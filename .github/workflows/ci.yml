@@ -68,10 +68,12 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install 
+        working-directory: ./zenoh-ts
 
       - name: Transpile Library
+        working-directory: ./zenoh-ts
         run: |
-          npm run build:ts
+          yarn run build
 
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
