@@ -55,6 +55,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ./zenoh-ts
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -66,12 +69,10 @@ jobs:
 
       - name: Run install
         uses: borales/actions-yarn@v4
-        working-directory: ./zenoh-ts
         with:
           cmd: install 
 
       - name: Transpile Library
-        working-directory: ./zenoh-ts
         run: |
           yarn run build
 
