@@ -70,7 +70,8 @@ jobs:
       - name: Run install
         uses: borales/actions-yarn@v4
         with:
-          cmd: install 
+          cmd: install
+          dir: 'zenoh-ts' 
 
       - name: Install NPX 
         run: |
