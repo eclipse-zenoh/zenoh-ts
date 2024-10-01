@@ -73,10 +73,6 @@ jobs:
           cmd: install
           dir: 'zenoh-ts' 
 
-      - name: Install NPX 
-        run: |
-          npx --package typescript tsc --init
-
       - name: Transpile Library
         run: |
           yarn run build
