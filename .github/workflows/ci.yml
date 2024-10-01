@@ -66,9 +66,9 @@ jobs:
 
       - name: Run install
         uses: borales/actions-yarn@v4
+        working-directory: ./zenoh-ts
         with:
           cmd: install 
-        working-directory: ./zenoh-ts
 
       - name: Transpile Library
         working-directory: ./zenoh-ts
