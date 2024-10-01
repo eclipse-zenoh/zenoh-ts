@@ -47,8 +47,7 @@ In its current state, it is not possible to compile Zenoh (Rust) to target WASM,
 
 ## Generating Documentation
 
-1. Make sure that the `typedoc` dependency is installed.
- - [typedoc](https://typedoc.org/)
+1. Make sure that the [typedoc](https://typedoc.org/) dependency is installed.
 
 2. Navigate to the directory `zenoh-ts`
 
