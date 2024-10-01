@@ -17,7 +17,7 @@ jobs:
       - uses: actions/setup-node@v3
       - run: cd zenoh-ts && yarn install
       # Generate your TypeDoc documentation
-      - run: cd zenoh-ts && npx typedoc
+      - run: cd zenoh-ts && npx typedoc src/index.ts
       # https://github.com/actions/upload-pages-artifact
       - uses: actions/upload-pages-artifact@v2
         with:
