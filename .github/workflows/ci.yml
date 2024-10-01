@@ -23,39 +23,55 @@ on:
   schedule:
     - cron: "0 6 * * 1-5"
 
-defaults:
-  run:
-    shell: bash
-    working-directory: ./zenoh-plugin-remote-api
-
 jobs:
-  build:
+  build-rs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
-
     steps:
       - uses: actions/checkout@v4
-
+      - uses: dtolnay/rust-toolchain@1.75.0
       - name: Install Rust toolchain
         run: |
           rustup show
           rustup component add rustfmt clippy
-
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
-
       - name: Clippy
         run: cargo clippy --all --examples -- -D warnings
-
       - name: Build
-        run: cargo build --verbose --all-targets
-
+        run: cargo build --all-targets
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test
+      - name: Cleanup
+        run: cargo clean
+
+  build-ts:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '21'
+
+      - name: Run install
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install 
+
+      - name: Transpile Library
+        run: |
+          npm run build:ts
 
   # NOTE: In GitHub repository settings, the "Require status checks to pass
   # before merging" branch protection rule ensures that commits are only merged
@@ -65,7 +81,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build-rs, build-ts]
     if: always()
     steps:
       - name: Check whether all jobs pass

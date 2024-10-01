@@ -87,11 +87,11 @@ Prerequisites:
 
 The TypeScript library can be install from the command line: 
 
-`npm install @zettascalelabs/zenoh-ts@0.0.6`
+`npm install @zettascalelabs/zenoh-ts@0.0.8`
 
 Or added via package.json
 
-`"@zettascalelabs/zenoh-ts": "0.0.6" `
+`"@zettascalelabs/zenoh-ts": "0.0.8" `
 
 Note: In order to add this library to your project you must log into the github npm repository,  
 please refer to this link for more information [Accessing github NPM](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token)
