@@ -25,7 +25,7 @@ on:
 
 jobs:
   build-rs:
-    name: Build on ${{ matrix.os }}
+    name: Build Rust plugin on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -50,6 +50,7 @@ jobs:
         run: cargo clean
 
   build-ts:
+    name: Build TS API on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
