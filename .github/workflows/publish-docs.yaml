@@ -21,7 +21,7 @@ jobs:
       # https://github.com/actions/upload-pages-artifact
       - uses: actions/upload-pages-artifact@v2
         with:
-          path: ./docs  # This should be your TypeDoc "out" path.
+          path: ./zenoh-ts/docs  # This should be your TypeDoc "out" path.
   deploy:
     runs-on: ubuntu-latest
     environment:
