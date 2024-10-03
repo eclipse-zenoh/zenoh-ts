@@ -66,6 +66,7 @@ serde_json = "1.0.114"
 zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
     "plugins",
 ], version = "1.0.0-dev" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.0.0-dev" }
 zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.0.0-dev" }
 zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.0.0-dev" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.0.0-dev" }

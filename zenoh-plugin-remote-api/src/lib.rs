@@ -287,7 +287,7 @@ impl From<(&SocketAddr, &RemoteState)> for AdminSpaceClient {
 
         AdminSpaceClient {
             uuid: remote_state.session_id.to_string(),
-            remote_address: sock_addr.clone(),
+            remote_address: *sock_addr,
             publishers: pub_keyexprs,
             subscribers: sub_keyexprs,
             queryables: query_keyexprs,
@@ -349,13 +349,13 @@ async fn run_admin_space_queryable(zenoh_runtime: Runtime, state_map: StateMap, 
                         }
                     }
                 } else {
-                    let own_ke: OwnedKeyExpr = query_ke.to_owned().into();
+                    let own_ke: OwnedKeyExpr = query_ke.to_owned();
                     if own_ke.contains("config") {
                         send_admin_reply(&query, &own_ke, &AdminRef::Config, &config).await;
                     }
                     if own_ke.contains("client") {
                         let mut opt_id = None;
-                        let split = own_ke.split("/");
+                        let split = own_ke.split('/');
                         let mut next_is_id = false;
                         for elem in split {
                             if next_is_id {
@@ -417,8 +417,8 @@ async fn send_admin_reply(
 ) {
     let z_bytes: ZBytes = match admin_ref {
         AdminRef::Version => match serde_json::to_value(RemoteApiPlugin::PLUGIN_LONG_VERSION) {
-            Ok(v) => match ZBytes::try_from(v) {
-                Ok(value) => value,
+            Ok(v) => match serde_json::to_vec(&v) {
+                Ok(value) => ZBytes::from(value),
                 Err(e) => {
                     tracing::warn!("Error transforming JSON to ZBytes: {}", e);
                     return;
@@ -430,8 +430,8 @@ async fn send_admin_reply(
             }
         },
         AdminRef::Config => match serde_json::to_value(config) {
-            Ok(v) => match ZBytes::try_from(v) {
-                Ok(value) => value,
+            Ok(v) => match serde_json::to_vec(&v) {
+                Ok(value) => ZBytes::from(value),
                 Err(e) => {
                     tracing::warn!("Error transforming JSON to ZBytes: {}", e);
                     return;

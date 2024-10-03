@@ -5,8 +5,7 @@ use ts_rs::TS;
 use uuid::Uuid;
 use zenoh::{
     key_expr::OwnedKeyExpr,
-    pubsub::Reliability,
-    qos::{CongestionControl, Priority},
+    qos::{CongestionControl, Priority, Reliability},
     query::{ConsolidationMode, Query, Reply, ReplyError},
     sample::{Sample, SampleKind},
 };
@@ -272,12 +271,10 @@ where
             }
         })),
         Ok(None) => Ok(None),
-        val => {
-            return Err(serde::de::Error::custom(format!(
-                "Value not valid for CongestionControl Enum {:?}",
-                val
-            )))
-        }
+        val => Err(serde::de::Error::custom(format!(
+            "Value not valid for CongestionControl Enum {:?}",
+            val
+        ))),
     }
 }
 
@@ -315,12 +312,10 @@ where
             }
         })),
         Ok(None) => Ok(None),
-        val => {
-            return Err(serde::de::Error::custom(format!(
-                "Value not valid for Priority Enum {:?}",
-                val
-            )))
-        }
+        val => Err(serde::de::Error::custom(format!(
+            "Value not valid for Priority Enum {:?}",
+            val
+        ))),
     }
 }
 
@@ -350,12 +345,10 @@ where
             }
         })),
         Ok(None) => Ok(None),
-        val => {
-            return Err(serde::de::Error::custom(format!(
-                "Value not valid for Reliability Enum {:?}",
-                val
-            )))
-        }
+        val => Err(serde::de::Error::custom(format!(
+            "Value not valid for Reliability Enum {:?}",
+            val
+        ))),
     }
 }
 
@@ -410,8 +403,9 @@ pub struct QueryWS {
 
 impl From<(&Query, Uuid)> for QueryWS {
     fn from((q, uuid): (&Query, Uuid)) -> Self {
-        let payload: Option<Vec<u8>> = q.payload().map(Vec::<u8>::from);
-        let attachment: Option<Vec<u8>> = q.attachment().map(Vec::<u8>::from);
+        let payload = q.payload().map(|x| x.to_bytes().to_vec());
+        let attachment: Option<Vec<u8>> = q.attachment().map(|x| x.to_bytes().to_vec());
+
         QueryWS {
             query_uuid: uuid,
             key_expr: q.key_expr().to_owned().into(),
@@ -489,7 +483,7 @@ pub struct ReplyErrorWS {
 
 impl From<ReplyError> for ReplyErrorWS {
     fn from(r_e: ReplyError) -> Self {
-        let z_bytes: Vec<u8> = Vec::<u8>::from(r_e.payload());
+        let z_bytes: Vec<u8> = r_e.payload().to_bytes().to_vec();
 
         ReplyErrorWS {
             payload: z_bytes,
@@ -500,7 +494,7 @@ impl From<ReplyError> for ReplyErrorWS {
 
 impl From<&ReplyError> for ReplyErrorWS {
     fn from(r_e: &ReplyError) -> Self {
-        let z_bytes: Vec<u8> = Vec::<u8>::from(r_e.payload());
+        let z_bytes: Vec<u8> = r_e.payload().to_bytes().to_vec();
 
         ReplyErrorWS {
             payload: z_bytes,
@@ -542,7 +536,9 @@ impl From<SampleKind> for SampleKindWS {
 
 impl From<&Sample> for SampleWS {
     fn from(s: &Sample) -> Self {
-        let z_bytes: Vec<u8> = Vec::<u8>::from(s.payload());
+        // let z_bytes: Vec<u8> = Vec::<u8>::from(s.payload());
+        let z_bytes: Vec<u8> = s.payload().to_bytes().to_vec();
+
         SampleWS {
             key_expr: s.key_expr().to_owned().into(),
             value: z_bytes,
@@ -552,7 +548,7 @@ impl From<&Sample> for SampleWS {
             congestion_control: s.congestion_control() as u8,
             encoding: s.encoding().to_string(),
             express: s.express(),
-            attachement: s.attachment().map(|x| Vec::<u8>::from(x)),
+            attachement: s.attachment().map(|x| x.to_bytes().to_vec()),
         }
     }
 }
