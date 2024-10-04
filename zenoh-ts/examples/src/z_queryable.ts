@@ -4,7 +4,7 @@ import "./webpage.ts";
 import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@ZettaScaleLabs/zenoh-ts";
 
 
-export async function main_queryable() {
+export async function queryable() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
   let key_expr = KeyExpr.new("demo/example/zenoh-ts-queryable");
 

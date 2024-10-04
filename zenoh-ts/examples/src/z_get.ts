@@ -1,11 +1,11 @@
-import { ReplyError } from "../../../dist/query";
-import { deserialize_string } from "../../../dist/z_bytes";
+import { ReplyError } from "@ZettaScaleLabs/zenoh-ts";
+import { deserialize_string } from "@ZettaScaleLabs/zenoh-ts";
 import "./style.css";
 import "./webpage.ts";
 
 import { Config, Receiver, RecvErr, Reply, Sample, Session } from "@ZettaScaleLabs/zenoh-ts";
 
-export async function main_get() {
+export async function get() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   // Callback get query

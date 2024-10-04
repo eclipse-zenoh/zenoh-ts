@@ -74,7 +74,7 @@ function read_length(buffer: Uint8Array) {
   return v
 }
 
-export async function main_sub_test() {
+export async function sub_test() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   // Poll Subscribers will only consume data on calls to receieve()

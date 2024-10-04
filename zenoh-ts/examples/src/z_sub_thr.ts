@@ -42,7 +42,7 @@ class Stats {
   }
 }
 
-export async function main_thr() {
+export async function thr() {
   console.log("Open Session");
   const session : Session = await Session.open(Config.new("ws/127.0.0.1:10000"));
   let stats = new Stats(100000);

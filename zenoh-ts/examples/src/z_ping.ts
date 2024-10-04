@@ -1,10 +1,10 @@
-import { FifoChannel } from "../../../dist/pubsub";
+import { FifoChannel } from "@ZettaScaleLabs/zenoh-ts";
 import "./style.css";
 import "./webpage.ts";
 
 import { Encoding, CongestionControl, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
 
-export async function main_ping() {
+export async function ping() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   let sub = await session.declare_subscriber("test/pong", new FifoChannel(256));

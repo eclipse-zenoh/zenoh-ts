@@ -64,7 +64,7 @@ Otherwise, incompatibilities in memory mapping of shared types between `zenohd` 
 
 To know the Rust version you're `zenohd` has been built with, use the `--version` option.
 
-### Example with a downloaded version:
+### Example with a downloaded zenohd:
 ```bash
 $ zenohd --version
 zenohd v1.0.0-beta.2 built with rustc 1.75.0 (82e1608df 2023-12-21)

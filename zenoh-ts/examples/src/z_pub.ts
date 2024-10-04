@@ -3,7 +3,7 @@ import "./webpage.ts";
 
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@ZettaScaleLabs/zenoh-ts";
 
-export async function main_pub() {
+export async function pub() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   let key_expr = KeyExpr.new("demo/example/zenoh-ts-pub");

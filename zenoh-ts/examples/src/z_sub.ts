@@ -5,7 +5,7 @@ import {
   RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr
 } from "@ZettaScaleLabs/zenoh-ts";
 
-export async function main_sub() {
+export async function sub() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   const callback = async function (sample: Sample): Promise<void> {

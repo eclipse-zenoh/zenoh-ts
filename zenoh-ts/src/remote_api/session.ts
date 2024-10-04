@@ -1,4 +1,3 @@
-import { Option, some, none } from "fp-ts/Option";
 import { SimpleChannel } from "channel-ts";
 import { v4 as uuidv4 } from "uuid";
 import { Logger } from "tslog";
@@ -39,7 +38,7 @@ export type UUIDv4 = String | string;
 export class RemoteSession {
   ws: WebSocket;
   ws_channel: SimpleChannel<JSONMessage>;
-  session: Option<UUIDv4>;
+  session: UUIDv4 | null;
   subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
   queryables: Map<UUIDv4, SimpleChannel<QueryWS>>;
   get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS | RemoteRecvErr>>;
@@ -47,7 +46,7 @@ export class RemoteSession {
   private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
     this.ws = ws;
     this.ws_channel = ws_channel;
-    this.session = none;
+    this.session = null;
     this.subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
     this.queryables = new Map<UUIDv4, SimpleChannel<QueryWS>>();
     this.get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
@@ -68,6 +67,7 @@ export class RemoteSession {
 
     const chan = new SimpleChannel<JSONMessage>(); // creates a new simple channel
     let ws = new WebSocket(websocket_endpoint);
+
     while (websocket_connected == false) {
       ws.onopen = function (_event: any) {
         // `this` here is a websocket object
@@ -336,7 +336,7 @@ export class RemoteSession {
       console.log("unhandled Control Message:", control_msg);
     } else if (typeof control_msg === "object") {
       if ("Session" in control_msg) {
-        this.session = some(control_msg["Session"]);
+        this.session = control_msg["Session"];
       } else if ("GetFinished" in control_msg) {
         let channel = this.get_receiver.get(control_msg["GetFinished"].id);
         channel?.send(RemoteRecvErr.Disconnected);

@@ -3,7 +3,7 @@ import "./webpage.ts";
 
 import { Encoding, CongestionControl, Sample, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
 
-export async function main_pong() {
+export async function pong() {
   const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
 
   let pub = await session.declare_publisher(
