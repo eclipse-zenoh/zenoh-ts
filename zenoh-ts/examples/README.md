@@ -33,12 +33,12 @@ In order to run the example project the user must:
 3. Build + Run the examples
 
 
-### Build the Typescript Library  
+### 1. Build the Typescript Library  
 From project root directory:  
 1. Navigate to the `/zenoh-ts` directory  
 2. Build the `zenoh-ts` bindings by running `yarn install && yarn run build`  
 
-### Build + Run the remote-api-plugin  
+### 2. Build + Run the remote-api-plugin  
 From project root directory:  
 1. Build the plugin by running `cargo build`  
 2. Run an instance of `zenohd` loading the plugin `zenohd --config ./zenoh-plugin-remote-api/EXAMPLE_CONFIG.json5 `  with the following config
@@ -61,21 +61,21 @@ The latest version of `zenohd` can be build from source from [zenoh](https://git
 or downloaded from the [release](https://github.com/eclipse-zenoh/zenoh/releases) page for your platform.
 Keep this terminal running while building and running the example below
 
-### Build + run the examples
+### 3. Build + run the examples
 
 1. Navigate to the `/zenoh-ts/examples` directory
 2. Install `zenoh-ts` library by running `yarn install` 
 3. Then run the examples by running `yarn run dev`
 
-This will host a webserver serving the examples, 
-the example will attempt to connect to a `websocket_port` : `10000`
-where the remote API plugin should be running. 
+This will host a webserver serving the examples,  
+The web application will attempt to connect to a `websocket_port` : `10000`  
+where the remote API plugin should be running.  
 
 4. Open a web browser and navigate to `http://localhost:5173` and open the console. 
 
-By default, the `main.ts` file is loaded into the webpage and run, 
-And the Zenoh-sub 
-Running specific will have to be commented in at the `main.ts` file. 
+By default, the `main.ts` file is loaded into the webpage and run.  
+The subscriber example is run by default however in order to run specific examples  
+the user will have to comment in the function invocation in the `main.ts` file. 
 
 
 ### Clean projects
