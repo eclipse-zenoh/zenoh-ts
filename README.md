@@ -21,6 +21,8 @@ This repository provides a Typscript / Javascript binding through the use of the
 The long term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.  
 In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and will need to undergo a fair amount of refactoring before that can happen.
 
+Docs can be accessed at [Docs Link](https://zettascalelabs.github.io/zenoh-ts/)
+
 ---
 
 ## How to build it
