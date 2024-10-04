@@ -125,9 +125,9 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         encoding: Option<String>,
-        #[ts(type = "number[] | undefined")]
+        #[ts(type = "string | undefined")]
         payload: Option<B64String>,
-        #[ts(type = "number[] | undefined")]
+        #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
     },
     GetFinished {
@@ -156,7 +156,7 @@ pub enum ControlMsg {
         priority: Option<Priority>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
-        #[ts(type = "number[] | undefined")]
+        #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
     },
     Delete {
@@ -179,7 +179,7 @@ pub enum ControlMsg {
         priority: Option<Priority>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
-        #[ts(type = "number[] | undefined")]
+        #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
     },
     // Subscriber
@@ -412,9 +412,9 @@ pub struct QueryWS {
     key_expr: OwnedKeyExpr,
     parameters: String,
     encoding: Option<String>,
-    #[ts(type = "number[] | undefined")]
+    #[ts(type = "string | undefined")]
     attachment: Option<B64String>,
-    #[ts(type = "number[] | undefined")]
+    #[ts(type = "string | undefined")]
     payload: Option<B64String>,
 }
 
@@ -593,6 +593,26 @@ mod tests {
     use zenoh::key_expr::KeyExpr;
 
     use super::*;
+
+    #[test]
+    fn test_b64_serializing() {
+        let bytes: Vec<u8> = std::iter::repeat(245).take(100).collect();
+
+        let b64_string = BASE64_STANDARD.encode(bytes.clone());
+
+        #[derive(Debug, Serialize, Deserialize)]
+        struct RawBytes {
+            bytes: Vec<u8>,
+        }
+        #[derive(Debug, Serialize, Deserialize)]
+        struct B64Encoded {
+            b64_string: String,
+        }
+
+        let json_bytes = serde_json::to_string(&RawBytes { bytes }).unwrap();
+        let json_b64 = serde_json::to_string(&B64Encoded { b64_string }).unwrap();
+        assert!(json_b64.len() < json_bytes.len())
+    }
 
     #[test]
     fn serialize_messages() {

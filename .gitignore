@@ -13,3 +13,4 @@ zenoh-plugin-remote-api/target/**
 zenoh-plugin-remote-api/bindings/** 
 **/target/** 
 **/node_modules/** 
+**/dist/** 

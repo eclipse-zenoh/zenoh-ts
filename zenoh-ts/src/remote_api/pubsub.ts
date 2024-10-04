@@ -1,5 +1,6 @@
 import { SimpleChannel } from "channel-ts";
 import { v4 as uuidv4 } from "uuid";
+import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 // Import interface
 import { SampleWS } from "./interface/SampleWS";
@@ -54,11 +55,16 @@ export class RemotePublisher {
       return;
     }
 
+    let optional_attachment = null;
+    if (attachment != null) {
+      optional_attachment = b64_str_from_bytes(new Uint8Array(attachment));
+    }
+
     let data_msg: DataMsg = {
       PublisherPut: {
         id: this.publisher_id.toString(),
-        payload: payload,
-        attachment: attachment,
+        payload: b64_str_from_bytes(new Uint8Array(payload)),
+        attachment: optional_attachment,
         encoding: encoding,
       },
     };

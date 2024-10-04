@@ -1,5 +1,6 @@
 // External
 import { SimpleChannel } from "channel-ts";
+import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 // Remote API
 import { RemoteQueryable } from "./remote_api/query";
 import { ReplyWS } from "./remote_api/interface/ReplyWS";
@@ -229,7 +230,8 @@ export class Query {
     let qr_variant: QueryReplyVariant = {
       Reply: {
         key_expr: _key_expr.toString(),
-        payload: Array.from(z_bytes.payload()),
+        payload: b64_str_from_bytes(z_bytes.buffer()),
+
       },
     };
     this.reply_ws(qr_variant);
@@ -242,7 +244,7 @@ export class Query {
   reply_err(payload: IntoZBytes): void {
     let z_bytes: ZBytes = ZBytes.new(payload);
     let qr_variant: QueryReplyVariant = {
-      ReplyErr: { payload: Array.from(z_bytes.payload()) },
+      ReplyErr: { payload: b64_str_from_bytes(z_bytes.buffer()) },
     };
     this.reply_ws(qr_variant);
   }

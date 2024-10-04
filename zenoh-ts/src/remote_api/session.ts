@@ -1,6 +1,7 @@
 import { SimpleChannel } from "channel-ts";
 import { v4 as uuidv4 } from "uuid";
 import { Logger } from "tslog";
+import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 const log = new Logger({ stylePrettyLogs: false });
 
@@ -126,14 +127,21 @@ export class RemoteSession {
     attachment?: Array<number>
   ): void {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
+
+    let opt_attachment = undefined;
+    if (attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+    }
+
     let data_message: ControlMsg = {
       Put: {
-        key_expr: owned_keyexpr, payload: payload,
+        key_expr: owned_keyexpr,
+        payload: b64_str_from_bytes(new Uint8Array(payload)),
         encoding: encoding,
         congestion_control: congestion_control,
         priority: priority,
         express: express,
-        attachment: attachment,
+        attachment: opt_attachment,
       },
     };
     this.send_ctrl_message(data_message);
@@ -156,6 +164,15 @@ export class RemoteSession {
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
 
+    let opt_payload = undefined;
+    if (payload != undefined) {
+      opt_payload = b64_str_from_bytes(new Uint8Array(payload))
+    }
+    let opt_attachment = undefined;
+    if (attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+    }
+
     let control_message: ControlMsg = {
       Get: {
         key_expr: key_expr,
@@ -167,8 +184,8 @@ export class RemoteSession {
         priority: priority,
         express: express,
         encoding: encoding,
-        payload: payload,
-        attachment: attachment
+        payload: opt_payload,
+        attachment: opt_attachment
       },
     };
     this.send_ctrl_message(control_message);
@@ -184,13 +201,17 @@ export class RemoteSession {
     attachment?: Array<number>
   ): Promise<void> {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
+    let opt_attachment = undefined;
+    if (attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+    }
     let data_message: ControlMsg = {
       Delete: {
         key_expr: owned_keyexpr,
         congestion_control: congestion_control,
         priority: priority,
         express: express,
-        attachment: attachment,
+        attachment: opt_attachment,
       }
     };
     this.send_ctrl_message(data_message);

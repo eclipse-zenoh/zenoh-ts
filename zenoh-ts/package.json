@@ -16,10 +16,10 @@
     "LICENSE"
   ],
   "dependencies": {
+    "base64-arraybuffer": "^1.0.2",
     "channel-ts": "^0.1.2",
     "eslint": "^9.10.0",
     "text-encoding": "^0.7.0",
-    "ts-log": "^2.2.5",
     "tslog": "^4.9.3",
     "uuid": "^10.0.0"
   },
