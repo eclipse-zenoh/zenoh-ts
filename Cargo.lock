@@ -3181,6 +3181,7 @@ dependencies = [
 name = "zenoh-plugin-remote-api"
 version = "1.0.0"
 dependencies = [
+ "base64 0.22.1",
  "flume",
  "futures",
  "futures-util",

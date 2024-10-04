@@ -32,9 +32,24 @@ pub async fn handle_data_message(
             encoding,
         } => {
             if let Some(publisher) = state_map.publishers.get(&id) {
-                let mut put_builder = publisher.put(payload);
-                if let Some(payload) = attachment {
-                    put_builder = put_builder.attachment(payload);
+                let mut put_builder = match payload.b64_to_bytes() {
+                    Ok(payload) => publisher.put(payload),
+                    Err(err) => {
+                        warn!("DataMsg::PublisherPut : Could not decode B64 encoded bytes {err}");
+                        return Err(Box::new(err));
+                    }
+                };
+
+                if let Some(attachment_b64) = attachment {
+                    match attachment_b64.b64_to_bytes() {
+                        Ok(payload) => put_builder = put_builder.attachment(payload),
+                        Err(err) => {
+                            warn!(
+                                "DataMsg::PublisherPut : Could not decode B64 encoded bytes {err}"
+                            );
+                            return Err(Box::new(err));
+                        }
+                    }
                 }
                 if let Some(encoding) = encoding {
                     put_builder = put_builder.encoding(encoding);
@@ -59,9 +74,21 @@ pub async fn handle_data_message(
                 if let Some(q) = query {
                     match reply.result {
                         QueryReplyVariant::Reply { key_expr, payload } => {
-                            q.reply(key_expr, payload).await?
+                            match payload.b64_to_bytes() {
+                                Ok(payload) => q.reply(key_expr, payload).await?,
+                                Err(err) => {
+                                    warn!("QueryReplyVariant::Reply : Could not decode B64 encoded bytes {err}");
+                                    return Err(Box::new(err));
+                                }
+                            }
                         }
-                        QueryReplyVariant::ReplyErr { payload } => q.reply_err(payload).await?,
+                        QueryReplyVariant::ReplyErr { payload } => match payload.b64_to_bytes() {
+                            Ok(payload) => q.reply_err(payload).await?,
+                            Err(err) => {
+                                warn!("QueryReplyVariant::Reply : Could not decode B64 encoded bytes {err}");
+                                return Err(Box::new(err));
+                            }
+                        },
                         QueryReplyVariant::ReplyDelete { key_expr } => {
                             q.reply_del(key_expr).await?
                         }

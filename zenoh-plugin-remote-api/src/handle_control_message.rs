@@ -79,8 +79,18 @@ pub(crate) async fn handle_control_message(
             add_if_some!(priority, get_builder);
             add_if_some!(express, get_builder);
             add_if_some!(encoding, get_builder);
-            add_if_some!(payload, get_builder);
-            add_if_some!(attachment, get_builder);
+            if let Some(payload_b64) = payload {
+                match payload_b64.b64_to_bytes() {
+                    Ok(payload) => get_builder = get_builder.payload(payload),
+                    Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                }
+            }
+            if let Some(attachment_b64) = attachment {
+                match attachment_b64.b64_to_bytes() {
+                    Ok(attachment) => get_builder = get_builder.attachment(attachment),
+                    Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                }
+            }
 
             match handler {
                 HandlerChannel::Fifo(size) => {
@@ -130,12 +140,26 @@ pub(crate) async fn handle_control_message(
             express,
             attachment,
         } => {
-            let mut put_builder = state_map.session.put(key_expr, payload);
+            let mut put_builder = match payload.b64_to_bytes() {
+                Ok(payload) => state_map.session.put(key_expr, payload),
+                Err(err) => {
+                    warn!("ControlMsg::Put , could not decode B64 encoded bytes {err}");
+                    return Ok(None);
+                }
+            };
+
             add_if_some!(encoding, put_builder);
             add_if_some!(congestion_control, put_builder);
             add_if_some!(priority, put_builder);
             add_if_some!(express, put_builder);
-            add_if_some!(attachment, put_builder);
+
+            if let Some(attachment_b64) = attachment {
+                match attachment_b64.b64_to_bytes() {
+                    Ok(attachment) => put_builder = put_builder.attachment(attachment),
+                    Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                }
+            }
+
             put_builder.await?;
         }
         ControlMsg::Delete {
@@ -149,7 +173,12 @@ pub(crate) async fn handle_control_message(
             add_if_some!(congestion_control, delete_builder);
             add_if_some!(priority, delete_builder);
             add_if_some!(express, delete_builder);
-            add_if_some!(attachment, delete_builder);
+            if let Some(attachment_b64) = attachment {
+                match attachment_b64.b64_to_bytes() {
+                    Ok(attachment) => delete_builder = delete_builder.attachment(attachment),
+                    Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                }
+            }
 
             delete_builder.await?;
         }
