@@ -1,6 +1,6 @@
 {
   "name": "@ZettaScaleLabs/zenoh-ts",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "license": "SEE LICENSE IN 'LICENSE'",
   "type": "module",
   "exports": {
