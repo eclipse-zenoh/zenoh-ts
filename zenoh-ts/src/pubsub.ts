@@ -230,11 +230,11 @@ export class Publisher {
     let _attachment = null;
     if (attachment != null) {
       let att_bytes = ZBytes.new(attachment);
-      _attachment = Array.from(att_bytes.payload());
+      _attachment = Array.from(att_bytes.buffer());
     }
 
     return this._remote_publisher.put(
-      Array.from(zbytes.payload()),
+      Array.from(zbytes.buffer()),
       _attachment,
       _encoding.toString(),
     );

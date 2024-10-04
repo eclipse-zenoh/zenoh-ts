@@ -14,10 +14,10 @@ export type IntoZBytes =
  * Class to represent an Array of Bytes received from Zenoh
  */
 export class ZBytes {
-  private buffer: Uint8Array;
+  private _buffer: Uint8Array;
 
   private constructor(buffer: Uint8Array) {
-    this.buffer = buffer;
+    this._buffer = buffer;
   }
 
   /**
@@ -26,7 +26,7 @@ export class ZBytes {
   * @returns number
   */
   len(): number {
-    return this.buffer.length;
+    return this._buffer.length;
   }
 
   /**
@@ -43,8 +43,8 @@ export class ZBytes {
    * 
    * @returns Uint8Array
    */
-  payload(): Uint8Array {
-    return this.buffer
+  buffer(): Uint8Array {
+    return this._buffer
   }
 
   /**
@@ -57,7 +57,7 @@ export class ZBytes {
   // }
 
   deserialize<T>(func: (buffer: Uint8Array) => T): T {
-    return func(this.buffer);
+    return func(this._buffer);
   }
 
   /**

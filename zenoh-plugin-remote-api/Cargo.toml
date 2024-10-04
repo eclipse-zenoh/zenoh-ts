@@ -46,7 +46,7 @@ tokio-tungstenite = "0.23.1"
 tokio-rustls = { version = "0.26.0", default-features = false }
 futures-util = "0.3.26"
 rustls-pemfile = "2.1.2"
-
+base64 = "0.22.1"
 flume = "0.11"
 futures = "0.3.5"
 git-version = "0.3.5"
@@ -55,7 +55,7 @@ ts-rs = { version = "9.0", features = [
     "serde-compat",
     "uuid-impl",
     "serde-json-impl",
-    "no-serde-warnings"
+    "no-serde-warnings",
 ] }
 tracing = "0.1"
 schemars = { version = "0.8.12", features = ["either"] }

@@ -1,3 +1,6 @@
+// External
+import { encode as b64_str_from_bytes, decode as b64_bytes_from_str, } from "base64-arraybuffer";
+// Internal
 import { KeyExpr } from "./key_expr";
 import { OwnedKeyExprWrapper } from "./remote_api/interface/OwnedKeyExprWrapper";
 import { SampleKindWS } from "./remote_api/interface/SampleKindWS";
@@ -286,7 +289,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
     sample_kind = SampleKind.PUT;
   }
 
-  let payload = ZBytes.new(sample_ws.value);
+  let payload = ZBytes.new(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
 
   let key_exr = KeyExpr.new(sample_ws.key_expr);
 
@@ -304,7 +307,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 
   let attachment = undefined;
   if (sample_ws.attachement != undefined) {
-    attachment = ZBytes.new(sample_ws.attachement);
+    attachment = ZBytes.new(new Uint8Array(b64_bytes_from_str(sample_ws.attachement)));
   }
 
   return Sample.new(
@@ -332,7 +335,7 @@ export function SampleWS_from_Sample(
   attachement: ZBytes | undefined,
 ): SampleWS {
   let key_expr: OwnedKeyExprWrapper = sample.keyexpr().toString();
-  let value: Array<number> = Array.from(sample.payload().payload());
+  let value: Array<number> = Array.from(sample.payload().buffer());
 
   let sample_kind: SampleKindWS;
   if (sample.kind() == SampleKind.DELETE) {
@@ -349,12 +352,12 @@ export function SampleWS_from_Sample(
 
   let attach = null;
   if (attachement != null) {
-    attach = Array.from(attachement.payload());
+    attach = b64_str_from_bytes(new Uint8Array(attachement.buffer()));
   }
 
   let sample_ws: SampleWS = {
     key_expr: key_expr,
-    value: value,
+    value: b64_str_from_bytes(new Uint8Array(value)),
     kind: sample_kind,
     encoding: encoding.toString(),
     timestamp: null,

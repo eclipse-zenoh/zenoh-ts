@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use ts_rs::TS;
 use uuid::Uuid;
@@ -19,6 +20,22 @@ use zenoh::{
 #[derive(TS)]
 #[ts(export)]
 #[derive(Debug, Serialize, Deserialize)]
+pub(crate) struct B64String(String);
+impl From<String> for B64String {
+    fn from(value: String) -> Self {
+        B64String(value)
+    }
+}
+
+impl B64String {
+    pub fn b64_to_bytes(self) -> Result<Vec<u8>, base64::DecodeError> {
+        BASE64_STANDARD.decode(self.0)
+    }
+}
+
+#[derive(TS)]
+#[ts(export)]
+#[derive(Debug, Serialize, Deserialize)]
 pub enum RemoteAPIMsg {
     Data(DataMsg),
     Control(ControlMsg),
@@ -31,8 +48,8 @@ pub enum DataMsg {
     // Client -> SVR
     PublisherPut {
         id: Uuid,
-        payload: Vec<u8>,
-        attachment: Option<Vec<u8>>,
+        payload: B64String,
+        attachment: Option<B64String>,
         encoding: Option<String>,
     },
     // SVR -> Client
@@ -108,10 +125,10 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         encoding: Option<String>,
-        #[ts(type = "number[] | undefined")]
-        payload: Option<Vec<u8>>,
-        #[ts(type = "number[] | undefined")]
-        attachment: Option<Vec<u8>>,
+        #[ts(type = "string | undefined")]
+        payload: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        attachment: Option<B64String>,
     },
     GetFinished {
         id: Uuid,
@@ -119,7 +136,7 @@ pub enum ControlMsg {
     Put {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
-        payload: Vec<u8>,
+        payload: B64String,
         //
         #[ts(type = "string | undefined")]
         encoding: Option<String>,
@@ -139,8 +156,8 @@ pub enum ControlMsg {
         priority: Option<Priority>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
-        #[ts(type = "number[] | undefined")]
-        attachment: Option<Vec<u8>>,
+        #[ts(type = "string | undefined")]
+        attachment: Option<B64String>,
     },
     Delete {
         #[ts(as = "OwnedKeyExprWrapper")]
@@ -162,8 +179,8 @@ pub enum ControlMsg {
         priority: Option<Priority>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
-        #[ts(type = "number[] | undefined")]
-        attachment: Option<Vec<u8>>,
+        #[ts(type = "string | undefined")]
+        attachment: Option<B64String>,
     },
     // Subscriber
     DeclareSubscriber {
@@ -395,16 +412,22 @@ pub struct QueryWS {
     key_expr: OwnedKeyExpr,
     parameters: String,
     encoding: Option<String>,
-    #[ts(type = "number[] | undefined")]
-    attachment: Option<Vec<u8>>,
-    #[ts(type = "number[] | undefined")]
-    payload: Option<Vec<u8>>,
+    #[ts(type = "string | undefined")]
+    attachment: Option<B64String>,
+    #[ts(type = "string | undefined")]
+    payload: Option<B64String>,
 }
 
 impl From<(&Query, Uuid)> for QueryWS {
     fn from((q, uuid): (&Query, Uuid)) -> Self {
-        let payload = q.payload().map(|x| x.to_bytes().to_vec());
-        let attachment: Option<Vec<u8>> = q.attachment().map(|x| x.to_bytes().to_vec());
+        let payload = q
+            .payload()
+            .map(|x| x.to_bytes().to_vec())
+            .map(|vec_bytes| BASE64_STANDARD.encode(vec_bytes).into());
+        let attachment: Option<B64String> = q
+            .attachment()
+            .map(|x| x.to_bytes().to_vec())
+            .map(|vec_bytes| BASE64_STANDARD.encode(vec_bytes).into());
 
         QueryWS {
             query_uuid: uuid,
@@ -462,10 +485,10 @@ pub enum QueryReplyVariant {
     Reply {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
-        payload: Vec<u8>,
+        payload: B64String,
     },
     ReplyErr {
-        payload: Vec<u8>,
+        payload: B64String,
     },
     ReplyDelete {
         #[ts(as = "OwnedKeyExprWrapper")]
@@ -477,7 +500,7 @@ pub enum QueryReplyVariant {
 #[ts(export)]
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ReplyErrorWS {
-    pub(crate) payload: Vec<u8>,
+    pub(crate) payload: B64String,
     pub(crate) encoding: String,
 }
 
@@ -486,7 +509,7 @@ impl From<ReplyError> for ReplyErrorWS {
         let z_bytes: Vec<u8> = r_e.payload().to_bytes().to_vec();
 
         ReplyErrorWS {
-            payload: z_bytes,
+            payload: BASE64_STANDARD.encode(z_bytes).into(),
             encoding: r_e.encoding().to_string(),
         }
     }
@@ -497,7 +520,7 @@ impl From<&ReplyError> for ReplyErrorWS {
         let z_bytes: Vec<u8> = r_e.payload().to_bytes().to_vec();
 
         ReplyErrorWS {
-            payload: z_bytes,
+            payload: base64::prelude::BASE64_STANDARD.encode(z_bytes).into(),
             encoding: r_e.encoding().to_string(),
         }
     }
@@ -508,14 +531,14 @@ impl From<&ReplyError> for ReplyErrorWS {
 pub struct SampleWS {
     #[ts(as = "OwnedKeyExprWrapper")]
     pub(crate) key_expr: OwnedKeyExpr,
-    pub(crate) value: Vec<u8>,
+    pub(crate) value: B64String,
     pub(crate) kind: SampleKindWS,
     pub(crate) encoding: String,
     pub(crate) timestamp: Option<String>,
     pub(crate) congestion_control: u8,
     pub(crate) priority: u8,
     pub(crate) express: bool,
-    pub(crate) attachement: Option<Vec<u8>>,
+    pub(crate) attachement: Option<B64String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -536,19 +559,21 @@ impl From<SampleKind> for SampleKindWS {
 
 impl From<&Sample> for SampleWS {
     fn from(s: &Sample) -> Self {
-        // let z_bytes: Vec<u8> = Vec::<u8>::from(s.payload());
         let z_bytes: Vec<u8> = s.payload().to_bytes().to_vec();
 
         SampleWS {
             key_expr: s.key_expr().to_owned().into(),
-            value: z_bytes,
+            value: BASE64_STANDARD.encode(z_bytes).into(),
             kind: s.kind().into(),
             timestamp: s.timestamp().map(|x| x.to_string_rfc3339_lossy()),
             priority: s.priority() as u8,
             congestion_control: s.congestion_control() as u8,
             encoding: s.encoding().to_string(),
             express: s.express(),
-            attachement: s.attachment().map(|x| x.to_bytes().to_vec()),
+            attachement: s
+                .attachment()
+                .map(|x| x.to_bytes().to_vec())
+                .map(|z_bytes| BASE64_STANDARD.encode(z_bytes).into()),
         }
     }
 }
@@ -568,6 +593,26 @@ mod tests {
     use zenoh::key_expr::KeyExpr;
 
     use super::*;
+
+    #[test]
+    fn test_b64_serializing() {
+        let bytes: Vec<u8> = std::iter::repeat(245).take(100).collect();
+
+        let b64_string = BASE64_STANDARD.encode(bytes.clone());
+
+        #[derive(Debug, Serialize, Deserialize)]
+        struct RawBytes {
+            bytes: Vec<u8>,
+        }
+        #[derive(Debug, Serialize, Deserialize)]
+        struct B64Encoded {
+            b64_string: String,
+        }
+
+        let json_bytes = serde_json::to_string(&RawBytes { bytes }).unwrap();
+        let json_b64 = serde_json::to_string(&B64Encoded { b64_string }).unwrap();
+        assert!(json_b64.len() < json_bytes.len())
+    }
 
     #[test]
     fn serialize_messages() {
@@ -592,7 +637,7 @@ mod tests {
 
         let _sample_ws = SampleWS {
             key_expr: key_expr.clone(),
-            value: vec![1, 2, 3],
+            value: BASE64_STANDARD.encode(vec![1, 2, 3]).into(),
             kind: SampleKindWS::Put,
             encoding: "zenoh/bytes".into(),
             timestamp: None,
@@ -602,17 +647,9 @@ mod tests {
             attachement: None,
         };
 
-        // let json: String = serde_json::to_string(&QueryableMsg::Reply {
-        //     reply: QueryReplyWS {
-        //         query_uuid: uuid,
-        //     },
-        // })
-        // .unwrap();
-        // assert_eq!(json, r#"{"Reply":{}}"#);
-
         let sample_ws = SampleWS {
             key_expr,
-            value: vec![1, 2, 3],
+            value: BASE64_STANDARD.encode(vec![1, 2, 3]).into(),
             kind: SampleKindWS::Put,
             encoding: "zenoh/bytes".into(),
             timestamp: None,
@@ -622,9 +659,5 @@ mod tests {
             attachement: None,
         };
         let _json: String = serde_json::to_string(&DataMsg::Sample(sample_ws, uuid)).unwrap();
-        // assert_eq!(
-        //     json,
-        //     r#"{"Sample":[{"key_expr":"demo/test","value":[1,2,3],"kind":"Put"},"a2663bb1-128c-4dd3-a42b-d1d3337e2e51"]}"#
-        // );
     }
 }
