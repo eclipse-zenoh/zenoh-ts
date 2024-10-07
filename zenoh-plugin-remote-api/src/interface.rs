@@ -579,7 +579,7 @@ impl From<&Sample> for SampleWS {
             key_expr: s.key_expr().to_owned().into(),
             value: BASE64_STANDARD.encode(z_bytes).into(),
             kind: s.kind().into(),
-            timestamp: s.timestamp().map(|x| x.to_string_rfc3339_lossy()),
+            timestamp: s.timestamp().map(|x| x.to_string()),
             priority: s.priority() as u8,
             congestion_control: s.congestion_control() as u8,
             encoding: s.encoding().to_string(),
