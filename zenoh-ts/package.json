@@ -1,0 +1,41 @@
+{
+  "name": "@eclipse-zenoh/zenoh-ts",
+  "version": "0.0.9",
+  "license": "(Apache-2.0 OR EPL-2.0)",
+  "type": "module",
+  "exports": {
+    "import": "./dist/index.js",
+    "types": "./dist/index.d.ts"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "package.json",
+    "README.md",
+    "dist",
+    "LICENSE"
+  ],
+  "dependencies": {
+    "base64-arraybuffer": "^1.0.2",
+    "channel-ts": "^0.1.2",
+    "eslint": "^9.10.0",
+    "text-encoding": "^0.7.0",
+    "tslog": "^4.9.3",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.9.1",
+    "@types/uuid": "^10.0.0",
+    "typedoc": "^0.26.5",
+    "typescript": "^5.3.2"
+  },
+  "scripts": {
+    "build": "npx tsc",
+    "release": "npx release-it",
+    "clean": "rm -rf ./node_modules ./dist ./esm"
+  },
+  "publishConfig": {
+    "access": "restricted",
+    "registry": "https://npm.pkg.github.com"
+  }
+}

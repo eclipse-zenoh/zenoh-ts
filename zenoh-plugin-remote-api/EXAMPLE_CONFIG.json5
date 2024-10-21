@@ -1,0 +1,13 @@
+{
+  mode: "router",
+  plugins_loading: {
+     enabled: true,
+     search_dirs: ["./target/debug", "~/.zenoh/lib"],
+   },
+  plugins: {
+    remote_api: {
+        "websocket_port": "10000",
+    },
+  },
+}
+

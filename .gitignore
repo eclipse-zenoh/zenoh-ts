@@ -1,0 +1,16 @@
+.vscode
+**/build
+cp_plugin.sh
+
+zenoh-ts/dist
+zenoh-ts/node_modules
+zenoh-ts/package-lock.json
+zenoh-ts/examples/web/src/index.js
+zenoh-ts/cjs/
+zenoh-ts/esm/
+
+zenoh-plugin-remote-api/target/** 
+zenoh-plugin-remote-api/bindings/** 
+**/target/** 
+**/node_modules/** 
+**/dist/** 
