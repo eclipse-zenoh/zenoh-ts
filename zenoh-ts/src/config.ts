@@ -18,10 +18,10 @@
 // ██      ██    ██ ██  ██ ██ ██      ██ ██    ██
 //  ██████  ██████  ██   ████ ██      ██  ██████
 
+/**
+  * The configuration for a Zenoh Session.
+  */
 export class Config {
-  /**
-   * The configuration for a Zenoh Session.
-   */
   locator: string;
 
   /**
