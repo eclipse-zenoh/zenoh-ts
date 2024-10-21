@@ -1,7 +1,7 @@
 {
   "name": "@eclipse-zenoh/zenoh-ts",
   "version": "0.0.9",
-  "license": "SEE LICENSE IN 'LICENSE'",
+  "license": "(Apache-2.0 OR EPL-2.0)",
   "type": "module",
   "exports": {
     "import": "./dist/index.js",
