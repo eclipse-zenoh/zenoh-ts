@@ -21,7 +21,7 @@ This repository provides a Typscript / Javascript binding through the use of the
 The long term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.  
 In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and will need to undergo a fair amount of refactoring before that can happen.
 
-Docs can be accessed at [Docs Link](https://zettascalelabs.github.io/zenoh-ts/)
+Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 ---
 
@@ -89,11 +89,11 @@ Prerequisites:
 
 The TypeScript library can be install from the command line: 
 
-`npm install @zettascalelabs/zenoh-ts@0.0.8`
+`npm install @eclipse-zenoh/zenoh-ts@0.0.8`
 
 Or added via package.json
 
-`"@zettascalelabs/zenoh-ts": "0.0.8" `
+`"@eclipse-zenoh/zenoh-ts": "0.0.8" `
 
 Note: In order to add this library to your project you must log into the github npm repository,  
 please refer to this link for more information [Accessing github NPM](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-with-a-personal-access-token)

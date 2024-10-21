@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2022 ZettaScale Technology
+# Copyright (c) 2024 ZettaScale Technology
 #
 # This program and the accompanying materials are made available under the
 # terms of the Eclipse Public License 2.0 which is available at
@@ -66,13 +66,13 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '21'
+          node-version: "21"
 
       - name: Run install
         uses: borales/actions-yarn@v4
         with:
           cmd: install
-          dir: 'zenoh-ts' 
+          dir: "zenoh-ts"
 
       - name: Transpile Library
         run: |

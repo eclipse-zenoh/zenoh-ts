@@ -5,11 +5,9 @@ resolver = "1"
 
 [workspace.package]
 version = "1.0.0-dev"
-repository = "https://github.com/zettascalelabs/zenoh-ts"
+repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
-authors = [
-    "Charles Schleich <charles.schleich@zettascale.tech>",
-]
+authors = ["Charles Schleich <charles.schleich@zettascale.tech>"]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming", "database"]
