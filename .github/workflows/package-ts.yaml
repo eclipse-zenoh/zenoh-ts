@@ -32,10 +32,7 @@ jobs:
       NUXT_PUBLIC_VERSION: ${{ inputs.version }}
     strategy:
       fail-fast: false
-      matrix:
-        job:
-          - { name: 'Ubuntu x64', os: 'ubuntu-22.04', arch: X64 }
-    runs-on: ['self-hosted', '${{ matrix.job.os }}', '${{ matrix.job.arch }}']
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
