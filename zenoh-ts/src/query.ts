@@ -56,7 +56,8 @@ export class Queryable {
     Queryable.registry.unregister(this);
   }
   /** 
-   * @hidden user must use new function
+   * Returns a Queryable 
+   * Note! : user must use declare_queryable on a session
    */
   constructor(remote_queryable: RemoteQueryable, callback_queryable: boolean) {
     this._remote_queryable = remote_queryable;
@@ -97,12 +98,6 @@ export class Queryable {
     Queryable.registry.unregister(this);
   }
 
-  /** 
-   * @hidden : user must use declare_queryable
-   */
-  static new(remote_queryable: RemoteQueryable, callback_queryable: boolean): Queryable {
-    return new Queryable(remote_queryable, callback_queryable);
-  }
 }
 
 /**
@@ -116,7 +111,7 @@ export function QueryWS_to_Query(
   let key_expr: KeyExpr = new KeyExpr(query_ws.key_expr);
   let payload: ZBytes | undefined = undefined;
   let attachment: ZBytes | undefined = undefined;
-  let parameters: Parameters = Parameters.new(query_ws.parameters);
+  let parameters: Parameters = new Parameters(query_ws.parameters);
   let encoding: Encoding | undefined = undefined;
 
   if (query_ws.payload != null) {
@@ -129,7 +124,7 @@ export function QueryWS_to_Query(
     encoding = Encoding.from_str(query_ws.encoding);
   }
 
-  return Query.new(
+  return new Query(
     query_ws.query_uuid,
     key_expr,
     parameters,
@@ -160,9 +155,11 @@ export class Query {
   private _reply_tx: SimpleChannel<QueryReplyWS>;
 
   /**
-  * @hidden
-  */
-  private constructor(
+    * New Function Used to Construct Query, 
+    * Note: Users should not need to call this function
+    * But will receieve 'Query's from Queryables 
+    */
+  constructor(
     query_id: UUIDv4,
     key_expr: KeyExpr,
     parameters: Parameters,
@@ -185,7 +182,7 @@ export class Query {
    * @returns Selector
    */
   selector() {
-    return Selector.new(this._key_expr, this._parameters)
+    return new Selector(this._key_expr, this._parameters)
   }
   /**
    * gets the KeyExpr of Query
@@ -276,31 +273,6 @@ export class Query {
     this.reply_ws(qr_variant);
   }
 
-  /**
-    * New Function Used to Construct Query, 
-    * Note: Users should not need to call this function
-    * But will receieve 'Query's from Queryables 
-    * @hidden
-    */
-  static new(
-    query_id: UUIDv4,
-    key_expr: KeyExpr,
-    parameters: Parameters,
-    payload: ZBytes | undefined,
-    attachment: ZBytes | undefined,
-    encoding: Encoding | undefined,
-    reply_tx: SimpleChannel<QueryReplyWS>,
-  ) {
-    return new Query(
-      query_id,
-      key_expr,
-      parameters,
-      payload,
-      attachment,
-      encoding,
-      reply_tx,
-    );
-  }
 }
 
 
@@ -318,9 +290,29 @@ export class Parameters {
 
   private _params: Map<string, string>;
 
-  private constructor(p: Map<string, string>) {
-    this._params = p;
+  // constructor(p: Map<string, string>) {
+  //   this._params = p;
+  // }
+
+  constructor(p: IntoParameters) {
+    if (p instanceof Parameters) {
+      this._params = p._params
+    } else if (p instanceof Map) {
+      this._params = p;
+    } else {
+      const params = new Map<string, string>();
+      if (p.length != 0) {
+        for (const pair of p.split(";") || []) {
+          const [key, value] = pair.split("=");
+          if (key != undefined && value != undefined) {
+            params.set(key, value);
+          }
+        }
+      }
+      this._params = params;
+    }
   }
+
 
   /**
    * removes a key from the parameters
@@ -383,7 +375,7 @@ export class Parameters {
    * @returns void
    */
   extend(other: IntoParameters) {
-    let other_params = Parameters.new(other);
+    let other_params = new Parameters(other);
     for (let [key, value] of other_params._params) {
       this._params.set(key, value)
     }
@@ -403,24 +395,6 @@ export class Parameters {
     return output_string;
   }
 
-  static new(p: IntoParameters): Parameters {
-    if (p instanceof Parameters) {
-      return p
-    } else if (p instanceof Map) {
-      return new Parameters(p);
-    } else {
-      const params = new Map<string, string>();
-      if (p.length != 0) {
-        for (const pair of p.split(";") || []) {
-          const [key, value] = pair.split("=");
-          if (key != undefined && value != undefined) {
-            params.set(key, value);
-          }
-        }
-      }
-      return new Parameters(params);
-    }
-  }
 }
 
 
@@ -448,20 +422,17 @@ export class ReplyError {
     return this._encoding;
   }
 
-  private constructor(payload: ZBytes, encoding: Encoding) {
+  /**
+    * ReplyError gets created by the reply of a `get` on a session
+    * 
+    */
+  constructor(reply_err_ws: ReplyErrorWS) {
+    let payload = new ZBytes(reply_err_ws.payload);
+    let encoding = Encoding.from_str(reply_err_ws.encoding);
     this._encoding = encoding;
     this._payload = payload;
   }
 
-  /**
-    * ReplyError gets created by the reply of a `get` on a session
-    * @hidden
-    */
-  static new(reply_err_ws: ReplyErrorWS): ReplyError {
-    let zbytes = new ZBytes(reply_err_ws.payload);
-    let encoding = Encoding.from_str(reply_err_ws.encoding);
-    return new ReplyError(zbytes, encoding);
-  }
 }
 
 /**
@@ -481,22 +452,15 @@ export class Reply {
   /**
    * @hidden
    */
-  private constructor(result: Sample | ReplyError) {
-    this._result = result;
-  }
-
-  /**
-  * @hidden
-  */
-  static new(reply_ws: ReplyWS): Reply {
+  constructor(reply_ws: ReplyWS) {
     if ("Ok" in reply_ws.result) {
       let sample_ws = reply_ws.result["Ok"];
       let sample = Sample_from_SampleWS(sample_ws);
-      return new Reply(sample);
+      this._result = sample;
     } else {
       let sample_ws_err: ReplyErrorWS = reply_ws.result["Err"];
-      let reply_error = ReplyError.new(sample_ws_err);
-      return new Reply(reply_error);
+      let reply_error = new ReplyError(sample_ws_err);
+      this._result = reply_error;
     }
   }
 }
@@ -536,7 +500,7 @@ export class Selector {
    */
   parameters(): Parameters {
     if (this._parameters == undefined) {
-      return Parameters.new("");
+      return new Parameters("");
     } else {
       return this._parameters;
     }
@@ -546,29 +510,28 @@ export class Selector {
     return this._key_expr.toString + "?" + this._parameters?.toString()
   }
 
-  private constructor(keyexpr: KeyExpr, parameters?: Parameters) {
-    this._key_expr = keyexpr;
-    this._parameters = parameters;
-  }
-
   /**
    * New Function to create a selector from Selector / KeyExpr and Parameters
    * @returns Selector
    */
-  static new(selector: IntoSelector, parameters?: IntoParameters): Selector {
+  constructor(selector: IntoSelector, parameters?: IntoParameters) {
     let key_expr: KeyExpr;
     if (selector instanceof Selector) {
-      return selector;
+      this._key_expr = selector._key_expr;
+      this._parameters = selector._parameters;
+      return ;
     } else if (selector instanceof KeyExpr) {
       key_expr = selector;
     } else {
       key_expr = new KeyExpr(selector);
     }
+    this._key_expr = key_expr;
 
     if (parameters == undefined) {
-      return new Selector(key_expr, Parameters.new(""));
+      this._parameters = new Parameters("")
     } else {
-      return new Selector(key_expr, Parameters.new(parameters));
+      this._parameters = new Parameters(parameters);
     }
   }
+
 }

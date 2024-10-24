@@ -312,16 +312,16 @@ export class Session {
       let split_string = into_selector.split("?")
       if (split_string.length == 1) {
         key_expr = new KeyExpr(into_selector);
-        selector = Selector.new(key_expr);
+        selector = new Selector(key_expr);
       } else if (split_string.length == 2 && split_string[0] != undefined && split_string[1] != undefined) {
         key_expr = new KeyExpr(split_string[0]);
-        let parameters: Parameters = Parameters.new(split_string[1]);
-        selector = Selector.new(key_expr, parameters);
+        let parameters: Parameters = new Parameters(split_string[1]);
+        selector = new Selector(key_expr, parameters);
       } else {
         throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
       }
     } else {
-      selector = Selector.new(into_selector);
+      selector = new Selector(into_selector);
     }
 
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
@@ -362,7 +362,7 @@ export class Session {
         for await (const message of chan) {
           // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
           if (message != undefined && (message as unknown as number) != 0) {
-            let reply = Reply.new(message);
+            let reply = new Reply(message);
             if (callback != undefined) {
               callback(reply);
             }
@@ -475,7 +475,7 @@ export class Session {
       );
     }
 
-    let queryable = Queryable.new(remote_queryable, callback_queryable);
+    let queryable = new Queryable(remote_queryable, callback_queryable);
     return queryable;
   }
 
@@ -595,7 +595,7 @@ export class Receiver {
         return RecvErr.Disconnected;
       } else if (isReplyWS(channel_msg)) {
         // Handle the ReplyWS case
-        let opt_reply = Reply.new(channel_msg);
+        let opt_reply = new Reply(channel_msg);
         if (opt_reply == undefined) {
           return RecvErr.MalformedReply;
         } else {
