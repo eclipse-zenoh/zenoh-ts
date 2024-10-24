@@ -236,7 +236,7 @@ export class Publisher {
     let zbytes: ZBytes = ZBytes.new(payload);
     let _encoding;
     if (encoding != null) {
-      _encoding = Encoding.into_Encoding(encoding);
+      _encoding = Encoding.intoEncoding(encoding);
     } else {
       _encoding = Encoding.default();
     }
