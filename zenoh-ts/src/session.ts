@@ -147,7 +147,7 @@ export class Session {
   // WebSocket Backend
   private remote_session: RemoteSession;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemoteSession> = new FinalizationRegistry((r_session: RemoteSession) => r_session.close());
 
@@ -264,7 +264,7 @@ export class Session {
   }
 
   /** 
-   * @hidden internal function for handlers
+   * @ignore internal function for handlers
   */
   private check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
     [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
@@ -570,11 +570,11 @@ export enum RecvErr {
  */
 export class Receiver {
   /**
-   * @hidden
+   * @ignore
    */
   private receiver: SimpleChannel<ReplyWS | RecvErr>;
   /**
-   * @hidden
+   * @ignore
    */
   private constructor(receiver: SimpleChannel<ReplyWS | RecvErr>) {
     this.receiver = receiver;
@@ -609,7 +609,7 @@ export class Receiver {
   /**
    *  Receiver gets created by `get` call
    * 
-   * @hidden Reply
+   * @ignore Reply
    */
   static new(reply_tx: SimpleChannel<ReplyWS>) {
     return new Receiver(reply_tx);

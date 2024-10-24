@@ -44,12 +44,12 @@ export class Queryable {
   private _remote_queryable: RemoteQueryable;
   private _callback_queryable;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemoteQueryable> = new FinalizationRegistry((r_queryable: RemoteQueryable) => r_queryable.undeclare());
 
   /** 
-   * @hidden
+   * @ignore
    */
   dispose() {
     this.undeclare();
@@ -102,7 +102,7 @@ export class Queryable {
 
 /**
  * Convenience function to convert between QueryWS and Query 
- * @hidden
+ * @ignore
  */
 export function QueryWS_to_Query(
   query_ws: QueryWS,
@@ -450,7 +450,7 @@ export class Reply {
   }
 
   /**
-   * @hidden
+   * @ignore
    */
   constructor(reply_ws: ReplyWS) {
     if ("Ok" in reply_ws.result) {

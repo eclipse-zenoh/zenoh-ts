@@ -41,26 +41,26 @@ import { Encoding, IntoEncoding } from "./encoding";
 
 export class Subscriber {
   /**
-   * @hidden 
+   * @ignore 
    */
   private remote_subscriber: RemoteSubscriber;
   /**
-   * @hidden 
+   * @ignore 
    */
   private callback_subscriber: boolean;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemoteSubscriber> = new FinalizationRegistry((r_subscriber: RemoteSubscriber) => r_subscriber.undeclare());
   /**
-   * @hidden 
+   * @ignore 
    */
   dispose() {
     this.undeclare();
     Subscriber.registry.unregister(this);
   }
   /**
-   * @hidden 
+   * @ignore 
    */
   constructor(
     remote_subscriber: RemoteSubscriber,
@@ -107,7 +107,7 @@ export class Subscriber {
    * Create a new subscriber, 
    * note : This function should never be called directly by the user
    * please use `declare_subscriber` on a session to create a subscriber
-   * @hidden
+   * @ignore
    */
   static async new(
     remote_subscriber: RemoteSubscriber,
@@ -129,7 +129,7 @@ export enum ChannelType {
 
 /**
  * General interface for a Handler, not to be exposed by the user
- * @hidden
+ * @ignore
  */
 export interface Handler {
   size: number;
@@ -177,12 +177,12 @@ export class Publisher {
   private _reliability: Reliability;
   private _encoding: Encoding;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemotePublisher> = new FinalizationRegistry((r_publisher: RemotePublisher) => r_publisher.undeclare());
 
   /** 
-   * @hidden 
+   * @ignore 
    */
   dispose() {
     this.undeclare();
