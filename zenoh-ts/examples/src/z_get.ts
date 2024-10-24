@@ -20,7 +20,7 @@ import "./webpage.ts";
 import { Config, Receiver, RecvErr, Reply, Sample, Session } from "@ZettaScaleLabs/zenoh-ts";
 
 export async function get() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
 
   // Callback get query
   const get_callback = async function (reply: Reply): Promise<void> {

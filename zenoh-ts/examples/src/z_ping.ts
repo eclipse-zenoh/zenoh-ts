@@ -19,7 +19,7 @@ import "./webpage.ts";
 import { Encoding, CongestionControl, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
 
 export async function ping() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
 
   let sub = await session.declare_subscriber("test/pong", new FifoChannel(256));
   let pub = session.declare_publisher(

@@ -20,7 +20,7 @@ import {
 } from "@ZettaScaleLabs/zenoh-ts";
 
 export async function sub() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
 
   const callback = async function (sample: Sample): Promise<void> {
     console.log!(
@@ -31,7 +31,7 @@ export async function sub() {
     );
   };
 
-  let key_expr = KeyExpr.new("demo/example/zenoh-ts-sub");
+  let key_expr = new KeyExpr("demo/example/zenoh-ts-sub");
   console.log("Declare Subscriber ", key_expr.toString());
   // Callback Subscriber take a callback which will be called upon every sample received.
   let callback_subscriber: Subscriber = await session.declare_subscriber(

@@ -305,7 +305,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 
   let payload = ZBytes.new(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
 
-  let key_exr = KeyExpr.new(sample_ws.key_expr);
+  let key_exr = new KeyExpr(sample_ws.key_expr);
 
   let encoding = Encoding.from_str(sample_ws.encoding);
 

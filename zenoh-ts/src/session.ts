@@ -201,7 +201,7 @@ export class Session {
     into_zbytes: IntoZBytes,
     put_opts?: PutOpts,
   ): void {
-    let key_expr = KeyExpr.new(into_key_expr);
+    let key_expr = new KeyExpr(into_key_expr);
     let z_bytes = ZBytes.new(into_zbytes);
 
     let _priority;
@@ -244,7 +244,7 @@ export class Session {
     into_key_expr: IntoKeyExpr,
     delete_opts?: DeleteOpts
   ): void {
-    let key_expr = KeyExpr.new(into_key_expr);
+    let key_expr = new KeyExpr(into_key_expr);
     let _congestion_control = congestion_control_to_int(delete_opts?.congestion_control);
     let _priority = priority_to_int(delete_opts?.priority);
     let _express = delete_opts?.express;
@@ -311,10 +311,10 @@ export class Session {
     if (typeof into_selector === "string" || into_selector instanceof String) {
       let split_string = into_selector.split("?")
       if (split_string.length == 1) {
-        key_expr = KeyExpr.new(into_selector);
+        key_expr = new KeyExpr(into_selector);
         selector = Selector.new(key_expr);
       } else if (split_string.length == 2 && split_string[0] != undefined && split_string[1] != undefined) {
-        key_expr = KeyExpr.new(split_string[0]);
+        key_expr = new KeyExpr(split_string[0]);
         let parameters: Parameters = Parameters.new(split_string[1]);
         selector = Selector.new(key_expr, parameters);
       } else {
@@ -393,7 +393,7 @@ export class Session {
     key_expr: IntoKeyExpr,
     handler: ((sample: Sample) => Promise<void>) | Handler = new FifoChannel(256),
   ): Promise<Subscriber> {
-    let _key_expr = KeyExpr.new(key_expr);
+    let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
     let callback_subscriber = false;
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
@@ -440,7 +440,7 @@ export class Session {
     key_expr: IntoKeyExpr,
     queryable_opts?: QueryableOpts
   ): Promise<Queryable> {
-    let _key_expr = KeyExpr.new(key_expr);
+    let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
     let reply_tx: SimpleChannel<QueryReplyWS> =
       new SimpleChannel<QueryReplyWS>();
@@ -493,7 +493,7 @@ export class Session {
     keyexpr: IntoKeyExpr,
     publisher_opts: PublisherOptions
   ): Publisher {
-    let _key_expr: KeyExpr = KeyExpr.new(keyexpr);
+    let _key_expr: KeyExpr = new KeyExpr(keyexpr);
 
     let _express = publisher_opts?.express;
 

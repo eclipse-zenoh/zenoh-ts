@@ -113,7 +113,7 @@ export function QueryWS_to_Query(
   query_ws: QueryWS,
   reply_tx: SimpleChannel<QueryReplyWS>,
 ): Query {
-  let key_expr: KeyExpr = KeyExpr.new(query_ws.key_expr);
+  let key_expr: KeyExpr = new KeyExpr(query_ws.key_expr);
   let payload: ZBytes | undefined = undefined;
   let attachment: ZBytes | undefined = undefined;
   let parameters: Parameters = Parameters.new(query_ws.parameters);
@@ -239,7 +239,7 @@ export class Query {
     * @returns void
     */
   reply(key_expr: IntoKeyExpr, payload: IntoZBytes): void {
-    let _key_expr: KeyExpr = KeyExpr.new(key_expr);
+    let _key_expr: KeyExpr = new KeyExpr(key_expr);
     let z_bytes: ZBytes = ZBytes.new(payload);
     let qr_variant: QueryReplyVariant = {
       Reply: {
@@ -269,7 +269,7 @@ export class Query {
     * @returns void
     */
   reply_del(key_expr: IntoKeyExpr): void {
-    let _key_expr: KeyExpr = KeyExpr.new(key_expr);
+    let _key_expr: KeyExpr = new KeyExpr(key_expr);
     let qr_variant: QueryReplyVariant = {
       ReplyDelete: { key_expr: _key_expr.toString() },
     };
@@ -562,7 +562,7 @@ export class Selector {
     } else if (selector instanceof KeyExpr) {
       key_expr = selector;
     } else {
-      key_expr = KeyExpr.new(selector);
+      key_expr = new KeyExpr(selector);
     }
 
     if (parameters == undefined) {

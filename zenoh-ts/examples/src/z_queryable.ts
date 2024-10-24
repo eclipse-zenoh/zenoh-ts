@@ -19,8 +19,8 @@ import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@ZettaScaleL
 
 
 export async function queryable() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
-  let key_expr = KeyExpr.new("demo/example/zenoh-ts-queryable");
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
+  let key_expr = new KeyExpr("demo/example/zenoh-ts-queryable");
   console.log("Declare Queryable on KeyExpr:", key_expr.toString());
 
   const payload = [122, 101, 110, 111, 104];
