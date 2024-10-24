@@ -147,7 +147,7 @@ export function priority_from_int(prio_u8: number): Priority {
     case 7:
       return Priority.BACKGROUND;
     default:
-      console.log("Unknown Priority Variant, default to Data");
+      console.warn("Unknown Priority Variant, default to Data");
       return Priority.DATA;
   }
 }
@@ -334,7 +334,7 @@ export function SampleWS_from_Sample(
   } else if (sample.kind() == SampleKind.PUT) {
     sample_kind = "Put";
   } else {
-    console.log(
+    console.warn(
       "Sample Kind not PUT | DELETE, defaulting to PUT: ",
       sample.kind(),
     );

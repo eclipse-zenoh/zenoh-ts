@@ -21,7 +21,7 @@ import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@ZettaScaleL
 export async function queryable() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
   let key_expr = new KeyExpr("demo/example/zenoh-ts-queryable");
-  console.log("Declare Queryable on KeyExpr:", key_expr.toString());
+  console.warn("Declare Queryable on KeyExpr:", key_expr.toString());
 
   const payload = [122, 101, 110, 111, 104];
 
@@ -30,14 +30,14 @@ export async function queryable() {
     let zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == null) {
-      console.log!(`>> [Queryable ] Received Query ${query.selector()}`);
+      console.warn!(`>> [Queryable ] Received Query ${query.selector()}`);
     } else {
-      console.log!(
+      console.warn!(
         `>> [Queryable ] Received Query ${query.selector()} with payload '${zbytes}'`,
       );
     }
 
-    console.log(
+    console.warn(
       `>> [Queryable ] Responding ${key_expr.toString()} with payload '${payload}'`,
     );
     query.reply(key_expr, payload);
@@ -62,14 +62,14 @@ export async function queryable() {
     let zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == null) {
-      console.log!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
+      console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
     } else {
-      console.log!(
+      console.warn!(
         `>> [Queryable ] Received Query ${query.selector()} with payload '${zbytes.buffer()}'`,
       );
     }
 
-    console.log(
+    console.warn(
       `>> [Queryable ] Responding ${key_expr.toString()} with payload '${payload}'`,
     );
     query.reply(key_expr, payload);

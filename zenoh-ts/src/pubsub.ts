@@ -81,7 +81,7 @@ export class Subscriber {
    */
   async receive(): Promise<Sample | void> {
     if (this.callback_subscriber === true) {
-      console.log("Cannot call `receive()` on Subscriber created with callback:");
+      console.warn("Cannot call `receive()` on Subscriber created with callback:");
       return;
     }
 
@@ -90,7 +90,7 @@ export class Subscriber {
     if (opt_sample_ws != undefined) {
       return Sample_from_SampleWS(opt_sample_ws);
     } else {
-      console.log("Receieve returned unexpected void from RemoteSubscriber");
+      console.warn("Receieve returned unexpected void from RemoteSubscriber");
       return;
     }
   }

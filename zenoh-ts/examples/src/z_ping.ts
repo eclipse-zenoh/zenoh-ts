@@ -31,7 +31,7 @@ export async function ping() {
   );
 
   // Warm up
-  console.log("Warming up for 5 seconds...");
+  console.warn("Warming up for 5 seconds...");
 
   let startTime = new Date();
   let data = [122, 101, 110, 111, 104];
@@ -52,7 +52,7 @@ export async function ping() {
 
   for (let i = 0; i < samples_out.length; i++) {
     let rtt = samples_out[i];
-    console.log(
+    console.warn(
       data.length +
       "bytes: seq=" +
       i +

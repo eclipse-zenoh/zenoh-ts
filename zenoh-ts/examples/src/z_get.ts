@@ -27,14 +27,14 @@ export async function get() {
     let resp = reply.result();
     if (resp instanceof Sample) {
       let sample: Sample = resp;
-      console.log(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
+      console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
     } else {
       let reply_error: ReplyError = resp;
-      console.log(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
+      console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
     }
   };
 
-  console.log("Start z_get")
+  console.warn("Start z_get")
   await session.get("demo/example/**", get_callback);
 
   // Poll receiever
@@ -46,15 +46,15 @@ export async function get() {
   let reply = await receiver.receive();
   while (reply != RecvErr.Disconnected) {
     if (reply == RecvErr.MalformedReply) {
-      console.log("MalformedReply");
+      console.warn("MalformedReply");
     } else {
       let resp = reply.result();
       if (resp instanceof Sample) {
         let sample: Sample = resp;
-        console.log(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
+        console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
       } else {
         let reply_error: ReplyError = resp;
-        console.log(">> Received (ERROR: '{", reply_error.payload().deserialize(deserialize_string), "}')");
+        console.warn(">> Received (ERROR: '{", reply_error.payload().deserialize(deserialize_string), "}')");
       }
     }
     reply = await receiver.receive();

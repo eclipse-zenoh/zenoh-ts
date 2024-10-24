@@ -119,7 +119,7 @@ export class RemoteSession {
         websocket_connected = true;
       } else {
         ws = new WebSocket(websocket_endpoint);
-        console.log("Restart connection");
+        console.warn("Restart connection");
       }
     }
 
@@ -348,7 +348,7 @@ export class RemoteSession {
       ) as RemoteAPIMsg;
 
       if ("Session" in remote_api_message) {
-        console.log("Continue Ignore Session Messages");
+        console.warn("Continue Ignore Session Messages");
         continue;
       } else if ("Control" in remote_api_message) {
         this.handle_control_message(remote_api_message["Control"]);
@@ -363,12 +363,12 @@ export class RemoteSession {
         );
       }
     }
-    console.log("Closed");
+    console.warn("Closed");
   }
 
   private async handle_control_message(control_msg: ControlMsg) {
     if (typeof control_msg === "string") {
-      console.log("unhandled Control Message:", control_msg);
+      console.warn("unhandled Control Message:", control_msg);
     } else if (typeof control_msg === "object") {
       if ("Session" in control_msg) {
         this.session = control_msg["Session"];
@@ -391,7 +391,7 @@ export class RemoteSession {
         let sample: SampleWS = data_msg["Sample"][0];
         channel.send(sample);
       } else {
-        console.log("Subscrption UUID not in map", subscription_uuid);
+        console.warn("Subscrption UUID not in map", subscription_uuid);
       }
     } else if ("GetReply" in data_msg) {
       let get_reply: ReplyWS = data_msg["GetReply"];
@@ -412,17 +412,17 @@ export class RemoteSession {
           let query = queryable_msg.Query.query;
           channel.send(query);
         } else {
-          console.log("Queryable Message UUID not in map", queryable_uuid);
+          console.warn("Queryable Message UUID not in map", queryable_uuid);
         }
       } else if ("Reply" in queryable_msg) {
         // Server
-        console.log("Client should not receive Reply in Queryable Message");
-        console.log("Replies to get queries should come via Get Reply");
+        console.warn("Client should not receive Reply in Queryable Message");
+        console.warn("Replies to get queries should come via Get Reply");
       } else {
-        console.log("Queryable message Variant not recognized");
+        console.warn("Queryable message Variant not recognized");
       }
     } else {
-      console.log("Data Message not recognized Expected Variant", data_msg);
+      console.warn("Data Message not recognized Expected Variant", data_msg);
     }
   }
 }

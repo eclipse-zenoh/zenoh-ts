@@ -73,7 +73,7 @@ export class Queryable {
 
     if (this._callback_queryable === true) {
       let message = "Cannot call `receive()` on Subscriber created with callback:";
-      console.log(message);
+      console.warn(message);
       return
     }
 
@@ -84,7 +84,7 @@ export class Queryable {
       let reply_tx = opt_query_ws[1];
       return QueryWS_to_Query(query_ws, reply_tx);
     } else {
-      console.log("Receieve returned unexpected void from RemoteQueryable");
+      console.warn("Receieve returned unexpected void from RemoteQueryable");
       return;
     }
   }

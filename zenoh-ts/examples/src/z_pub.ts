@@ -37,8 +37,8 @@ export async function pub() {
   for (let idx = 0; idx < Number.MAX_VALUE; idx++) {
     let buf = `[${idx}] ${payload}`;
 
-    console.log("Block statement execution no : " + idx);
-    console.log(`Putting Data ('${key_expr}': '${buf}')...`);
+    console.warn("Block statement execution no : " + idx);
+    console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
     publisher.put(buf, Encoding.TEXT_PLAIN, "attachment");
     await sleep(1000);
 
