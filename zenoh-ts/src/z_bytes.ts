@@ -30,8 +30,23 @@ export type IntoZBytes =
 export class ZBytes {
   private _buffer: Uint8Array;
 
-  private constructor(buffer: Uint8Array) {
-    this._buffer = buffer;
+  /**
+   * new function to create a ZBytes 
+   * 
+   * @returns ZBytes
+   */
+  constructor(bytes: IntoZBytes) {
+    if (bytes instanceof ZBytes) {
+      this._buffer = bytes._buffer;
+    } else if (bytes instanceof String || typeof bytes === "string") {
+      const encoder = new TextEncoder();
+      const encoded = encoder.encode(bytes.toString());
+      this._buffer = encoded;
+    } else if (typeof bytes === "boolean") {
+      this._buffer = Uint8Array.from([bytes === true ? 1 : 0]);
+    } else {
+      this._buffer = Uint8Array.from(bytes);
+    }
   }
 
   /**
@@ -74,24 +89,6 @@ export class ZBytes {
     return func(this._buffer);
   }
 
-  /**
-   * new function to create a ZBytes 
-   * 
-   * @returns ZBytes
-   */
-  static new(bytes: IntoZBytes): ZBytes {
-    if (bytes instanceof ZBytes) {
-      return bytes;
-    } else if (bytes instanceof String || typeof bytes === "string") {
-      const encoder = new TextEncoder();
-      const encoded = encoder.encode(bytes.toString());
-      return new ZBytes(encoded);
-    } else if (typeof bytes === "boolean") {
-      return new ZBytes(Uint8Array.from([bytes === true ? 1 : 0]));
-    } else {
-      return new ZBytes(Uint8Array.from(bytes));
-    }
-  }
 }
 
 /**

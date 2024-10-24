@@ -120,10 +120,10 @@ export function QueryWS_to_Query(
   let encoding: Encoding | undefined = undefined;
 
   if (query_ws.payload != null) {
-    payload = ZBytes.new(query_ws.payload);
+    payload = new ZBytes(query_ws.payload);
   }
   if (query_ws.attachment != null) {
-    attachment = ZBytes.new(query_ws.attachment);
+    attachment = new ZBytes(query_ws.attachment);
   }
   if (query_ws.encoding != null) {
     encoding = Encoding.from_str(query_ws.encoding);
@@ -240,7 +240,7 @@ export class Query {
     */
   reply(key_expr: IntoKeyExpr, payload: IntoZBytes): void {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
-    let z_bytes: ZBytes = ZBytes.new(payload);
+    let z_bytes: ZBytes = new ZBytes(payload);
     let qr_variant: QueryReplyVariant = {
       Reply: {
         key_expr: _key_expr.toString(),
@@ -256,7 +256,7 @@ export class Query {
   * @returns void
   */
   reply_err(payload: IntoZBytes): void {
-    let z_bytes: ZBytes = ZBytes.new(payload);
+    let z_bytes: ZBytes = new ZBytes(payload);
     let qr_variant: QueryReplyVariant = {
       ReplyErr: { payload: b64_str_from_bytes(z_bytes.buffer()) },
     };
@@ -458,7 +458,7 @@ export class ReplyError {
     * @hidden
     */
   static new(reply_err_ws: ReplyErrorWS): ReplyError {
-    let zbytes = ZBytes.new(reply_err_ws.payload);
+    let zbytes = new ZBytes(reply_err_ws.payload);
     let encoding = Encoding.from_str(reply_err_ws.encoding);
     return new ReplyError(zbytes, encoding);
   }

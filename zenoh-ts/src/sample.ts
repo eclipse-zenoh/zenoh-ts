@@ -244,7 +244,7 @@ export class Sample {
     return this._attachment;
   }
 
-  private constructor(
+  constructor(
     keyexpr: KeyExpr,
     payload: ZBytes,
     kind: SampleKind,
@@ -266,29 +266,6 @@ export class Sample {
     this._attachment = attachment;
   }
 
-  static new(
-    key_expr: KeyExpr,
-    payload: ZBytes,
-    kind: SampleKind,
-    encoding: Encoding,
-    priority: Priority,
-    timestamp: string | undefined,
-    congestion_control: CongestionControl,
-    express: boolean,
-    attachment: ZBytes | undefined,
-  ): Sample {
-    return new Sample(
-      key_expr,
-      payload,
-      kind,
-      encoding,
-      priority,
-      timestamp,
-      congestion_control,
-      express,
-      attachment,
-    );
-  }
 }
 
 
@@ -303,7 +280,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
     sample_kind = SampleKind.PUT;
   }
 
-  let payload = ZBytes.new(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
+  let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
 
   let key_exr = new KeyExpr(sample_ws.key_expr);
 
@@ -321,10 +298,10 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 
   let attachment = undefined;
   if (sample_ws.attachement != undefined) {
-    attachment = ZBytes.new(new Uint8Array(b64_bytes_from_str(sample_ws.attachement)));
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.attachement)));
   }
 
-  return Sample.new(
+  return new Sample(
     key_exr,
     payload,
     sample_kind,

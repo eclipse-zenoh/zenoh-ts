@@ -189,10 +189,21 @@ export class Publisher {
     Publisher.registry.unregister(this);
   }
 
-  /** 
-   * @hidden 
+  /**
+   * Creates a new Publisher on a session
+   *  Note: this should never be called directly by the user. 
+   *  please use `declare_publisher` on a session.
+   * 
+   * @param {KeyExpr} key_expr -  A Key Expression
+   * @param {RemotePublisher} remote_publisher -  A Session to create the publisher on
+   * @param {CongestionControl} congestion_control -  Congestion control 
+   * @param {Priority} priority -  Priority for Zenoh Data
+   * @param {Reliability} reliability - Reliability for publishing data
+   * 
+   * @returns {Publisher} a new  instance of a publisher 
+   * 
    */
-  private constructor(
+  constructor(
     remote_publisher: RemotePublisher,
     key_expr: KeyExpr,
     congestion_control: CongestionControl,
@@ -233,7 +244,7 @@ export class Publisher {
     encoding?: IntoEncoding,
     attachment?: IntoZBytes,
   ): void {
-    let zbytes: ZBytes = ZBytes.new(payload);
+    let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     if (encoding != null) {
       _encoding = Encoding.intoEncoding(encoding);
@@ -243,7 +254,7 @@ export class Publisher {
 
     let _attachment = null;
     if (attachment != null) {
-      let att_bytes = ZBytes.new(attachment);
+      let att_bytes = new ZBytes(attachment);
       _attachment = Array.from(att_bytes.buffer());
     }
 
@@ -300,35 +311,4 @@ export class Publisher {
     Publisher.registry.unregister(this);
   }
 
-  /**
-   * Creates a new Publisher on a session
-   *  Note: this should never be called directly by the user. 
-   *  please use `declare_publisher` on a session.
-   * 
-   * @param {KeyExpr} key_expr -  A Key Expression
-   * @param {RemotePublisher} remote_publisher -  A Session to create the publisher on
-   * @param {CongestionControl} congestion_control -  Congestion control 
-   * @param {Priority} priority -  Priority for Zenoh Data
-   * @param {Reliability} reliability - Reliability for publishing data
-   * 
-   * @returns a new Publisher instance
-   * @hidden 
-   */
-  static new(
-    key_expr: KeyExpr,
-    remote_publisher: RemotePublisher,
-    congestion_control: CongestionControl,
-    priority: Priority,
-    reliability: Reliability,
-    encoding: Encoding,
-  ): Publisher {
-    return new Publisher(
-      remote_publisher,
-      key_expr,
-      congestion_control,
-      priority,
-      reliability,
-      encoding
-    );
-  }
 }

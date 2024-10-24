@@ -202,7 +202,7 @@ export class Session {
     put_opts?: PutOpts,
   ): void {
     let key_expr = new KeyExpr(into_key_expr);
-    let z_bytes = ZBytes.new(into_zbytes);
+    let z_bytes = new ZBytes(into_zbytes);
 
     let _priority;
     let _express;
@@ -218,7 +218,7 @@ export class Session {
     _express = put_opts?.express?.valueOf();
 
     if (put_opts?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(put_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(put_opts?.attachment).buffer())
     }
 
     this.remote_session.put(
@@ -251,7 +251,7 @@ export class Session {
     let _attachment
 
     if (delete_opts?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(delete_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(delete_opts?.attachment).buffer())
     }
 
     this.remote_session.delete(
@@ -336,10 +336,10 @@ export class Session {
     let _payload;
 
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(ZBytes.new(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
     }
 
     let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
@@ -534,9 +534,9 @@ export class Session {
         _reliability
       );
 
-    let publisher: Publisher = Publisher.new(
-      _key_expr,
+    let publisher: Publisher = new Publisher(
       remote_publisher,
+      _key_expr,
       congestion_control,
       priority,
       reliability,
