@@ -34,7 +34,7 @@ import {
   Selector,
 } from "./query";
 import { SimpleChannel } from "channel-ts";
-import { ChannelType, FifoChannel, Handler, Publisher, RingChannel, Subscriber } from "./pubsub";
+import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -417,11 +417,12 @@ export class Session {
         handler_type,
       );
     }
-
-    let subscriber = await Subscriber.new(
+    
+    let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       callback_subscriber,
     );
+
     return subscriber;
   }
 

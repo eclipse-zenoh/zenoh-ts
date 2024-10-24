@@ -34,6 +34,7 @@ import { Encoding, IntoEncoding } from "./encoding";
 // ███████  ██████  ██████  ███████  ██████ ██   ██ ██ ██████  ███████ ██   ██
 
 
+export const NewSubscriber = Symbol();
 /**
  * Class to represent a Subscriber on Zenoh, 
  * created via calling `declare_subscriber()` on a `session`
@@ -62,7 +63,7 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  constructor(
+  private constructor(
     remote_subscriber: RemoteSubscriber,
     callback_subscriber: boolean,
   ) {
@@ -109,10 +110,10 @@ export class Subscriber {
    * please use `declare_subscriber` on a session to create a subscriber
    * @ignore
    */
-  static async new(
+  static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
     callback_subscriber: boolean,
-  ): Promise<Subscriber> {
+  ): Subscriber {
     return new Subscriber(remote_subscriber, callback_subscriber);
   }
 }
