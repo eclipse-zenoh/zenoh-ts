@@ -66,7 +66,7 @@ function executeAsync(func: any) {
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
 */
 
-export interface PutOpts {
+export interface PutOptions {
   encoding?: Encoding,
   congestion_control?: CongestionControl,
   priority?: Priority,
@@ -81,7 +81,7 @@ export interface PutOpts {
  * @prop {boolean=} express  - Express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
 */
-export interface DeleteOpts {
+export interface DeleteOptions {
   congestion_control?: CongestionControl,
   priority?: Priority,
   express?: boolean,
@@ -113,7 +113,7 @@ export interface GetOptions {
  * @prop complete - Change queryable completeness.
  * @prop callback - Callback function for this queryable
 */
-export interface QueryableOpts {
+export interface QueryableOptions {
   complete?: boolean,
   callback?: (query: Query) => void,
 }
@@ -172,9 +172,8 @@ export class Session {
    *
    */
 
-  static async open(config: Promise<Config> | Config): Promise<Session> {
-    const cfg = await config;
-    let remote_session = await RemoteSession.new(cfg.locator);
+  static async open(config: Config): Promise<Session> {
+    let remote_session = await RemoteSession.new(config.locator);
     return new Session(remote_session);
   }
 
@@ -193,13 +192,13 @@ export class Session {
    *
    * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
    * @param {IntoZBytes} into_zbytes - something that implements intoValue
-   * @param {PutOpts=} put_opts - an interface for the options settings on puts 
+   * @param {PutOptions=} put_opts - an interface for the options settings on puts 
    * @returns void
    */
   put(
     into_key_expr: IntoKeyExpr,
     into_zbytes: IntoZBytes,
-    put_opts?: PutOpts,
+    put_opts?: PutOptions,
   ): void {
     let key_expr = new KeyExpr(into_key_expr);
     let z_bytes = new ZBytes(into_zbytes);
@@ -236,13 +235,13 @@ export class Session {
    * Executes a Delete on a session, for a specific key expression KeyExpr
    *
    * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
-   * @param {DeleteOpts} delete_opts - optional additional parameters to go with a delete function
+   * @param {DeleteOptions} delete_opts - optional additional parameters to go with a delete function
    *
    * @returns void
    */
   delete(
     into_key_expr: IntoKeyExpr,
-    delete_opts?: DeleteOpts
+    delete_opts?: DeleteOptions
   ): void {
     let key_expr = new KeyExpr(into_key_expr);
     let _congestion_control = congestion_control_to_int(delete_opts?.congestion_control);
@@ -433,13 +432,13 @@ export class Session {
   *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
   * 
   * @param {IntoKeyExpr} key_expr - string of key_expression
-  * @param {QueryableOpts=} queryable_opts - Optional additional settings for a Queryable [QueryableOpts]
+  * @param {QueryableOptions=} queryable_opts - Optional additional settings for a Queryable [QueryableOptions]
   *
   * @returns Queryable
   */
   async declare_queryable(
     key_expr: IntoKeyExpr,
-    queryable_opts?: QueryableOpts
+    queryable_opts?: QueryableOptions
   ): Promise<Queryable> {
     let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
