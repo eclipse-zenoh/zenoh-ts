@@ -12,12 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError } from "@ZettaScaleLabs/zenoh-ts";
-import { deserialize_string } from "@ZettaScaleLabs/zenoh-ts";
+import { ReplyError } from "@eclipse-zenoh/zenoh-ts";
+import { deserialize_string } from "@eclipse-zenoh/zenoh-ts";
 import "./style.css";
 import "./webpage.ts";
 
-import { Config, Receiver, RecvErr, Reply, Sample, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Config, Receiver, RecvErr, Reply, Sample, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function get() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));

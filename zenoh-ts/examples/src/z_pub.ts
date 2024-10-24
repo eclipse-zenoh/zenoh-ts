@@ -15,7 +15,7 @@
 import "./style.css";
 import "./webpage.ts";
 
-import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function pub() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));

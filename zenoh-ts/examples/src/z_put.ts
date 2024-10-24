@@ -14,7 +14,7 @@
 
 import "./style.css";
 import "./webpage.ts";
-import { Config, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function put() {
   console.warn('Running Zenoh Put !');

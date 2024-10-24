@@ -15,7 +15,7 @@
 import "./style.css";
 import "./webpage.ts";
 
-import { Config, Session, Sample } from "@ZettaScaleLabs/zenoh-ts";
+import { Config, Session, Sample } from "@eclipse-zenoh/zenoh-ts";
 
 // Throughput test
 class Stats {

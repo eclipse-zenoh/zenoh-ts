@@ -17,7 +17,7 @@ import "./webpage.ts";
 
 import {
   RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr
-} from "@ZettaScaleLabs/zenoh-ts";
+} from "@eclipse-zenoh/zenoh-ts";
 
 export async function sub() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));

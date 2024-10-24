@@ -15,7 +15,7 @@
 import "./style.css";
 import "./webpage.ts";
 
-import { Encoding, CongestionControl, Sample, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Encoding, CongestionControl, Sample, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function pong() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));

@@ -12,11 +12,11 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { FifoChannel } from "@ZettaScaleLabs/zenoh-ts";
+import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
 import "./style.css";
 import "./webpage.ts";
 
-import { Encoding, CongestionControl, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function ping() {
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));

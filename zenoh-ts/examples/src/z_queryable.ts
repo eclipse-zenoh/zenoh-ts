@@ -15,7 +15,7 @@
 import "./style.css";
 import "./webpage.ts";
 
-import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@ZettaScaleLabs/zenoh-ts";
+import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@eclipse-zenoh/zenoh-ts";
 
 
 export async function queryable() {
