@@ -34,6 +34,7 @@ import { Encoding, IntoEncoding } from "./encoding";
 // ███████  ██████  ██████  ███████  ██████ ██   ██ ██ ██████  ███████ ██   ██
 
 
+export const NewSubscriber = Symbol();
 /**
  * Class to represent a Subscriber on Zenoh, 
  * created via calling `declare_subscriber()` on a `session`
@@ -41,28 +42,28 @@ import { Encoding, IntoEncoding } from "./encoding";
 
 export class Subscriber {
   /**
-   * @hidden 
+   * @ignore 
    */
   private remote_subscriber: RemoteSubscriber;
   /**
-   * @hidden 
+   * @ignore 
    */
   private callback_subscriber: boolean;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemoteSubscriber> = new FinalizationRegistry((r_subscriber: RemoteSubscriber) => r_subscriber.undeclare());
   /**
-   * @hidden 
+   * @ignore 
    */
   dispose() {
     this.undeclare();
     Subscriber.registry.unregister(this);
   }
   /**
-   * @hidden 
+   * @ignore 
    */
-  constructor(
+  private constructor(
     remote_subscriber: RemoteSubscriber,
     callback_subscriber: boolean,
   ) {
@@ -80,7 +81,7 @@ export class Subscriber {
    */
   async receive(): Promise<Sample | void> {
     if (this.callback_subscriber === true) {
-      console.log("Cannot call `receive()` on Subscriber created with callback:");
+      console.warn("Cannot call `receive()` on Subscriber created with callback:");
       return;
     }
 
@@ -89,7 +90,7 @@ export class Subscriber {
     if (opt_sample_ws != undefined) {
       return Sample_from_SampleWS(opt_sample_ws);
     } else {
-      console.log("Receieve returned unexpected void from RemoteSubscriber");
+      console.warn("Receieve returned unexpected void from RemoteSubscriber");
       return;
     }
   }
@@ -107,12 +108,12 @@ export class Subscriber {
    * Create a new subscriber, 
    * note : This function should never be called directly by the user
    * please use `declare_subscriber` on a session to create a subscriber
-   * @hidden
+   * @ignore
    */
-  static async new(
+  static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
     callback_subscriber: boolean,
-  ): Promise<Subscriber> {
+  ): Subscriber {
     return new Subscriber(remote_subscriber, callback_subscriber);
   }
 }
@@ -129,7 +130,7 @@ export enum ChannelType {
 
 /**
  * General interface for a Handler, not to be exposed by the user
- * @hidden
+ * @ignore
  */
 export interface Handler {
   size: number;
@@ -177,22 +178,33 @@ export class Publisher {
   private _reliability: Reliability;
   private _encoding: Encoding;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemotePublisher> = new FinalizationRegistry((r_publisher: RemotePublisher) => r_publisher.undeclare());
 
   /** 
-   * @hidden 
+   * @ignore 
    */
   dispose() {
     this.undeclare();
     Publisher.registry.unregister(this);
   }
 
-  /** 
-   * @hidden 
+  /**
+   * Creates a new Publisher on a session
+   *  Note: this should never be called directly by the user. 
+   *  please use `declare_publisher` on a session.
+   * 
+   * @param {KeyExpr} key_expr -  A Key Expression
+   * @param {RemotePublisher} remote_publisher -  A Session to create the publisher on
+   * @param {CongestionControl} congestion_control -  Congestion control 
+   * @param {Priority} priority -  Priority for Zenoh Data
+   * @param {Reliability} reliability - Reliability for publishing data
+   * 
+   * @returns {Publisher} a new  instance of a publisher 
+   * 
    */
-  private constructor(
+  constructor(
     remote_publisher: RemotePublisher,
     key_expr: KeyExpr,
     congestion_control: CongestionControl,
@@ -233,17 +245,17 @@ export class Publisher {
     encoding?: IntoEncoding,
     attachment?: IntoZBytes,
   ): void {
-    let zbytes: ZBytes = ZBytes.new(payload);
+    let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     if (encoding != null) {
-      _encoding = Encoding.into_Encoding(encoding);
+      _encoding = Encoding.intoEncoding(encoding);
     } else {
       _encoding = Encoding.default();
     }
 
     let _attachment = null;
     if (attachment != null) {
-      let att_bytes = ZBytes.new(attachment);
+      let att_bytes = new ZBytes(attachment);
       _attachment = Array.from(att_bytes.buffer());
     }
 
@@ -300,35 +312,4 @@ export class Publisher {
     Publisher.registry.unregister(this);
   }
 
-  /**
-   * Creates a new Publisher on a session
-   *  Note: this should never be called directly by the user. 
-   *  please use `declare_publisher` on a session.
-   * 
-   * @param {KeyExpr} key_expr -  A Key Expression
-   * @param {RemotePublisher} remote_publisher -  A Session to create the publisher on
-   * @param {CongestionControl} congestion_control -  Congestion control 
-   * @param {Priority} priority -  Priority for Zenoh Data
-   * @param {Reliability} reliability - Reliability for publishing data
-   * 
-   * @returns a new Publisher instance
-   * @hidden 
-   */
-  static new(
-    key_expr: KeyExpr,
-    remote_publisher: RemotePublisher,
-    congestion_control: CongestionControl,
-    priority: Priority,
-    reliability: Reliability,
-    encoding: Encoding,
-  ): Publisher {
-    return new Publisher(
-      remote_publisher,
-      key_expr,
-      congestion_control,
-      priority,
-      reliability,
-      encoding
-    );
-  }
 }

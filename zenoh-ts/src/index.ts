@@ -18,7 +18,7 @@ import { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int
 import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample";
 import { Publisher, Subscriber, FifoChannel, RingChannel } from "./pubsub";
 import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query";
-import { Session, RecvErr, Receiver, DeleteOpts, PutOpts, GetOptions, QueryableOpts, PublisherOptions } from "./session";
+import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions } from "./session";
 import { Config } from "./config";
 import { Encoding, IntoEncoding } from "./encoding";
 
@@ -28,6 +28,6 @@ export { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int
 export { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind };
 export { Publisher, Subscriber, FifoChannel, RingChannel };
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector };
-export { Session, RecvErr, Receiver, DeleteOpts, PutOpts, GetOptions, QueryableOpts, PublisherOptions };
+export { Session, RecvErr, Receiver, DeleteOptions as DeleteOpts, PutOptions, GetOptions, QueryableOptions, PublisherOptions };
 export { Config };
 export { Encoding, IntoEncoding };

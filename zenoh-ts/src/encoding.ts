@@ -80,7 +80,7 @@ export class Encoding {
     this._schema = str_rep;
   }
 
-  static into_Encoding(input: IntoEncoding): Encoding {
+  static intoEncoding(input: IntoEncoding): Encoding {
     if (input instanceof Encoding) {
       return input;
     } else {

@@ -107,7 +107,7 @@ export class RemoteQueryable {
 
   async receive(): Promise<[QueryWS, SimpleChannel<QueryReplyWS>] | void> {
     if (this.undeclared == true) {
-      console.log("Queryable keyexpr:`" +
+      console.warn("Queryable keyexpr:`" +
         this.key_expr +
         "` id:`" +
         this.queryable_id +
@@ -116,7 +116,7 @@ export class RemoteQueryable {
     }
 
     if (this.callback != undefined) {
-      console.log("Cannot Call receive on Queryable created with callback:`" +
+      console.warn("Cannot Call receive on Queryable created with callback:`" +
         this.key_expr +
         "` id:`" +
         this.queryable_id +
@@ -129,7 +129,7 @@ export class RemoteQueryable {
 
   undeclare() {
     if (this.undeclared == true) {
-      console.log("Queryable keyexpr:`" +
+      console.warn("Queryable keyexpr:`" +
         this.key_expr +
         "` id:`" +
         this.queryable_id +
