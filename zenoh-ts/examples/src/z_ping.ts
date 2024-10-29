@@ -12,14 +12,14 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { FifoChannel } from "@ZettaScaleLabs/zenoh-ts";
+import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
 import "./style.css";
 import "./webpage.ts";
 
-import { Encoding, CongestionControl, Config, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function ping() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
 
   let sub = await session.declare_subscriber("test/pong", new FifoChannel(256));
   let pub = session.declare_publisher(
@@ -31,7 +31,7 @@ export async function ping() {
   );
 
   // Warm up
-  console.log("Warming up for 5 seconds...");
+  console.warn("Warming up for 5 seconds...");
 
   let startTime = new Date();
   let data = [122, 101, 110, 111, 104];
@@ -52,7 +52,7 @@ export async function ping() {
 
   for (let i = 0; i < samples_out.length; i++) {
     let rtt = samples_out[i];
-    console.log(
+    console.warn(
       data.length +
       "bytes: seq=" +
       i +

@@ -15,12 +15,12 @@
 import "./style.css";
 import "./webpage.ts";
 
-import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@ZettaScaleLabs/zenoh-ts";
+import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
 
 export async function pub() {
-  const session = await Session.open(Config.new("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
 
-  let key_expr = KeyExpr.new("demo/example/zenoh-ts-pub");
+  let key_expr = new KeyExpr("demo/example/zenoh-ts-pub");
   let publisher: Publisher = session.declare_publisher(
     key_expr,
     {
@@ -37,8 +37,8 @@ export async function pub() {
   for (let idx = 0; idx < Number.MAX_VALUE; idx++) {
     let buf = `[${idx}] ${payload}`;
 
-    console.log("Block statement execution no : " + idx);
-    console.log(`Putting Data ('${key_expr}': '${buf}')...`);
+    console.warn("Block statement execution no : " + idx);
+    console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
     publisher.put(buf, Encoding.TEXT_PLAIN, "attachment");
     await sleep(1000);
 

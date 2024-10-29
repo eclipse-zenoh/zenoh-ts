@@ -65,7 +65,7 @@ export class RemotePublisher {
         "` id:`" +
         this.publisher_id +
         "` already undeclared";
-      console.log(message);
+      console.warn(message);
       return;
     }
 
@@ -93,7 +93,7 @@ export class RemotePublisher {
         "` id:`" +
         this.publisher_id +
         "` already undeclared";
-      console.log(message);
+      console.warn(message);
       return;
     }
     this.undeclared = true;
@@ -163,7 +163,7 @@ export class RemoteSubscriber {
 
   async receive(): Promise<SampleWS | void> {
     if (this.undeclared == true) {
-      console.log("Subscriber keyexpr:`" +
+      console.warn("Subscriber keyexpr:`" +
         this.key_expr +
         "` id:`" +
         this.subscriber_id +
@@ -172,7 +172,7 @@ export class RemoteSubscriber {
     }
 
     if (this.callback != undefined) {
-      console.log("Cannot Call receive on Subscriber created with callback:`" +
+      console.warn("Cannot Call receive on Subscriber created with callback:`" +
         this.key_expr +
         "` id:`" +
         this.subscriber_id +
@@ -185,7 +185,7 @@ export class RemoteSubscriber {
 
   undeclare() {
     if (this.undeclared == true) {
-      console.log("Subscriber keyexpr:`" +
+      console.warn("Subscriber keyexpr:`" +
         this.key_expr +
         "` id:`" +
         this.subscriber_id +

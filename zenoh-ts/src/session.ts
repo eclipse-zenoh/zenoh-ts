@@ -34,7 +34,7 @@ import {
   Selector,
 } from "./query";
 import { SimpleChannel } from "channel-ts";
-import { ChannelType, FifoChannel, Handler, Publisher, RingChannel, Subscriber } from "./pubsub";
+import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -66,7 +66,7 @@ function executeAsync(func: any) {
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
 */
 
-export interface PutOpts {
+export interface PutOptions {
   encoding?: Encoding,
   congestion_control?: CongestionControl,
   priority?: Priority,
@@ -81,7 +81,7 @@ export interface PutOpts {
  * @prop {boolean=} express  - Express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
 */
-export interface DeleteOpts {
+export interface DeleteOptions {
   congestion_control?: CongestionControl,
   priority?: Priority,
   express?: boolean,
@@ -113,7 +113,7 @@ export interface GetOptions {
  * @prop complete - Change queryable completeness.
  * @prop callback - Callback function for this queryable
 */
-export interface QueryableOpts {
+export interface QueryableOptions {
   complete?: boolean,
   callback?: (query: Query) => void,
 }
@@ -147,7 +147,7 @@ export class Session {
   // WebSocket Backend
   private remote_session: RemoteSession;
   /** Finalization registry used for cleanup on drop
-   * @hidden 
+   * @ignore 
    */
   static registry: FinalizationRegistry<RemoteSession> = new FinalizationRegistry((r_session: RemoteSession) => r_session.close());
 
@@ -172,9 +172,8 @@ export class Session {
    *
    */
 
-  static async open(config: Promise<Config> | Config): Promise<Session> {
-    const cfg = await config;
-    let remote_session = await RemoteSession.new(cfg.locator);
+  static async open(config: Config): Promise<Session> {
+    let remote_session = await RemoteSession.new(config.locator);
     return new Session(remote_session);
   }
 
@@ -193,16 +192,16 @@ export class Session {
    *
    * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
    * @param {IntoZBytes} into_zbytes - something that implements intoValue
-   * @param {PutOpts=} put_opts - an interface for the options settings on puts 
+   * @param {PutOptions=} put_opts - an interface for the options settings on puts 
    * @returns void
    */
   put(
     into_key_expr: IntoKeyExpr,
     into_zbytes: IntoZBytes,
-    put_opts?: PutOpts,
+    put_opts?: PutOptions,
   ): void {
-    let key_expr = KeyExpr.new(into_key_expr);
-    let z_bytes = ZBytes.new(into_zbytes);
+    let key_expr = new KeyExpr(into_key_expr);
+    let z_bytes = new ZBytes(into_zbytes);
 
     let _priority;
     let _express;
@@ -218,7 +217,7 @@ export class Session {
     _express = put_opts?.express?.valueOf();
 
     if (put_opts?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(put_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(put_opts?.attachment).buffer())
     }
 
     this.remote_session.put(
@@ -236,22 +235,22 @@ export class Session {
    * Executes a Delete on a session, for a specific key expression KeyExpr
    *
    * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
-   * @param {DeleteOpts} delete_opts - optional additional parameters to go with a delete function
+   * @param {DeleteOptions} delete_opts - optional additional parameters to go with a delete function
    *
    * @returns void
    */
   delete(
     into_key_expr: IntoKeyExpr,
-    delete_opts?: DeleteOpts
+    delete_opts?: DeleteOptions
   ): void {
-    let key_expr = KeyExpr.new(into_key_expr);
+    let key_expr = new KeyExpr(into_key_expr);
     let _congestion_control = congestion_control_to_int(delete_opts?.congestion_control);
     let _priority = priority_to_int(delete_opts?.priority);
     let _express = delete_opts?.express;
     let _attachment
 
     if (delete_opts?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(delete_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(delete_opts?.attachment).buffer())
     }
 
     this.remote_session.delete(
@@ -264,7 +263,7 @@ export class Session {
   }
 
   /** 
-   * @hidden internal function for handlers
+   * @ignore internal function for handlers
   */
   private check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
     [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
@@ -311,17 +310,17 @@ export class Session {
     if (typeof into_selector === "string" || into_selector instanceof String) {
       let split_string = into_selector.split("?")
       if (split_string.length == 1) {
-        key_expr = KeyExpr.new(into_selector);
-        selector = Selector.new(key_expr);
+        key_expr = new KeyExpr(into_selector);
+        selector = new Selector(key_expr);
       } else if (split_string.length == 2 && split_string[0] != undefined && split_string[1] != undefined) {
-        key_expr = KeyExpr.new(split_string[0]);
-        let parameters: Parameters = Parameters.new(split_string[1]);
-        selector = Selector.new(key_expr, parameters);
+        key_expr = new KeyExpr(split_string[0]);
+        let parameters: Parameters = new Parameters(split_string[1]);
+        selector = new Selector(key_expr, parameters);
       } else {
         throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
       }
     } else {
-      selector = Selector.new(into_selector);
+      selector = new Selector(into_selector);
     }
 
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
@@ -336,10 +335,10 @@ export class Session {
     let _payload;
 
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(ZBytes.new(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(ZBytes.new(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
     }
 
     let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
@@ -362,7 +361,7 @@ export class Session {
         for await (const message of chan) {
           // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
           if (message != undefined && (message as unknown as number) != 0) {
-            let reply = Reply.new(message);
+            let reply = new Reply(message);
             if (callback != undefined) {
               callback(reply);
             }
@@ -393,7 +392,7 @@ export class Session {
     key_expr: IntoKeyExpr,
     handler: ((sample: Sample) => Promise<void>) | Handler = new FifoChannel(256),
   ): Promise<Subscriber> {
-    let _key_expr = KeyExpr.new(key_expr);
+    let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
     let callback_subscriber = false;
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
@@ -417,11 +416,12 @@ export class Session {
         handler_type,
       );
     }
-
-    let subscriber = await Subscriber.new(
+    
+    let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       callback_subscriber,
     );
+
     return subscriber;
   }
 
@@ -432,15 +432,15 @@ export class Session {
   *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
   * 
   * @param {IntoKeyExpr} key_expr - string of key_expression
-  * @param {QueryableOpts=} queryable_opts - Optional additional settings for a Queryable [QueryableOpts]
+  * @param {QueryableOptions=} queryable_opts - Optional additional settings for a Queryable [QueryableOptions]
   *
   * @returns Queryable
   */
   async declare_queryable(
     key_expr: IntoKeyExpr,
-    queryable_opts?: QueryableOpts
+    queryable_opts?: QueryableOptions
   ): Promise<Queryable> {
-    let _key_expr = KeyExpr.new(key_expr);
+    let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
     let reply_tx: SimpleChannel<QueryReplyWS> =
       new SimpleChannel<QueryReplyWS>();
@@ -475,7 +475,7 @@ export class Session {
       );
     }
 
-    let queryable = Queryable.new(remote_queryable, callback_queryable);
+    let queryable = new Queryable(remote_queryable, callback_queryable);
     return queryable;
   }
 
@@ -493,7 +493,7 @@ export class Session {
     keyexpr: IntoKeyExpr,
     publisher_opts: PublisherOptions
   ): Publisher {
-    let _key_expr: KeyExpr = KeyExpr.new(keyexpr);
+    let _key_expr: KeyExpr = new KeyExpr(keyexpr);
 
     let _express = publisher_opts?.express;
 
@@ -534,9 +534,9 @@ export class Session {
         _reliability
       );
 
-    let publisher: Publisher = Publisher.new(
-      _key_expr,
+    let publisher: Publisher = new Publisher(
       remote_publisher,
+      _key_expr,
       congestion_control,
       priority,
       reliability,
@@ -570,11 +570,11 @@ export enum RecvErr {
  */
 export class Receiver {
   /**
-   * @hidden
+   * @ignore
    */
   private receiver: SimpleChannel<ReplyWS | RecvErr>;
   /**
-   * @hidden
+   * @ignore
    */
   private constructor(receiver: SimpleChannel<ReplyWS | RecvErr>) {
     this.receiver = receiver;
@@ -595,7 +595,7 @@ export class Receiver {
         return RecvErr.Disconnected;
       } else if (isReplyWS(channel_msg)) {
         // Handle the ReplyWS case
-        let opt_reply = Reply.new(channel_msg);
+        let opt_reply = new Reply(channel_msg);
         if (opt_reply == undefined) {
           return RecvErr.MalformedReply;
         } else {
@@ -609,7 +609,7 @@ export class Receiver {
   /**
    *  Receiver gets created by `get` call
    * 
-   * @hidden Reply
+   * @ignore Reply
    */
   static new(reply_tx: SimpleChannel<ReplyWS>) {
     return new Receiver(reply_tx);

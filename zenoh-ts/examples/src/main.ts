@@ -38,15 +38,15 @@ async function main() {
   let count = 0;
   while (true) {
     await sleep(1000 * 100);
-    console.log("Main Loop tick ", count);
+    console.warn("Main Loop tick ", count);
     count = count + 1;
   }
 }
 
 main()
-  .then(() => console.log("Done"))
+  .then(() => console.warn("Done"))
   .catch((e) => {
-    console.log(e);
+    console.warn(e);
     throw e;
   });
 

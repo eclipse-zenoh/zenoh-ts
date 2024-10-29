@@ -26,23 +26,18 @@ export class KeyExpr {
   private _inner: string;
 
 
-  private constructor(key_expr: string) {
-    this._inner = key_expr;
+  constructor(keyexpr: IntoKeyExpr) {
+    if (keyexpr instanceof KeyExpr) {
+      this._inner = keyexpr._inner;
+    } else if (keyexpr instanceof String) {
+      this._inner = keyexpr.toString();
+    } else {
+      this._inner = keyexpr;
+    }
+
   }
 
   toString(): string {
     return this._inner;
-  }
-  /**
-   * Class to represent a Key Expression in Zenoh
-   */
-  static new(keyexpr: IntoKeyExpr): KeyExpr {
-    if (keyexpr instanceof KeyExpr) {
-      return keyexpr;
-    } else if (keyexpr instanceof String) {
-      return new KeyExpr(keyexpr.toString());
-    } else {
-      return new KeyExpr(keyexpr);
-    }
   }
 }
