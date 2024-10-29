@@ -6,7 +6,7 @@
   },
   plugins: {
     remote_api: {
-      'websocket_port': '10000',
+      websocket_port: '10000',
       secure_websocket: {
         certificate_path: 'path/to/certificate_path',
         private_key_path: 'path/to/private_key_path'
