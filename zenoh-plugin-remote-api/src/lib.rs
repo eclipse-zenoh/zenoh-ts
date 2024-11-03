@@ -60,6 +60,7 @@ use zenoh::{
         format::{kedefine, keformat},
         keyexpr, OwnedKeyExpr,
     },
+    liveliness::LivelinessToken,
     pubsub::Publisher,
     query::{Query, Queryable},
     Session,
@@ -482,6 +483,9 @@ struct RemoteState {
     // Queryable
     queryables: HashMap<Uuid, (Queryable<()>, OwnedKeyExpr)>,
     unanswered_queries: Arc<std::sync::RwLock<HashMap<Uuid, Query>>>,
+    // Liveliness
+    liveliness_tokens: HashMap<Uuid, LivelinessToken>,
+    liveliness_subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
 }
 
 impl RemoteState {
@@ -494,6 +498,8 @@ impl RemoteState {
             publishers: HashMap::new(),
             queryables: HashMap::new(),
             unanswered_queries: Arc::new(std::sync::RwLock::new(HashMap::new())),
+            liveliness_tokens: HashMap::new(),
+            liveliness_subscribers: HashMap::new(),
         }
     }
 

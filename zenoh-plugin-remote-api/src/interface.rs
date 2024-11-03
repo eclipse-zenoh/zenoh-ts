@@ -246,6 +246,26 @@ pub enum ControlMsg {
         complete: bool,
     },
     UndeclareQueryable(Uuid),
+
+    // Liveliness
+    Liveliness(LivelinessMsg),
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub enum LivelinessMsg {
+    DeclareToken {
+        #[ts(as = "OwnedKeyExprWrapper")]
+        key_expr: OwnedKeyExpr,
+        id: Uuid,
+    },
+    UndeclareToken(Uuid),
+    DeclareSubscriber {
+        #[ts(as = "OwnedKeyExprWrapper")]
+        key_expr: OwnedKeyExpr,
+        id: Uuid,
+    },
+    UndeclareSubscriber(Uuid),
 }
 
 fn deserialize_consolidation_mode<'de, D>(d: D) -> Result<Option<ConsolidationMode>, D::Error>
