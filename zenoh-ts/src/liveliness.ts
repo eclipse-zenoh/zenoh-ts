@@ -10,6 +10,14 @@ import { ControlMsg } from "./remote_api/interface/ControlMsg";
 import { SampleWS } from "./remote_api/interface/SampleWS";
 import { NewSubscriber, Subscriber } from "./pubsub";
 // Liveliness API
+import { TimeDuration as Duration } from 'typed-duration'
+import { Receiver } from "./session";
+import { SimpleChannel } from "channel-ts";
+import { ReplyWS } from "./remote_api/interface/ReplyWS";
+
+function executeAsync(func: any) {
+  setTimeout(func, 0);
+}
 
 interface LivelinessSubscriberOptions {
   callback?: (sample: Sample) => Promise<void>,
@@ -18,7 +26,7 @@ interface LivelinessSubscriberOptions {
 
 interface LivelinessGetOptions {
   callback?: (reply: Reply) => Promise<void>,
-  timeout: boolean,
+  timeout?: Duration,
 }
 
 export class Liveliness {
@@ -72,12 +80,64 @@ export class Liveliness {
     return subscriber;
   }
 
-  get(key_expr: IntoKeyExpr, options: LivelinessGetOptions) {
+  get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Receiver | undefined {
     console.log(key_expr, options)
-    // @todo;
+    let _key_expr = new KeyExpr(key_expr);
 
+    let _timeout_millis: bigint | undefined = undefined;
+
+    if (options?.timeout !== undefined) {
+      switch (options?.timeout.type) {
+        case "MILLISECONDS": {
+          _timeout_millis = BigInt(options?.timeout.value);
+          break;
+        }
+        case "SECONDS": {
+          _timeout_millis = BigInt(options?.timeout.value * 1000);
+          break;
+        }
+        case "MINUTES": {
+          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60);
+          break;
+        }
+        case "HOURS": {
+          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60 * 60);
+          break;
+        }
+        case "DAYS": {
+          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60 * 60 * 24);
+          break;
+        }
+      };
+    }
+
+    let chan: SimpleChannel<ReplyWS> = this.remote_session.get_liveliness(
+      _key_expr.toString(),
+      _timeout_millis
+    );
+
+    let receiver = Receiver.new(chan);
+
+    let callback = options?.callback;
+    if (callback !== undefined) {
+      executeAsync(async () => {
+        for await (const message of chan) {
+          // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
+          if (message != undefined && (message as unknown as number) != 0) {
+            let reply = new Reply(message);
+            if (callback != undefined) {
+              callback(reply);
+            }
+          } else {
+            break
+          }
+        }
+      });
+      return undefined;
+    } else {
+      return receiver;
+    }
   }
-
 }
 
 export class LivelinessToken {

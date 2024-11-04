@@ -394,10 +394,12 @@ async fn handle_liveliness(
             id,
             timeout,
         } => {
-            let receiver = liveliness
-                .get(key_expr)
-                .timeout(Duration::from_millis(timeout))
-                .await?;
+            let mut builder = liveliness.get(key_expr);
+            if let Some(timeout) = timeout {
+                builder = builder.timeout(Duration::from_millis(timeout));
+            }
+            let receiver = builder.await?;
+
             let mut receiving: bool = true;
 
             while receiving {

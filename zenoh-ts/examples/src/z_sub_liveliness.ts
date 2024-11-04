@@ -28,23 +28,23 @@ export async function sub_liveliness() {
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
   let liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: true });
-  console.log("liveliness_subscriber : ",liveliness_subscriber);
+  console.log("liveliness_subscriber : ", liveliness_subscriber);
 
   let sample = await liveliness_subscriber.receive();
   while (sample != undefined) {
-    switch (sample.kind()){
-      case SampleKind.PUT:{
+    switch (sample.kind()) {
+      case SampleKind.PUT: {
         console.log!(
           ">> [LivelinessSubscriber] New alive token ",
           sample.keyexpr().toString()
-      )
+        )
         break;
       }
-      case SampleKind.DELETE:{
+      case SampleKind.DELETE: {
         console.log!(
           ">> [LivelinessSubscriber] Dropped token ",
           sample.keyexpr().toString()
-      )
+        )
         break;
       }
     }

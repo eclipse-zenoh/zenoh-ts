@@ -25,6 +25,7 @@ import { queryable } from "./z_queryable.ts";
 // import { _delete } from "./z_delete.ts";
 import { liveliness } from "./z_liveliness.ts";
 import { sub_liveliness } from "./z_sub_liveliness.ts";
+import { get_liveliness } from "./z_get_liveliness.ts";
 
 async function main() {
   // thr();
@@ -37,7 +38,8 @@ async function main() {
   // _delete();
   // put();
   // liveliness();
-  sub_liveliness();
+  // sub_liveliness();
+  get_liveliness();
 
   let count = 0;
   while (true) {

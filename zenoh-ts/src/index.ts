@@ -22,6 +22,8 @@ import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, Quer
 import { Config } from "./config";
 import { Encoding, IntoEncoding } from "./encoding";
 import { Liveliness, LivelinessToken } from "./liveliness";
+// Re-export duration external library
+import { TimeDuration as Duration } from 'typed-duration'
 
 // Exports
 export { KeyExpr, IntoKeyExpr };
@@ -33,3 +35,4 @@ export { Session, RecvErr, Receiver, DeleteOptions as DeleteOpts, PutOptions, Ge
 export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
+export { Duration };

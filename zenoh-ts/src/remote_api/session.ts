@@ -324,13 +324,14 @@ export class RemoteSession {
     return publisher;
   }
 
+  // Liveliness 
   declare_liveliness_token(
     key_expr: string,
   ): UUIDv4 {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      Liveliness: { DeclareToken: { key_expr: key_expr, id: uuid }}
+      Liveliness: { DeclareToken: { key_expr: key_expr, id: uuid } }
     };
 
     this.send_ctrl_message(control_message);
@@ -346,7 +347,7 @@ export class RemoteSession {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      Liveliness: { DeclareSubscriber: { key_expr: key_expr, id: uuid, history : history }}
+      Liveliness: { DeclareSubscriber: { key_expr: key_expr, id: uuid, history: history } }
     };
 
     let channel: SimpleChannel<SampleWS> = new SimpleChannel<SampleWS>();
@@ -362,8 +363,32 @@ export class RemoteSession {
       channel,
       callback,
     );
-    
+
     return subscriber;
+  }
+
+  get_liveliness(
+    key_expr: string,
+    timeout_milliseconds?: bigint
+  ): SimpleChannel<ReplyWS> {
+    let uuid = uuidv4();
+    let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
+    this.get_receiver.set(uuid, channel);
+
+    let timeout = null;
+    if (timeout_milliseconds !== undefined) {
+      timeout = timeout_milliseconds;
+    }
+
+    let control_message: ControlMsg = {
+      Liveliness: { Get: { key_expr: key_expr, id: uuid, timeout: timeout } }
+    };
+
+    this.liveliness_get_receiver.set(uuid, channel);
+
+    this.send_ctrl_message(control_message);
+
+    return channel;
   }
 
   //
@@ -447,8 +472,13 @@ export class RemoteSession {
       let get_reply: ReplyWS = data_msg["GetReply"];
 
       let opt_receiver = this.get_receiver.get(get_reply.query_uuid);
+      let opt_liveliness_receiver = this.liveliness_get_receiver.get(get_reply.query_uuid);
+
       if (opt_receiver != undefined) {
         let channel: SimpleChannel<ReplyWS | RemoteRecvErr> = opt_receiver;
+        channel.send(get_reply);
+      } else if (opt_liveliness_receiver != undefined) {
+        let channel: SimpleChannel<ReplyWS | RemoteRecvErr> = opt_liveliness_receiver;
         channel.send(get_reply);
       }
     } else if ("Queryable" in data_msg) {

@@ -271,7 +271,8 @@ pub enum LivelinessMsg {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
         id: Uuid,
-        timeout: u64,
+        // timeout in Milliseconds
+        timeout: Option<u64>,
     },
 }
 
