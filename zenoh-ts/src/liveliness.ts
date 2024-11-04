@@ -3,10 +3,12 @@ import {
   UUIDv4
 } from "./remote_api/session";
 import { IntoKeyExpr, KeyExpr } from "./key_expr";
-import { Sample } from "./sample";
+import { Sample, Sample_from_SampleWS } from "./sample";
 import { Reply } from "./query";
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg";
+import { SampleWS } from "./remote_api/interface/SampleWS";
+import { NewSubscriber, Subscriber } from "./pubsub";
 // Liveliness API
 
 interface LivelinessSubscriberOptions {
@@ -34,18 +36,44 @@ export class Liveliness {
     return new LivelinessToken(this.remote_session, uuid)
   }
 
-  declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions) {
-    console.log(key_expr,options)
-    // let _history = false;
-    // if (options?.history != undefined) {
-    //   _history = options?.history;
-    // };
+  declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Subscriber {
+    console.log(key_expr, options)
 
-    // let subscriber = this.remote_session.declare_liveliness_subscriber(key_expr,);
+    let _key_expr = new KeyExpr(key_expr);
+
+    let _history = false;
+    if (options?.history != undefined) {
+      _history = options?.history;
+    };
+
+    let remote_subscriber;
+    let callback_subscriber = false;
+
+    if (options?.callback !== undefined) {
+      let callback = options?.callback;
+      callback_subscriber = true;
+      const callback_conversion = async function (sample_ws: SampleWS,): Promise<void> {
+        let sample: Sample = Sample_from_SampleWS(sample_ws);
+        if (callback !== undefined) {
+          callback(sample);
+        }
+      };
+
+      remote_subscriber = this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_conversion);
+    } else {
+      remote_subscriber = this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history);
+    }
+
+    let subscriber = Subscriber[NewSubscriber](
+      remote_subscriber,
+      callback_subscriber,
+    );
+
+    return subscriber;
   }
 
   get(key_expr: IntoKeyExpr, options: LivelinessGetOptions) {
-    console.log(key_expr,options)
+    console.log(key_expr, options)
     // @todo;
 
   }

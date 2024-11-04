@@ -338,12 +338,11 @@ export class RemoteSession {
     return uuid;
   }
 
-
-  async declare_liveliness_subscriber(
+  declare_liveliness_subscriber(
     key_expr: string,
     history: boolean,
     callback?: (sample: SampleWS) => Promise<void>,
-  ): Promise<RemoteSubscriber> {
+  ): RemoteSubscriber {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -363,6 +362,7 @@ export class RemoteSession {
       channel,
       callback,
     );
+    
     return subscriber;
   }
 
@@ -384,7 +384,7 @@ export class RemoteSession {
   }
 
   //
-  // Manager Session and handle messages
+  // Manage Session and handle messages
   //
   private async channel_receive() {
     for await (const message of this.ws_channel) {
@@ -430,9 +430,14 @@ export class RemoteSession {
       let subscription_uuid: UUIDv4 = data_msg["Sample"][1];
 
       let opt_subscriber = this.subscribers.get(subscription_uuid);
+      let opt_livelinesss_subscriber = this.liveliness_subscribers.get(subscription_uuid);
 
       if (opt_subscriber != undefined) {
         let channel: SimpleChannel<SampleWS> = opt_subscriber;
+        let sample: SampleWS = data_msg["Sample"][0];
+        channel.send(sample);
+      } else if (opt_livelinesss_subscriber != undefined) {
+        let channel: SimpleChannel<SampleWS> = opt_livelinesss_subscriber;
         let sample: SampleWS = data_msg["Sample"][0];
         channel.send(sample);
       } else {
