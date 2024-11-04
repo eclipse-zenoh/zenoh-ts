@@ -21,9 +21,11 @@ import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub";
 import { SampleWS } from "./remote_api/interface/SampleWS";
 import { RemoteQueryable } from "./remote_api/query";
 import { QueryWS } from "./remote_api/interface/QueryWS";
+import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS";
 // API interface
 import { IntoKeyExpr, KeyExpr } from "./key_expr";
 import { IntoZBytes, ZBytes } from "./z_bytes";
+import { Liveliness } from "./liveliness";
 import {
   IntoSelector,
   Parameters,
@@ -33,7 +35,6 @@ import {
   Reply,
   Selector,
 } from "./query";
-import { SimpleChannel } from "channel-ts";
 import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub";
 import {
   priority_to_int,
@@ -47,11 +48,13 @@ import {
   Reliability,
   reliability_to_int,
 } from "./sample";
-import { State } from "channel-ts/lib/channel";
 import { Config } from "./config";
 import { Encoding } from "./encoding";
-import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS";
 import { HandlerChannel } from "./remote_api/interface/HandlerChannel";
+// General imports
+import { SimpleChannel } from "channel-ts";
+import { State } from "channel-ts/lib/channel";
+
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -423,6 +426,10 @@ export class Session {
     );
 
     return subscriber;
+  }
+
+  liveliness() : Liveliness {
+    return new Liveliness(this.remote_session)
   }
 
   /**

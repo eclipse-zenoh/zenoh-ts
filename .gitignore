@@ -1,6 +1,7 @@
 .vscode
 **/build
 cp_plugin.sh
+TEST_CONFIG.json5
 
 zenoh-ts/dist
 zenoh-ts/node_modules

@@ -57,6 +57,8 @@ export class RemoteSession {
   subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
   queryables: Map<UUIDv4, SimpleChannel<QueryWS>>;
   get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS | RemoteRecvErr>>;
+  liveliness_subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
+  liveliness_get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS>>;
 
   private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
     this.ws = ws;
@@ -65,6 +67,8 @@ export class RemoteSession {
     this.subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
     this.queryables = new Map<UUIDv4, SimpleChannel<QueryWS>>();
     this.get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
+    this.liveliness_subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
+    this.liveliness_get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
   }
 
   //
@@ -237,7 +241,6 @@ export class RemoteSession {
     this.ws.close();
   }
 
-
   async declare_remote_subscriber(
     key_expr: string,
     handler: HandlerChannel,
@@ -319,6 +322,48 @@ export class RemoteSession {
     };
     this.send_ctrl_message(control_message);
     return publisher;
+  }
+
+  declare_liveliness_token(
+    key_expr: string,
+  ): UUIDv4 {
+    let uuid = uuidv4();
+
+    let control_message: ControlMsg = {
+      Liveliness: { DeclareToken: { key_expr: key_expr, id: uuid }}
+    };
+
+    this.send_ctrl_message(control_message);
+
+    return uuid;
+  }
+
+
+  async declare_liveliness_subscriber(
+    key_expr: string,
+    history: boolean,
+    callback?: (sample: SampleWS) => Promise<void>,
+  ): Promise<RemoteSubscriber> {
+    let uuid = uuidv4();
+
+    let control_message: ControlMsg = {
+      Liveliness: { DeclareSubscriber: { key_expr: key_expr, id: uuid, history : history }}
+    };
+
+    let channel: SimpleChannel<SampleWS> = new SimpleChannel<SampleWS>();
+
+    this.liveliness_subscribers.set(uuid, channel);
+
+    this.send_ctrl_message(control_message);
+
+    let subscriber = RemoteSubscriber.new(
+      key_expr,
+      uuid,
+      this,
+      channel,
+      callback,
+    );
+    return subscriber;
   }
 
   //

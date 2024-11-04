@@ -21,6 +21,7 @@
     "eslint": "^9.10.0",
     "text-encoding": "^0.7.0",
     "tslog": "^4.9.3",
+    "typed-duration": "^2.0.0",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

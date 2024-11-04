@@ -21,6 +21,7 @@ import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, Repl
 import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions } from "./session";
 import { Config } from "./config";
 import { Encoding, IntoEncoding } from "./encoding";
+import { Liveliness, LivelinessToken } from "./liveliness";
 
 // Exports
 export { KeyExpr, IntoKeyExpr };
@@ -31,3 +32,4 @@ export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, Repl
 export { Session, RecvErr, Receiver, DeleteOptions as DeleteOpts, PutOptions, GetOptions, QueryableOptions, PublisherOptions };
 export { Config };
 export { Encoding, IntoEncoding };
+export { Liveliness, LivelinessToken };

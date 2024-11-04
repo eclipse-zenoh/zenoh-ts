@@ -264,8 +264,15 @@ pub enum LivelinessMsg {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
         id: Uuid,
+        history: bool,
     },
     UndeclareSubscriber(Uuid),
+    Get {
+        #[ts(as = "OwnedKeyExprWrapper")]
+        key_expr: OwnedKeyExpr,
+        id: Uuid,
+        timeout: u64,
+    },
 }
 
 fn deserialize_consolidation_mode<'de, D>(d: D) -> Result<Option<ConsolidationMode>, D::Error>
