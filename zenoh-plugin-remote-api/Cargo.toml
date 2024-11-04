@@ -14,7 +14,7 @@
 [package]
 rust-version = "1.75.0"
 name = "zenoh-plugin-remote-api"
-version = "1.0.0" # Zenoh version
+version = "1.0.0-dev" # Zenoh version
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = [

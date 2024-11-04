@@ -3155,7 +3155,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-plugin-remote-api"
-version = "1.0.0"
+version = "1.0.0-dev"
 dependencies = [
  "base64 0.22.1",
  "flume",
