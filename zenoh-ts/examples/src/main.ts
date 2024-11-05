@@ -37,9 +37,9 @@ async function main() {
   // get();
   // _delete();
   // put();
-  // liveliness();
+  liveliness();
   // sub_liveliness();
-  get_liveliness();
+  // get_liveliness();
 
   let count = 0;
   while (true) {

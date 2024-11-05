@@ -23,6 +23,7 @@ import {
   ReplyError
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration'
+const { seconds } = Duration
 
 export async function get_liveliness() {
 
@@ -31,8 +32,7 @@ export async function get_liveliness() {
   let key_expr = new KeyExpr("group1/**");
   console.log("Sending Liveliness Query '", key_expr.toString(),"'");
 
-  // WIP continue here
-  let receiver = session.liveliness().get(key_expr, {timeout: Duration.seconds(10)});
+  let receiver = session.liveliness().get(key_expr, {timeout: seconds.of(20)});
 
   if (!(receiver instanceof Receiver)){
     return // Return in case of callback get query
@@ -55,5 +55,7 @@ export async function get_liveliness() {
     }
     reply = await receiver.receive();
   }
+
+  console.warn("End Liveliness query");
 }
 

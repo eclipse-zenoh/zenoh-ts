@@ -369,13 +369,13 @@ export class RemoteSession {
 
   get_liveliness(
     key_expr: string,
-    timeout_milliseconds?: bigint
+    timeout_milliseconds?: number
   ): SimpleChannel<ReplyWS> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
 
-    let timeout = null;
+    let timeout = undefined;
     if (timeout_milliseconds !== undefined) {
       timeout = timeout_milliseconds;
     }

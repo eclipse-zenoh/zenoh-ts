@@ -34,7 +34,6 @@ export async function liveliness() {
     await sleep(10000);
     console.log("Tick")
   }
-
 }
 
 function sleep(ms: number) {

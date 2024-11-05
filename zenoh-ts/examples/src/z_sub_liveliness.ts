@@ -53,7 +53,3 @@ export async function sub_liveliness() {
 
   liveliness_subscriber.undeclare();
 }
-
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}

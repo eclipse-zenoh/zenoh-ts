@@ -551,12 +551,8 @@ async fn run_websocket_server(
         opt_tls_acceptor = Some(TlsAcceptor::from(Arc::new(config)));
     }
 
-    tracing::info!("Spawning Remote API Plugin on {:?}", ws_port);
-
-    let tcp = TcpListener::bind(ws_port).await;
-
-    let server: TcpListener = match tcp {
-        Ok(x) => x,
+    let server: TcpListener = match TcpListener::bind(ws_port).await {
+        Ok(server) => server,
         Err(err) => {
             tracing::error!("Unable to start TcpListener {err}");
             return;

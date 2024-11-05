@@ -1,3 +1,4 @@
+// 
 import {
   RemoteSession,
   UUIDv4
@@ -5,15 +6,19 @@ import {
 import { IntoKeyExpr, KeyExpr } from "./key_expr";
 import { Sample, Sample_from_SampleWS } from "./sample";
 import { Reply } from "./query";
+
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg";
 import { SampleWS } from "./remote_api/interface/SampleWS";
 import { NewSubscriber, Subscriber } from "./pubsub";
+
 // Liveliness API
-import { TimeDuration as Duration } from 'typed-duration'
 import { Receiver } from "./session";
 import { SimpleChannel } from "channel-ts";
 import { ReplyWS } from "./remote_api/interface/ReplyWS";
+
+// External
+import { Duration, TimeDuration } from 'typed-duration'
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -26,7 +31,7 @@ interface LivelinessSubscriberOptions {
 
 interface LivelinessGetOptions {
   callback?: (reply: Reply) => Promise<void>,
-  timeout?: Duration,
+  timeout?: TimeDuration,
 }
 
 export class Liveliness {
@@ -84,31 +89,10 @@ export class Liveliness {
     console.log(key_expr, options)
     let _key_expr = new KeyExpr(key_expr);
 
-    let _timeout_millis: bigint | undefined = undefined;
+    let _timeout_millis: number | undefined = undefined;
 
     if (options?.timeout !== undefined) {
-      switch (options?.timeout.type) {
-        case "MILLISECONDS": {
-          _timeout_millis = BigInt(options?.timeout.value);
-          break;
-        }
-        case "SECONDS": {
-          _timeout_millis = BigInt(options?.timeout.value * 1000);
-          break;
-        }
-        case "MINUTES": {
-          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60);
-          break;
-        }
-        case "HOURS": {
-          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60 * 60);
-          break;
-        }
-        case "DAYS": {
-          _timeout_millis = BigInt(options?.timeout.value * 1000 * 60 * 60 * 24);
-          break;
-        }
-      };
+      _timeout_millis = Duration.milliseconds.from(options?.timeout);
     }
 
     let chan: SimpleChannel<ReplyWS> = this.remote_session.get_liveliness(

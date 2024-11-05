@@ -272,6 +272,7 @@ pub enum LivelinessMsg {
         key_expr: OwnedKeyExpr,
         id: Uuid,
         // timeout in Milliseconds
+        #[ts(type = "number | undefined")]
         timeout: Option<u64>,
     },
 }
