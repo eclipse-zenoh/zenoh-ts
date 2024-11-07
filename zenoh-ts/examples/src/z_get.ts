@@ -12,22 +12,17 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError } from "@eclipse-zenoh/zenoh-ts";
-import { deserialize_string } from "@eclipse-zenoh/zenoh-ts";
-import "./style.css";
-import "./webpage.ts";
+import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Reply, Sample, Session } from "@eclipse-zenoh/zenoh-ts";
 
-import { Config, Receiver, RecvErr, Reply, Sample, Session } from "@eclipse-zenoh/zenoh-ts";
-
-export async function get() {
-  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
+export async function main() {
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   // Callback get query
   const get_callback = async function (reply: Reply): Promise<void> {
     let resp = reply.result();
     if (resp instanceof Sample) {
       let sample: Sample = resp;
-      console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
+      console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string), "')");
     } else {
       let reply_error: ReplyError = resp;
       console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
@@ -38,8 +33,8 @@ export async function get() {
   await session.get("demo/example/**", get_callback);
 
   // Poll receiever
-  let receiver: void | Receiver  = await session.get("demo/example/**");
-  if (!(receiver instanceof Receiver)){
+  let receiver: void | Receiver = await session.get("demo/example/**");
+  if (!(receiver instanceof Receiver)) {
     return // Return in case of callback get query
   }
 
@@ -51,7 +46,7 @@ export async function get() {
       let resp = reply.result();
       if (resp instanceof Sample) {
         let sample: Sample = resp;
-        console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string),"')");
+        console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string), "')");
       } else {
         let reply_error: ReplyError = resp;
         console.warn(">> Received (ERROR: '{", reply_error.payload().deserialize(deserialize_string), "}')");
@@ -60,3 +55,6 @@ export async function get() {
     reply = await receiver.receive();
   }
 }
+
+
+main()

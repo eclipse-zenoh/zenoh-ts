@@ -20,18 +20,18 @@ import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 const log = new Logger({ stylePrettyLogs: false });
 
 // Import interface
-import { RemoteAPIMsg } from "./interface/RemoteAPIMsg";
-import { SampleWS } from "./interface/SampleWS";
-import { DataMsg } from "./interface/DataMsg";
-import { ControlMsg } from "./interface/ControlMsg";
-import { OwnedKeyExprWrapper } from "./interface/OwnedKeyExprWrapper";
-import { QueryWS } from "./interface/QueryWS";
-import { RemotePublisher, RemoteSubscriber } from "./pubsub";
-import { RemoteQueryable } from "./query";
-import { ReplyWS } from "./interface/ReplyWS";
-import { QueryableMsg } from "./interface/QueryableMsg";
-import { QueryReplyWS } from "./interface/QueryReplyWS";
-import { HandlerChannel } from "./interface/HandlerChannel";
+import { RemoteAPIMsg } from "./interface/RemoteAPIMsg.js";
+import { SampleWS } from "./interface/SampleWS.js";
+import { DataMsg } from "./interface/DataMsg.js";
+import { ControlMsg } from "./interface/ControlMsg.js";
+import { OwnedKeyExprWrapper } from "./interface/OwnedKeyExprWrapper.js";
+import { QueryWS } from "./interface/QueryWS.js";
+import { RemotePublisher, RemoteSubscriber } from "./pubsub.js";
+import { RemoteQueryable } from "./query.js";
+import { ReplyWS } from "./interface/ReplyWS.js";
+import { QueryableMsg } from "./interface/QueryableMsg.js";
+import { QueryReplyWS } from "./interface/QueryReplyWS.js";
+import { HandlerChannel } from "./interface/HandlerChannel.js";
 
 // ██████  ███████ ███    ███  ██████  ████████ ███████     ███████ ███████ ███████ ███████ ██  ██████  ███    ██
 // ██   ██ ██      ████  ████ ██    ██    ██    ██          ██      ██      ██      ██      ██ ██    ██ ████   ██

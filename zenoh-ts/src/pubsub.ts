@@ -13,19 +13,19 @@
 //
 
 // Remote API
-import { RemoteSubscriber, RemotePublisher } from "./remote_api/pubsub";
+import { RemoteSubscriber, RemotePublisher } from "./remote_api/pubsub.js";
 
 // API
-import { KeyExpr } from "./key_expr";
-import { IntoZBytes, ZBytes } from "./z_bytes";
+import { KeyExpr } from "./key_expr.js";
+import { IntoZBytes, ZBytes } from "./z_bytes.js";
 import {
   CongestionControl,
   Priority,
   Reliability,
   Sample,
   Sample_from_SampleWS,
-} from "./sample";
-import { Encoding, IntoEncoding } from "./encoding";
+} from "./sample.js";
+import { Encoding, IntoEncoding } from "./encoding.js";
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
 // ██      ██    ██ ██   ██ ██      ██      ██   ██ ██ ██   ██ ██      ██   ██

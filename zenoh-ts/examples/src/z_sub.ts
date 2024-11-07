@@ -12,15 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import "./style.css";
-import "./webpage.ts";
-
 import {
   RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr
 } from "@eclipse-zenoh/zenoh-ts";
 
-export async function sub() {
-  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
+export async function main() {
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   const callback = async function (sample: Sample): Promise<void> {
     console.warn!(
@@ -64,3 +61,5 @@ export async function sub() {
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+main()

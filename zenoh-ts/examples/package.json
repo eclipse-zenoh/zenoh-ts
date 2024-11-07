@@ -4,18 +4,17 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --config vite.config.js",
-    "build": "tsc && vite build",
+    "build": "tsc",
     "preview": "vite preview",
-    "clean": "rm -rf ./node_modules ./dist ./esm"
+    "clean": "rm -rf ./node_modules ./dist ./esm",
+    "run_example": "deno run -A --no-prompt" 
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",
-    "typescript": "^5.2.2",
-    "vite": "^5.2.12"
+    "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@eclipse-zenoh/zenoh-ts": "file:../",
+    "@eclipse-zenoh/zenoh-ts": "file:..",
     "eslint": "^9.10.0",
     "tslog": "^4.9.3"
   }

@@ -17,12 +17,12 @@ import { v4 as uuidv4 } from "uuid";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 // Import interface
-import { SampleWS } from "./interface/SampleWS";
-import { DataMsg } from "./interface/DataMsg";
-import { ControlMsg } from "./interface/ControlMsg";
+import { SampleWS } from "./interface/SampleWS.js";
+import { DataMsg } from "./interface/DataMsg.js";
+import { ControlMsg } from "./interface/ControlMsg.js";
 
 // Remote Api
-import { RemoteSession } from "./session";
+import { RemoteSession } from "./session.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
