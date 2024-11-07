@@ -25,7 +25,7 @@ export async function main() {
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
   let liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: true });
-  console.log("liveliness_subscriber : ", liveliness_subscriber);
+
 
   let sample = await liveliness_subscriber.receive();
   while (sample != undefined) {

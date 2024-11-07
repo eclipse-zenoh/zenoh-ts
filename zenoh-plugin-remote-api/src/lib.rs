@@ -518,7 +518,18 @@ impl RemoteState {
                 error!("{e}")
             }
         }
+
         drop(self.unanswered_queries);
+
+        for (_, queryable) in self.liveliness_tokens {
+            if let Err(e) = queryable.undeclare().await {
+                error!("{e}")
+            }
+        }
+
+        for (_, (liveliness_subscriber, _)) in self.liveliness_subscribers {
+            liveliness_subscriber.abort();
+        }
 
         if let Err(err) = self.session.close().await {
             error!("{err}")
