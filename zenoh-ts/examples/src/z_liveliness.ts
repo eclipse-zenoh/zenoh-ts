@@ -11,15 +11,11 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-
-import "./style.css";
-import "./webpage.ts";
-
 import {
   Config, Session, KeyExpr, LivelinessToken
 } from "@eclipse-zenoh/zenoh-ts";
 
-export async function liveliness() {
+export async function main() {
 
   console.log("Opening session...")
   const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
@@ -39,3 +35,5 @@ export async function liveliness() {
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+main()
