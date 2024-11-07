@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "preview": "vite preview",
     "clean": "rm -rf ./node_modules ./dist ./esm",
     "run_example": "deno run -A --no-prompt" 
   },
@@ -14,8 +13,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@eclipse-zenoh/zenoh-ts": "file:..",
-    "eslint": "^9.10.0",
-    "tslog": "^4.9.3"
+    "@eclipse-zenoh/zenoh-ts": "file:.."
   }
 }
