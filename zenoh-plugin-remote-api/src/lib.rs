@@ -60,6 +60,7 @@ use zenoh::{
         format::{kedefine, keformat},
         keyexpr, OwnedKeyExpr,
     },
+    liveliness::LivelinessToken,
     pubsub::Publisher,
     query::{Query, Queryable},
     Session,
@@ -482,6 +483,9 @@ struct RemoteState {
     // Queryable
     queryables: HashMap<Uuid, (Queryable<()>, OwnedKeyExpr)>,
     unanswered_queries: Arc<std::sync::RwLock<HashMap<Uuid, Query>>>,
+    // Liveliness
+    liveliness_tokens: HashMap<Uuid, LivelinessToken>,
+    liveliness_subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
 }
 
 impl RemoteState {
@@ -494,6 +498,8 @@ impl RemoteState {
             publishers: HashMap::new(),
             queryables: HashMap::new(),
             unanswered_queries: Arc::new(std::sync::RwLock::new(HashMap::new())),
+            liveliness_tokens: HashMap::new(),
+            liveliness_subscribers: HashMap::new(),
         }
     }
 
@@ -545,12 +551,8 @@ async fn run_websocket_server(
         opt_tls_acceptor = Some(TlsAcceptor::from(Arc::new(config)));
     }
 
-    tracing::info!("Spawning Remote API Plugin on {:?}", ws_port);
-
-    let tcp = TcpListener::bind(ws_port).await;
-
-    let server: TcpListener = match tcp {
-        Ok(x) => x,
+    let server: TcpListener = match TcpListener::bind(ws_port).await {
+        Ok(server) => server,
         Err(err) => {
             tracing::error!("Unable to start TcpListener {err}");
             return;

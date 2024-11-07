@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-use std::{error::Error, net::SocketAddr};
+use std::{error::Error, net::SocketAddr, time::Duration};
 
 use tracing::{error, warn};
 use uuid::Uuid;
@@ -24,9 +24,10 @@ use zenoh::{
 
 use crate::{
     interface::{
-        ControlMsg, DataMsg, HandlerChannel, QueryWS, QueryableMsg, RemoteAPIMsg, ReplyWS, SampleWS,
+        ControlMsg, DataMsg, HandlerChannel, LivelinessMsg, QueryWS, QueryableMsg, RemoteAPIMsg,
+        ReplyWS, SampleWS,
     },
-    spawn_future, StateMap,
+    spawn_future, RemoteState, StateMap,
 };
 
 ///
@@ -202,7 +203,7 @@ pub(crate) async fn handle_control_message(
             handler,
             id: subscriber_uuid,
         } => {
-            let key_expr = KeyExpr::new(owned_key_expr.clone()).unwrap();
+            let key_expr = KeyExpr::new(owned_key_expr.clone())?;
             let ch_tx = state_map.websocket_tx.clone();
 
             let join_handle = match handler {
@@ -326,6 +327,10 @@ pub(crate) async fn handle_control_message(
                 queryable.undeclare().await?;
             };
         }
+        ControlMsg::Liveliness(liveliness_msg) => {
+            return handle_liveliness(liveliness_msg, state_map).await;
+        }
+
         msg @ (ControlMsg::GetFinished { id: _ }
         | ControlMsg::Session(_)
         | ControlMsg::Subscriber(_)) => {
@@ -333,5 +338,86 @@ pub(crate) async fn handle_control_message(
             error!("Backend should not recieve this message Type: {msg:?}");
         }
     };
+    Ok(None)
+}
+
+// Handle Liveliness Messages
+async fn handle_liveliness(
+    liveliness_msg: LivelinessMsg,
+    state_map: &mut RemoteState,
+) -> Result<Option<ControlMsg>, Box<dyn Error + Send + Sync>> {
+    let liveliness = state_map.session.liveliness();
+    match liveliness_msg {
+        LivelinessMsg::DeclareToken { key_expr, id } => {
+            let token = liveliness.declare_token(key_expr).await?;
+            state_map.liveliness_tokens.insert(id, token);
+        }
+        LivelinessMsg::UndeclareToken(uuid) => {
+            if let Some(token) = state_map.liveliness_tokens.remove(&uuid) {
+                token.undeclare().await?;
+            }
+        }
+        LivelinessMsg::DeclareSubscriber {
+            key_expr: owned_key_expr,
+            id,
+            history,
+        } => {
+            let key_expr = KeyExpr::new(owned_key_expr.clone())?;
+            let subscriber = liveliness
+                .declare_subscriber(key_expr)
+                .history(history)
+                .await?;
+            let ch_tx = state_map.websocket_tx.clone();
+
+            let handler = spawn_future(async move {
+                while let Ok(sample) = subscriber.recv_async().await {
+                    let sample_ws = SampleWS::from(sample);
+                    let remote_api_message = RemoteAPIMsg::Data(DataMsg::Sample(sample_ws, id));
+                    if let Err(e) = ch_tx.send(remote_api_message) {
+                        error!("Forward Sample Channel error: {e}");
+                    };
+                }
+            });
+            state_map
+                .liveliness_subscribers
+                .insert(id, (handler, owned_key_expr));
+        }
+        LivelinessMsg::UndeclareSubscriber(uuid) => {
+            if let Some((join_handle, _)) = state_map.liveliness_subscribers.remove(&uuid) {
+                join_handle.abort(); // This should drop the underlying liveliness_subscribers of the future
+            } else {
+                warn!("UndeclareSubscriber: No Subscriber with UUID {uuid}");
+            }
+        }
+        LivelinessMsg::Get {
+            key_expr,
+            id,
+            timeout,
+        } => {
+            let mut builder = liveliness.get(key_expr);
+            if let Some(timeout) = timeout {
+                builder = builder.timeout(Duration::from_millis(timeout));
+            }
+            let receiver = builder.await?;
+
+            let mut receiving: bool = true;
+
+            while receiving {
+                match receiver.recv_async().await {
+                    Ok(reply) => {
+                        let reply_ws = ReplyWS::from((reply, id));
+                        let remote_api_msg = RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
+                        if let Err(err) = state_map.websocket_tx.send(remote_api_msg) {
+                            tracing::error!("{}", err);
+                        }
+                    }
+                    Err(_) => receiving = false,
+                }
+            }
+
+            let remote_api_msg = RemoteAPIMsg::Control(ControlMsg::GetFinished { id });
+            state_map.websocket_tx.send(remote_api_msg)?;
+        }
+    }
     Ok(None)
 }

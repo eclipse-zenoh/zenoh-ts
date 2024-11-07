@@ -136,7 +136,7 @@ export class RemoteSubscriber {
     this.undeclared = false;
   }
 
-  static async new(
+  static new(
     key_expr: String,
     subscriber_id: UUID,
     session_ref: RemoteSession,
@@ -163,7 +163,7 @@ export class RemoteSubscriber {
 
   async receive(): Promise<SampleWS | void> {
     if (this.undeclared == true) {
-      console.warn("Subscriber keyexpr:`" +
+      console.warn("Subscriber undeclared keyexpr:`" +
         this.key_expr +
         "` id:`" +
         this.subscriber_id +
