@@ -13,6 +13,9 @@ Zenoh (pronounce _/zeno/_) unifies data in motion, data at rest and computations
 
 Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.com/eclipse-zenoh/roadmap) for more detailed information.
 
+:warning: Note: This library does not support NodeJS. 
+To run on the backend its recommended either to use [deno](https://deno.com/) or check out the differnt language bindings
+
 ---
 
 # Typescript/Javascript API
@@ -63,22 +66,19 @@ Keep this terminal running while building and running the example below
 
 ### 3. Build + run the examples
 
-1. Navigate to the `/zenoh-ts/examples` directory
-2. Install `zenoh-ts` library by running `yarn install` 
-3. Then run the examples by running `yarn run dev`
+The most simple way to run examples is to install [deno](https://deno.com/), and run each example individually.  
 
-This will host a webserver serving the examples,  
-The web application will attempt to connect to a `websocket_port` : `10000`  
-where the remote API plugin should be running.  
+1. Install [deno](https://deno.com/)
+2. Navigate to the `/zenoh-ts/examples` directory
+3. Install `zenoh-ts` library by running `yarn install` 
+4. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn run_example src/z_sub.ts`
 
-4. Open a web browser and navigate to `http://localhost:5173` and open the console. 
-
-By default, the `main.ts` file is loaded into the webpage and run.  
-The subscriber example is run by default however in order to run specific examples  
-the user will have to comment in the function invocation in the `main.ts` file. 
-
+This will start an instance of Deno running the example.
+The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
+The javascript runtime [deno](https://deno.com/) is expected be consistent with the browser. 
+Note: This library does not support NodeJS 
 
 ### Clean projects
 
 To reset state of the project from the top level directory run 
-`cargo clean && cd zenoh-ts && yarn run clean && cd examples && yarn run clean`
+`cargo clean && cd zenoh-ts && yarn clean && cd examples && yarn clean`
