@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./node_modules ./dist ./esm",
-    "run_example": "deno run -A --no-prompt" 
+    "example": "deno run -A --no-prompt" 
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",

@@ -39,7 +39,7 @@ In order to run the example project the user must:
 ### 1. Build the Typescript Library  
 From project root directory:  
 1. Navigate to the `/zenoh-ts` directory  
-2. Build the `zenoh-ts` bindings by running `yarn install && yarn run build`  
+2. Build the `zenoh-ts` bindings by running `yarn install && yarn build`  
 
 ### 2. Build + Run the remote-api-plugin  
 From project root directory:  
@@ -71,7 +71,7 @@ The most simple way to run examples is to install [deno](https://deno.com/), and
 1. Install [deno](https://deno.com/)
 2. Navigate to the `/zenoh-ts/examples` directory
 3. Install `zenoh-ts` library by running `yarn install` 
-4. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn run_example src/z_sub.ts`
+4. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
 This will start an instance of Deno running the example.
 The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
