@@ -24,6 +24,7 @@ import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API interface
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
+import { Liveliness } from "./liveliness.js";
 import {
   IntoSelector,
   Parameters,
@@ -424,6 +425,10 @@ export class Session {
     );
 
     return subscriber;
+  }
+
+  liveliness() : Liveliness {
+    return new Liveliness(this.remote_session)
   }
 
   /**
