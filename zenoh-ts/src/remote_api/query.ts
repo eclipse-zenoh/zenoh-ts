@@ -15,14 +15,14 @@
 import { SimpleChannel } from "channel-ts";
 
 // Import interface
-import { ControlMsg } from "./interface/ControlMsg";
+import { ControlMsg } from "./interface/ControlMsg.js";
 
 // Remote Api
-import { RemoteSession, UUIDv4 } from "./session";
-import { QueryWS } from "./interface/QueryWS";
-import { DataMsg } from "./interface/DataMsg";
-import { QueryableMsg } from "./interface/QueryableMsg";
-import { QueryReplyWS } from "./interface/QueryReplyWS";
+import { RemoteSession, UUIDv4 } from "./session.js";
+import { QueryWS } from "./interface/QueryWS.js";
+import { DataMsg } from "./interface/DataMsg.js";
+import { QueryableMsg } from "./interface/QueryableMsg.js";
+import { QueryReplyWS } from "./interface/QueryReplyWS.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);

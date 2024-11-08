@@ -70,3 +70,33 @@ please refer to this link for more information [Accessing github NPM](https://do
 ```bash
   npx typedoc src/index.ts
 ```
+
+## Build + run the examples
+
+The most simple way to run examples is to install [deno](https://deno.com/), and run each example individually via the command line.  
+
+1. Install [deno](https://deno.com/)
+2. Navigate to the `/zenoh-ts/examples` directory
+3. Install `zenoh-ts` library by running `yarn install` 
+4. Start a `zenohd` instance with the Remote API plugin running `zenohd --config EXAMPLE CONFIG.json`
+```json
+{
+  mode: 'router',
+  plugins_loading: {
+    enabled: true,
+    search_dirs: ['./target/debug', '~/.zenoh/lib']
+  },
+  plugins: {
+    remote_api: {
+      websocket_port: '10000',
+    }
+  }
+}
+```
+5. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
+
+This will start an instance of Deno running the example.
+The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
+The javascript runtime [deno](https://deno.com/) is expected be consistent with the browser. 
+Note: This library does not support NodeJS 
+

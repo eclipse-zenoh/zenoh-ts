@@ -12,13 +12,13 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import "./style.css";
-import "./webpage.ts";
 import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
-export async function put() {
+export async function main() {
   console.warn('Running Zenoh Put !');
 
-  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   session.put("demo/example/zenoh-ts-put", "Put from Typescript!");
 }
+
+main()

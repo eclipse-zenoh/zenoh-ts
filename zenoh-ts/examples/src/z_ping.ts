@@ -13,13 +13,10 @@
 //
 
 import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
-import "./style.css";
-import "./webpage.ts";
-
 import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 
-export async function ping() {
-  const session = await Session.open(new Config ("ws/127.0.0.1:10000"));
+export async function main() {
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   let sub = await session.declare_subscriber("test/pong", new FifoChannel(256));
   let pub = session.declare_publisher(
@@ -81,3 +78,4 @@ function elapsed_ms(startTime: Date) {
   return timeDiff;
 }
 
+main()

@@ -16,18 +16,18 @@
 import { SimpleChannel } from "channel-ts";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 // Remote API
-import { RemoteQueryable } from "./remote_api/query";
-import { ReplyWS } from "./remote_api/interface/ReplyWS";
-import { QueryReplyVariant } from "./remote_api/interface/QueryReplyVariant";
-import { ReplyErrorWS } from "./remote_api/interface/ReplyErrorWS";
-import { UUIDv4 } from "./remote_api/session";
-import { QueryWS } from "./remote_api/interface/QueryWS";
-import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS";
+import { RemoteQueryable } from "./remote_api/query.js";
+import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
+import { QueryReplyVariant } from "./remote_api/interface/QueryReplyVariant.js";
+import { ReplyErrorWS } from "./remote_api/interface/ReplyErrorWS.js";
+import { UUIDv4 } from "./remote_api/session.js";
+import { QueryWS } from "./remote_api/interface/QueryWS.js";
+import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 // API
-import { IntoKeyExpr, KeyExpr } from "./key_expr";
-import { IntoZBytes, ZBytes } from "./z_bytes";
-import { Sample, Sample_from_SampleWS } from "./sample";
-import { Encoding } from "./encoding";
+import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
+import { IntoZBytes, ZBytes } from "./z_bytes.js";
+import { Sample, Sample_from_SampleWS } from "./sample.js";
+import { Encoding } from "./encoding.js";
 
 //  ██████  ██    ██ ███████ ██████  ██    ██  █████  ██████  ██      ███████
 // ██    ██ ██    ██ ██      ██   ██  ██  ██  ██   ██ ██   ██ ██      ██

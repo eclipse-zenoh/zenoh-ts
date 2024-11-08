@@ -15,17 +15,16 @@
 import {
   RemoteRecvErr as GetChannelClose,
   RemoteSession,
-} from "./remote_api/session";
-import { ReplyWS } from "./remote_api/interface/ReplyWS";
-import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub";
-import { SampleWS } from "./remote_api/interface/SampleWS";
-import { RemoteQueryable } from "./remote_api/query";
-import { QueryWS } from "./remote_api/interface/QueryWS";
-import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS";
+} from "./remote_api/session.js";
+import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
+import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
+import { SampleWS } from "./remote_api/interface/SampleWS.js";
+import { RemoteQueryable } from "./remote_api/query.js";
+import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API interface
-import { IntoKeyExpr, KeyExpr } from "./key_expr";
-import { IntoZBytes, ZBytes } from "./z_bytes";
-import { Liveliness } from "./liveliness";
+import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
+import { IntoZBytes, ZBytes } from "./z_bytes.js";
+import { Liveliness } from "./liveliness.js";
 import {
   IntoSelector,
   Parameters,
@@ -34,8 +33,8 @@ import {
   QueryWS_to_Query,
   Reply,
   Selector,
-} from "./query";
-import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub";
+} from "./query.js";
+import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub.js";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -47,14 +46,14 @@ import {
   ConsolidationMode,
   Reliability,
   reliability_to_int,
-} from "./sample";
-import { Config } from "./config";
-import { Encoding } from "./encoding";
-import { HandlerChannel } from "./remote_api/interface/HandlerChannel";
-// General imports
+} from "./sample.js";
+import { State } from "channel-ts/lib/channel.js";
+import { Config } from "./config.js";
+import { Encoding } from "./encoding.js";
+import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
+import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
+// External deps
 import { SimpleChannel } from "channel-ts";
-import { State } from "channel-ts/lib/channel";
-
 
 function executeAsync(func: any) {
   setTimeout(func, 0);

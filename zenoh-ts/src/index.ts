@@ -13,15 +13,15 @@
 //
 
 // API Layer Files
-import { KeyExpr, IntoKeyExpr } from "./key_expr";
-import { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int, deserialize_float, deserialize_string } from "./z_bytes";
-import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample";
-import { Publisher, Subscriber, FifoChannel, RingChannel } from "./pubsub";
-import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query";
-import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions } from "./session";
-import { Config } from "./config";
-import { Encoding, IntoEncoding } from "./encoding";
-import { Liveliness, LivelinessToken } from "./liveliness";
+import { KeyExpr, IntoKeyExpr } from "./key_expr.js";
+import { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int, deserialize_float, deserialize_string } from "./z_bytes.js";
+import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample.js";
+import { Publisher, Subscriber, FifoChannel, RingChannel } from "./pubsub.js";
+import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query.js";
+import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions } from "./session.js";
+import { Config } from "./config.js";
+import { Encoding, IntoEncoding } from "./encoding.js";
+import { Liveliness, LivelinessToken } from "./liveliness.js";
 // Re-export duration external library
 import { TimeDuration as Duration } from 'typed-duration'
 

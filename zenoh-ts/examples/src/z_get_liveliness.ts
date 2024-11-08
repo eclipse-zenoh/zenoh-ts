@@ -12,9 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import "./style.css";
-import "./webpage.ts";
-
 import {
   RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr,
   SampleKind,
@@ -25,7 +22,7 @@ import {
 import { Duration } from 'typed-duration'
 const { seconds } = Duration
 
-export async function get_liveliness() {
+export async function main() {
 
   console.log("Opening session...")
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -59,3 +56,4 @@ export async function get_liveliness() {
   console.warn("End Liveliness query");
 }
 
+main()

@@ -12,15 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import "./style.css";
-import "./webpage.ts";
-
 import {
-  RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr,
+  Config, Subscriber, Session, KeyExpr,
   SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
 
-export async function sub_liveliness() {
+export async function main() {
 
   console.log("Opening session...")
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -28,7 +25,7 @@ export async function sub_liveliness() {
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
   let liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: true });
-  console.log("liveliness_subscriber : ", liveliness_subscriber);
+
 
   let sample = await liveliness_subscriber.receive();
   while (sample != undefined) {
@@ -53,3 +50,5 @@ export async function sub_liveliness() {
 
   liveliness_subscriber.undeclare();
 }
+
+main();

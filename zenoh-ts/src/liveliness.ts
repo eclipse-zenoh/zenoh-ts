@@ -2,20 +2,20 @@
 import {
   RemoteSession,
   UUIDv4
-} from "./remote_api/session";
-import { IntoKeyExpr, KeyExpr } from "./key_expr";
-import { Sample, Sample_from_SampleWS } from "./sample";
-import { Reply } from "./query";
+} from "./remote_api/session.js";
+import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
+import { Sample, Sample_from_SampleWS } from "./sample.js";
+import { Reply } from "./query.js";
 
 // Import interface
-import { ControlMsg } from "./remote_api/interface/ControlMsg";
-import { SampleWS } from "./remote_api/interface/SampleWS";
-import { NewSubscriber, Subscriber } from "./pubsub";
+import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
+import { SampleWS } from "./remote_api/interface/SampleWS.js";
+import { NewSubscriber, Subscriber } from "./pubsub.js";
 
 // Liveliness API
-import { Receiver } from "./session";
+import { Receiver } from "./session.js";
 import { SimpleChannel } from "channel-ts";
-import { ReplyWS } from "./remote_api/interface/ReplyWS";
+import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 
 // External
 import { Duration, TimeDuration } from 'typed-duration'
