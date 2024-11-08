@@ -67,7 +67,7 @@ jobs:
       repo: ${{ github.repository }}
       version: ${{ needs.tag.outputs.version }}
       branch: ${{ needs.tag.outputs.branch }}
-      exclude-builds: '["x86_64-unknown-linux-musl", "aarch64-unknown-linux-musl"]'
+      exclude-builds: '[{ build: { target: "x86_64-unknown-linux-musl", os: "ubuntu-20.04" }, { target: "aarch64-unknown-linux-musl", os: "ubuntu-20.04" } }]'
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.(dylib|so)$
         ^zenoh_plugin_remote_api(2)?\.dll$
