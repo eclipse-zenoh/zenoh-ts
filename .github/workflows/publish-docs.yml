@@ -1,8 +1,26 @@
 name: "typedoc"
 
 on:
-  push:
-    branches: [docs]
+  schedule:
+    - cron: "0 0 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      live-run:
+        type: boolean
+        description: Live-run
+        required: false
+      version:
+        type: string
+        description: Release number
+        required: false
+      zenoh-version:
+        type: string
+        description: Release number of Zenoh
+        required: false
+      branch:
+        type: string
+        description: Release branch
+        required: false
 
 permissions:
   contents: read
