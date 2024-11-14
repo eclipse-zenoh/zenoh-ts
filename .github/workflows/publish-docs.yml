@@ -1,8 +1,13 @@
 name: "typedoc"
 
 on:
+  schedule:
+    - cron: "0 0 * * 1-5"
+  workflow_dispatch:
   push:
-    branches: [docs]
+    tags:
+      - [0-9]+.*
+
 
 permissions:
   contents: read
