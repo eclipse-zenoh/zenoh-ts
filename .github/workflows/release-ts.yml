@@ -13,12 +13,7 @@ on:
         required: false
         default: '0.0.1'
         type: string
-      zenoh_version:
-        description: 'Zenoh version'
-        required: true
-        type: string
-        default: '1.0.0-alpha.6'
-  push: 
+
 
 defaults:
   run:
