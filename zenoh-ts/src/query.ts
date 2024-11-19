@@ -507,7 +507,7 @@ export class Selector {
   }
 
   toString(): string {
-    return this._key_expr.toString + "?" + this._parameters?.toString()
+    return this._key_expr.toString() + "?" + this._parameters?.toString()
   }
 
   /**
