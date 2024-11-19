@@ -28,7 +28,7 @@ export async function main() {
     );
   };
 
-  let key_expr = new KeyExpr("demo/example/zenoh-ts-sub");
+  let key_expr = new KeyExpr("demo/example/zenoh-ts-pub");
   console.warn("Declare Subscriber ", key_expr.toString());
   // Callback Subscriber take a callback which will be called upon every sample received.
   let callback_subscriber: Subscriber = await session.declare_subscriber(
@@ -43,7 +43,7 @@ export async function main() {
   // Poll Subscribers will only consume data on calls to receieve()
   // This means that interally the FIFO queue will fill up to the point that new values will be dropped
   // The dropping of these values occurs in the Remote-API Plugin
-  let poll_subscriber: Subscriber = await session.declare_subscriber("demo/example/zenoh-ts-sub", new RingChannel(10));
+  let poll_subscriber: Subscriber = await session.declare_subscriber("demo/example/zenoh-ts-pub", new RingChannel(10));
   let sample = await poll_subscriber.receive();
   while (sample != undefined) {
     console.warn!(

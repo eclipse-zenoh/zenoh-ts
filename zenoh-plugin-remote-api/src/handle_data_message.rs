@@ -76,10 +76,13 @@ pub async fn handle_data_message(
         }
         DataMsg::Queryable(queryable_msg) => match queryable_msg {
             QueryableMsg::Reply { reply } => {
+                
+                error!(" QueryableMsg::REPLY : {}, {:?}",reply.query_uuid,reply);
+
                 let query: Option<Query> = match state_map.unanswered_queries.write() {
                     Ok(mut wr) => wr.remove(&reply.query_uuid),
                     Err(err) => {
-                        tracing::error!("unanswered Queries RwLock Poisened {err}");
+                        tracing::error!("unanswered Queries RwLock Poisoned {err}");
                         return Ok(());
                     }
                 };

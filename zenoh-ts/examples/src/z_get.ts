@@ -18,19 +18,19 @@ export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   // Callback get query
-  const get_callback = async function (reply: Reply): Promise<void> {
-    let resp = reply.result();
-    if (resp instanceof Sample) {
-      let sample: Sample = resp;
-      console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string), "')");
-    } else {
-      let reply_error: ReplyError = resp;
-      console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
-    }
-  };
+  // const get_callback = async function (reply: Reply): Promise<void> {
+  //   let resp = reply.result();
+  //   if (resp instanceof Sample) {
+  //     let sample: Sample = resp;
+  //     console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string), "')");
+  //   } else {
+  //     let reply_error: ReplyError = resp;
+  //     console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
+  //   }
+  // };
 
   console.warn("Start z_get")
-  await session.get("demo/example/**", get_callback);
+  // await session.get("demo/example/**", get_callback);
 
   // Poll receiever
   let receiver: void | Receiver = await session.get("demo/example/**");

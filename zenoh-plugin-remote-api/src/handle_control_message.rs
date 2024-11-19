@@ -86,6 +86,22 @@ pub(crate) async fn handle_control_message(
             payload,
             attachment,
         } => {
+
+            error!(
+                "Get DEBUG  \nkey_expr:{:?} \nparameters:{:?} \nid:{:?} \nhandler:{:?} \nconsolidation:{:?} \ncongestion_control:{:?} \npriority:{:?} \nexpress:{:?} \nencoding:{:?} \npayload:{:?} \nattachment:{:?}",
+                key_expr,
+                parameters,
+                id,
+                handler,
+                consolidation,
+                congestion_control,
+                priority,
+                express,
+                encoding,
+                payload,
+                attachment,
+            );
+
             let selector = Selector::owned(key_expr, parameters.unwrap_or_default());
             let mut get_builder = state_map.session.get(selector);
 
@@ -114,6 +130,7 @@ pub(crate) async fn handle_control_message(
                     while receiving {
                         match receiver.recv_async().await {
                             Ok(reply) => {
+                                error!("Get DEBUG2 Fifo REPLY {:?}", reply);
                                 let reply_ws = ReplyWS::from((reply, id));
                                 let remote_api_msg =
                                     RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
@@ -131,6 +148,7 @@ pub(crate) async fn handle_control_message(
                     while receiving {
                         match receiver.recv_async().await {
                             Ok(reply) => {
+                                error!("Get DEBUG2 REPLY {:?}", reply);
                                 let reply_ws = ReplyWS::from((reply, id));
                                 let remote_api_msg =
                                     RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
@@ -293,11 +311,12 @@ pub(crate) async fn handle_control_message(
             let unanswered_queries = state_map.unanswered_queries.clone();
             let session = state_map.session.clone();
             let ch_tx = state_map.websocket_tx.clone();
-
+            let key_expr_cl = key_expr.clone();
             let queryable = session
                 .declare_queryable(&key_expr)
                 .complete(complete)
                 .callback(move |query| {
+                    error!(" Queryable : Receieved Query {key_expr_cl}, {}",query.key_expr());
                     let query_uuid = Uuid::new_v4();
                     let queryable_msg = QueryableMsg::Query {
                         queryable_uuid,

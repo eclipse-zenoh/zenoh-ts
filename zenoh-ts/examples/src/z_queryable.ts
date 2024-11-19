@@ -19,32 +19,32 @@ export async function main() {
   let key_expr = new KeyExpr("demo/example/zenoh-ts-queryable");
   console.warn("Declare Queryable on KeyExpr:", key_expr.toString());
 
-  const payload = [122, 101, 110, 111, 104];
+  const response = "Queryable from Typescript!";
 
   // Declaring a queryable with a callback
-  function callback(query: Query) {
-    let zbytes: ZBytes | undefined = query.payload();
+  // function callback(query: Query) {
+  //   let zbytes: ZBytes | undefined = query.payload();
 
-    if (zbytes == null) {
-      console.warn!(`>> [Queryable ] Received Query ${query.selector()}`);
-    } else {
-      console.warn!(
-        `>> [Queryable ] Received Query ${query.selector()} with payload '${zbytes}'`,
-      );
-    }
+  //   if (zbytes == null) {
+  //     console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
+  //   } else {
+  //     console.warn!(
+  //       `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes}'`,
+  //     );
+  //   }
 
-    console.warn(
-      `>> [Queryable ] Responding ${key_expr.toString()} with payload '${payload}'`,
-    );
-    query.reply(key_expr, payload);
-  }
+  //   console.warn(
+  //     `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
+  //   );
+  //   query.reply(key_expr, response);
+  // }
 
-  let queryable_cb: Queryable = await session.declare_queryable(key_expr, {
-    complete: true,
-    callback: callback,
-  });
-  await sleep(1000 * 5);
-  queryable_cb.undeclare()
+  // let queryable_cb: Queryable = await session.declare_queryable(key_expr, {
+  //   complete: true,
+  //   callback: callback,
+  // });
+  // await sleep(1000 * 5);
+  // queryable_cb.undeclare()
 
 
   // Declaring a Queryable with a handler
@@ -58,17 +58,17 @@ export async function main() {
     let zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == null) {
-      console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
+      console.warn!(`>> [Queryable ] Received Query1 ${query.selector().toString()}`);
     } else {
       console.warn!(
-        `>> [Queryable ] Received Query ${query.selector()} with payload '${zbytes.buffer()}'`,
+        `>> [Queryable ] Received Query2 ${query.selector().toString()} with payload '${zbytes.buffer()}'`,
       );
     }
-
+    
     console.warn(
-      `>> [Queryable ] Responding ${key_expr.toString()} with payload '${payload}'`,
+      `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
     );
-    query.reply(key_expr, payload);
+    query.reply(key_expr, response);
 
     query = await queryable.receive();
   }
