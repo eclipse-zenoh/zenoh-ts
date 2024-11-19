@@ -507,7 +507,11 @@ export class Selector {
   }
 
   toString(): string {
-    return this._key_expr.toString() + "?" + this._parameters?.toString()
+    if(this._parameters !=undefined) {
+      return this._key_expr.toString() + "?" + this._parameters?.toString()
+    } else {
+      return this._key_expr.toString()
+    }
   }
 
   /**
