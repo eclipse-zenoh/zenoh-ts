@@ -62,6 +62,7 @@ jobs:
         env:
           LIVE_RUN: ${{ inputs.live_run }}
           VERSION: ${{ steps.create-release-branch.outputs.version }}
+          BRANCH: ${{ inputs.branch }}
           GIT_USER_NAME: eclipse-zenoh-bot
           GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
 

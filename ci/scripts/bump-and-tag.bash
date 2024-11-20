@@ -5,6 +5,8 @@ set -xeo pipefail
 readonly live_run=${LIVE_RUN:-false}
 # Release number
 readonly version=${VERSION:?input VERSION is required}
+# Release number
+readonly branch=${BRANCH:?input BRANCH is required}
 # Git actor name
 readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
@@ -37,12 +39,12 @@ cat ${package_json_path} | jq "$JQ"  > "$package_tmp"
 mv ${package_tmp} ${package_json_path}
 
 git commit Cargo.toml ${plugin_toml_path} ${package_json_path} -m "chore: Bump version to $version"
+git push --force origin ${branch}
 
 if [[ ${live_run} ]]; then
   git tag --force "$version" -m "v$version"
+  git push --force origin "$version"
 fi
 
 git log -10
 git show-ref --tags
-git push --force origin
-git push --force origin "$version"
