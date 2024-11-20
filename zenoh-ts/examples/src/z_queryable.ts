@@ -58,10 +58,10 @@ export async function main() {
     let zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == null) {
-      console.warn!(`>> [Queryable ] Received Query1 ${query.selector().toString()}`);
+      console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
     } else {
       console.warn!(
-        `>> [Queryable ] Received Query2 ${query.selector().toString()} with payload '${zbytes.buffer()}'`,
+        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.buffer()}'`,
       );
     }
     
@@ -69,7 +69,7 @@ export async function main() {
       `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
     );
     query.reply(key_expr, response);
-
+    
     query = await queryable.receive();
   }
 }

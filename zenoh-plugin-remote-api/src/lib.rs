@@ -667,7 +667,7 @@ async fn handle_message(
             Ok(msg) => match msg {
                 RemoteAPIMsg::Control(ctrl_msg) => {
                     match handle_control_message(ctrl_msg, sock_addr, state_map).await {
-                        Ok(ok) => return ok.map(RemoteAPIMsg::Control),
+                        Ok(_) => return None,
                         Err(err) => {
                             tracing::error!(err);
                         }
