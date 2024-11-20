@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Reply, Sample, Session } from "@eclipse-zenoh/zenoh-ts";
+import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Reply, Sample, Session} from "@eclipse-zenoh/zenoh-ts";
 
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -54,6 +54,7 @@ export async function main() {
     }
     reply = await receiver.receive();
   }
+  console.warn("Get Finished");
 }
 
 

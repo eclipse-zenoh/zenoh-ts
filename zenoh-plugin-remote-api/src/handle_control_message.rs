@@ -87,6 +87,7 @@ pub(crate) async fn handle_control_message(
             encoding,
             payload,
             attachment,
+            timeout,
         } => {
             let selector = Selector::owned(key_expr, parameters.unwrap_or_default());
             let mut get_builder = state_map.session.get(selector);
@@ -107,6 +108,9 @@ pub(crate) async fn handle_control_message(
                     Ok(attachment) => get_builder = get_builder.attachment(attachment),
                     Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
                 }
+            }
+            if let Some(timeout) = timeout {
+                get_builder = get_builder.timeout(Duration::from_millis(timeout));
             }
 
             let ws_tx = state_map.websocket_tx.clone();

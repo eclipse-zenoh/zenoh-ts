@@ -120,7 +120,8 @@ pub enum ControlMsg {
         )]
         #[ts(type = "number | undefined")]
         consolidation: Option<ConsolidationMode>,
-        // timeout: Option<ConsolidationMode>,
+        #[ts(type = "number | undefined")]
+        timeout: Option<u64>,
         #[serde(
             deserialize_with = "deserialize_congestion_control",
             serialize_with = "serialize_congestion_control",

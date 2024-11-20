@@ -14,7 +14,7 @@
 
 // External
 import { SimpleChannel } from "channel-ts";
-import { encode as b64_str_from_bytes } from "base64-arraybuffer";
+import { encode as b64_str_from_bytes, decode as b64_bytes_from_str, } from "base64-arraybuffer";
 // Remote API
 import { RemoteQueryable } from "./remote_api/query.js";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
@@ -28,6 +28,9 @@ import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
 import { Sample, Sample_from_SampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
+
+
+
 
 //  ██████  ██    ██ ███████ ██████  ██    ██  █████  ██████  ██      ███████
 // ██    ██ ██    ██ ██      ██   ██  ██  ██  ██   ██ ██   ██ ██      ██
@@ -427,7 +430,7 @@ export class ReplyError {
     * 
     */
   constructor(reply_err_ws: ReplyErrorWS) {
-    let payload = new ZBytes(reply_err_ws.payload);
+    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(reply_err_ws.payload)));
     let encoding = Encoding.from_str(reply_err_ws.encoding);
     this._encoding = encoding;
     this._payload = payload;
