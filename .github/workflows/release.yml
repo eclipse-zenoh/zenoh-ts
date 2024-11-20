@@ -89,6 +89,23 @@ jobs:
         ^zenoh_plugin_remote_api(2)?\.dll$
     secrets: inherit
 
+  cargo:
+    needs: tag
+    name: Publish Cargo crates
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-cargo.yml@main
+    with:
+      repo: ${{ github.repository }}
+      live-run: ${{ inputs.live-run || false }}
+      branch: ${{ needs.tag.outputs.branch }}
+      # - In dry-run mode, we need to publish eclipse-zenoh/zenoh before this
+      #   repository, in which case the version of zenoh dependecies are left as
+      #   is and thus point to the main branch of eclipse-zenoh/zenoh.
+      # - In live-run mode, we assume that eclipse-zenoh/zenoh is already
+      #   published as this workflow can't be responsible for publishing it
+      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && 'zenoh.*' || '' }}
+      unpublished-deps-repos: ${{ !(inputs.live-run || false) && 'eclipse-zenoh/zenoh' || '' }}
+    secrets: inherit
+
   debian:
     name: Publish Debian packages
     needs: [tag, build-debian]
