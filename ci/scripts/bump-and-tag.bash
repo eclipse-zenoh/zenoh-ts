@@ -39,12 +39,12 @@ cat ${package_json_path} | jq "$JQ"  > "$package_tmp"
 mv ${package_tmp} ${package_json_path}
 
 git commit Cargo.toml ${plugin_toml_path} ${package_json_path} -m "chore: Bump version to $version"
-git push --force origin ${branch}
 
 if [[ ${live_run} ]]; then
   git tag --force "$version" -m "v$version"
-  git push --force origin "$version"
 fi
 
 git log -10
 git show-ref --tags
+git push origin
+git push --force origin "$version"
