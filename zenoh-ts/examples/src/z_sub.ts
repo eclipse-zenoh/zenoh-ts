@@ -18,32 +18,32 @@ import {
 
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  let key_expr = new KeyExpr("demo/example/**");
 
-  const callback = async function (sample: Sample): Promise<void> {
-    console.warn!(
-      ">> [Subscriber] Received " +
-      sample.kind() + " ('" +
-      sample.keyexpr() + "': '" +
-      sample.payload().deserialize(deserialize_string) + "')",
-    );
-  };
+  // const callback = async function (sample: Sample): Promise<void> {
+  //   console.warn!(
+  //     ">> [Subscriber] Received " +
+  //     sample.kind() + " ('" +
+  //     sample.keyexpr() + "': '" +
+  //     sample.payload().deserialize(deserialize_string) + "')",
+  //   );
+  // };
 
-  let key_expr = new KeyExpr("demo/example/zenoh-ts-sub");
-  console.warn("Declare Subscriber ", key_expr.toString());
-  // Callback Subscriber take a callback which will be called upon every sample received.
-  let callback_subscriber: Subscriber = await session.declare_subscriber(
-    key_expr,
-    callback,
-  );
+  // console.warn("Declare Subscriber ", key_expr.toString());
+  // // Callback Subscriber take a callback which will be called upon every sample received.
+  // let callback_subscriber: Subscriber = await session.declare_subscriber(
+  //   key_expr,
+  //   callback,
+  // );
 
-  await sleep(1000 * 3);
-  callback_subscriber.undeclare();
-  console.warn("Undeclare callback_subscriber");
+  // await sleep(1000 * 3);
+  // callback_subscriber.undeclare();
+  // console.warn("Undeclare callback_subscriber");
 
   // Poll Subscribers will only consume data on calls to receieve()
   // This means that interally the FIFO queue will fill up to the point that new values will be dropped
   // The dropping of these values occurs in the Remote-API Plugin
-  let poll_subscriber: Subscriber = await session.declare_subscriber("demo/example/zenoh-ts-sub", new RingChannel(10));
+  let poll_subscriber: Subscriber = await session.declare_subscriber(key_expr, new RingChannel(10));
   let sample = await poll_subscriber.receive();
   while (sample != undefined) {
     console.warn!(

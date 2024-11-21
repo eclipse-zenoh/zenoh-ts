@@ -53,6 +53,7 @@ import { Encoding } from "./encoding.js";
 import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 // External deps
+import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
 
 function executeAsync(func: any) {
@@ -108,6 +109,7 @@ export interface GetOptions {
   encoding?: Encoding,
   payload?: IntoZBytes,
   attachment?: IntoZBytes
+  timeout?: TimeDuration,
 }
 
 /**
@@ -328,6 +330,7 @@ export class Session {
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
+    
     let _consolidation = consolidation_mode_to_int(get_options?.consolidation)
     let _encoding = get_options?.encoding?.toString();
     let _congestion_control = congestion_control_to_int(get_options?.congestion_control);
@@ -335,7 +338,11 @@ export class Session {
     let _express = get_options?.express;
     let _attachment;
     let _payload;
+    let _timeout_millis: number | undefined = undefined;
 
+    if (get_options?.timeout !== undefined) {
+      _timeout_millis = Duration.milliseconds.from(get_options?.timeout);
+    }
     if (get_options?.attachment != undefined) {
       _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
     }
@@ -354,6 +361,7 @@ export class Session {
       _encoding,
       _payload,
       _attachment,
+      _timeout_millis
     );
 
     let receiver = Receiver.new(chan);

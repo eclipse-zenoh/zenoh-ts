@@ -12,8 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-// External
-import { encode as b64_str_from_bytes, decode as b64_bytes_from_str, } from "base64-arraybuffer";
 // Internal
 import { KeyExpr } from "./key_expr.js";
 import { OwnedKeyExprWrapper } from "./remote_api/interface/OwnedKeyExprWrapper.js";
@@ -21,6 +19,8 @@ import { SampleKindWS } from "./remote_api/interface/SampleKindWS.js";
 import { SampleWS } from "./remote_api/interface/SampleWS.js";
 import { ZBytes } from "./z_bytes.js";
 import { Encoding } from "./encoding.js";
+// External
+import { encode as b64_str_from_bytes, decode as b64_bytes_from_str, } from "base64-arraybuffer";
 
 /**
  * Kinds of Samples that can be received from Zenoh

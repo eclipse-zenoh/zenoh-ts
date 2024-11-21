@@ -176,7 +176,8 @@ export class RemoteSession {
     express?: boolean,
     encoding?: string,
     payload?: Array<number>,
-    attachment?: Array<number>
+    attachment?: Array<number>,
+    timeout_ms?: number,
   ): Promise<SimpleChannel<ReplyWS>> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
@@ -202,6 +203,7 @@ export class RemoteSession {
         priority: priority,
         express: express,
         encoding: encoding,
+        timeout: timeout_ms,
         payload: opt_payload,
         attachment: opt_attachment
       },
