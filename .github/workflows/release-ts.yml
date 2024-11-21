@@ -1,24 +1,9 @@
-name: Package zenoh-ts
+name: Release zenoh-ts
 
 on:
-  workflow_dispatch:
-    inputs:
-      publish:
-        description: 'Publish artifacts'
-        default: false
-        required: false
-        type: boolean
-      version:
-        description: 'Library version'
-        required: false
-        default: '0.0.1'
-        type: string
-      zenoh_version:
-        description: 'Zenoh version'
-        required: true
-        type: string
-        default: '1.0.0-alpha.6'
-  push: 
+  push:
+    tags:
+      - '[0-9]+.*'
 
 defaults:
   run:
@@ -28,8 +13,6 @@ defaults:
 jobs:
   package:
     name: Package app for ${{ matrix.job.name }}
-    env:
-      NUXT_PUBLIC_VERSION: ${{ inputs.version }}
     strategy:
       fail-fast: false
     runs-on: ubuntu-latest

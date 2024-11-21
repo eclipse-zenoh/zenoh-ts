@@ -38,16 +38,33 @@ on:
 jobs:
   tag:
     name: Branch, Bump & tag crates
-    uses: eclipse-zenoh/ci/.github/workflows/branch-bump-tag-crates.yml@main
-    with:
-      repo: ${{ github.repository }}
-      live-run: ${{ inputs.live-run || false }}
-      version: ${{ inputs.version }}
-      branch: ${{ inputs.branch }}
-      bump-deps-version: ${{ inputs.zenoh-version }}
-      bump-deps-pattern: ${{ inputs.zenoh-version && 'zenoh.*' || '^$' }}
-      bump-deps-branch: ${{ inputs.zenoh-version && format('release/{0}', inputs.zenoh-version) || '' }}
-    secrets: inherit
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.create-release-branch.outputs.version }}
+      branch: ${{ steps.create-release-branch.outputs.branch }}
+    steps:
+      - id: create-release-branch
+        uses: eclipse-zenoh/ci/create-release-branch@main
+        with:
+          repo: ${{ github.repository }}
+          live-run: ${{ inputs.live-run || false }}
+          version: ${{ inputs.version }}
+          branch: ${{ inputs.branch }}
+          github-token: ${{ secrets.BOT_TOKEN_WORKFLOW }}
+
+      - name: Checkout this repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.create-release-branch.outputs.branch }}
+
+      - name: Bump and tag project
+        run: bash ci/scripts/bump-and-tag.bash
+        env:
+          LIVE_RUN: ${{ inputs.live_run }}
+          VERSION: ${{ steps.create-release-branch.outputs.version }}
+          BRANCH: ${{ inputs.branch }}
+          GIT_USER_NAME: eclipse-zenoh-bot
+          GIT_USER_EMAIL: eclipse-zenoh-bot@users.noreply.github.com
 
   build-debian:
     name: Build Debian packages
@@ -70,6 +87,23 @@ jobs:
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.(dylib|so)$
         ^zenoh_plugin_remote_api(2)?\.dll$
+    secrets: inherit
+
+  cargo:
+    needs: tag
+    name: Publish Cargo crates
+    uses: eclipse-zenoh/ci/.github/workflows/release-crates-cargo.yml@main
+    with:
+      repo: ${{ github.repository }}
+      live-run: ${{ inputs.live-run || false }}
+      branch: ${{ needs.tag.outputs.branch }}
+      # - In dry-run mode, we need to publish eclipse-zenoh/zenoh before this
+      #   repository, in which case the version of zenoh dependecies are left as
+      #   is and thus point to the main branch of eclipse-zenoh/zenoh.
+      # - In live-run mode, we assume that eclipse-zenoh/zenoh is already
+      #   published as this workflow can't be responsible for publishing it
+      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && 'zenoh.*' || '' }}
+      unpublished-deps-repos: ${{ !(inputs.live-run || false) && 'eclipse-zenoh/zenoh' || '' }}
     secrets: inherit
 
   debian:
