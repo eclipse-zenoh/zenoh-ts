@@ -56,6 +56,11 @@ if [[ "$bump_deps_pattern" != '' ]]; then
       toml_set_in_place Cargo.toml "workspace.dependencies.$dep.branch" "$bump_deps_branch"
     fi
   done
+
+  package_metadata_old=$(toml get zenoh-plugin-remote-api/Cargo.toml package.metadata.deb.depends)
+  package_metadata_new=$(sed "s/.*/zenohd (=$bump_deps_version)/" <<< $package_metadata_old)
+  toml_set_in_place ${plugin_toml_path} "package.metadata.deb.depends" "$package_metadata_new"
+  
   # Update lockfile
   cargo check
 
