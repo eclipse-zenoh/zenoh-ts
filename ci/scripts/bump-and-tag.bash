@@ -65,7 +65,7 @@ if [[ "$bump_deps_pattern" != '' ]]; then
   cargo check
 
   if [[ -n $bump_deps_version || -n $bump_deps_branch ]]; then
-    git commit Cargo.toml Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
+    git commit Cargo.toml ${plugin_toml_path} Cargo.lock -m "chore: Bump $bump_deps_pattern version to $bump_deps_version"
   else
     echo "warn: no changes have been made to any workspace.dependencies matching $bump_deps_pattern"
   fi
