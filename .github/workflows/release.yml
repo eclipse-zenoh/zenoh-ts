@@ -110,7 +110,7 @@ jobs:
 
   debian:
     name: Publish Debian packages
-    needs: [tag, build-standalone, cargo]
+    needs: [tag, build-debian, cargo]
     uses: eclipse-zenoh/ci/.github/workflows/release-crates-debian.yml@main
     with:
       no-build: true
