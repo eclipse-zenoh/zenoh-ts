@@ -5,8 +5,6 @@ set -xeo pipefail
 readonly live_run=${LIVE_RUN:-false}
 # Release number
 readonly version=${VERSION:?input VERSION is required}
-# Release number
-readonly branch=${BRANCH:?input BRANCH is required}
 # Git actor name
 readonly git_user_name=${GIT_USER_NAME:?input GIT_USER_NAME is required}
 # Git actor email
