@@ -18,7 +18,7 @@ version = "1.0.0-dev" # Zenoh version
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = [
-    "Charles Schleich",
+    "Charles Schleich <charles.schleich@zettascale.tech>",
     "Olivier Hécart <olivier.hecart@zettascale.tech>",
     "Luca Cominardi <luca.cominardi@zettascale.tech>",
     "Pierre Avital <pierre.avital@zettascale.tech>",
@@ -27,8 +27,7 @@ edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = [
     "network-programming",
-    "web-programming::http-server",
-    "websocket",
+    "web-programming::websocket",
 ]
 description = "Zenoh: The Zero Overhead Pub/Sub/Query Protocol."
 
