@@ -1,6 +1,6 @@
 {
-  "name": "zenoh-ts",
-  "private": true,
+  "name": "zenoh-ts-examples",
+  "private": false,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
