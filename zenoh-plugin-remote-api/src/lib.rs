@@ -608,9 +608,13 @@ async fn run_websocket_server(
                 None => Box::new(tcp_stream),
             };
 
-            let ws_stream = tokio_tungstenite::accept_async(streamable)
-                .await
-                .expect("Error during the websocket handshake occurred");
+            let ws_stream = match tokio_tungstenite::accept_async(streamable).await {
+                Ok(ws_stream) => ws_stream,
+                Err(e) => {
+                    error!("Error during the websocket handshake occurred: {}", e);
+                    return;
+                }
+            };
 
             let (ws_tx, ws_rx) = ws_stream.split();
 
