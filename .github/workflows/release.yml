@@ -60,7 +60,7 @@ jobs:
       - name: Bump and tag project
         run: bash ci/scripts/bump-and-tag.bash
         env:
-          LIVE_RUN: ${{ inputs.live_run }}
+          LIVE_RUN: ${{ inputs.live-run }}
           VERSION: ${{ steps.create-release-branch.outputs.version }}
           BUMP_DEPS_VERSION: ${{ inputs.zenoh-version }}
           BUMP_DEPS_PATTERN: ${{ inputs.zenoh-version && 'zenoh.*' || '' }}
