@@ -2,6 +2,7 @@
 **/build
 cp_plugin.sh
 TEST_CONFIG.json5
+.bin
 
 zenoh-ts/dist
 zenoh-ts/node_modules
@@ -14,4 +15,4 @@ zenoh-plugin-remote-api/target/**
 zenoh-plugin-remote-api/bindings/** 
 **/target/** 
 **/node_modules/** 
-**/dist/** 
+**/dist/**

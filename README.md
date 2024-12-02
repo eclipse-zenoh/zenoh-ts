@@ -25,9 +25,45 @@ Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 ---
 
-## How to build it
+## How to build and run it
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in maintaining compatibility between the various git repositories in the Zenoh project.
+
+
+## Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
+
+The `zenohd` router and its pluigns should be built with exactly the same version of rust compiler with the same set of features.
+This requirement exists because router and plugins shares common Rust structures and Rust doesn't guarantee the ABI compatibility of
+memory representation of these structures.
+
+Therefore one of these methodds are recommended:
+
+1. Install latest release of `zenohd` and `zenoh-plugin-remote-api`
+
+  Ubuntu:
+
+  ```sh
+  echo "deb [trusted=yes] https://download.eclipse.org/zenoh/debian-repo/ /" | sudo tee -a /etc/apt/sources.list.d/zenoh.list > /dev/null
+  sudo apt update
+  sudo apt install zenohd
+  sudo apt install zenoh-plugin-remote-api
+  ```
+
+  ```sh
+  zenohd
+  ```
+
+2. Build `zenoh-plugin-remote-api` locally and build and run exactly the same zenohd version as the one which is used for building the plugin.
+The 3-rd party tool https://crates.io/crates/cargo-run-bin is used to build and run zenohd version local to project (in `.bin` directory)
+
+  ```sh
+  cargo install cargo-run-bin
+  cargo bin -i zenohd
+  ```
+
+  ```sh
+  cargo bin zenohd
+  ```  
 
 ## Building the Typescript project
 
