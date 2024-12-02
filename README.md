@@ -32,11 +32,11 @@ Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 ## Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
-The `zenohd` router and its pluigns should be built with exactly the same version of rust compiler with the same set of features.
+The `zenohd` router and its pluigns should be built with the same zenoh sources and the same version of rust compiler with the same set of features.
 This requirement exists because router and plugins shares common Rust structures and Rust doesn't guarantee the ABI compatibility of
 memory representation of these structures.
 
-Therefore one of these methodds is recommended:
+Therefore one of these methods is recommended:
 
 1. Install latest release of `zenohd` and `zenoh-plugin-remote-api`
 
@@ -50,13 +50,32 @@ Therefore one of these methodds is recommended:
   ```
 
   Mac-OS:
+
   ```sh
   brew tap eclipse-zenoh/homebrew-zenoh
   brew install zenoh
   brew install zenoh-plugin-remote-api
   ```
 
-2. Build the plugin and the router locally: 
+  Run installed zenoh router with example config
+
+  ```sh
+  zenohd --config EXAMPLE_CONFIG.json5
+  ```
+  
+  Expected output for is like:
+
+  ```
+  zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
+  zenoh::net::runtime: Using ZID: f7bc54e0941036422ec08ebac6fbdb40
+  zenoh::api::loader: Loading  plugin "remote_api"
+  zenoh::api::loader: Starting  plugin "remote_api"
+  zenoh::api::loader: Successfully started plugin remote_api from "/usr/lib/libzenoh_plugin_remote_api.so"
+  zenoh::api::loader: Finished loading plugins
+  zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/....
+  ```
+
+2. Build the plugin and the router from the sources:
 
   Build the `zenoh-plugin-remote-api`
 
@@ -64,19 +83,32 @@ Therefore one of these methodds is recommended:
   cargo build 
   ```
 
- and build and run exactly the same zenohd version as the one which is used for building the plugin.
-The 3-rd party tool https://crates.io/crates/cargo-run-bin is used to build and run zenohd version local to project
+  Build and run the zenohd from the same sources which were used for the plugin.
+  The zenohd dependency is specified in `[workspace.metadata.bin]` section in Cargo.toml and processed by the 3-rd party tool https://crates.io/crates/cargo-run-bin.
 
   ```sh
   cargo install cargo-run-bin
   cargo bin -i zenohd
   ```
 
-  Use this command to run local zenoh router version instead of just `zenohd --config config.json5` in the examples below
+  Use this command to run local zenoh router version
 
   ```sh
-  cargo bin zenohd -- --config config.json5
+  cargo bin zenohd --config EXAMPLE_CONFIG.json5
   ```  
+
+  Expected output is like:
+
+  ```
+  zenohd: zenohd vc764bf9b built with rustc 1.75.0 (82e1608df 2023-12-21)
+  zenoh::net::runtime: Using ZID: bb3fb16628f57e92f92accf2f5c81511
+  zenoh::api::loader: Loading  plugin "remote_api"
+  zenoh::api::loader: Starting  plugin "remote_api"
+  zenoh::api::loader: Successfully started plugin remote_api from "./target/debug\\zenoh_plugin_remote_api.dll"
+  zenoh::api::loader: Finished loading plugins
+  zenoh::net::runtime::orchestrator: Zenoh can be reached at: ...
+  ```
+
 
 ## Building the Typescript project
 
