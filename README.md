@@ -36,7 +36,7 @@ The `zenohd` router and its pluigns should be built with exactly the same versio
 This requirement exists because router and plugins shares common Rust structures and Rust doesn't guarantee the ABI compatibility of
 memory representation of these structures.
 
-Therefore one of these methodds are recommended:
+Therefore one of these methodds is recommended:
 
 1. Install latest release of `zenohd` and `zenoh-plugin-remote-api`
 
@@ -49,20 +49,33 @@ Therefore one of these methodds are recommended:
   sudo apt install zenoh-plugin-remote-api
   ```
 
+  Mac-OS:
   ```sh
-  zenohd
+  brew tap eclipse-zenoh/homebrew-zenoh
+  brew install zenoh
+  brew install zenoh-plugin-remote-api
   ```
 
-2. Build `zenoh-plugin-remote-api` locally and build and run exactly the same zenohd version as the one which is used for building the plugin.
-The 3-rd party tool https://crates.io/crates/cargo-run-bin is used to build and run zenohd version local to project (in `.bin` directory)
+2. Build the plugin and the router locally: 
+
+  Build the `zenoh-plugin-remote-api`
+
+  ```sh
+  cargo build 
+  ```
+
+ and build and run exactly the same zenohd version as the one which is used for building the plugin.
+The 3-rd party tool https://crates.io/crates/cargo-run-bin is used to build and run zenohd version local to project
 
   ```sh
   cargo install cargo-run-bin
   cargo bin -i zenohd
   ```
 
+  Use this command to run local zenoh router version instead of just `zenohd --config config.json5` in the examples below
+
   ```sh
-  cargo bin zenohd
+  cargo bin zenohd -- --config config.json5
   ```  
 
 ## Building the Typescript project
