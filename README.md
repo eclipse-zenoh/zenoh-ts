@@ -29,7 +29,6 @@ Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in maintaining compatibility between the various git repositories in the Zenoh project.
 
-
 ## Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
 The `zenohd` router and its pluigns should be built with the same zenoh sources and the same version of rust compiler with the same set of features.
@@ -65,7 +64,7 @@ Therefore one of these methods is recommended:
   
   Expected output for is like:
 
-  ```
+  ```txt
   zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
   zenoh::net::runtime: Using ZID: f7bc54e0941036422ec08ebac6fbdb40
   zenoh::api::loader: Loading  plugin "remote_api"
@@ -75,7 +74,7 @@ Therefore one of these methods is recommended:
   zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/....
   ```
 
-2. Build the plugin and the router from the sources:
+1. Build the plugin and the router from the sources:
 
   Build the `zenoh-plugin-remote-api`
 
@@ -84,22 +83,16 @@ Therefore one of these methods is recommended:
   ```
 
   Build and run the zenohd from the same sources which were used for the plugin.
-  The zenohd dependency is specified in `[workspace.metadata.bin]` section in Cargo.toml and processed by the 3-rd party tool https://crates.io/crates/cargo-run-bin.
+  The zenohd dependency is specified in `[workspace.metadata.bin]` section in Cargo.toml and processed by the 3-rd party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
 
   ```sh
   cargo install cargo-run-bin
-  cargo bin -i zenohd
-  ```
-
-  Use this command to run local zenoh router version
-
-  ```sh
   cargo bin zenohd --config EXAMPLE_CONFIG.json5
   ```  
 
   Expected output is like:
 
-  ```
+  ```txt
   zenohd: zenohd vc764bf9b built with rustc 1.75.0 (82e1608df 2023-12-21)
   zenoh::net::runtime: Using ZID: bb3fb16628f57e92f92accf2f5c81511
   zenoh::api::loader: Loading  plugin "remote_api"
@@ -109,68 +102,56 @@ Therefore one of these methods is recommended:
   zenoh::net::runtime::orchestrator: Zenoh can be reached at: ...
   ```
 
-
 ## Building the Typescript project
 
 1. Make sure that the following utilities are available on your platform. 
- - [NPM](https://www.npmjs.com/package/npm)
- - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
- - [Typescript](https://www.typescriptlang.org/download/) 
 
-2. Navigate to the directory `zenoh-ts`
+- [NPM](https://www.npmjs.com/package/npm)
+- [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
+- [Typescript](https://www.typescriptlang.org/download/) 
 
-3. Run the commands:
+1. Navigate to the directory `zenoh-ts`
 
-```bash
-  yarn install 
-  # 
-  yarn run build
+1. Run the commands:
+
+```sh
+yarn install 
+yarn run build
 ```
 
-## Building the Rust Plugin
+## Build and run the command line examples
 
-1. Make sure that the following utilities are available on your platform. 
- - [Cargo + Rust Compiler](https://rustup.rs/)
+This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
+To run the command line examples use javascript runtime [deno](https://deno.com/) which is expected be consistent with the browser.
 
-2. Navigate to `zenoh-plugin-remote-api`
+1. Install [deno](https://deno.com/)
+1. Navigate to the `zenoh-ts/examples/deno` directory
+1. Install `zenoh-ts` library by running `yarn install`
+1. Run zenohd with remote_api plugin, configured to websocket port 10000, as described above
+1. Run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
-3. Run `cargo build`
+E.g. in different sessions run publisher and subcriber examples:
 
-## **Examples of usage**
+```sh
+yarn example src/pub.rs
+```
 
-### Running the Rust Plugin
+```sh
+yarn example src/sub.rs
+```
 
-Prerequisites:
- - You have a zenoh router (`zenohd`) installed, and the `zenoh_plugin_remote_api` library file is available in `~/.zenoh/lib`.
+The subscriber should start to receive messages from publisher
 
-### **Setup via a JSON5 configuration file**
-
-  - Create a `zenoh.json5` configuration file containing for example:
-    ```json5
-    {
-      plugins: {
-        // configuration of "storage_manager" plugin:
-        remote_api: {
-          "websocket_port": "10000",
-          // secure_websocket configuration is optional
-          "secure_websocket": {
-                "certificate_path" : "/path/to/certificate",
-                "private_key_path" : "/path/to/private_key"
-          }
-        }
-        // Optionally, add the REST plugin
-        rest: { http_port: 8000 }
-      }
-    }
-    ```
-  - Run the zenoh router with:
-    `zenohd -c zenoh.json5`
+This will start an instance of Deno running the example.
+The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
 
 ## Adding Typescript to your application
 
 The TypeScript library can be install from the command line: 
 
-`npm install @eclipse-zenoh/zenoh-ts@0.0.8`
+```sh
+npm install @eclipse-zenoh/zenoh-ts@0.0.8
+````
 
 Or added via package.json
 

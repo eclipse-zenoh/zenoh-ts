@@ -3,6 +3,7 @@
   "private": false,
   "version": "0.0.0",
   "type": "module",
+  "license": "EPL-2.0",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf ./node_modules ./dist ./esm",
@@ -13,6 +14,6 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "@eclipse-zenoh/zenoh-ts": "file:.."
+    "@eclipse-zenoh/zenoh-ts": "file:../.."
   }
 }
