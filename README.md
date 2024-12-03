@@ -1,15 +1,15 @@
 <img src="https://raw.githubusercontent.com/eclipse-zenoh/zenoh/master/zenoh-dragon.png" height="150">
 
-> :warning: **This is a WIP Active development project**: Experiment with with it, but it is **Not** production Ready!
+> :warning: **This is a WIP Active development project**: Experiment with it, but it is **Not** production ready!
 
 [![Discord](https://img.shields.io/badge/chat-on%20discord-blue)](https://discord.gg/2GJ958VuHs)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 # Eclipse Zenoh Typescript / Javascript API
 
-The Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query and Compute.
+The Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query, and Compute.
 
-Zenoh (pronounce _/zeno/_) unifies data in motion, data at rest and computations. It carefully blends traditional pub/sub with geo-distributed storages, queries and computations, while retaining a level of time and space efficiency that is well beyond any of the mainstream stacks.
+Zenoh (pronounced _/zeno/_) unifies data in motion, data at rest, and computations. It carefully blends traditional pub/sub with geo-distributed storage, queries, and computations, while retaining a level of time and space efficiency that is well beyond any of the mainstream stacks.
 
 Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.com/eclipse-zenoh/roadmap) for more detailed information.
 
@@ -17,9 +17,9 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 ## Typescript/Javascript API
 
-This repository provides a Typscript / Javascript binding through the use of the `remote-api-plugin` in this repo. 
-The long term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.  
-In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and will need to undergo a fair amount of refactoring before that can happen.
+This repository provides a Typescript / Javascript binding through the use of the `remote-api-plugin` in this repo. 
+The long-term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.  
+In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and it will need to undergo a fair amount of refactoring before that can happen.
 
 Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
@@ -27,7 +27,7 @@ Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 ## How to build and run it
 
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort in maintaining compatibility between the various git repositories in the Zenoh project.
+> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort into maintaining compatibility between the various git repositories in the Zenoh project.
 
 ### Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
@@ -35,7 +35,7 @@ The `zenohd` router and its plugins should be built with the same Zenoh sources,
 
 Therefore one of these methods is recommended:
 
-1. Install latest release of `zenohd` and `zenoh-plugin-remote-api`
+1. Install the latest release of `zenohd` and `zenoh-plugin-remote-api`
 
    Ubuntu:
 
@@ -54,7 +54,7 @@ Therefore one of these methods is recommended:
    brew install zenoh-plugin-remote-api
    ```
 
-   Run installed zenoh router with example config
+   Run the installed zenoh router with example config
 
    ```sh
    zenohd --config EXAMPLE_CONFIG.json5
@@ -81,7 +81,7 @@ Therefore one of these methods is recommended:
    ```
 
    Build and run the zenohd from the same sources which were used for the plugin.
-   The zenohd dependency is specified in `[workspace.metadata.bin]` section in Cargo.toml which is processed by the 3-rd party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
+   The zenohd dependency is specified in the `[workspace.metadata.bin]` section in Cargo.toml which is processed by the 3rd party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
 
    ```sh
    cargo install cargo-run-bin
@@ -120,15 +120,15 @@ Therefore one of these methods is recommended:
 ### Build and run the command line examples
 
 This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
-To run the command line examples use javascript runtime [deno](https://deno.com/) which is expected be consistent with the browser.
+To run the command line examples use the javascript runtime [deno](https://deno.com/) which is expected to be consistent with the browser.
 
 1. Install [deno](https://deno.com/)
 1. Navigate to the `zenoh-ts/examples/deno` directory
-1. Install `zenoh-ts` library by running `yarn install`
-1. Run zenohd with remote_api plugin, configured to websocket port 10000, as described above
+1. Install the `zenoh-ts` library by running `yarn install`
+1. Run zenohd with the remote_api plugin, configured to websocket port 10000, as described above
 1. Run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
-For to run publisher and subcriber examples:
+To run publisher and subscriber examples:
 
 ```sh
 yarn example src/pub.rs
