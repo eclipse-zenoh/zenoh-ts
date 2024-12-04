@@ -3,5 +3,6 @@ import type { B64String } from "./B64String";
 import type { QueryableMsg } from "./QueryableMsg";
 import type { ReplyWS } from "./ReplyWS";
 import type { SampleWS } from "./SampleWS";
+import type { SessionInfo } from "./SessionInfo";
 
-export type DataMsg = { "PublisherPut": { id: string, payload: B64String, attachment: B64String | null, encoding: string | null, } } | { "Sample": [SampleWS, string] } | { "GetReply": ReplyWS } | { "Queryable": QueryableMsg };
+export type DataMsg = { "PublisherPut": { id: string, payload: B64String, attachment: B64String | null, encoding: string | null, } } | { "Sample": [SampleWS, string] } | { "GetReply": ReplyWS } | { "SessionInfo": SessionInfo } | { "Queryable": QueryableMsg };

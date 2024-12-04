@@ -32,6 +32,8 @@ import { ReplyWS } from "./interface/ReplyWS.js";
 import { QueryableMsg } from "./interface/QueryableMsg.js";
 import { QueryReplyWS } from "./interface/QueryReplyWS.js";
 import { HandlerChannel } from "./interface/HandlerChannel.js";
+import { SessionInfo as SessionInfoIface} from "./interface/SessionInfo.js";
+
 
 // ██████  ███████ ███    ███  ██████  ████████ ███████     ███████ ███████ ███████ ███████ ██  ██████  ███    ██
 // ██   ██ ██      ████  ████ ██    ██    ██    ██          ██      ██      ██      ██      ██ ██    ██ ████   ██
@@ -59,6 +61,7 @@ export class RemoteSession {
   get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS | RemoteRecvErr>>;
   liveliness_subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
   liveliness_get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS>>;
+  session_info: SessionInfoIface | null ;
 
   private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
     this.ws = ws;
@@ -69,6 +72,7 @@ export class RemoteSession {
     this.get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
     this.liveliness_subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
     this.liveliness_get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
+    this.session_info = null;
   }
 
   //
@@ -135,6 +139,16 @@ export class RemoteSession {
   //
   // Zenoh Session Functions
   //
+  async info() : Promise<SessionInfoIface> {
+    let ctrl_message: ControlMsg = "SessionInfo";
+    this.session_info = null;
+    this.send_ctrl_message(ctrl_message);
+    while (this.session_info == null){
+      sleep(1)
+    }
+    return new Promise(this.session_info) ;
+  }
+
   // Put
   put(key_expr: string,
     payload: Array<number>,
@@ -151,7 +165,7 @@ export class RemoteSession {
       opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
     }
 
-    let data_message: ControlMsg = {
+    let ctrl_message: ControlMsg = {
       Put: {
         key_expr: owned_keyexpr,
         payload: b64_str_from_bytes(new Uint8Array(payload)),
@@ -162,7 +176,7 @@ export class RemoteSession {
         attachment: opt_attachment,
       },
     };
-    this.send_ctrl_message(data_message);
+    this.send_ctrl_message(ctrl_message);
   }
 
   // get
@@ -393,6 +407,7 @@ export class RemoteSession {
     return channel;
   }
 
+
   //
   // Sending Messages
   //
@@ -503,11 +518,21 @@ export class RemoteSession {
       } else {
         console.warn("Queryable message Variant not recognized");
       }
+    } else if("SessionInfo" in data_msg) {
+
+      console.log("SessionInfo Found !")
+      console.log(data_msg)
+      // SessionInfo(SessionInfo);
+
+
     } else {
       console.warn("Data Message not recognized Expected Variant", data_msg);
     }
   }
 }
+
+
+
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
