@@ -236,6 +236,15 @@ export class Session {
   }
 
   /**
+   * Returns the Zenoh SessionInfo Object
+   *
+   * @returns SessionInfo
+   */
+  static async info(): Promise<SessionInfo> {
+    // TODO 
+  }
+
+  /**
    * Executes a Delete on a session, for a specific key expression KeyExpr
    *
    * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
@@ -330,7 +339,7 @@ export class Session {
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
-    
+
     let _consolidation = consolidation_mode_to_int(get_options?.consolidation)
     let _encoding = get_options?.encoding?.toString();
     let _congestion_control = congestion_control_to_int(get_options?.congestion_control);
@@ -426,7 +435,7 @@ export class Session {
         handler_type,
       );
     }
-    
+
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       callback_subscriber,
@@ -435,7 +444,7 @@ export class Session {
     return subscriber;
   }
 
-  liveliness() : Liveliness {
+  liveliness(): Liveliness {
     return new Liveliness(this.remote_session)
   }
 
@@ -635,4 +644,43 @@ export class Receiver {
  */
 export function open(config: Config): Promise<Session> {
   return Session.open(config);
+}
+
+
+export class SessionInfo {
+  private _zid: ZenohId
+  private _routers: ZenohId[]
+  private _peers: ZenohId[]
+
+  constructor(
+    zid: ZenohId,
+    routers: ZenohId[],
+    peers: ZenohId[],
+  ) {
+    this._zid = zid;
+    this._routers = routers;
+    this._peers = peers;
+  }
+
+  zid(): ZenohId {
+    return this._zid;
+  }
+  routers(): ZenohId[] {
+    return this._routers;
+  }
+  peers(): ZenohId[] {
+    return this._peers;
+  }
+}
+
+export class ZenohId {
+  private zid: string
+
+  constructor(zid:string) {
+    this.zid = zid;
+  }
+
+  toString(): string {
+    return this.zid;
+  }
 }

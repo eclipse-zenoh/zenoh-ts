@@ -71,8 +71,20 @@ pub enum DataMsg {
     Sample(SampleWS, Uuid),
     // GetReply
     GetReply(ReplyWS),
+    // 
+    SessionInfo(SessionInfo),
+
     // Bidirectional
     Queryable(QueryableMsg),
+}
+
+#[derive(TS)]
+#[ts(export)]
+#[derive(Debug, Serialize, Deserialize)]
+pub struct SessionInfo {
+    pub zid: String, 
+    pub z_routers:Vec<String>,
+    pub z_peers:Vec<String>,
 }
 
 #[derive(TS)]
@@ -104,6 +116,9 @@ pub enum ControlMsg {
     OpenSession,
     CloseSession,
     Session(Uuid),
+
+    // 
+    SessionInfo,
 
     // Session Action Messages
     Get {
