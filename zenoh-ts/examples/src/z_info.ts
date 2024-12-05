@@ -13,22 +13,26 @@
 //
 
 import {
-  RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr
+  SessionInfo, Config, Session
 } from "@eclipse-zenoh/zenoh-ts";
 
 export async function main() {
   console.log!("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  let info = await session.info();
-  console.log!("zid: {}", info.zid().await);
+  console.log!("Get Info...");
+  let info: SessionInfo = await session.info();
+
+  console.log!("zid: {}", info.zid());
+
   console.log!(
-      "routers zid: {:?}",
-      info.routers_zid()
+    "routers zid: {:?}",
+    info.routers_zid()
   );
+
   console.log!(
-      "peers zid: {:?}",
-      info.peers_zid()
+    "peers zid: {:?}",
+    info.peers_zid()
   );
 
 }

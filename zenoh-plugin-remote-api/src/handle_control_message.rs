@@ -63,6 +63,7 @@ pub(crate) async fn handle_control_message(
             return Ok(());
         }
     };
+
     // Handle Control Message
     match ctrl_msg {
         ControlMsg::OpenSession => {

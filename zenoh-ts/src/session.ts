@@ -242,15 +242,15 @@ export class Session {
    * @returns SessionInfo
    */
   async info(): Promise<SessionInfo> {
-    let session_info_iface : SessionInfoIface = await this.remote_session.info();
+    let session_info_iface: SessionInfoIface = await this.remote_session.info();
 
     let zid = new ZenohId(session_info_iface.zid);
     let z_peers = session_info_iface.z_peers.map(x => new ZenohId(x));
     let z_routers = session_info_iface.z_routers.map(x => new ZenohId(x));
 
-    let session_info = new SessionInfo(zid,z_peers,z_routers);
+    let session_info = new SessionInfo(zid, z_peers, z_routers);
 
-    return session_info ;
+    return session_info;
   }
 
   /**
@@ -665,8 +665,8 @@ export class SessionInfo {
 
   constructor(
     zid: ZenohId,
-    routers: ZenohId[],
     peers: ZenohId[],
+    routers: ZenohId[],
   ) {
     this._zid = zid;
     this._routers = routers;
@@ -676,10 +676,10 @@ export class SessionInfo {
   zid(): ZenohId {
     return this._zid;
   }
-  routers(): ZenohId[] {
+  routers_zid(): ZenohId[] {
     return this._routers;
   }
-  peers(): ZenohId[] {
+  peers_zid(): ZenohId[] {
     return this._peers;
   }
 }
@@ -687,7 +687,7 @@ export class SessionInfo {
 export class ZenohId {
   private zid: string
 
-  constructor(zid:string) {
+  constructor(zid: string) {
     this.zid = zid;
   }
 
