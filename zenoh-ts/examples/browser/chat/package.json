@@ -1,0 +1,25 @@
+{
+  "name": "zenoh-ts-chat",
+  "version": "1.0.0",
+  "description": "Simple example of using zenoh-ts library on the web page",
+  "repository": "git@github.com:eclipse-zenoh/zenoh-ts",
+  "author": "Michael Ilyin <milyin@gmail.com>",
+  "license": "EPL-2.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && webpack",
+    "start": "http-server dist -c-1 -o"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.6.3",
+    "http-server": "^14.1.1",
+    "typescript": "^5.7.2",
+    "webpack": "^5.97.0",
+    "webpack-cli": "^5.1.4"
+  },
+  "dependencies": {
+    "@eclipse-zenoh/zenoh-ts": "file:../../..",
+    "importly": "^0.2.3"
+  }
+}

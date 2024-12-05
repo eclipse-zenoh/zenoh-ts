@@ -1,0 +1,18 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "moduleResolution": "nodenext",
+        "target": "es2021",
+        "strict": true,
+        "baseUrl": ".",
+        "esModuleInterop": true
+    },
+    "include": [
+        "src/main.ts"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node_modules.json"
+        }
+    ]
+}

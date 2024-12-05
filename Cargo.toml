@@ -29,6 +29,7 @@ ts-rs = { version = "9.0", features = [
     "uuid-impl",
     "serde-json-impl",
     "no-serde-warnings",
+    "import-esm",
 ] }
 tracing = "0.1"
 schemars = { version = "0.8.12", features = ["either"] }

@@ -1,0 +1,96 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.server-panel {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    background-color: #f0f0f0;
+}
+
+.server-panel label {
+    margin-right: 5px;
+}
+
+.server-panel input {
+    margin-right: 10px;
+}
+
+.main-panel {
+    display: flex;
+    flex: 1;
+}
+
+.user-list {
+    width: 20%;
+    border-right: 1px solid #ccc;
+    padding: 10px;
+}
+
+.chat-panel {
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.chat-log {
+    flex: 1;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.chat-input {
+    display: flex;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 5px;
+}
+
+.chat-input button {
+    padding: 5px 10px;
+}
+
+.technical-log-panel {
+    background-color: #f0f0f0;
+    padding: 10px;
+    height: 33vh;
+    /* 1/3 of the screen height */
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.technical-log-panel.hidden {
+    display: none;
+}
+
+.technical-log {
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+    margin-top: 10px;
+    height: calc(100% - 40px);
+    /* Adjust height to fit within the panel */
+    overflow-y: auto;
+}
+
+.toggle-log-panel {
+    position: fixed;
+    bottom: 10px;
+    left: 10px;
+}
+
+#toggle-log-button {
+    margin-top: 10px;
+}

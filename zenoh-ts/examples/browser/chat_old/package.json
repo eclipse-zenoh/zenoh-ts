@@ -1,0 +1,24 @@
+{
+  "name": "zenoh-ts-example",
+  "version": "1.0.0",
+  "description": "Simple example of using zenoh-ts library on the web page",
+  "repository": "git@github.com:ZettaScaleLabs/zenoh-ts-example.git",
+  "author": "Michael Ilyin <milyin@gmail.com>",
+  "license": "EPL-2.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node insert-importmap.js",
+    "start": "http-server -c-1 -o"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "jspm": "^3.3.3",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@eclipse-zenoh/zenoh-ts": "file:../../..",
+    "es-module-shims": "^1.10.1",
+    "importly": "^0.2.3"
+  }
+}
