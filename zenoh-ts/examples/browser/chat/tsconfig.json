@@ -9,6 +9,6 @@
         "outDir": "./dist"
     },
     "include": [
-        "src/main.ts"
+        "./src/main.ts"
     ]
 }

@@ -5,21 +5,27 @@
   "repository": "git@github.com:eclipse-zenoh/zenoh-ts",
   "author": "Michael Ilyin <milyin@gmail.com>",
   "license": "EPL-2.0",
-  "main": "index.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && webpack",
-    "start": "http-server dist -c-1 -o"
+    "build:ts": "tsc",
+    "build:webpack": "webpack",
+    "build:importmap": "importly < package-lock.json > importmap.json",
+    "build": "npm run build:ts && npm run build:importmap && npm run build:webpack",
+    "start": "http-server . -c-1 -o dist/index.html"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.6.3",
     "http-server": "^14.1.1",
+    "importly": "^0.2.3",
     "typescript": "^5.7.2",
-    "webpack": "^5.97.0",
+    "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
     "@eclipse-zenoh/zenoh-ts": "file:../../..",
-    "importly": "^0.2.3"
+    "@import-maps/generate": "^0.2.7",
+    "@jsenv/importmap-node-module": "^7.0.1",
+    "jspm": "^3.3.3",
+    "ts-loader": "^9.5.1"
   }
 }

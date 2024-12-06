@@ -1,7 +1,4 @@
 import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
-import { SimpleChannel } from "channel-ts";
-
-let q = new SimpleChannel();
 
 document.addEventListener('DOMContentLoaded', () => {
 	const toggleLogButton = document.getElementById('toggle-log-button');
