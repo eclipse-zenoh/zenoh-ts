@@ -18,12 +18,13 @@ import { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int
 import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample.js";
 import { Publisher, Subscriber, FifoChannel, RingChannel } from "./pubsub.js";
 import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query.js";
-import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions } from "./session.js";
+import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo } from "./session.js";
 import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
 // Re-export duration external library
 import { TimeDuration as Duration } from 'typed-duration'
+
 
 // Exports
 export { KeyExpr, IntoKeyExpr };
@@ -31,7 +32,7 @@ export { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int
 export { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind };
 export { Publisher, Subscriber, FifoChannel, RingChannel };
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector };
-export { Session, RecvErr, Receiver, DeleteOptions as DeleteOpts, PutOptions, GetOptions, QueryableOptions, PublisherOptions };
+export { Session, RecvErr, Receiver, DeleteOptions as DeleteOpts, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo};
 export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
