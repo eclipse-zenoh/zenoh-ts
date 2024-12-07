@@ -16,9 +16,10 @@ To start the example follow these steps:
    npm run start
    ```
 
-The example uses "importmap" approach to run the project. This is done purposedly to
-verify that library is ready to work directly in browser without any additional bundling.
+The example uses "importmap" approach to run the project. This means that the javascript code
+is loaded by browser directly, without any additional bundling. This is done purposedly to
+verify that library is ready to be used in browser without additional tooling.
 
-Note thought that dependent libraries are loaded from the cloud instead of local node_modules in this approach.
-This is necessayr because some of them (especially `channel-ts`) is written with CommonJS module
+Note though that dependent libraries are loaded from the cloud instead of local node_modules in this approach.
+This is necessary because some of them (especially `channel-ts`) is written with CommonJS module
 loading system and can't work in browser without repacking.
