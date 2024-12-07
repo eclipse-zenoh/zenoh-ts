@@ -7,25 +7,18 @@
   "license": "EPL-2.0",
   "type": "module",
   "scripts": {
-    "build:ts": "tsc",
-    "build:webpack": "webpack",
-    "build:importmap": "importly < package-lock.json > importmap.json",
-    "build": "npm run build:ts && npm run build:importmap && npm run build:webpack",
-    "start": "http-server . -c-1 -o dist/index.html"
+    "build": "rm -rf dist && mkdir dist && tsc && cp assets/* dist/ && jspm link -m dist/index.html",
+    "start": "http-server ../.. -c-1 -o examples/chat/dist/index.html"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.6.3",
     "http-server": "^14.1.1",
-    "importly": "^0.2.3",
+    "jspm": "^3.3.3",
     "typescript": "^5.7.2",
     "webpack": "^5.97.1",
     "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "@eclipse-zenoh/zenoh-ts": "file:../../..",
-    "@import-maps/generate": "^0.2.7",
-    "@jsenv/importmap-node-module": "^7.0.1",
-    "jspm": "^3.3.3",
-    "ts-loader": "^9.5.1"
+    "@eclipse-zenoh/zenoh-ts": "file:../.."
   }
 }
