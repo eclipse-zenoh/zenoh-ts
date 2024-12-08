@@ -1,4 +1,36 @@
-import { Config, Session } from '@eclipse-zenoh/zenoh-ts';
+import { Config, Session, Queryable, Query } from '@eclipse-zenoh/zenoh-ts';
+import CryptoJS from 'crypto-js';
+
+class ChatSession {
+	session: Session;
+	queryable: Queryable;
+
+	constructor(session: Session, queryable: Queryable) {
+		this.session = session;
+		this.queryable = queryable;
+	}
+
+	public static async connect(serverName: string, serverPort: string, username: string): Promise<ChatSession> {
+		let locator = `ws/${serverName}:${serverPort}`;
+		let config = new Config(locator);
+		log(`Connecting to zenohd on ${locator}`);
+		let session = await Session.open(config);
+		log(`Connected to zenohd on ${locator}`);
+		let user_id = CryptoJS.MD5(username).toString();
+		let queryable_keyexpr = `user/${user_id}`;
+		let queriable = await session.declare_queryable(queryable_keyexpr, { 
+			callback: (query: Query) => {
+				log(`Replying to query: ${query.selector().toString()}`);
+				query.reply(queryable_keyexpr, username);
+			},
+			complete: true
+		});
+		log(`Created queryable on ${queryable_keyexpr}`);
+		return new ChatSession(session, queriable)
+	}
+}
+
+let chatSession: ChatSession | null = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	const toggleLogButton = document.getElementById('toggle-log-button');
@@ -6,6 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const connectButton = document.getElementById('connect-button');
 	const serverNameInput = document.getElementById('server-name') as HTMLInputElement;
 	const serverPortInput = document.getElementById('server-port') as HTMLInputElement;
+	const usernameInput = document.getElementById('username') as HTMLInputElement;
 
 	toggleLogButton?.addEventListener('click', () => {
 		if (technicalLogPanel) {
@@ -14,7 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	connectButton?.addEventListener('click', () => {
-		connect(serverNameInput.value, serverPortInput.value);
+		connect(serverNameInput.value, serverPortInput.value, usernameInput.value);
 	});
 });
 
@@ -26,10 +59,6 @@ function log(message: string) {
 	technicalLog?.appendChild(logMessage);
 }
 
-async function connect(serverName: string, serverPort: string) {
-	let locator = `ws/${serverName}:${serverPort}`;
-	let config = new Config(locator);
-	log(`Connecting to zenohd on ${locator}`);
-	let session = await Session.open(config);
-	log(`Connected to zenohd on ${locator}`);
+async function connect(serverName: string, serverPort: string, username: string) {
+	chatSession = await ChatSession.connect(serverName, serverPort, username);
 }

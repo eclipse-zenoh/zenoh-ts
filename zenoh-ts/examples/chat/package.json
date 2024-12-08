@@ -11,11 +11,13 @@
     "start": "http-server ../.. -c-1 -o examples/chat/dist/index.html"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "http-server": "^14.1.1",
     "jspm": "^3.3.3",
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
     "@eclipse-zenoh/zenoh-ts": "file:../.."
   }
 }
