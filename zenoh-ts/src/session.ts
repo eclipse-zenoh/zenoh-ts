@@ -435,6 +435,11 @@ export class Session {
     return subscriber;
   }
 
+  /**
+   * Obtain a Liveliness struct tied to this Zenoh Session.
+   * 
+   * @returns Liveliness
+   */
   liveliness() : Liveliness {
     return new Liveliness(this.remote_session)
   }
