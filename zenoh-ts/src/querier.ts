@@ -166,6 +166,7 @@ export class Querier {
     this.undeclared = true;
     // Finalization registry
     // Queryable.registry.unregister(this);
+    this._remote_querier.undeclare()
   }
 
   /**

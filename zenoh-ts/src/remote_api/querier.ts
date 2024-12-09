@@ -33,6 +33,15 @@ export class RemoteQuerier {
         this.session_ref = session_ref;
     }
 
+    undeclare() {
+
+        let control_msg: ControlMsg = {
+            UndeclareQuerier: this.querier_id as string
+        };
+
+        this.session_ref.send_ctrl_message(control_msg);
+    }
+
     get(
         _encoding?: string,
         _parameters?: string,

@@ -345,7 +345,7 @@ pub(crate) async fn handle_control_message(
             priority,
             consolidation,
             allowed_destination,
-            express
+            express,
         } => {
             let mut querier_builder = state_map.session.declare_querier(key_expr);
             let timeout = timeout.map(|millis| Duration::from_millis(millis));
@@ -363,7 +363,7 @@ pub(crate) async fn handle_control_message(
             let querier = querier_builder.await?;
             state_map.queriers.insert(id, querier);
         }
-        ControlMsg::UndDeclareQuerier(uuid) => {
+        ControlMsg::UndeclareQuerier(uuid) => {
             if let Some(querier) = state_map.queriers.remove(&uuid) {
                 querier.undeclare().await?;
             } else {

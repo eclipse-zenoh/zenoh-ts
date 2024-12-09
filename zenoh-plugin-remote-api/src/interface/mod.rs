@@ -101,7 +101,6 @@ pub enum QueryableMsg {
     },
 }
 
-
 //  ██████  ██████  ███    ██ ████████ ██████   ██████  ██          ███    ███ ███████ ███████ ███████  █████   ██████  ███████
 // ██      ██    ██ ████   ██    ██    ██   ██ ██    ██ ██          ████  ████ ██      ██      ██      ██   ██ ██       ██
 // ██      ██    ██ ██ ██  ██    ██    ██████  ██    ██ ██          ██ ████ ██ █████   ███████ ███████ ███████ ██   ███ █████
@@ -310,7 +309,7 @@ pub enum ControlMsg {
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
     },
-    UndDeclareQuerier(Uuid),
+    UndeclareQuerier(Uuid),
     // Querier
     QuerierGet {
         querier_id: Uuid,
