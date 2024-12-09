@@ -270,7 +270,7 @@ pub enum ControlMsg {
         )]
         #[ts(type = "number | undefined")]
         target: Option<QueryTarget>,
-        //
+        #[ts(type = "number | undefined")]
         timeout: Option<u64>,
         #[serde(
             deserialize_with = "deserialize_reply_key_expr",
@@ -307,6 +307,8 @@ pub enum ControlMsg {
         )]
         #[ts(type = "number | undefined")]
         consolidation: Option<ConsolidationMode>,
+        #[ts(type = "boolean | undefined")]
+        express: Option<bool>,
     },
     UndDeclareQuerier(Uuid),
     // Querier

@@ -345,6 +345,7 @@ pub(crate) async fn handle_control_message(
             priority,
             consolidation,
             allowed_destination,
+            express
         } => {
             let mut querier_builder = state_map.session.declare_querier(key_expr);
             let timeout = timeout.map(|millis| Duration::from_millis(millis));
@@ -357,6 +358,8 @@ pub(crate) async fn handle_control_message(
             add_if_some!(priority, querier_builder);
             add_if_some!(consolidation, querier_builder);
             add_if_some!(allowed_destination, querier_builder);
+            add_if_some!(express, querier_builder);
+
             let querier = querier_builder.await?;
             state_map.queriers.insert(id, querier);
         }

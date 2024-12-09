@@ -32,6 +32,7 @@ import { ReplyWS } from "./interface/ReplyWS.js";
 import { QueryableMsg } from "./interface/QueryableMsg.js";
 import { QueryReplyWS } from "./interface/QueryReplyWS.js";
 import { HandlerChannel } from "./interface/HandlerChannel.js";
+import { RemoteQuerier } from "./querier.js"
 
 // ██████  ███████ ███    ███  ██████  ████████ ███████     ███████ ███████ ███████ ███████ ██  ██████  ███    ██
 // ██   ██ ██      ████  ████ ██    ██    ██    ██          ██      ██      ██      ██      ██ ██    ██ ████   ██
@@ -325,6 +326,46 @@ export class RemoteSession {
     this.send_ctrl_message(control_message);
     return publisher;
   }
+
+  declare_remote_querier(
+    key_expr: string,
+    consolidation?: number,
+    congestion_control?: number,
+    priority?: number,
+    express?: boolean,
+    target?: number,
+    allowed_destination?: number,
+    accept_replies?: number,
+    timeout_milliseconds?: number,
+  ): RemoteQuerier {
+    let timeout = undefined;
+    if (timeout_milliseconds !== undefined) {
+      timeout = timeout_milliseconds;
+    }
+
+    let uuid: string = uuidv4();
+    let querier = new RemoteQuerier(uuid, this);
+
+    let control_message: ControlMsg = {
+      DeclareQuerier: {
+        id: uuid,
+        key_expr: key_expr,
+        congestion_control: congestion_control,
+        priority: priority,
+        express: express,
+        target: target,
+        timeout: timeout,
+        accept_replies: accept_replies,
+        allowed_destination: allowed_destination,
+        consolidation: consolidation,
+      },
+    };
+
+
+    this.send_ctrl_message(control_message);
+    return querier;
+  }
+
 
   // Liveliness 
   declare_liveliness_token(
