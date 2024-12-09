@@ -73,8 +73,16 @@ pub(crate) async fn handle_control_message(
             let session_info = state_map.session.info();
 
             let zid = session_info.zid().await.to_string();
-            let z_peers: Vec<String> = session_info.peers_zid().await.map(|x|x.to_string()).collect();
-            let z_routers: Vec<String> = session_info.routers_zid().await.map(|x|x.to_string()).collect();
+            let z_peers: Vec<String> = session_info
+                .peers_zid()
+                .await
+                .map(|x| x.to_string())
+                .collect();
+            let z_routers: Vec<String> = session_info
+                .routers_zid()
+                .await
+                .map(|x| x.to_string())
+                .collect();
 
             let session_info = SessionInfo {
                 zid,
@@ -82,8 +90,7 @@ pub(crate) async fn handle_control_message(
                 z_peers,
             };
 
-            let remote_api_message =
-                RemoteAPIMsg::Data(DataMsg::SessionInfo(session_info));
+            let remote_api_message = RemoteAPIMsg::Data(DataMsg::SessionInfo(session_info));
 
             if let Err(e) = state_map.websocket_tx.send(remote_api_message) {
                 error!("Forward Sample Channel error: {e}");
