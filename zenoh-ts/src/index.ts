@@ -22,8 +22,10 @@ import { Session, RecvErr, Receiver, DeleteOptions, PutOptions, GetOptions, Quer
 import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
+import { Querier, QueryTarget, Locality, ReplyKeyExpr, QuerierOptions, QuerierGetOptions } from './querier.js'
+
 // Re-export duration external library
-import { TimeDuration as Duration } from 'typed-duration'
+import { Duration } from 'typed-duration'
 
 // Exports
 export { KeyExpr, IntoKeyExpr };
@@ -36,3 +38,4 @@ export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
 export { Duration };
+export { Querier, QueryTarget, Locality, ReplyKeyExpr, QuerierOptions, QuerierGetOptions }

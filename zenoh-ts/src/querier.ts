@@ -102,12 +102,12 @@ export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
 
 export interface QuerierOptions {
   congestion_control?: CongestionControl,
-  consolidation: ConsolidationMode,
+  consolidation?: ConsolidationMode,
   priority?: Priority,
   express?: boolean,
   target: QueryTarget
   timeout?: TimeDuration,
-  allowed_destination: Locality
+  allowed_destination?: Locality
   // 
   accept_replies?: ReplyKeyExpr
 }
@@ -205,7 +205,7 @@ export class Querier {
    * Issue a Get request on this querier
    * @returns Promise <Receiever | void>
    */
-  get(get_options: QuerierGetOptions): Receiver | undefined {
+  get(get_options?: QuerierGetOptions): Receiver | undefined {
     if (this.undeclared == true) {
       return undefined;
     }
