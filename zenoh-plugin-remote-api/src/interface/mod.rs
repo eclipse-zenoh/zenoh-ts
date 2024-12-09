@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 // mod interface::ser_de;
 pub(crate) mod ser_de;
+use base64::{prelude::BASE64_STANDARD, Engine};
 use ser_de::{
     deserialize_congestion_control, deserialize_consolidation_mode, deserialize_locality,
     deserialize_priority, deserialize_query_target, deserialize_reliability,
@@ -23,8 +24,6 @@ use ser_de::{
     serialize_locality, serialize_priority, serialize_query_target, serialize_reliability,
     serialize_reply_key_expr,
 };
-
-use base64::{prelude::BASE64_STANDARD, Engine};
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
