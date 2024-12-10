@@ -41,11 +41,11 @@ export enum QueryTarget {
 export function query_target_to_int(query_target?: QueryTarget): number {
   switch (query_target) {
     case QueryTarget.BestMatching:
-      return 1;
+      return 0;
     case QueryTarget.All:
-      return 2;
+      return 1;
     case QueryTarget.AllComplete:
-      return 3;
+      return 2;
     default:
       // Default is QueryTarget.BestMatching
       return 1;
@@ -65,14 +65,14 @@ export enum Locality {
 export function locality_to_int(query_target?: Locality): number {
   switch (query_target) {
     case Locality.SessionLocal:
-      return 1;
+      return 0;
     case Locality.Remote:
-      return 2;
+      return 1;
     case Locality.Any:
-      return 3;
+      return 2;
     default:
       // Default is Locality.Any
-      return 3;
+      return 2;
   }
 }
 
@@ -90,12 +90,12 @@ export enum ReplyKeyExpr {
 export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
   switch (query_target) {
     case ReplyKeyExpr.Any:
-      return 1;
+      return 0;
     case ReplyKeyExpr.MatchingQuery:
-      return 2;
+      return 1;
     default:
       // Default is ReplyKeyExpr.MatchingQuery
-      return 2;
+      return 1;
   }
 }
 

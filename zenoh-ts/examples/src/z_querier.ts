@@ -27,7 +27,7 @@ export async function main() {
   );
 
   for(let i =0; i<1000; i++) {
-    sleep(1000)
+    await sleep(1000)
     let payload = "["+i+"] Querier Get from Zenoh-ts!";
     let receiver = querier.get({payload:payload}) as Receiver;
     
