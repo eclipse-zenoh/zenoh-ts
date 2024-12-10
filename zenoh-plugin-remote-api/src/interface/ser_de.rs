@@ -159,8 +159,8 @@ where
 {
     match Option::<u8>::deserialize(d) {
         Ok(Some(value)) => Ok(Some(match value {
-            0u8 => Reliability::Reliable,
-            1u8 => Reliability::BestEffort,
+            0u8 => Reliability::BestEffort,
+            1u8 => Reliability::Reliable,
             val => {
                 return Err(serde::de::Error::custom(format!(
                     "Value not valid for Reliability Enum {:?}",
@@ -192,9 +192,9 @@ where
 {
     match Option::<u8>::deserialize(d) {
         Ok(Some(value)) => Ok(Some(match value {
-            0u8 => Locality::Any,
+            0u8 => Locality::SessionLocal,
             1u8 => Locality::Remote,
-            2u8 => Locality::SessionLocal,
+            2u8 => Locality::Any,
             val => {
                 return Err(serde::de::Error::custom(format!(
                     "Value not valid for Locality Enum {:?}",
@@ -226,9 +226,9 @@ where
 {
     match Option::<u8>::deserialize(d) {
         Ok(Some(value)) => Ok(Some(match value {
-            0u8 => QueryTarget::All,
-            1u8 => QueryTarget::AllComplete,
-            2u8 => QueryTarget::BestMatching,
+            0u8 => QueryTarget::BestMatching,
+            1u8 => QueryTarget::All,
+            2u8 => QueryTarget::AllComplete,
             val => {
                 return Err(serde::de::Error::custom(format!(
                     "Value not valid for QueryTarget Enum {:?}",

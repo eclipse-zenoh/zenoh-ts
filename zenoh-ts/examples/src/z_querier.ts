@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Duration, deserialize_string, ReplyError, Config, Receiver, RecvErr, Reply, Sample, Session, QueryTarget } from "@eclipse-zenoh/zenoh-ts";
+import { Duration, deserialize_string, ReplyError, Config, Receiver, RecvErr, Reply, Sample, Session, QueryTarget, Locality } from "@eclipse-zenoh/zenoh-ts";
 
 
 export async function main() {
@@ -49,9 +49,7 @@ export async function main() {
       reply = await receiver.receive();
     }
     console.warn("Get Finished");
-
   }
-
 }
 
 function sleep(ms: number) {

@@ -361,7 +361,6 @@ export class RemoteSession {
       },
     };
 
-
     this.send_ctrl_message(control_message);
     return querier;
   }

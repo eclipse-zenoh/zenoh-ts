@@ -349,7 +349,7 @@ pub(crate) async fn handle_control_message(
         } => {
             let mut querier_builder = state_map.session.declare_querier(key_expr);
             let timeout = timeout.map(|millis| Duration::from_millis(millis));
-            //
+
             add_if_some!(target, querier_builder);
             add_if_some!(timeout, querier_builder);
             add_if_some!(accept_replies, querier_builder);
