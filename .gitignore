@@ -2,6 +2,7 @@
 **/build
 cp_plugin.sh
 TEST_CONFIG.json5
+.bin
 
 zenoh-ts/dist
 zenoh-ts/node_modules
