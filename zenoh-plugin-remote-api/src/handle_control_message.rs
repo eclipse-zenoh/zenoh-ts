@@ -14,9 +14,11 @@
 
 use std::{error::Error, net::SocketAddr, time::Duration};
 
+use base64::{prelude::BASE64_STANDARD, Engine};
 use tracing::{error, warn};
 use uuid::Uuid;
 use zenoh::{
+    bytes::ZBytes,
     handlers::{FifoChannel, RingChannel},
     key_expr::KeyExpr,
     query::Selector,
@@ -24,8 +26,8 @@ use zenoh::{
 
 use crate::{
     interface::{
-        ControlMsg, DataMsg, HandlerChannel, LivelinessMsg, QueryWS, QueryableMsg, RemoteAPIMsg,
-        ReplyWS, SampleWS,
+        B64String, ControlMsg, DataMsg, HandlerChannel, LivelinessMsg, QueryWS, QueryableMsg,
+        RemoteAPIMsg, ReplyWS, SampleWS,
     },
     spawn_future, RemoteState, StateMap,
 };
@@ -333,7 +335,94 @@ pub(crate) async fn handle_control_message(
         ControlMsg::Liveliness(liveliness_msg) => {
             return handle_liveliness(liveliness_msg, state_map).await;
         }
+        ControlMsg::DeclareQuerier {
+            id,
+            key_expr,
+            target,
+            timeout,
+            accept_replies,
+            congestion_control,
+            priority,
+            consolidation,
+            allowed_destination,
+            express,
+        } => {
+            let mut querier_builder = state_map.session.declare_querier(key_expr);
+            let timeout = timeout.map(|millis| Duration::from_millis(millis));
 
+            add_if_some!(target, querier_builder);
+            add_if_some!(timeout, querier_builder);
+            add_if_some!(accept_replies, querier_builder);
+            add_if_some!(accept_replies, querier_builder);
+            add_if_some!(congestion_control, querier_builder);
+            add_if_some!(priority, querier_builder);
+            add_if_some!(consolidation, querier_builder);
+            add_if_some!(allowed_destination, querier_builder);
+            add_if_some!(express, querier_builder);
+
+            let querier = querier_builder.await?;
+            state_map.queriers.insert(id, querier);
+        }
+        ControlMsg::UndeclareQuerier(uuid) => {
+            if let Some(querier) = state_map.queriers.remove(&uuid) {
+                querier.undeclare().await?;
+            } else {
+                warn!("No Querier Found with UUID {}", uuid);
+            };
+        }
+        ControlMsg::QuerierGet {
+            get_id,
+            querier_id,
+            encoding,
+            payload,
+            attachment,
+        } => {
+            if let Some(querier) = state_map.queriers.get(&querier_id) {
+                let mut get_builder = querier.get();
+
+                let payload = payload
+                    .map(|B64String(x)| BASE64_STANDARD.decode(x))
+                    .and_then(|res_vec_bytes| {
+                        if let Ok(vec_bytes) = res_vec_bytes {
+                            Some(ZBytes::from(vec_bytes))
+                        } else {
+                            None
+                        }
+                    });
+
+                let attachment: Option<ZBytes> = attachment
+                    .map(|B64String(x)| BASE64_STANDARD.decode(x))
+                    .and_then(|res_vec_bytes| {
+                        if let Ok(vec_bytes) = res_vec_bytes {
+                            Some(ZBytes::from(vec_bytes))
+                        } else {
+                            None
+                        }
+                    });
+                add_if_some!(encoding, get_builder);
+                add_if_some!(payload, get_builder);
+                add_if_some!(attachment, get_builder);
+                let receiver = get_builder.await?;
+                let ws_tx = state_map.websocket_tx.clone();
+                let finish_msg = RemoteAPIMsg::Control(ControlMsg::GetFinished { id: get_id });
+
+                spawn_future(async move {
+                    while let Ok(reply) = receiver.recv_async().await {
+                        let reply_ws = ReplyWS::from((reply, get_id));
+                        let remote_api_msg = RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
+                        if let Err(err) = ws_tx.send(remote_api_msg) {
+                            tracing::error!("{}", err);
+                        }
+                    }
+                    if let Err(err) = ws_tx.send(finish_msg) {
+                        tracing::error!("{}", err);
+                    }
+                });
+            } else {
+                // TODO: Do we want to add an error here ?
+                warn!("No Querier With ID {querier_id} found")
+            }
+        }
         msg @ (ControlMsg::GetFinished { id: _ }
         | ControlMsg::Session(_)
         | ControlMsg::Subscriber(_)) => {
