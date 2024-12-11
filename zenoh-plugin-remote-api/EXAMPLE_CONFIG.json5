@@ -1,16 +1,3 @@
 {
-  mode: 'router',
-  plugins_loading: {
-    enabled: true,
-    search_dirs: ['./target/debug', '~/.zenoh/lib']
-  },
-  plugins: {
-    remote_api: {
-      websocket_port: '10000',
-      secure_websocket: {
-        certificate_path: 'path/to/certificate_path',
-        private_key_path: 'path/to/private_key_path'
-      }
-    }
-  }
+  websocket_port: '10000'
 }
