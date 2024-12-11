@@ -41,7 +41,9 @@ The `zenohd` router and its plugins should be built with the same Zenoh sources,
 same set of features. This requirement exists because the router and plugins share common Rust structures, and Rust doesn't guarantee
 ABI compatibility of the memory representation of these structures.
 
-Therefore one of these methods is recommended to ensure that plugin and router are compatible:
+Therefore one of the methods below is recommended to ensure that plugin and router are compatible.
+
+The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_CONFIG.json5` with minimal necessary set of options to run the plugin. See also full set of available options, like ssl certificate settings in `zenoh-plugin-remote-api\config.json5`.
 
 1. Install the latest release of `zenohd` and `zenoh-plugin-remote-api`
 
@@ -68,7 +70,7 @@ Therefore one of these methods is recommended to ensure that plugin and router a
    zenohd --config EXAMPLE_CONFIG.json5
    ```
   
-   Expected output is like:
+   Expected output should be something similar to:
 
     ```txt
    zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
@@ -80,7 +82,7 @@ Therefore one of these methods is recommended to ensure that plugin and router a
    zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/....
    ```
 
-1. Build both the plugin and the router from the sources:
+2. Build both the plugin and the router from the sources:
 
    Build the plugin `zenoh-plugin-remote-api`
 
@@ -96,7 +98,7 @@ Therefore one of these methods is recommended to ensure that plugin and router a
    cargo bin zenohd --config EXAMPLE_CONFIG.json5
    ```  
 
-   Expected output is like:
+   Expected output should be something similar to:
 
    ```txt
    zenohd: zenohd vc764bf9b built with rustc 1.75.0 (82e1608df 2023-12-21)
@@ -118,7 +120,7 @@ Therefore one of these methods is recommended to ensure that plugin and router a
 
 2. Navigate to the directory `zenoh-ts`
 
-1. Run the commands:
+3. Run the commands:
 
    ```sh
    yarn install 
@@ -131,19 +133,19 @@ This library is currently compatible with browsers, but not with NodeJS due to w
 To run the command line examples use the javascript runtime [deno](https://deno.com/) which is expected to be consistent with the browser.
 
 1. Install [deno](https://deno.com/)
-1. Navigate to the `zenoh-ts/examples/deno` directory
-1. Install the `zenoh-ts` library by running `yarn install`
-1. Run zenohd with the remote_api plugin, configured to websocket port 10000, as described above
-1. Run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
+2. Navigate to the `zenoh-ts/examples/deno` directory
+3. Install the `zenoh-ts` library by running `yarn install`
+4. Run zenohd with the remote_api plugin, configured to websocket port 10000, as described above
+5. Run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
 To run publisher and subscriber examples:
 
 ```sh
-yarn example src/pub.rs
+yarn example src/z_pub.rs
 ```
 
 ```sh
-yarn example src/sub.rs
+yarn example src/z_sub.rs
 ```
 
 The subscriber should start to receive messages from publisher:
