@@ -19,10 +19,10 @@ class ChatUser {
 	}
 	public static fromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
 		let parts = (keyexpr.toString()).split("/");
-		if (parts.length < 3 || parts[0] != "chat" || parts[2] != "user") {
+		if (parts.length < 3 || parts[0] != "chat" || parts[1] != "user") {
 			return null;
 		}
-		let username = parts[1];
+		let username = parts[2];
 		if (!validate_username(username)) {
 			return null;
 		}
@@ -69,8 +69,19 @@ class ChatSession {
 
 		let keyexpr = this.user.toKeyexpr();
 
-		let messages = await this.session.get("chat/messages");
-		log(`[Session] Retrieved messages: ${messages}`);
+		let receiver = await this.session.get("chat/messages") as Receiver;
+		log(`[Session] Get messages from chat/messages`);
+		let reply = await receiver.receive();
+		if (reply instanceof Reply) {
+			let resp = reply.result();
+			if (resp instanceof Sample) {
+				let payload = deserialize_string(resp.payload().buffer());
+				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
+				this.messages = JSON.parse(payload);
+			}
+		} else {
+			log(`[Session] GetError ${reply}`);
+		}
 
 		this.messages_queryable = await this.session.declare_queryable("chat/messages", {
 			callback: (query: Query) => {
@@ -87,9 +98,9 @@ class ChatSession {
 
 		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", (sample) => {
 			let message = deserialize_string(sample.payload().buffer());
+			log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 			let user = ChatUser.fromKeyexpr(sample.keyexpr());
 			if (user) {
-				log(`[Subscriber] Received message: ${message} from ${user.toString()}`);
 				const timestamp = new Date().toISOString();
 				this.messages.push({ t: timestamp, u: user.username, m: message });
 				if (this.messageCallback) {
