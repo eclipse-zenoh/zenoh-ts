@@ -14,6 +14,8 @@ body {
     align-items: center;
     padding: 10px;
     background-color: #f0f0f0;
+    border-radius: 8px; /* Round corners */
+    margin-bottom: 10px; /* Small padding around */
 }
 
 .server-panel label {
@@ -35,6 +37,9 @@ body {
     border-right: 1px solid #ccc;
     padding: 10px;
     overflow-y: auto; /* Make user list scrollable */
+    background-color: #f0f0f0;
+    border-radius: 8px; /* Round corners */
+    margin-right: 10px; /* Small padding around */
 }
 
 .chat-panel {
@@ -43,6 +48,8 @@ body {
     flex-direction: column;
     padding: 10px;
     overflow-y: auto; /* Make chat panel scrollable */
+    background-color: #f0f0f0;
+    border-radius: 8px; /* Round corners */
 }
 
 .chat-log {
@@ -51,10 +58,13 @@ body {
     padding: 10px;
     overflow-y: auto; /* Make chat log scrollable */
     margin-bottom: 10px;
+    background-color: #fff;
+    border-radius: 8px; /* Round corners */
 }
 
 .chat-input {
     display: flex;
+    margin-bottom: 10px; /* Add space below message input field */
 }
 
 .chat-input input {
@@ -74,6 +84,8 @@ body {
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    border-radius: 8px; /* Round corners */
+    margin-top: 10px; /* Small padding around */
 }
 
 .technical-log-panel.hidden {
@@ -87,6 +99,8 @@ body {
     height: calc(100% - 40px);
     /* Adjust height to fit within the panel */
     overflow-y: auto;
+    background-color: #fff;
+    border-radius: 8px; /* Round corners */
 }
 
 .toggle-log-panel {

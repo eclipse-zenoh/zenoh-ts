@@ -3,11 +3,11 @@ import { ChatSession, ChatUser } from './chat_session';
 let globalChatSession: ChatSession | null = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-	const toggleLogButton = document.getElementById('toggle-log-button');
-	const technicalLogPanel = document.getElementById('technical-log-panel');
-	const connectButton = document.getElementById('connect-button');
-	const disconnectButton = document.getElementById('disconnect-button');
-	const sendButton = document.getElementById('send-button');
+	const toggleLogButton = document.getElementById('toggle-log-button') as HTMLButtonElement;
+	const technicalLogPanel = document.getElementById('technical-log-panel') as HTMLDivElement;
+	const connectButton = document.getElementById('connect-button') as HTMLButtonElement;
+	const disconnectButton = document.getElementById('disconnect-button') as HTMLButtonElement;
+	const sendButton = document.getElementById('send-button') as HTMLButtonElement;
 	const serverNameInput = document.getElementById('server-name') as HTMLInputElement;
 	const serverPortInput = document.getElementById('server-port') as HTMLInputElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
@@ -27,10 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 	let randomUsername = `${adjectives[Math.floor(Math.random() * adjectives.length)]}-${animals[Math.floor(Math.random() * animals.length)]}`;
 	usernameInput.value = randomUsername;
 
-	toggleLogButton?.addEventListener('click', () => {
-		if (technicalLogPanel) {
-			technicalLogPanel.classList.toggle('hidden');
-		}
+	toggleLogButton.addEventListener('click', () => {
+		technicalLogPanel.classList.toggle('hidden');
 	});
 
 	function onConnect(chatSession: ChatSession) {
@@ -52,11 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			chatLog.appendChild(messageElement);
 		});
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
+		connectButton.style.display = 'none';
+		disconnectButton.style.display = 'inline-block';
 	}
 
 	function onDisconnect(chatSession: ChatSession) {
 		usersList.innerHTML = '';
 		chatLog.innerHTML = '';
+		connectButton.style.display = 'inline-block';
+		disconnectButton.style.display = 'none';
 	}
 
 	connectButton?.addEventListener('click', () => {
