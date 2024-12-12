@@ -83,12 +83,12 @@ class ChatSession {
 		let locator = `ws/${serverName}:${serverPort}`;
 		let config = new Config(locator);
 		this.session = await Session.open(config);
-		log(`[Session] Connected to zenohd on ${locator}`);
+		log(`[Session] Open ${locator}`);
 
 		let keyexpr = this.user.toKeyexpr();
 
 		let receiver = await this.session.get("chat/messages") as Receiver;
-		log(`[Session] Get messages from chat/messages`);
+		log(`[Session] Get from chat/messages`);
 		let reply = await receiver.receive();
 		if (reply instanceof Reply) {
 			let resp = reply.result();
@@ -109,10 +109,10 @@ class ChatSession {
 			},
 			complete: true
 		});
-		log(`[Session] Created queryable on ${keyexpr}`);
+		log(`[Session] Declare queryable on ${keyexpr}`);
 
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
-		log(`[Session] Created publisher on ${keyexpr}`);
+		log(`[Session] Declare publisher on ${keyexpr}`);
 
 		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", (sample) => {
 			let message = deserialize_string(sample.payload().buffer());
@@ -127,10 +127,10 @@ class ChatSession {
 			}
 			return Promise.resolve();
 		});
-		log(`[Session] Created subscriber on chat/user/*`);
+		log(`[Session] Declare Subscriber on chat/user/*`);
 
 		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
-		log(`[Session] Created liveliness token on ${keyexpr}`);
+		log(`[Session] Declare liveliness token on ${keyexpr}`);
 
 		// Subscribe to changes of users presence
 		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("chat/user/*", {
@@ -164,7 +164,7 @@ class ChatSession {
 			},
 			history: true
 		});
-		log(`[Session] Created liveliness subscriber on chat/user/*`);
+		log(`[Session] Declare liveliness subscriber on chat/user/*`);
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
@@ -185,7 +185,7 @@ class ChatSession {
 
 	async send_message(message: string) {
 		if (this.messages_publisher) {
-			log(`[Publisher] Sending message: ${message}`);
+			log(`[Publisher] Put message: ${message}`);
 			await this.messages_publisher.put(message);
 		}
 	}
@@ -193,6 +193,7 @@ class ChatSession {
 	async disconnect() {
 		if (this.session) {
 			await this.session.close();
+			log(`[Session] Close`);
 			this.session = null;
 			this.liveliness_token = null;
 			this.messages_queryable = null;
@@ -201,11 +202,8 @@ class ChatSession {
 			this.message_subscriber = null;
 			this.users = [];
 			this.messages = [];
-			if (this.usersCallback) {
-				this.usersCallback();
-				if (this.onDisconnectCallback) {
-					this.onDisconnectCallback(this);
-				}
+			if (this.onDisconnectCallback) {
+				this.onDisconnectCallback(this);
 			}
 		}
 	}
