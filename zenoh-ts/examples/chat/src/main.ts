@@ -1,4 +1,4 @@
-import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, RecvErr, Receiver, KeyExpr, Subscriber, SampleKind } from '@eclipse-zenoh/zenoh-ts';
+import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, RecvErr, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
 import { Duration } from 'typed-duration';
 import { validate_keyexpr } from './validate_keyexpr';
 
@@ -38,10 +38,13 @@ class ChatUser {
 
 class ChatSession {
 	session: Session | null = null;
-	token: LivelinessToken | null = null;
-	queryable: Queryable | null = null;
+	liveliness_token: LivelinessToken | null = null;
 	liveliness_subscriber: Subscriber | null = null;
-	usersCallback: ((users: string[]) => void) | null = null;
+	messages_queryable: Queryable | null = null;
+	messages_publisher: Publisher | null = null;
+	message_subscriber: Subscriber | null = null;
+
+	usersCallback: (() => void) | null = null;
 
 	user: ChatUser;
 	users: ChatUser[] = [];
@@ -55,8 +58,10 @@ class ChatSession {
 		let config = new Config(locator);
 		this.session = await Session.open(config);
 		log(`[Session] Connected to zenohd on ${locator}`);
+
 		let keyexpr = this.user.toKeyexpr();
-		this.queryable = await this.session.declare_queryable(keyexpr, {
+
+		this.messages_queryable = await this.session.declare_queryable(keyexpr, {
 			callback: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				query.reply(keyexpr, this.user.username);
@@ -65,7 +70,13 @@ class ChatSession {
 		});
 		log(`[Session] Created queryable on ${keyexpr}`);
 
-		this.token = this.session.liveliness().declare_token(keyexpr);
+		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
+
+		this.message_subscriber = await this.session.declare_subscriber(keyexpr, (sample) => {
+			return Promise.resolve();
+		});
+
+		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
 
 		// Subscribe to changes of users presence
 		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("user/*", {
@@ -93,7 +104,7 @@ class ChatSession {
 					}
 				}
 				if (this.usersCallback) {
-					this.usersCallback(this.users.map(u => u.username));
+					this.usersCallback();
 				}
 				return Promise.resolve();
 			},
@@ -101,26 +112,30 @@ class ChatSession {
 		});
 	}
 
-	onChangeUsers(callback: (users: string[]) => void) {
+	onChangeUsers(callback: () => void) {
 		this.usersCallback = callback;
+	}
+
+	getUsers(): ChatUser[] {
+		return this.users;
 	}
 
 	async disconnect() {
 		if (this.session) {
 			await this.session.close();
 			this.session = null;
-			this.token = null;
-			this.queryable = null;
+			this.liveliness_token = null;
+			this.messages_queryable = null;
 			this.liveliness_subscriber = null;
 			this.users = [];
 			if (this.usersCallback) {
-				this.usersCallback([]);
+				this.usersCallback();
 			}
 		}
 	}
 }
 
-let chatSession: ChatSession | null = null;
+let globalChatSession: ChatSession | null = null;
 
 document.addEventListener('DOMContentLoaded', () => {
 	const toggleLogButton = document.getElementById('toggle-log-button');
@@ -157,28 +172,30 @@ document.addEventListener('DOMContentLoaded', () => {
 				log(`Invalid username: ${usernameInput.value}`);
 				return;
 			}
-			chatSession = new ChatSession(user);
+			let chatSession: ChatSession = new ChatSession(user);
 			await chatSession.connect(serverNameInput.value, serverPortInput.value);
-			chatSession.onChangeUsers((users) => {
+			chatSession.onChangeUsers(() => {
 				usersList.innerHTML = '';
-				users.forEach(user => {
+				chatSession.getUsers().forEach(user => {
 					const li = document.createElement('li');
-					li.textContent = user;
+					li.textContent = user.toString();
 					usersList.appendChild(li);
 				});
 			});
+			if (globalChatSession) {
+				await globalChatSession.disconnect();
+			}
+			globalChatSession = chatSession;
 		});
 	});
 
 	disconnectButton?.addEventListener('click', () => {
-		if (chatSession) {
-			log_catch(async () => {
-				if (chatSession) {
-					await chatSession.disconnect();
-					chatSession = null;
-				}
-			});
-		}
+		log_catch(async () => {
+			if (globalChatSession) {
+				await globalChatSession.disconnect();
+				globalChatSession = null;
+			}
+		});
 	});
 });
 
