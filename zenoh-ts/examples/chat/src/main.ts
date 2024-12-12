@@ -37,54 +37,38 @@ class ChatUser {
 }
 
 class ChatSession {
-	session: Session;
-	token: LivelinessToken;
-	queryable: Queryable;
-	liveliness_subscriber: Subscriber;
+	session: Session | null = null;
+	token: LivelinessToken | null = null;
+	queryable: Queryable | null = null;
+	liveliness_subscriber: Subscriber | null = null;
 	usersCallback: ((users: string[]) => void) | null = null;
 
 	user: ChatUser;
-	users: ChatUser[];
+	users: ChatUser[] = [];
 
-	constructor(session: Session,
-		queryable: Queryable,
-		token: LivelinessToken,
-		liveliness_subscriber: Subscriber,
-		user: ChatUser,
-		users: ChatUser[]
-	) {
-		this.session = session;
-		this.queryable = queryable;
-		this.token = token;
-		this.liveliness_subscriber = liveliness_subscriber;
+	constructor(user: ChatUser) {
 		this.user = user;
-		this.users = users;
 	}
 
-	public static async connect(serverName: string, serverPort: string, username: string): Promise<ChatSession> {
-		let user = ChatUser.fromString(username);
-		if (!user) {
-			throw new Error("Invalid username");
-		}
+	public async connect(serverName: string, serverPort: string): Promise<void> {
 		let locator = `ws/${serverName}:${serverPort}`;
 		let config = new Config(locator);
-		let session = await Session.open(config);
+		this.session = await Session.open(config);
 		log(`[Session] Connected to zenohd on ${locator}`);
-		let queryable_keyexpr = `user/${username}`;
-		let queryable = await session.declare_queryable(queryable_keyexpr, {
+		let keyexpr = this.user.toKeyexpr();
+		this.queryable = await this.session.declare_queryable(keyexpr, {
 			callback: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
-				query.reply(queryable_keyexpr, username);
+				query.reply(keyexpr, this.user.username);
 			},
 			complete: true
 		});
-		log(`[Session] Created queryable on ${queryable_keyexpr}`);
+		log(`[Session] Created queryable on ${keyexpr}`);
 
-		let token = session.liveliness().declare_token(queryable_keyexpr);
+		this.token = this.session.liveliness().declare_token(keyexpr);
 
-		// Suscribe to changes of users presence
-		let users: ChatUser[] = [];
-		let liveliness_subscriber = session.liveliness().declare_subscriber("user/*", {
+		// Subscribe to changes of users presence
+		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("user/*", {
 			callback: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);
@@ -93,14 +77,14 @@ class ChatSession {
 				} else {
 					switch (sample.kind()) {
 						case SampleKind.PUT: {
-							users.push(user);
+							this.users.push(user);
 							log(
 								`[LivelinessSubscriber] New alive token ${keyexpr}`
 							);
 							break;
 						}
 						case SampleKind.DELETE: {
-							users = users.filter(u => u.username != user.username);
+							this.users = this.users.filter(u => u.username != user.username);
 							log(
 								`[LivelinessSubscriber] Dropped token ${keyexpr}`
 							);
@@ -108,12 +92,13 @@ class ChatSession {
 						}
 					}
 				}
+				if (this.usersCallback) {
+					this.usersCallback(this.users.map(u => u.username));
+				}
 				return Promise.resolve();
 			},
 			history: true
 		});
-
-		return new ChatSession(session, queryable, token, liveliness_subscriber, user, users);
 	}
 
 	onChangeUsers(callback: (users: string[]) => void) {
@@ -121,7 +106,14 @@ class ChatSession {
 	}
 
 	async disconnect() {
-		await this.session.close();
+		if (this.session) {
+			await this.session.close();
+			this.session = null;
+			this.token = null;
+			this.queryable = null;
+			this.liveliness_subscriber = null;
+			this.users = [];
+		}
 	}
 }
 
@@ -157,17 +149,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	connectButton?.addEventListener('click', () => {
 		log_catch(async () => {
-			await connect(serverNameInput.value, serverPortInput.value, usernameInput.value);
-			if (chatSession) {
-				chatSession.onChangeUsers((users) => {
-					usersList.innerHTML = '';
-					users.forEach(user => {
-						const li = document.createElement('li');
-						li.textContent = user;
-						usersList.appendChild(li);
-					});
-				});
+			let user = ChatUser.fromString(usernameInput.value);
+			if (!user) {
+				log(`Invalid username: ${usernameInput.value}`);
+				return;
 			}
+			chatSession = new ChatSession(user);
+			await chatSession.connect(serverNameInput.value, serverPortInput.value);
+			chatSession.onChangeUsers((users) => {
+				usersList.innerHTML = '';
+				users.forEach(user => {
+					const li = document.createElement('li');
+					li.textContent = user;
+					usersList.appendChild(li);
+				});
+			});
 		});
 	});
 
@@ -197,11 +193,4 @@ async function log_catch(asyncFunc: () => Promise<void>) {
 	} catch (error) {
 		log(`Error: ${error}`);
 	}
-}
-
-async function connect(serverName: string, serverPort: string, username: string) {
-	if (chatSession) {
-		await chatSession.disconnect();
-	}
-	chatSession = await ChatSession.connect(serverName, serverPort, username);
 }
