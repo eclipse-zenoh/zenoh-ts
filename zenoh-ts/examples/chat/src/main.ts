@@ -52,6 +52,24 @@ class ChatSession {
 
 	usersCallback: (() => void) | null = null;
 	messageCallback: ((user: ChatUser, message: string) => void) | null = null;
+	onConnectCallback: ((chatSession: ChatSession) => void) | null = null;
+	onDisconnectCallback: ((chatSession: ChatSession) => void) | null = null;
+
+	onConnect(callback: (chatSession: ChatSession) => void) {
+		this.onConnectCallback = callback;
+	}
+
+	onDisconnect(callback: (chatSession: ChatSession) => void) {
+		this.onDisconnectCallback = callback;
+	}
+
+	onChangeUsers(callback: (chatSession: ChatSession) => void) {
+		this.usersCallback = () => callback(this);
+	}
+
+	onNewMessage(callback: (chatSession: ChatSession, user: ChatUser, message: string) => void) {
+		this.messageCallback = (user, message) => callback(this, user, message);
+	}
 
 	user: ChatUser;
 	users: ChatUser[] = [];
@@ -78,14 +96,6 @@ class ChatSession {
 				let payload = deserialize_string(resp.payload().buffer());
 				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
 				this.messages = JSON.parse(payload);
-				this.messages.forEach(message => {
-					let user = ChatUser.fromString(message.u);
-					if (user) {
-						if (this.messageCallback) {
-							this.messageCallback(user, message.m);
-						}
-					}
-				});
 			}
 		} else {
 			log(`[Session] GetError ${reply}`);
@@ -155,18 +165,22 @@ class ChatSession {
 			history: true
 		});
 		log(`[Session] Created liveliness subscriber on chat/user/*`);
+
+		if (this.onConnectCallback) {
+			this.onConnectCallback(this);
+		}
 	}
 
-	onChangeUsers(callback: () => void) {
-		this.usersCallback = callback;
-	}
-
-	onNewMessage(callback: (user: ChatUser, message: string) => void) {
-		this.messageCallback = callback;
+	getUser(): ChatUser {
+		return this.user;
 	}
 
 	getUsers(): ChatUser[] {
 		return this.users;
+	}
+
+	getMessages(): ChatMessage[] {
+		return this.messages;
 	}
 
 	async send_message(message: string) {
@@ -189,6 +203,9 @@ class ChatSession {
 			this.messages = [];
 			if (this.usersCallback) {
 				this.usersCallback();
+				if (this.onDisconnectCallback) {
+					this.onDisconnectCallback(this);
+				}
 			}
 		}
 	}
@@ -227,6 +244,30 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	});
 
+	function onConnect(chatSession: ChatSession) {
+		usersList.innerHTML = '';
+		chatSession.getUsers().forEach(user => {
+			const li = document.createElement('li');
+			li.textContent = user.toString();
+			usersList.appendChild(li);
+		});
+		chatLog.innerHTML = '';
+		chatSession.getMessages().forEach(message => {
+			const messageElement = document.createElement('div');
+			if (message.u === chatSession.getUser().username) {
+				messageElement.innerHTML = `<strong>${message.u}</strong>: ${message.m}`;
+			} else {
+				messageElement.textContent = `${message.u}: ${message.m}`;
+			}
+			chatLog.appendChild(messageElement);
+		});
+	}
+
+	function onDisconnect(chatSession: ChatSession) {
+		usersList.innerHTML = '';
+		chatLog.innerHTML = '';
+	}
+
 	connectButton?.addEventListener('click', () => {
 		log_catch(async () => {
 			let user = ChatUser.fromString(usernameInput.value);
@@ -235,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				return;
 			}
 			let chatSession: ChatSession = new ChatSession(user);
-			chatSession.onChangeUsers(() => {
+			chatSession.onChangeUsers((chatSession) => {
 				usersList.innerHTML = '';
 				chatSession.getUsers().forEach(user => {
 					const li = document.createElement('li');
@@ -243,17 +284,23 @@ document.addEventListener('DOMContentLoaded', () => {
 					usersList.appendChild(li);
 				});
 			});
-			chatSession.onNewMessage((user, message) => {
+			chatSession.onNewMessage((chatSession, user, message) => {
 				const messageElement = document.createElement('div');
-				messageElement.textContent = `${user.toString()}: ${message}`;
+				if (user.username === chatSession.getUser().username) {
+					messageElement.innerHTML = `<strong>${user.toString()}</strong>: ${message}`;
+				} else {
+					messageElement.textContent = `${user.toString()}: ${message}`;
+				}
 				chatLog.appendChild(messageElement);
 				chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 			});
+			chatSession.onConnect(onConnect);
+			chatSession.onDisconnect(onDisconnect);
 			if (globalChatSession) {
 				await globalChatSession.disconnect();
 			}
 			globalChatSession = chatSession;
-			await globalChatSession.connect(serverNameInput.value, serverPortInput.value);
+			await chatSession.connect(serverNameInput.value, serverPortInput.value);
 		});
 	});
 
