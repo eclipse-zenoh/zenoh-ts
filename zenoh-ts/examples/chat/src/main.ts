@@ -74,6 +74,7 @@ class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 
 		this.message_subscriber = await this.session.declare_subscriber(keyexpr, (sample) => {
+			log(`[Subscriber] Received message: ${sample.payload.toString()} from ${sample.keyexpr().toString()}`);
 			if (this.messageCallback) {
 				this.messageCallback(sample.payload.toString());
 			}
