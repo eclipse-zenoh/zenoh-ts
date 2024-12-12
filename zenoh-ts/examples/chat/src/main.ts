@@ -1,4 +1,4 @@
-import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, RecvErr, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
+import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, RecvErr, Receiver, KeyExpr, Subscriber, SampleKind, Publisher, deserialize_string } from '@eclipse-zenoh/zenoh-ts';
 import { Duration } from 'typed-duration';
 import { validate_keyexpr } from './validate_keyexpr';
 
@@ -74,9 +74,10 @@ class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 
 		this.message_subscriber = await this.session.declare_subscriber(keyexpr, (sample) => {
-			log(`[Subscriber] Received message: ${sample.payload.toString()} from ${sample.keyexpr().toString()}`);
+			let message = deserialize_string(sample.payload().buffer());
+			log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 			if (this.messageCallback) {
-				this.messageCallback(sample.payload.toString());
+				this.messageCallback(message);
 			}
 			return Promise.resolve();
 		});
@@ -207,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				const messageElement = document.createElement('div');
 				messageElement.textContent = message;
 				chatLog.appendChild(messageElement);
+				chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 			});
 			if (globalChatSession) {
 				await globalChatSession.disconnect();
@@ -233,11 +235,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function log(message: string) {
-	const technicalLog = document.getElementById('technical-log');
+	const technicalLog = document.getElementById('technical-log') as HTMLDivElement;
 	const timestamp = new Date().toLocaleTimeString();
 	const logMessage = document.createElement('div');
 	logMessage.textContent = `[${timestamp}] ${message}`;
-	technicalLog?.appendChild(logMessage);
+	technicalLog.appendChild(logMessage);
+	technicalLog.scrollTop = technicalLog.scrollHeight; // Scroll to the latest log message
 }
 
 async function log_catch(asyncFunc: () => Promise<void>) {
