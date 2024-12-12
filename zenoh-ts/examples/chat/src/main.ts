@@ -78,6 +78,14 @@ class ChatSession {
 				let payload = deserialize_string(resp.payload().buffer());
 				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
 				this.messages = JSON.parse(payload);
+				this.messages.forEach(message => {
+					let user = ChatUser.fromString(message.u);
+					if (user) {
+						if (this.messageCallback) {
+							this.messageCallback(user, message.m);
+						}
+					}
+				});
 			}
 		} else {
 			log(`[Session] GetError ${reply}`);
@@ -87,7 +95,7 @@ class ChatSession {
 			callback: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
-				query.reply(keyexpr, response);
+				query.reply("chat/messages", response);
 			},
 			complete: true
 		});
@@ -227,7 +235,6 @@ document.addEventListener('DOMContentLoaded', () => {
 				return;
 			}
 			let chatSession: ChatSession = new ChatSession(user);
-			await chatSession.connect(serverNameInput.value, serverPortInput.value);
 			chatSession.onChangeUsers(() => {
 				usersList.innerHTML = '';
 				chatSession.getUsers().forEach(user => {
@@ -246,6 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				await globalChatSession.disconnect();
 			}
 			globalChatSession = chatSession;
+			await globalChatSession.connect(serverNameInput.value, serverPortInput.value);
 		});
 	});
 
