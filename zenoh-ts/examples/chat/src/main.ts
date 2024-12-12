@@ -45,6 +45,7 @@ class ChatSession {
 	message_subscriber: Subscriber | null = null;
 
 	usersCallback: (() => void) | null = null;
+	messageCallback: ((message: string) => void) | null = null;
 
 	user: ChatUser;
 	users: ChatUser[] = [];
@@ -73,6 +74,9 @@ class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 
 		this.message_subscriber = await this.session.declare_subscriber(keyexpr, (sample) => {
+			if (this.messageCallback) {
+				this.messageCallback(sample.payload.toString());
+			}
 			return Promise.resolve();
 		});
 
@@ -88,17 +92,17 @@ class ChatSession {
 				} else {
 					switch (sample.kind()) {
 						case SampleKind.PUT: {
-							this.users.push(user);
 							log(
 								`[LivelinessSubscriber] New alive token ${keyexpr}`
 							);
+							this.users.push(user);
 							break;
 						}
 						case SampleKind.DELETE: {
-							this.users = this.users.filter(u => u.username != user.username);
 							log(
 								`[LivelinessSubscriber] Dropped token ${keyexpr}`
 							);
+							this.users = this.users.filter(u => u.username != user.username);
 							break;
 						}
 					}
@@ -116,8 +120,19 @@ class ChatSession {
 		this.usersCallback = callback;
 	}
 
+	onNewMessage(callback: (message: string) => void) {
+		this.messageCallback = callback;
+	}
+
 	getUsers(): ChatUser[] {
 		return this.users;
+	}
+
+	async send_message(message: string) {
+		if (this.messages_publisher) {
+			log(`[Publisher] Sending message: ${message}`);
+			await this.messages_publisher.put(message);
+		}
 	}
 
 	async disconnect() {
@@ -127,6 +142,8 @@ class ChatSession {
 			this.liveliness_token = null;
 			this.messages_queryable = null;
 			this.liveliness_subscriber = null;
+			this.messages_publisher = null;
+			this.message_subscriber = null;
 			this.users = [];
 			if (this.usersCallback) {
 				this.usersCallback();
@@ -142,10 +159,13 @@ document.addEventListener('DOMContentLoaded', () => {
 	const technicalLogPanel = document.getElementById('technical-log-panel');
 	const connectButton = document.getElementById('connect-button');
 	const disconnectButton = document.getElementById('disconnect-button');
+	const sendButton = document.getElementById('send-button');
 	const serverNameInput = document.getElementById('server-name') as HTMLInputElement;
 	const serverPortInput = document.getElementById('server-port') as HTMLInputElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
+	const messageInput = document.getElementById('message-input') as HTMLInputElement;
 	const usersList = document.getElementById('users') as HTMLUListElement;
+	const chatLog = document.getElementById('chat-log') as HTMLDivElement;
 
 	const adjectives = [
 		'adorable', 'beautiful', 'clean', 'drab', 'elegant', 'fancy', 'glamorous', 'handsome', 'long', 'magnificent',
@@ -182,6 +202,11 @@ document.addEventListener('DOMContentLoaded', () => {
 					usersList.appendChild(li);
 				});
 			});
+			chatSession.onNewMessage((message) => {
+				const messageElement = document.createElement('div');
+				messageElement.textContent = message;
+				chatLog.appendChild(messageElement);
+			});
 			if (globalChatSession) {
 				await globalChatSession.disconnect();
 			}
@@ -196,6 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
 				globalChatSession = null;
 			}
 		});
+	});
+
+	sendButton?.addEventListener('click', () => {
+		if (globalChatSession) {
+			globalChatSession.send_message(messageInput.value);
+			messageInput.value = '';
+		}
 	});
 });
 
