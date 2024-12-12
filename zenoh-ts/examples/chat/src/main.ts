@@ -19,7 +19,7 @@ class ChatUser {
 	}
 	public static fromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
 		let parts = (keyexpr.toString()).split("/");
-		if (parts.length < 2 || parts[0] != "user") {
+		if (parts.length < 3 || parts[0] != "chat" || parts[2] != "user") {
 			return null;
 		}
 		let username = parts[1];
@@ -29,7 +29,7 @@ class ChatUser {
 		return new ChatUser(username);
 	}
 	public toKeyexpr(): KeyExpr {
-		return new KeyExpr(`user/${this.username}`);
+		return new KeyExpr(`chat/user/${this.username}`);
 	}
 	public toString(): string {
 		return this.username;
@@ -69,7 +69,10 @@ class ChatSession {
 
 		let keyexpr = this.user.toKeyexpr();
 
-		this.messages_queryable = await this.session.declare_queryable(keyexpr, {
+		let messages = await this.session.get("chat/messages");
+		log(`[Session] Retrieved messages: ${messages}`);
+
+		this.messages_queryable = await this.session.declare_queryable("chat/messages", {
 			callback: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
@@ -80,8 +83,9 @@ class ChatSession {
 		log(`[Session] Created queryable on ${keyexpr}`);
 
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
+		log(`[Session] Created publisher on ${keyexpr}`);
 
-		this.message_subscriber = await this.session.declare_subscriber("user/*", (sample) => {
+		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", (sample) => {
 			let message = deserialize_string(sample.payload().buffer());
 			let user = ChatUser.fromKeyexpr(sample.keyexpr());
 			if (user) {
@@ -94,11 +98,13 @@ class ChatSession {
 			}
 			return Promise.resolve();
 		});
+		log(`[Session] Created subscriber on chat/user/*`);
 
 		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
+		log(`[Session] Created liveliness token on ${keyexpr}`);
 
 		// Subscribe to changes of users presence
-		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("user/*", {
+		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("chat/user/*", {
 			callback: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);
@@ -129,6 +135,7 @@ class ChatSession {
 			},
 			history: true
 		});
+		log(`[Session] Created liveliness subscriber on chat/user/*`);
 	}
 
 	onChangeUsers(callback: () => void) {
