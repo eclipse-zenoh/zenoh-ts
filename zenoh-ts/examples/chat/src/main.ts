@@ -45,7 +45,7 @@ class ChatSession {
 	message_subscriber: Subscriber | null = null;
 
 	usersCallback: (() => void) | null = null;
-	messageCallback: ((message: string) => void) | null = null;
+	messageCallback: ((user: ChatUser, message: string) => void) | null = null;
 
 	user: ChatUser;
 	users: ChatUser[] = [];
@@ -73,12 +73,17 @@ class ChatSession {
 
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 
-		this.message_subscriber = await this.session.declare_subscriber(keyexpr, (sample) => {
+		this.message_subscriber = await this.session.declare_subscriber("user/*", (sample) => {
 			let message = deserialize_string(sample.payload().buffer());
 			log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
-			if (this.messageCallback) {
-				this.messageCallback(message);
-			}
+			let user = ChatUser.fromKeyexpr(sample.keyexpr());
+			if (user) {
+				if (this.messageCallback) {
+					this.messageCallback(user, message);
+				}
+			} else {
+				log(`Invalid user keyexpr: ${sample.keyexpr().toString()}`);
+			};
 			return Promise.resolve();
 		});
 
@@ -122,7 +127,7 @@ class ChatSession {
 		this.usersCallback = callback;
 	}
 
-	onNewMessage(callback: (message: string) => void) {
+	onNewMessage(callback: (user: ChatUser, message: string) => void) {
 		this.messageCallback = callback;
 	}
 
@@ -204,9 +209,9 @@ document.addEventListener('DOMContentLoaded', () => {
 					usersList.appendChild(li);
 				});
 			});
-			chatSession.onNewMessage((message) => {
+			chatSession.onNewMessage((user, message) => {
 				const messageElement = document.createElement('div');
-				messageElement.textContent = message;
+				messageElement.textContent = `${user.toString()}: ${message}`;
 				chatLog.appendChild(messageElement);
 				chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 			});
