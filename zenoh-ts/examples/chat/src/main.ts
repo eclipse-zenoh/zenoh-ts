@@ -36,6 +36,12 @@ class ChatUser {
 	}
 }
 
+interface ChatMessage {
+	t: string; // timestamp
+	u: string; // username
+	m: string; // message
+}
+
 class ChatSession {
 	session: Session | null = null;
 	liveliness_token: LivelinessToken | null = null;
@@ -49,6 +55,7 @@ class ChatSession {
 
 	user: ChatUser;
 	users: ChatUser[] = [];
+	messages: ChatMessage[] = [];
 
 	constructor(user: ChatUser) {
 		this.user = user;
@@ -65,7 +72,8 @@ class ChatSession {
 		this.messages_queryable = await this.session.declare_queryable(keyexpr, {
 			callback: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
-				query.reply(keyexpr, this.user.username);
+				const response = JSON.stringify(this.messages);
+				query.reply(keyexpr, response);
 			},
 			complete: true
 		});
@@ -75,15 +83,15 @@ class ChatSession {
 
 		this.message_subscriber = await this.session.declare_subscriber("user/*", (sample) => {
 			let message = deserialize_string(sample.payload().buffer());
-			log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 			let user = ChatUser.fromKeyexpr(sample.keyexpr());
 			if (user) {
+				log(`[Subscriber] Received message: ${message} from ${user.toString()}`);
+				const timestamp = new Date().toISOString();
+				this.messages.push({ t: timestamp, u: user.username, m: message });
 				if (this.messageCallback) {
 					this.messageCallback(user, message);
 				}
-			} else {
-				log(`Invalid user keyexpr: ${sample.keyexpr().toString()}`);
-			};
+			}
 			return Promise.resolve();
 		});
 
@@ -152,6 +160,7 @@ class ChatSession {
 			this.messages_publisher = null;
 			this.message_subscriber = null;
 			this.users = [];
+			this.messages = [];
 			if (this.usersCallback) {
 				this.usersCallback();
 			}
