@@ -2,12 +2,14 @@ body {
     font-family: Arial, sans-serif;
     margin: 0; /* Remove default margin */
     overflow: hidden; /* Prevent vertical scrollbar */
+    padding: 10px; /* Add padding from page borders */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: calc(100vh - 20px); /* Adjust height to account for body padding */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
@@ -18,7 +20,7 @@ body {
     padding: 10px;
     background-color: #f0f0f0;
     border-radius: 8px; /* Round corners */
-    margin-bottom: 10px; /* Small padding around */
+    margin-bottom: 5px; /* Reduce padding between panels */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
@@ -44,8 +46,14 @@ body {
     overflow-y: auto; /* Make user list scrollable */
     background-color: #f0f0f0;
     border-radius: 8px; /* Round corners */
-    margin-right: 10px; /* Small padding around */
+    margin-right: 5px; /* Reduce padding between panels */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
+}
+
+.user-list ul {
+    margin: 0; /* Remove default margin */
+    padding-left: 0; /* Remove default left padding */
+    list-style-type: none; /* Remove default list style */
 }
 
 .chat-panel {
@@ -64,7 +72,7 @@ body {
     border: 1px solid #ccc;
     padding: 10px;
     overflow-y: auto; /* Make chat log scrollable */
-    margin-bottom: 10px;
+    margin-bottom: 5px; /* Reduce padding between panels */
     background-color: #fff;
     border-radius: 8px; /* Round corners */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
@@ -72,7 +80,7 @@ body {
 
 .chat-input {
     display: flex;
-    margin-bottom: 10px; /* Add space below message input field */
+    margin-bottom: 5px; /* Reduce padding between panels */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
@@ -94,7 +102,7 @@ body {
     display: flex;
     flex-direction: column;
     border-radius: 8px; /* Round corners */
-    margin-top: 10px; /* Small padding around */
+    margin-top: 5px; /* Reduce padding between panels */
 }
 
 .technical-log-panel.hidden {
@@ -104,8 +112,8 @@ body {
 .technical-log {
     border-top: 1px solid #ccc;
     padding-top: 10px;
-    margin-top: 10px;
-    height: calc(100% - 40px);
+    margin: 0;
+    height: 100%;
     /* Adjust height to fit within the panel */
     overflow-y: auto;
     background-color: #fff;
