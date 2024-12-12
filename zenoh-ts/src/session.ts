@@ -55,6 +55,7 @@ import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
+import { locality_to_int, Querier, QuerierOptions, query_target_to_int, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -210,7 +211,6 @@ export class Session {
     let _priority;
     let _express;
     let _attachment;
-
     let _encoding = put_opts?.encoding?.toString()
 
     let _congestion_control = congestion_control_to_int(put_opts?.congestion_control);
@@ -563,7 +563,74 @@ export class Session {
     );
     return publisher;
   }
+
+  /**
+  * Declares a Querier 
+  * 
+  * @param {IntoKeyExpr} keyexpr - string of key_expression
+  * @param {QuerierOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
+  * @returns Publisher
+  */
+  declare_querier(
+    into_keyexpr: IntoKeyExpr,
+    querier_opts: QuerierOptions,
+  ): Querier {
+    const key_expr = new KeyExpr(into_keyexpr);
+
+    // Optional Parameters 
+    let _priority;
+    let priority = Priority.DATA;
+    if (querier_opts?.priority != null) {
+      _priority = priority_to_int(querier_opts?.priority);
+      priority = querier_opts?.priority;
+    }
+
+    let _congestion_control;
+    let congestion_control = CongestionControl.DROP;
+    if (querier_opts?.congestion_control != null) {
+      _congestion_control = congestion_control_to_int(querier_opts?.congestion_control);
+      congestion_control = querier_opts?.congestion_control;
+    }
+
+    let _accept_replies;
+    let accept_replies = ReplyKeyExpr.Any;
+    if (querier_opts?.accept_replies != null) {
+      _accept_replies = reply_key_expr_to_int(querier_opts?.accept_replies);
+      accept_replies = querier_opts?.accept_replies;
+    }
+
+    let _consolidation = consolidation_mode_to_int(querier_opts?.consolidation);
+    let _target = query_target_to_int(querier_opts?.target);
+    let _allowed_destination = locality_to_int(querier_opts?.allowed_destination);
+    let _express = querier_opts?.express;
+    let _timeout_millis: number | undefined = undefined;
+
+    if (querier_opts?.timeout !== undefined) {
+      _timeout_millis = Duration.milliseconds.from(querier_opts?.timeout);
+    }
+
+    let remote_querier = this.remote_session.declare_remote_querier(
+      key_expr.toString(),
+      _consolidation,
+      _congestion_control,
+      _priority,
+      _express,
+      _target,
+      _allowed_destination,
+      _accept_replies,
+      _timeout_millis,
+    );
+
+    return new Querier(
+      remote_querier,
+      key_expr,
+      congestion_control,
+      priority,
+      accept_replies,
+    );
+  }
 }
+
 
 function isGetChannelClose(msg: any): msg is GetChannelClose {
   return msg === GetChannelClose.Disconnected;
@@ -595,7 +662,7 @@ export class Receiver {
   /**
    * @ignore
    */
-  private constructor(receiver: SimpleChannel<ReplyWS | RecvErr>) {
+  constructor(receiver: SimpleChannel<ReplyWS | RecvErr>) {
     this.receiver = receiver;
   }
 

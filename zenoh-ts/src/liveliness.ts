@@ -50,7 +50,6 @@ export class Liveliness {
   }
 
   declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Subscriber {
-    console.log(key_expr, options)
 
     let _key_expr = new KeyExpr(key_expr);
 
@@ -86,7 +85,7 @@ export class Liveliness {
   }
 
   get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Receiver | undefined {
-    console.log(key_expr, options)
+
     let _key_expr = new KeyExpr(key_expr);
 
     let _timeout_millis: number | undefined = undefined;

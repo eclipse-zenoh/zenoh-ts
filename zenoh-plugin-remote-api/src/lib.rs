@@ -62,7 +62,7 @@ use zenoh::{
     },
     liveliness::LivelinessToken,
     pubsub::Publisher,
-    query::{Query, Queryable},
+    query::{Querier, Query, Queryable},
     Session,
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};
@@ -486,6 +486,8 @@ struct RemoteState {
     // Liveliness
     liveliness_tokens: HashMap<Uuid, LivelinessToken>,
     liveliness_subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
+    // Querier
+    queriers: HashMap<Uuid, Querier<'static>>,
 }
 
 impl RemoteState {
@@ -500,6 +502,7 @@ impl RemoteState {
             unanswered_queries: Arc::new(std::sync::RwLock::new(HashMap::new())),
             liveliness_tokens: HashMap::new(),
             liveliness_subscribers: HashMap::new(),
+            queriers: HashMap::new(),
         }
     }
 
