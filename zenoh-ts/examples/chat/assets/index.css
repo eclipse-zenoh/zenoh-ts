@@ -27,12 +27,14 @@ body {
 .main-panel {
     display: flex;
     flex: 1;
+    overflow: hidden; /* Prevent overflow */
 }
 
 .user-list {
     width: 20%;
     border-right: 1px solid #ccc;
     padding: 10px;
+    overflow-y: auto; /* Make user list scrollable */
 }
 
 .chat-panel {
@@ -40,13 +42,14 @@ body {
     display: flex;
     flex-direction: column;
     padding: 10px;
+    overflow-y: auto; /* Make chat panel scrollable */
 }
 
 .chat-log {
     flex: 1;
     border: 1px solid #ccc;
     padding: 10px;
-    overflow-y: auto;
+    overflow-y: auto; /* Make chat log scrollable */
     margin-bottom: 10px;
 }
 
@@ -66,8 +69,8 @@ body {
 .technical-log-panel {
     background-color: #f0f0f0;
     padding: 10px;
-    height: 33vh;
-    /* 1/3 of the screen height */
+    height: 30vh;
+    /* 30% of the screen height */
     box-sizing: border-box;
     display: flex;
     flex-direction: column;

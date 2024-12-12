@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			const li = document.createElement('li');
 			li.textContent = user.toString();
 			usersList.appendChild(li);
+			usersList.scrollTop = usersList.scrollHeight; // Scroll to the latest user
 		});
 		chatLog.innerHTML = '';
 		chatSession.getMessages().forEach(message => {
@@ -50,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 			chatLog.appendChild(messageElement);
 		});
+		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 	}
 
 	function onDisconnect(chatSession: ChatSession) {
@@ -71,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
 					const li = document.createElement('li');
 					li.textContent = user.toString();
 					usersList.appendChild(li);
+					usersList.scrollTop = usersList.scrollHeight; // Scroll to the latest user
 				});
 			});
 			chatSession.onNewMessage((chatSession, user, message) => {
