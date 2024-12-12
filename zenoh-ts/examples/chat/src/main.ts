@@ -272,6 +272,15 @@ document.addEventListener('DOMContentLoaded', () => {
 			messageInput.value = '';
 		}
 	});
+
+	messageInput?.addEventListener('keypress', (event) => {
+		if (event.key === 'Enter') {
+			if (globalChatSession) {
+				globalChatSession.send_message(messageInput.value);
+				messageInput.value = '';
+			}
+		}
+	});
 });
 
 function log(message: string) {
