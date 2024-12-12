@@ -11,20 +11,22 @@
 <body>
     <div class="chat-container">
         <div class="server-panel">
-            <div>
-                <label for="server-name">Server Name:</label>
-                <input type="text" id="server-name" value="localhost">
+            <div class="input-buttons">
+                <button id="connect-button">Connect</button>
+                <button id="disconnect-button" style="display: none;">Disconnect</button>
             </div>
-            <div>
-                <label for="server-port">Server Port:</label>
-                <input type="text" id="server-port" value="10000">
-            </div>
-            <div>
-                <label for="username">Username:</label>
+            <div class="input-username">
+                <label for="username">Username</label>
                 <input type="text" id="username" value="Jean Dupont">
             </div>
-            <button id="connect-button">Connect</button>
-            <button id="disconnect-button" style="display: none;">Disconnect</button>
+            <div class="input-server-name">
+                <label for="server-name">Server</label>
+                <input type="text" id="server-name" value="localhost">
+            </div>
+            <div class="input-server-port">
+                <label for="server-port">Port</label>
+                <input type="text" id="server-port" value="10000">
+            </div>
         </div>
         <div class="main-panel">
             <div class="user-list">
