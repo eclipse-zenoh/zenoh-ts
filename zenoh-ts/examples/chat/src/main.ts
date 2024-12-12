@@ -113,6 +113,9 @@ class ChatSession {
 			this.queryable = null;
 			this.liveliness_subscriber = null;
 			this.users = [];
+			if (this.usersCallback) {
+				this.usersCallback([]);
+			}
 		}
 	}
 }
