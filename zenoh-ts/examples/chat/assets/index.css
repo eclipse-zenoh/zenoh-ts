@@ -1,11 +1,14 @@
 body {
     font-family: Arial, sans-serif;
+    margin: 0; /* Remove default margin */
+    overflow: hidden; /* Prevent vertical scrollbar */
 }
 
 .chat-container {
     display: flex;
     flex-direction: column;
     height: 100vh;
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .server-panel {
@@ -16,6 +19,7 @@ body {
     background-color: #f0f0f0;
     border-radius: 8px; /* Round corners */
     margin-bottom: 10px; /* Small padding around */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .server-panel label {
@@ -30,6 +34,7 @@ body {
     display: flex;
     flex: 1;
     overflow: hidden; /* Prevent overflow */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .user-list {
@@ -40,6 +45,7 @@ body {
     background-color: #f0f0f0;
     border-radius: 8px; /* Round corners */
     margin-right: 10px; /* Small padding around */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .chat-panel {
@@ -50,6 +56,7 @@ body {
     overflow-y: auto; /* Make chat panel scrollable */
     background-color: #f0f0f0;
     border-radius: 8px; /* Round corners */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .chat-log {
@@ -60,11 +67,13 @@ body {
     margin-bottom: 10px;
     background-color: #fff;
     border-radius: 8px; /* Round corners */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .chat-input {
     display: flex;
     margin-bottom: 10px; /* Add space below message input field */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .chat-input input {
@@ -101,6 +110,7 @@ body {
     overflow-y: auto;
     background-color: #fff;
     border-radius: 8px; /* Round corners */
+    box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
 .toggle-log-panel {
