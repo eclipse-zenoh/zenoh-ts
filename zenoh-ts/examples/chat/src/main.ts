@@ -87,11 +87,16 @@ document.addEventListener('DOMContentLoaded', () => {
 			});
 			chatSession.onNewMessage((chatSession, user, message) => {
 				const messageElement = document.createElement('div');
+				const usernameElement = document.createElement('span');
+				const messageTextElement = document.createElement('span');
 				if (user.username === chatSession.getUser().username) {
-					messageElement.innerHTML = `<strong>${user.toString()}</strong>: ${message}`;
+					usernameElement.innerHTML = `<strong>${user.toString()}</strong>: `;
 				} else {
-					messageElement.textContent = `${user.toString()}: ${message}`;
+					usernameElement.textContent = `${user.toString()}: `;
 				}
+				messageTextElement.textContent = message;
+				messageElement.appendChild(usernameElement);
+				messageElement.appendChild(messageTextElement);
 				chatLog.appendChild(messageElement);
 				chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 			});
