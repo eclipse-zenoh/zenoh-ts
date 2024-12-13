@@ -6,20 +6,20 @@ To start the example follow these steps:
 
 1. Build the zenoh-ts library (see root [README](../../README.md))
 
-1. Start zenohd with websocket plugin (see root [README](../../README.md))
+2. Start zenohd with websocket plugin (see root [README](../../README.md))
 
-1. Build and run chat example. Browser window should automatically open
+3. Build and run chat example. Browser window should automatically open
 
    ```sh
-   npm install
-   npm run build
-   npm run start
+   yarn install
+   yarm build
+   yarn start
    ```
 
 The example uses "importmap" approach to run the project. This means that the javascript code
-is loaded by browser directly, without any additional bundling. This is done purposedly to
-verify that library is ready to be used in browser without additional tooling.
+is loaded by browser directly, without additional bundling. This is done purposedly to
+verify that the zenoh-ts library is ready to be used in browser without additional tooling.
 
-Note though that dependent libraries are loaded from the cloud instead of local node_modules in this approach.
-This is necessary because some of them (especially `channel-ts`) is written with CommonJS module
-loading system and can't work in browser without repacking.
+Note though that not all dependent libraries follows this rule. Some of them (e.g. `channel-ts`)
+can be used directly in browser only after proper repacking. So when using importmap approach
+the libraries are loaded from the [jspm.io](https://jspm.org/cdn/jspm-io)
