@@ -22,4 +22,4 @@ verify that the zenoh-ts library is ready to be used in browser without addition
 
 Note though that not all dependent libraries follows this rule. Some of them (e.g. `channel-ts`)
 can be used directly in browser only after proper repacking. So when using importmap approach
-the libraries are loaded from the [jspm.io](https://jspm.org/cdn/jspm-io)
+the dependent libraries are loaded from the [jspm.io](https://jspm.org/cdn/jspm-io)
