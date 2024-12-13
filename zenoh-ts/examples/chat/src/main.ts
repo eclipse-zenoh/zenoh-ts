@@ -41,13 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		});
 		chatLog.innerHTML = '';
 		chatSession.getMessages().forEach(message => {
-			const messageElement = document.createElement('div');
-			if (message.u === chatSession.getUser().username) {
-				messageElement.innerHTML = `<strong>${message.u}</strong>: ${message.m}`;
-			} else {
-				messageElement.textContent = `${message.u}: ${message.m}`;
-			}
-			chatLog.appendChild(messageElement);
+			addMessageToChat(chatSession, new ChatUser(message.u), message.m);
 		});
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 		connectButton.style.display = 'none';
@@ -65,6 +59,36 @@ document.addEventListener('DOMContentLoaded', () => {
 		sendButton.disabled = true;
 	}
 
+	function onChangeUsers(chatSession: ChatSession) {
+		usersList.innerHTML = '';
+		chatSession.getUsers().forEach(user => {
+			const li = document.createElement('li');
+			li.textContent = user.toString();
+			usersList.appendChild(li);
+			usersList.scrollTop = usersList.scrollHeight; // Scroll to the latest user
+		});
+	}
+
+	function onNewMessage(chatSession: ChatSession, user: ChatUser, message: string) {
+		addMessageToChat(chatSession, user, message);
+		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
+	}
+
+	function addMessageToChat(chatSession: ChatSession, user: ChatUser, message: string) {
+		const messageElement = document.createElement('div');
+		const usernameElement = document.createElement('span');
+		const messageTextElement = document.createElement('span');
+		if (user.username === chatSession.getUser().username) {
+			usernameElement.innerHTML = `<strong>${user.toString()}</strong>: `;
+		} else {
+			usernameElement.textContent = `${user.toString()}: `;
+		}
+		messageTextElement.textContent = message;
+		messageElement.appendChild(usernameElement);
+		messageElement.appendChild(messageTextElement);
+		chatLog.appendChild(messageElement);
+	}
+
 	messageInput.disabled = true;
 	sendButton.disabled = true;
 
@@ -76,30 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
 				return;
 			}
 			let chatSession: ChatSession = new ChatSession(user);
-			chatSession.onChangeUsers((chatSession) => {
-				usersList.innerHTML = '';
-				chatSession.getUsers().forEach(user => {
-					const li = document.createElement('li');
-					li.textContent = user.toString();
-					usersList.appendChild(li);
-					usersList.scrollTop = usersList.scrollHeight; // Scroll to the latest user
-				});
-			});
-			chatSession.onNewMessage((chatSession, user, message) => {
-				const messageElement = document.createElement('div');
-				const usernameElement = document.createElement('span');
-				const messageTextElement = document.createElement('span');
-				if (user.username === chatSession.getUser().username) {
-					usernameElement.innerHTML = `<strong>${user.toString()}</strong>: `;
-				} else {
-					usernameElement.textContent = `${user.toString()}: `;
-				}
-				messageTextElement.textContent = message;
-				messageElement.appendChild(usernameElement);
-				messageElement.appendChild(messageTextElement);
-				chatLog.appendChild(messageElement);
-				chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
-			});
+			chatSession.onChangeUsers(onChangeUsers);
+			chatSession.onNewMessage(onNewMessage);
 			chatSession.onConnect(onConnect);
 			chatSession.onDisconnect(onDisconnect);
 			if (globalChatSession) {
