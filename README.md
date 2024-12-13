@@ -166,3 +166,5 @@ The latest version of zenoh-ts library can be installed from npm:
 ```sh
 npm install @eclipse-zenoh/zenoh-ts
 ```
+
+See also example application in the [zenoh-ts/examples/chat]
