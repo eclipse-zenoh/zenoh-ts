@@ -52,6 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 		connectButton.style.display = 'none';
 		disconnectButton.style.display = 'inline-block';
+		messageInput.disabled = false;
+		sendButton.disabled = false;
 	}
 
 	function onDisconnect(chatSession: ChatSession) {
@@ -59,7 +61,12 @@ document.addEventListener('DOMContentLoaded', () => {
 		chatLog.innerHTML = '';
 		connectButton.style.display = 'inline-block';
 		disconnectButton.style.display = 'none';
+		messageInput.disabled = true;
+		sendButton.disabled = true;
 	}
+
+	messageInput.disabled = true;
+	sendButton.disabled = true;
 
 	connectButton?.addEventListener('click', () => {
 		log_catch(async () => {
