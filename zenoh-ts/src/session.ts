@@ -101,6 +101,8 @@ export interface DeleteOptions {
  * @prop {Encoding=} encoding - Encoding type of payload 
  * @prop {IntoZBytes=} payload - Payload associated with getrequest
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {TimeDuration=} timeout - Timeout value for a get request
+ * @prop {((sample: Reply) => Promise<void>) | Handler} handler - either a callback or a polling handler with an underlying handling mechanism
 */
 export interface GetOptions {
   consolidation?: ConsolidationMode,
@@ -112,6 +114,13 @@ export interface GetOptions {
   attachment?: IntoZBytes
   timeout?: TimeDuration,
   handler?: ((sample: Reply) => Promise<void>) | Handler,
+}
+
+/**
+ * Options for a SubscriberOpts function 
+*/
+export interface SubscriberOpts {
+  handler?: ((sample: Sample) => Promise<void>) | Handler,
 }
 
 /**
@@ -407,11 +416,19 @@ export class Session {
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler: ((sample: Sample) => Promise<void>) | Handler = new FifoChannel(256),
+    subscriber_opts: SubscriberOpts
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
+
     let callback_subscriber = false;
+    // let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
+    let handler;
+    if (subscriber_opts?.handler !== undefined) {
+      handler = subscriber_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
 
     if (callback !== undefined) {
