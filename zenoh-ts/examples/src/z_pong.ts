@@ -26,7 +26,7 @@ export async function main() {
   );
 
   const subscriber_callback = async function (sample: Sample): Promise<void> {
-    await pub.put(sample.payload());
+    pub.put(sample.payload());
   };
 
   await session.declare_subscriber("test/pong", subscriber_callback);

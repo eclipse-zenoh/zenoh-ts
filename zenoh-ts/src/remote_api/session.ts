@@ -167,7 +167,7 @@ export class RemoteSession {
   }
 
   // get
-  async get(
+  get(
     key_expr: string,
     parameters: string | null,
     handler: HandlerChannel,
@@ -179,7 +179,7 @@ export class RemoteSession {
     payload?: Array<number>,
     attachment?: Array<number>,
     timeout_ms?: number,
-  ): Promise<SimpleChannel<ReplyWS>> {
+  ): SimpleChannel<ReplyWS> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
@@ -214,13 +214,13 @@ export class RemoteSession {
   }
 
   // delete
-  async delete(
+  delete(
     key_expr: string,
     congestion_control?: number,
     priority?: number,
     express?: boolean,
     attachment?: Array<number>
-  ): Promise<void> {
+  ): void {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
     let opt_attachment = undefined;
     if (attachment != undefined) {
@@ -244,11 +244,11 @@ export class RemoteSession {
     this.ws.close();
   }
 
-  async declare_remote_subscriber(
+  declare_remote_subscriber(
     key_expr: string,
     handler: HandlerChannel,
-    callback?: (sample: SampleWS) => Promise<void>,
-  ): Promise<RemoteSubscriber> {
+    callback?: (sample: SampleWS) => void,
+  ): RemoteSubscriber {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -384,7 +384,7 @@ export class RemoteSession {
   declare_liveliness_subscriber(
     key_expr: string,
     history: boolean,
-    callback?: (sample: SampleWS) => Promise<void>,
+    callback?: (sample: SampleWS) => void,
   ): RemoteSubscriber {
     let uuid = uuidv4();
 
@@ -478,7 +478,7 @@ export class RemoteSession {
     console.warn("Closed");
   }
 
-  private async handle_control_message(control_msg: ControlMsg) {
+  private handle_control_message(control_msg: ControlMsg) {
     if (typeof control_msg === "string") {
       console.warn("unhandled Control Message:", control_msg);
     } else if (typeof control_msg === "object") {
@@ -492,7 +492,7 @@ export class RemoteSession {
     }
   }
 
-  private async handle_data_message(data_msg: DataMsg) {
+  private handle_data_message(data_msg: DataMsg) {
     if ("Sample" in data_msg) {
       let subscription_uuid: UUIDv4 = data_msg["Sample"][1];
 
