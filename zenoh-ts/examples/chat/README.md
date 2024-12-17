@@ -19,7 +19,7 @@ To start the example follow these steps:
 4. Open second browser window on the same address, connect to server and test the chat
 
 The example uses "importmap" approach to run the project. This means that the javascript code
-is loaded by browser directly, without additional bundling. This is done purposedly to
+is loaded by browser directly, without additional bundling. This is done purposely to
 verify that the zenoh-ts library is ready to be used in browser without additional tooling.
 
 Note though that not all dependent libraries follows this rule. Some of them (e.g. `channel-ts`)
