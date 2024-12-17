@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "target": "es2021",
+        "strict": true,
+        "baseUrl": ".",
+        "esModuleInterop": true,
+        "outDir": "./dist"
+    },
+    "include": [
+        "./src/main.ts"
+    ]
+}

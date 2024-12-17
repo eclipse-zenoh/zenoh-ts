@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Zenoh TS Example</title>
+    <script type="module" src="main.js"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="chat-container">
+        <div class="server-panel">
+            <div class="input-username">
+                <label for="username">Username</label>
+                <input type="text" id="username" value="Jean Dupont">
+            </div>
+            <div class="input-server-name">
+                <label for="server-name">Server</label>
+                <input type="text" id="server-name" value="localhost">
+            </div>
+            <div class="input-server-port">
+                <label for="server-port">Port</label>
+                <input type="text" id="server-port" value="10000">
+            </div>
+            <div class="input-buttons">
+                <button id="connect-button">Connect</button>
+                <button id="disconnect-button" style="display: none;">Disconnect</button>
+            </div>
+        </div>
+        <div class="main-panel">
+            <div class="user-list">
+                <ul id="users">
+                    <!-- User list items will be added here -->
+                </ul>
+            </div>
+            <div class="chat-panel">
+                <div class="chat-log" id="chat-log">
+                    <!-- Chat messages will be added here -->
+                </div>
+                <div class="chat-input">
+                    <input type="text" id="message-input">
+                    <button id="send-button">Send</button>
+                </div>
+            </div>
+        </div>
+        <div class="technical-log-panel hidden" id="technical-log-panel">
+            <div class="technical-log" id="technical-log">
+                <!-- Technical log messages will be added here -->
+            </div>
+        </div>
+        <div class="toggle-log-panel">
+            <button id="toggle-log-button">Toggle Log</button>
+        </div>
+    </div>
+</body>
+
+</html>

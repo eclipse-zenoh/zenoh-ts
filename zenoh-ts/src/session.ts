@@ -47,7 +47,7 @@ import {
   Reliability,
   reliability_to_int,
 } from "./sample.js";
-import { State } from "channel-ts/lib/channel.js";
+import { ChannelState } from "channel-ts";
 import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
 import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
@@ -435,6 +435,11 @@ export class Session {
     return subscriber;
   }
 
+  /**
+   * Obtain a Liveliness struct tied to this Zenoh Session.
+   * 
+   * @returns Liveliness
+   */
   liveliness() : Liveliness {
     return new Liveliness(this.remote_session)
   }
@@ -667,7 +672,7 @@ export class Receiver {
    * @returns Reply
    */
   async receive(): Promise<Reply | RecvErr> {
-    if (this.receiver.state == State.close) {
+    if (this.receiver.state == ChannelState.close) {
       return RecvErr.Disconnected;
     } else {
       let channel_msg: ReplyWS | RecvErr = await this.receiver.receive();
