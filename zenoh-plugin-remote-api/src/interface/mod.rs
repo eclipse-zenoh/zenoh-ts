@@ -14,15 +14,24 @@
 
 use std::sync::Arc;
 
+// mod interface::ser_de;
+pub(crate) mod ser_de;
 use base64::{prelude::BASE64_STANDARD, Engine};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use ser_de::{
+    deserialize_congestion_control, deserialize_consolidation_mode, deserialize_locality,
+    deserialize_priority, deserialize_query_target, deserialize_reliability,
+    deserialize_reply_key_expr, serialize_congestion_control, serialize_consolidation_mode,
+    serialize_locality, serialize_priority, serialize_query_target, serialize_reliability,
+    serialize_reply_key_expr,
+};
+use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 use uuid::Uuid;
 use zenoh::{
     key_expr::OwnedKeyExpr,
     qos::{CongestionControl, Priority, Reliability},
-    query::{ConsolidationMode, Query, Reply, ReplyError},
-    sample::{Sample, SampleKind},
+    query::{ConsolidationMode, Query, QueryTarget, Reply, ReplyError, ReplyKeyExpr},
+    sample::{Locality, Sample, SampleKind},
 };
 
 // ██████  ███████ ███    ███  ██████  ████████ ███████      █████  ██████  ██     ███    ███ ███████ ███████ ███████  █████   ██████  ███████
@@ -34,7 +43,7 @@ use zenoh::{
 #[derive(TS)]
 #[ts(export)]
 #[derive(Debug, Serialize, Deserialize)]
-pub(crate) struct B64String(String);
+pub(crate) struct B64String(pub String);
 impl From<String> for B64String {
     fn from(value: String) -> Self {
         B64String(value)
@@ -262,6 +271,70 @@ pub enum ControlMsg {
         complete: bool,
     },
     UndeclareQueryable(Uuid),
+    // Quierer
+    DeclareQuerier {
+        id: Uuid,
+        #[ts(as = "OwnedKeyExprWrapper")]
+        key_expr: OwnedKeyExpr,
+        #[serde(
+            deserialize_with = "deserialize_query_target",
+            serialize_with = "serialize_query_target",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        target: Option<QueryTarget>,
+        #[ts(type = "number | undefined")]
+        timeout: Option<u64>,
+        #[serde(
+            deserialize_with = "deserialize_reply_key_expr",
+            serialize_with = "serialize_reply_key_expr",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        accept_replies: Option<ReplyKeyExpr>,
+        #[serde(
+            deserialize_with = "deserialize_locality",
+            serialize_with = "serialize_locality",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        allowed_destination: Option<Locality>,
+        #[serde(
+            deserialize_with = "deserialize_congestion_control",
+            serialize_with = "serialize_congestion_control",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        congestion_control: Option<CongestionControl>,
+        #[serde(
+            deserialize_with = "deserialize_priority",
+            serialize_with = "serialize_priority",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        priority: Option<Priority>,
+        #[serde(
+            deserialize_with = "deserialize_consolidation_mode",
+            serialize_with = "serialize_consolidation_mode",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        consolidation: Option<ConsolidationMode>,
+        #[ts(type = "boolean | undefined")]
+        express: Option<bool>,
+    },
+    UndeclareQuerier(Uuid),
+    // Querier
+    QuerierGet {
+        querier_id: Uuid,
+        get_id: Uuid,
+        #[ts(type = "string | undefined")]
+        encoding: Option<String>,
+        #[ts(type = "string | undefined")]
+        payload: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        attachment: Option<B64String>,
+    },
 
     // Liveliness
     Liveliness(LivelinessMsg),
@@ -291,151 +364,6 @@ pub enum LivelinessMsg {
         #[ts(type = "number | undefined")]
         timeout: Option<u64>,
     },
-}
-
-fn deserialize_consolidation_mode<'de, D>(d: D) -> Result<Option<ConsolidationMode>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match Option::<u8>::deserialize(d) {
-        Ok(Some(value)) => Ok(Some(match value {
-            0u8 => ConsolidationMode::Auto,
-            1u8 => ConsolidationMode::None,
-            2u8 => ConsolidationMode::Monotonic,
-            3u8 => ConsolidationMode::Latest,
-            _ => {
-                return Err(serde::de::Error::custom(format!(
-                    "Value not valid for ConsolidationMode Enum {:?}",
-                    value
-                )))
-            }
-        })),
-        Ok(None) => Ok(None),
-        Err(err) => Err(serde::de::Error::custom(format!(
-            "Value not valid for ConsolidationMode Enum {:?}",
-            err
-        ))),
-    }
-}
-
-fn serialize_consolidation_mode<S>(
-    consolidation_mode: &Option<ConsolidationMode>,
-    s: S,
-) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match consolidation_mode {
-        Some(c_mode) => s.serialize_u8(*c_mode as u8),
-        None => s.serialize_none(),
-    }
-}
-
-fn deserialize_congestion_control<'de, D>(d: D) -> Result<Option<CongestionControl>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match Option::<u8>::deserialize(d) {
-        Ok(Some(value)) => Ok(Some(match value {
-            0u8 => CongestionControl::Drop,
-            1u8 => CongestionControl::Block,
-            val => {
-                return Err(serde::de::Error::custom(format!(
-                    "Value not valid for CongestionControl Enum {:?}",
-                    val
-                )))
-            }
-        })),
-        Ok(None) => Ok(None),
-        val => Err(serde::de::Error::custom(format!(
-            "Value not valid for CongestionControl Enum {:?}",
-            val
-        ))),
-    }
-}
-
-fn serialize_congestion_control<S>(
-    congestion_control: &Option<CongestionControl>,
-    s: S,
-) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match congestion_control {
-        Some(c_ctrl) => s.serialize_u8(*c_ctrl as u8),
-        None => s.serialize_none(),
-    }
-}
-
-fn deserialize_priority<'de, D>(d: D) -> Result<Option<Priority>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match Option::<u8>::deserialize(d) {
-        Ok(Some(value)) => Ok(Some(match value {
-            1u8 => Priority::RealTime,
-            2u8 => Priority::InteractiveHigh,
-            3u8 => Priority::InteractiveLow,
-            4u8 => Priority::DataHigh,
-            5u8 => Priority::Data,
-            6u8 => Priority::DataLow,
-            7u8 => Priority::Background,
-            val => {
-                return Err(serde::de::Error::custom(format!(
-                    "Value not valid for Priority Enum {:?}",
-                    val
-                )))
-            }
-        })),
-        Ok(None) => Ok(None),
-        val => Err(serde::de::Error::custom(format!(
-            "Value not valid for Priority Enum {:?}",
-            val
-        ))),
-    }
-}
-
-fn serialize_priority<S>(priority: &Option<Priority>, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match priority {
-        Some(prio) => s.serialize_u8(*prio as u8),
-        None => s.serialize_none(),
-    }
-}
-
-fn deserialize_reliability<'de, D>(d: D) -> Result<Option<Reliability>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    match Option::<u8>::deserialize(d) {
-        Ok(Some(value)) => Ok(Some(match value {
-            0u8 => Reliability::Reliable,
-            1u8 => Reliability::BestEffort,
-            val => {
-                return Err(serde::de::Error::custom(format!(
-                    "Value not valid for Reliability Enum {:?}",
-                    val
-                )))
-            }
-        })),
-        Ok(None) => Ok(None),
-        val => Err(serde::de::Error::custom(format!(
-            "Value not valid for Reliability Enum {:?}",
-            val
-        ))),
-    }
-}
-
-fn serialize_reliability<S>(reliability: &Option<Reliability>, s: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match reliability {
-        Some(prio) => s.serialize_u8(*prio as u8),
-        None => s.serialize_none(),
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]

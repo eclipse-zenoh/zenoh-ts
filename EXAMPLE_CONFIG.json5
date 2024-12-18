@@ -1,0 +1,12 @@
+{
+  mode: 'router',
+  plugins_loading: {
+    enabled: true,
+    search_dirs: ['./target/debug', '~/.zenoh/lib', '/usr/lib']
+  },
+  plugins: {
+    remote_api: {
+      "__config__": "zenoh-plugin-remote-api/EXAMPLE_CONFIG.json5"
+    }
+  }
+}
