@@ -114,13 +114,13 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
 
 1. Make sure that the following utilities are available on your platform.
 
-- [NPM](https://www.npmjs.com/package/npm)
-- [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
-- [Typescript](https://www.typescriptlang.org/download/)
+   - [NPM](https://www.npmjs.com/package/npm)
+   - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
+   - [Typescript](https://www.typescriptlang.org/download/)
 
 2. Navigate to the directory `zenoh-ts`
 
-1. Run the commands:
+3. Run the commands:
 
    ```sh
    yarn install 
