@@ -1,0 +1,23 @@
+{
+  "version": "4",
+  "specifiers": {
+    "npm:@types/uuid@10": "10.0.0",
+    "npm:typescript@^5.2.2": "5.6.3"
+  },
+  "npm": {
+    "@types/uuid@10.0.0": {
+      "integrity": "sha512-7gqG38EyHgyP1S+7+xomFtL+ZNHcKv6DwNaCZmJmo1vgMugyF3TCnXVg4t1uk89mLNwnLtnY3TpOpCOyp1/xHQ=="
+    },
+    "typescript@5.6.3": {
+      "integrity": "sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw=="
+    }
+  },
+  "workspace": {
+    "packageJson": {
+      "dependencies": [
+        "npm:@types/uuid@10",
+        "npm:typescript@^5.2.2"
+      ]
+    }
+  }
+}

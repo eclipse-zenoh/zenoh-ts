@@ -101,6 +101,8 @@ export interface DeleteOptions {
  * @prop {Encoding=} encoding - Encoding type of payload 
  * @prop {IntoZBytes=} payload - Payload associated with getrequest
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {TimeDuration=} timeout - Timeout value for a get request
+ * @prop {((sample: Reply) => Promise<void>) | Handler} handler - either a callback or a polling handler with an underlying handling mechanism
 */
 export interface GetOptions {
   consolidation?: ConsolidationMode,
@@ -111,6 +113,14 @@ export interface GetOptions {
   payload?: IntoZBytes,
   attachment?: IntoZBytes
   timeout?: TimeDuration,
+  handler?: ((sample: Reply) => Promise<void>) | Handler,
+}
+
+/**
+ * Options for a SubscriberOptions function 
+*/
+export interface SubscriberOptions {
+  handler?: ((sample: Sample) => Promise<void>) | Handler,
 }
 
 /**
@@ -120,7 +130,7 @@ export interface GetOptions {
 */
 export interface QueryableOptions {
   complete?: boolean,
-  callback?: (query: Query) => void,
+  handler?: ((sample: Query) => Promise<void>) | Handler,
 }
 
 /**
@@ -302,11 +312,10 @@ export class Session {
    *
    * @returns Receiver
    */
-  async get(
+  get(
     into_selector: IntoSelector,
-    handler: ((sample: Reply) => Promise<void>) | Handler = new FifoChannel(256),
     get_options?: GetOptions
-  ): Promise<Receiver | undefined> {
+  ): Receiver | undefined {
 
     let selector: Selector;
     let key_expr: KeyExpr;
@@ -327,10 +336,17 @@ export class Session {
       selector = new Selector(into_selector);
     }
 
+    let handler;
+    if (get_options?.handler !== undefined) {
+      handler = get_options?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
-    
+
     let _consolidation = consolidation_mode_to_int(get_options?.consolidation)
     let _encoding = get_options?.encoding?.toString();
     let _congestion_control = congestion_control_to_int(get_options?.congestion_control);
@@ -350,7 +366,7 @@ export class Session {
       _payload = Array.from(new ZBytes(get_options?.payload).buffer())
     }
 
-    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
+    let chan: SimpleChannel<ReplyWS> = this.remote_session.get(
       selector.key_expr().toString(),
       selector.parameters().toString(),
       handler_type,
@@ -398,13 +414,20 @@ export class Session {
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
-  async declare_subscriber(
+  declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler: ((sample: Sample) => Promise<void>) | Handler = new FifoChannel(256),
-  ): Promise<Subscriber> {
+    subscriber_opts: SubscriberOptions
+  ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
+
     let callback_subscriber = false;
+    let handler;
+    if (subscriber_opts?.handler !== undefined) {
+      handler = subscriber_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
 
     if (callback !== undefined) {
@@ -415,18 +438,18 @@ export class Session {
           callback(sample);
         }
       };
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
+      remote_subscriber = this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
         callback_conversion,
       );
     } else {
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
+      remote_subscriber = this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
       );
     }
-    
+
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       callback_subscriber,
@@ -455,10 +478,10 @@ export class Session {
   *
   * @returns Queryable
   */
-  async declare_queryable(
+  declare_queryable(
     key_expr: IntoKeyExpr,
     queryable_opts?: QueryableOptions
-  ): Promise<Queryable> {
+  ): Queryable {
     let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
     let reply_tx: SimpleChannel<QueryReplyWS> =
@@ -469,21 +492,31 @@ export class Session {
       _complete = queryable_opts?.complete;
     };
 
+    let handler;
+    if (queryable_opts?.handler !== undefined) {
+      handler = queryable_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+    let [callback, handler_type] = this.check_handler_or_callback<Query>(handler);
+
     let callback_queryable = false;
-    if (queryable_opts?.callback != undefined) {
+    if (callback != undefined) {
       callback_queryable = true;
-      let callback = queryable_opts?.callback;
+      // Typescript cant figure out that calback!=undefined here, so this needs to be explicit
+      let defined_callback = callback;
       const callback_conversion = function (
         query_ws: QueryWS,
       ): void {
         let query: Query = QueryWS_to_Query(query_ws, reply_tx);
 
-        callback(query);
+        defined_callback(query);
       };
       remote_queryable = this.remote_session.declare_remote_queryable(
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type,
         callback_conversion,
       );
     } else {
@@ -491,6 +524,7 @@ export class Session {
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type
       );
     }
 

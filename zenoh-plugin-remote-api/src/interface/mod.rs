@@ -254,6 +254,7 @@ pub enum ControlMsg {
         key_expr: OwnedKeyExpr,
         id: Uuid,
         complete: bool,
+        handler: HandlerChannel,
     },
     UndeclareQueryable(Uuid),
     // Quierer
