@@ -114,9 +114,9 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
 
 1. Make sure that the following utilities are available on your platform.
 
-- [NPM](https://www.npmjs.com/package/npm)
-- [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
-- [Typescript](https://www.typescriptlang.org/download/) 
+   - [NPM](https://www.npmjs.com/package/npm)
+   - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
+   - [Typescript](https://www.typescriptlang.org/download/)
 
 2. Navigate to the directory `zenoh-ts`
 
@@ -166,3 +166,5 @@ The latest version of zenoh-ts library can be installed from npm:
 ```sh
 npm install @eclipse-zenoh/zenoh-ts
 ```
+
+See also example application in the [zenoh-ts/examples/chat](zenoh-ts/examples/chat/README.md)

@@ -1,0 +1,21 @@
+{
+  "env": [
+    "browser",
+    "development",
+    "module"
+  ],
+  "imports": {
+    "./node_modules/channel-ts/lib": "./node_modules/channel-ts/lib/index.js",
+    "./node_modules/channel-ts/lib/channel": "./node_modules/channel-ts/lib/channel.js",
+    "./node_modules/channel-ts/lib/mutex": "./node_modules/channel-ts/lib/mutex.js",
+    "./node_modules/channel-ts/lib/observe": "./node_modules/channel-ts/lib/observe.js",
+    "./node_modules/tslog/dist/esm/runtime/nodejs/index.js": "./node_modules/tslog/dist/esm/runtime/browser/index.js",
+    "./node_modules/typed-duration/dist/lib": "./node_modules/typed-duration/dist/lib/index.js",
+    "base64-arraybuffer": "./node_modules/base64-arraybuffer/dist/base64-arraybuffer.es5.js",
+    "channel-ts": "./node_modules/channel-ts/lib/index.js",
+    "channel-ts/lib/channel.js": "./node_modules/channel-ts/lib/channel.js",
+    "tslog": "./node_modules/tslog/dist/esm/index.js",
+    "typed-duration": "./node_modules/typed-duration/dist/index.js",
+    "uuid": "./node_modules/uuid/dist/esm-browser/index.js"
+  }
+}

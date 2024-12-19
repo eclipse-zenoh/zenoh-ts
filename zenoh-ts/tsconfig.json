@@ -11,7 +11,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-
 {
   "compilerOptions": {
     "module": "esnext",
@@ -30,14 +29,21 @@
     "emitDeclarationOnly": false,
     "baseUrl": ".",
     "paths": {
-      "*": ["src/types/*"]
+      "*": [
+        "src/types/*"
+      ]
     },
-    "lib": ["DOM", "ES2021"],
+    "lib": [
+      "DOM",
+      "ES2021"
+    ],
     "declaration": true,
     "esModuleInterop": true,
     "allowJs": true,
     "noImplicitAny": true,
     "noImplicitReturns": true
   },
-  "include": ["src/*"]
+  "include": [
+    "src/*"
+  ]
 }
