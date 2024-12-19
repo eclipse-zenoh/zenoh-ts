@@ -276,12 +276,13 @@ export class RemoteSession {
     key_expr: string,
     complete: boolean,
     reply_tx: SimpleChannel<QueryReplyWS>,
+    handler: HandlerChannel,
     callback?: (sample: QueryWS) => void,
   ): RemoteQueryable {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid },
+      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid, handler: handler },
     };
 
     let query_rx: SimpleChannel<QueryWS> = new SimpleChannel<QueryWS>();

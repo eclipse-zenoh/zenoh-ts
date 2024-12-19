@@ -117,9 +117,9 @@ export interface GetOptions {
 }
 
 /**
- * Options for a SubscriberOpts function 
+ * Options for a SubscriberOptions function 
 */
-export interface SubscriberOpts {
+export interface SubscriberOptions {
   handler?: ((sample: Sample) => Promise<void>) | Handler,
 }
 
@@ -130,7 +130,7 @@ export interface SubscriberOpts {
 */
 export interface QueryableOptions {
   complete?: boolean,
-  callback?: (query: Query) => void,
+  handler?: ((sample: Query) => Promise<void>) | Handler,
 }
 
 /**
@@ -416,13 +416,12 @@ export class Session {
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    subscriber_opts: SubscriberOpts
+    subscriber_opts: SubscriberOptions
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
     let callback_subscriber = false;
-    // let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
     let handler;
     if (subscriber_opts?.handler !== undefined) {
       handler = subscriber_opts?.handler;
@@ -488,21 +487,31 @@ export class Session {
       _complete = queryable_opts?.complete;
     };
 
+    let handler;
+    if (queryable_opts?.handler !== undefined) {
+      handler = queryable_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+    let [callback, handler_type] = this.check_handler_or_callback<Query>(handler);
+
     let callback_queryable = false;
-    if (queryable_opts?.callback != undefined) {
+    if (callback != undefined) {
       callback_queryable = true;
-      let callback = queryable_opts?.callback;
+      // Typescript cant figure out that calback!=undefined here, so this needs to be explicit
+      let defined_callback = callback;
       const callback_conversion = function (
         query_ws: QueryWS,
       ): void {
         let query: Query = QueryWS_to_Query(query_ws, reply_tx);
 
-        callback(query);
+        defined_callback(query);
       };
       remote_queryable = this.remote_session.declare_remote_queryable(
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type,
         callback_conversion,
       );
     } else {
@@ -510,6 +519,7 @@ export class Session {
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type
       );
     }
 
