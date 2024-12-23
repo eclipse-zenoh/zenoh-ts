@@ -13,8 +13,7 @@
 //
 
 import {
-  RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr,
-  SampleKind,
+  deserialize_string, Sample, Config, Session, KeyExpr,
   Receiver,
   RecvErr,
   ReplyError
@@ -29,12 +28,8 @@ export async function main() {
   let key_expr = new KeyExpr("group1/**");
   console.log("Sending Liveliness Query '", key_expr.toString(),"'");
 
-  let receiver = session.liveliness().get(key_expr, {timeout: seconds.of(20)});
-
-  if (!(receiver instanceof Receiver)){
-    return // Return in case of callback get query
-  }
-  
+  let receiver : Receiver= session.liveliness().get(key_expr, {timeout: seconds.of(20)}) as Receiver;
+ 
   let reply = await receiver.receive();
   
   while (reply != RecvErr.Disconnected) {
