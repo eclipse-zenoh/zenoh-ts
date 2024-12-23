@@ -202,6 +202,9 @@ export class Session {
     Session.registry.unregister(this);
   }
 
+  async is_closed(){
+    return this.remote_session.ws.readyState == WebSocket.CLOSED;
+  }
   /**
    * Puts a value on the session, on a specific key expression KeyExpr
    *
