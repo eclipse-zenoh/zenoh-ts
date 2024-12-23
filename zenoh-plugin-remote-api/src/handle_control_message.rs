@@ -77,6 +77,20 @@ pub(crate) async fn handle_control_message(
                 warn!("State Map Does not contain SocketAddr");
             }
         }
+        ControlMsg::NewTimestamp => {
+            if let Some(ts) = state_map
+                .session
+                .new_timestamp()
+                .to_string_rfc3339_lossy()
+                .split("/")
+                .collect::<Vec<&str>>()
+                .get(0)
+            {
+                state_map.websocket_tx.send(DataMsg::NewTimestamp(ts));
+            } else {
+                warn!("Could not get timestamp from Session");
+            };
+        }
         ControlMsg::Get {
             key_expr,
             parameters,
