@@ -481,7 +481,7 @@ struct RemoteState {
     subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
     publishers: HashMap<Uuid, Publisher<'static>>,
     // Queryable
-    queryables: HashMap<Uuid, (Queryable<()>, OwnedKeyExpr)>,
+    queryables: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
     unanswered_queries: Arc<std::sync::RwLock<HashMap<Uuid, Query>>>,
     // Liveliness
     liveliness_tokens: HashMap<Uuid, LivelinessToken>,
@@ -517,9 +517,7 @@ impl RemoteState {
         }
 
         for (_, (queryable, _)) in self.queryables {
-            if let Err(e) = queryable.undeclare().await {
-                error!("{e}")
-            }
+            queryable.abort();
         }
 
         drop(self.unanswered_queries);

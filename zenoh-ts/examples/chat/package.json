@@ -1,0 +1,21 @@
+{
+  "name": "zenoh-ts-chat",
+  "version": "1.0.0",
+  "description": "Simple example of using zenoh-ts library on the web page",
+  "repository": "git@github.com:eclipse-zenoh/zenoh-ts",
+  "author": "Michael Ilyin <milyin@gmail.com>",
+  "license": "EPL-2.0",
+  "type": "module",
+  "scripts": {
+    "build": "rm -rf dist && mkdir dist && tsc && cp assets/* dist/ && jspm link -m dist/index.html",
+    "start": "http-server ../.. -c-1 -o examples/chat/dist/index.html"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1",
+    "jspm": "^3.3.3",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@eclipse-zenoh/zenoh-ts": "file:../.."
+  }
+}

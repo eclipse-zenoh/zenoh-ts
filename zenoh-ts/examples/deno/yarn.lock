@@ -2,8 +2,8 @@
 # yarn lockfile v1
 
 
-"@eclipse-zenoh/zenoh-ts@file:..":
-  version "1.0.0-dev"
+"@eclipse-zenoh/zenoh-ts@file:../..":
+  version "1.0.3"
   dependencies:
     base64-arraybuffer "^1.0.2"
     channel-ts "^0.1.2"

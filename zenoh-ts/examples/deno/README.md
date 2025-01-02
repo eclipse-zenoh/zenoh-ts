@@ -13,14 +13,14 @@ Zenoh (pronounce _/zeno/_) unifies data in motion, data at rest and computations
 
 Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.com/eclipse-zenoh/roadmap) for more detailed information.
 
-:warning: Note: This library does not support NodeJS. 
+:warning: Note: This library does not support NodeJS.
 To run on the backend its recommended either to use [deno](https://deno.com/) or check out the differnt language bindings
 
 ---
 
 # Typescript/Javascript API
 
-This repository provides a Typscript / Javascript binding through the use of the `remote-api-plugin` in this repo. 
+This repository provides a Typscript / Javascript binding through the use of the `remote-api-plugin` in this repo.
 The long term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.  
 In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and will need to undergo a fair amount of refactoring before that can happen.
 
@@ -30,21 +30,25 @@ In its current state, it is not possible to compile Zenoh (Rust) to target WASM,
 
 The example project is a Web project using [Vite](https://vite.dev/)
 
-In order to run the example project the user must: 
+In order to run the example project the user must:
+
 1. Build the Typescript Library
 2. Build + Run the remote-api-plugin  
 3. Build + Run the examples
 
-
 ### 1. Build the Typescript Library  
+
 From project root directory:  
+
 1. Navigate to the `/zenoh-ts` directory  
 2. Build the `zenoh-ts` bindings by running `yarn install && yarn build`  
 
 ### 2. Build + Run the remote-api-plugin  
+
 From project root directory:  
+
 1. Build the plugin by running `cargo build`  
-2. Run an instance of `zenohd` loading the plugin `zenohd --config ./zenoh-plugin-remote-api/EXAMPLE_CONFIG.json5 `  with the following config
+2. Run an instance of `zenohd` loading the plugin `zenohd --config ./zenoh-plugin-remote-api/EXAMPLE_CONFIG.json5` with the following config
 
 ```json5
 {
@@ -60,6 +64,7 @@ From project root directory:
   },
 }
 ```
+
 The latest version of `zenohd` can be build from source from [zenoh](https://github.com/eclipse-zenoh/zenoh/)
 or downloaded from the [release](https://github.com/eclipse-zenoh/zenoh/releases) page for your platform.
 Keep this terminal running while building and running the example below
@@ -70,15 +75,15 @@ The most simple way to run examples is to install [deno](https://deno.com/), and
 
 1. Install [deno](https://deno.com/)
 2. Navigate to the `/zenoh-ts/examples` directory
-3. Install `zenoh-ts` library by running `yarn install` 
+3. Install `zenoh-ts` library by running `yarn install`
 4. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
 This will start an instance of Deno running the example.
 The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
-The javascript runtime [deno](https://deno.com/) is expected be consistent with the browser. 
-Note: This library does not support NodeJS 
+The javascript runtime [deno](https://deno.com/) is expected be consistent with the browser.
+Note: This library does not support NodeJS
 
 ### Clean projects
 
-To reset state of the project from the top level directory run 
+To reset state of the project from the top level directory run
 `cargo clean && cd zenoh-ts && yarn clean && cd examples && yarn clean`

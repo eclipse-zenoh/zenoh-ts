@@ -77,6 +77,20 @@ pub(crate) async fn handle_control_message(
                 warn!("State Map Does not contain SocketAddr");
             }
         }
+        ControlMsg::NewTimestamp => {
+            if let Some(ts) = state_map
+                .session
+                .new_timestamp()
+                .to_string_rfc3339_lossy()
+                .split("/")
+                .collect::<Vec<&str>>()
+                .get(0)
+            {
+                state_map.websocket_tx.send(DataMsg::NewTimestamp(ts));
+            } else {
+                warn!("Could not get timestamp from Session");
+            };
+        }
         ControlMsg::Get {
             key_expr,
             parameters,
@@ -209,15 +223,11 @@ pub(crate) async fn handle_control_message(
         } => {
             let key_expr = KeyExpr::new(owned_key_expr.clone())?;
             let ch_tx = state_map.websocket_tx.clone();
+            let subscriber_builder = state_map.session.declare_subscriber(key_expr);
 
             let join_handle = match handler {
                 HandlerChannel::Fifo(size) => {
-                    let subscriber = state_map
-                        .session
-                        .declare_subscriber(key_expr)
-                        .with(FifoChannel::new(size))
-                        .await?;
-
+                    let subscriber = subscriber_builder.with(FifoChannel::new(size)).await?;
                     spawn_future(async move {
                         while let Ok(sample) = subscriber.recv_async().await {
                             let sample_ws = SampleWS::from(sample);
@@ -230,12 +240,7 @@ pub(crate) async fn handle_control_message(
                     })
                 }
                 HandlerChannel::Ring(size) => {
-                    let subscriber = state_map
-                        .session
-                        .declare_subscriber(key_expr)
-                        .with(RingChannel::new(size))
-                        .await?;
-
+                    let subscriber = subscriber_builder.with(RingChannel::new(size)).await?;
                     spawn_future(async move {
                         while let Ok(sample) = subscriber.recv_async().await {
                             let sample_ws = SampleWS::from(sample);
@@ -295,41 +300,77 @@ pub(crate) async fn handle_control_message(
             key_expr,
             complete,
             id: queryable_uuid,
+            handler,
         } => {
             let unanswered_queries = state_map.unanswered_queries.clone();
-            let session = state_map.session.clone();
             let ch_tx = state_map.websocket_tx.clone();
-            let queryable = session
+            let query_builder = state_map
+                .session
                 .declare_queryable(&key_expr)
-                .complete(complete)
-                .callback(move |query| {
-                    let query_uuid = Uuid::new_v4();
-                    let queryable_msg = QueryableMsg::Query {
-                        queryable_uuid,
-                        query: QueryWS::from((&query, query_uuid)),
-                    };
+                .complete(complete);
 
-                    match unanswered_queries.write() {
-                        Ok(mut rw_lock) => {
-                            rw_lock.insert(query_uuid, query);
+            let join_handle = match handler {
+                HandlerChannel::Fifo(size) => {
+                    let queryable = query_builder.with(FifoChannel::new(size)).await?;
+                    spawn_future(async move {
+                        while let Ok(query) = queryable.recv_async().await {
+                            let query_uuid = Uuid::new_v4();
+                            let queryable_msg = QueryableMsg::Query {
+                                queryable_uuid,
+                                query: QueryWS::from((&query, query_uuid)),
+                            };
+
+                            match unanswered_queries.write() {
+                                Ok(mut rw_lock) => {
+                                    rw_lock.insert(query_uuid, query);
+                                }
+                                Err(err) => {
+                                    tracing::error!("Query RwLock has been poisoned {err:?}")
+                                }
+                            }
+
+                            let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
+                            if let Err(err) = ch_tx.send(remote_msg) {
+                                tracing::error!("Could not send Queryable Message on WS {}", err);
+                            };
                         }
-                        Err(err) => tracing::error!("Query RwLock has been poisoned {err:?}"),
-                    }
+                    })
+                }
+                HandlerChannel::Ring(size) => {
+                    let queryable = query_builder.with(RingChannel::new(size)).await?;
+                    spawn_future(async move {
+                        while let Ok(query) = queryable.recv_async().await {
+                            let query_uuid = Uuid::new_v4();
+                            let queryable_msg = QueryableMsg::Query {
+                                queryable_uuid,
+                                query: QueryWS::from((&query, query_uuid)),
+                            };
 
-                    let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
-                    if let Err(err) = ch_tx.send(remote_msg) {
-                        tracing::error!("Could not send Queryable Message on WS {}", err);
-                    };
-                })
-                .await?;
+                            match unanswered_queries.write() {
+                                Ok(mut rw_lock) => {
+                                    rw_lock.insert(query_uuid, query);
+                                }
+                                Err(err) => {
+                                    tracing::error!("Query RwLock has been poisoned {err:?}")
+                                }
+                            }
+
+                            let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
+                            if let Err(err) = ch_tx.send(remote_msg) {
+                                tracing::error!("Could not send Queryable Message on WS {}", err);
+                            };
+                        }
+                    })
+                }
+            };
 
             state_map
                 .queryables
-                .insert(queryable_uuid, (queryable, key_expr));
+                .insert(queryable_uuid, (join_handle, key_expr));
         }
         ControlMsg::UndeclareQueryable(uuid) => {
             if let Some((queryable, _)) = state_map.queryables.remove(&uuid) {
-                queryable.undeclare().await?;
+                queryable.abort();
             };
         }
         ControlMsg::Liveliness(liveliness_msg) => {

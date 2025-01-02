@@ -82,6 +82,7 @@ pub enum DataMsg {
     GetReply(ReplyWS),
     // Bidirectional
     Queryable(QueryableMsg),
+    NewTimestamp(String)
 }
 
 #[derive(TS)]
@@ -113,6 +114,7 @@ pub enum ControlMsg {
     OpenSession,
     CloseSession,
     Session(Uuid),
+    NewTimestamp,
 
     // Session Action Messages
     Get {
@@ -254,6 +256,7 @@ pub enum ControlMsg {
         key_expr: OwnedKeyExpr,
         id: Uuid,
         complete: bool,
+        handler: HandlerChannel,
     },
     UndeclareQueryable(Uuid),
     // Quierer
