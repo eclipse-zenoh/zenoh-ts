@@ -48,6 +48,10 @@ export class Subscriber {
   /**
    * @ignore 
    */
+  private _key_expr: KeyExpr;
+  /**
+   * @ignore 
+   */
   private callback_subscriber: boolean;
   /** Finalization registry used for cleanup on drop
    * @ignore 
@@ -65,13 +69,22 @@ export class Subscriber {
    */
   private constructor(
     remote_subscriber: RemoteSubscriber,
+    key_expr: KeyExpr,
     callback_subscriber: boolean,
   ) {
     this.remote_subscriber = remote_subscriber;
     this.callback_subscriber = callback_subscriber;
+    this._key_expr = key_expr;
     Subscriber.registry.register(this, remote_subscriber, this)
   }
 
+  /**
+   * returns the key expression of an object
+   * @returns KeyExpr
+   */
+  key_expr(): KeyExpr {
+    return this._key_expr
+  }
   /**
    * Receives a new message on the subscriber
    *  note: If subscriber was created with a callback, this recieve will return undefined, 
@@ -112,9 +125,10 @@ export class Subscriber {
    */
   static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
+    key_expr: KeyExpr,
     callback_subscriber: boolean,
   ): Subscriber {
-    return new Subscriber(remote_subscriber, callback_subscriber);
+    return new Subscriber(remote_subscriber, key_expr, callback_subscriber);
   }
 }
 
