@@ -180,6 +180,20 @@ export class FifoChannel implements Handler {
 // ██████  ██    ██ ██████  ██      ██ ███████ ███████ █████   ██████
 // ██      ██    ██ ██   ██ ██      ██      ██ ██   ██ ██      ██   ██
 // ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
+
+/**
+ * 
+ * 
+ * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
+ * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
+ * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+ */
+export interface PublisherPutOptions {
+  payload: IntoZBytes,
+  encoding?: IntoEncoding,
+  attachment?: IntoZBytes,
+}
+
 export class Publisher {
   /**
    * Class that represents a Zenoh Publisher, 
@@ -248,28 +262,28 @@ export class Publisher {
   /**
    * Puts a payload on the publisher associated with this class instance
    *
-   * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
-   * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
-   * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+   * @param {PublisherPutOptions} put_options
    *
    * @returns void
    */
   put(
-    payload: IntoZBytes,
-    encoding?: IntoEncoding,
-    attachment?: IntoZBytes,
+    put_options: PublisherPutOptions,
+
+    // payload: IntoZBytes,
+    // encoding?: IntoEncoding,
+    // attachment?: IntoZBytes,
   ): void {
-    let zbytes: ZBytes = new ZBytes(payload);
+    let zbytes: ZBytes = new ZBytes(put_options.payload);
     let _encoding;
-    if (encoding != null) {
-      _encoding = Encoding.intoEncoding(encoding);
+    if (put_options.encoding != null) {
+      _encoding = Encoding.intoEncoding(put_options.encoding);
     } else {
       _encoding = Encoding.default();
     }
 
     let _attachment = null;
-    if (attachment != null) {
-      let att_bytes = new ZBytes(attachment);
+    if (put_options.attachment != null) {
+      let att_bytes = new ZBytes(put_options.attachment);
       _attachment = Array.from(att_bytes.buffer());
     }
 
