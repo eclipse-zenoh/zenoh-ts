@@ -62,7 +62,7 @@ use zenoh::{
     },
     liveliness::LivelinessToken,
     pubsub::Publisher,
-    query::{Querier, Query, Queryable},
+    query::{Querier, Query},
     Session,
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};

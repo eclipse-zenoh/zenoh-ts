@@ -27,6 +27,7 @@ import {
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 
+
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
 // ██      ██    ██ ██   ██ ██      ██      ██   ██ ██ ██   ██ ██      ██   ██
 // ███████ ██    ██ ██████  ███████ ██      ██████  ██ ██████  █████   ██████
@@ -182,8 +183,7 @@ export class FifoChannel implements Handler {
 // ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
 
 /**
- * 
- * 
+ *  
  * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
  * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
  * @param {IntoZBytes=} attachment - optional extra data to send with Payload
@@ -192,6 +192,14 @@ export interface PublisherPutOptions {
   payload: IntoZBytes,
   encoding?: IntoEncoding,
   attachment?: IntoZBytes,
+}
+
+/**
+ * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+ */
+export interface PublisherDeleteOptions {
+  attachment?: IntoZBytes,
+  timestamp?: string
 }
 
 export class Publisher {
@@ -328,6 +336,31 @@ export class Publisher {
    */
   congestion_control(): CongestionControl {
     return this._congestion_control;
+  }
+
+  /**
+   * 
+   * executes delete on publisher
+   * @param {PublisherDeleteOptions} delete_options:  Options associated with a publishers delete
+   * @returns void
+   */
+  delete(delete_options: PublisherDeleteOptions) {
+
+    let _attachment = null;
+    if (delete_options.attachment != null) {
+      let att_bytes = new ZBytes(delete_options.attachment);
+      _attachment = Array.from(att_bytes.buffer());
+    }
+
+    let _timestamp = null;
+    if (delete_options.timestamp != null) {
+      _timestamp = delete_options.timestamp;
+    }
+
+    return this._remote_publisher.delete(
+      _attachment,
+      _timestamp
+    );
   }
 
   /**

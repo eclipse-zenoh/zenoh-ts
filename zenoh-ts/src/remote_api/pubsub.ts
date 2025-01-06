@@ -85,6 +85,27 @@ export class RemotePublisher {
     this.session_ref.send_data_message(data_msg);
   }
 
+  // Delete 
+  delete(
+    attachment: Array<number> | null,
+    timestamp: string | null,
+  ) {
+
+    let optional_attachment = null;
+    if (attachment != null) {
+      optional_attachment = b64_str_from_bytes(new Uint8Array(attachment));
+    }
+
+    let data_msg: DataMsg = {
+      PublisherDelete: {
+        id: this.publisher_id.toString(),
+        attachment: optional_attachment,
+        timestamp: timestamp,
+      },
+    };
+    this.session_ref.send_data_message(data_msg);
+  }
+
   undeclare() {
     if (this.undeclared == true) {
       let message =

@@ -86,7 +86,12 @@ pub(crate) async fn handle_control_message(
                 .collect::<Vec<&str>>()
                 .get(0)
             {
-                state_map.websocket_tx.send(DataMsg::NewTimestamp(ts));
+                if let Err(e) = state_map
+                    .websocket_tx
+                    .send(RemoteAPIMsg::Data(DataMsg::NewTimestamp(ts.to_string())))
+                {
+                    error!("{}", e);
+                };
             } else {
                 warn!("Could not get timestamp from Session");
             };

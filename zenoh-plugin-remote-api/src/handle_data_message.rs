@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::{error::Error, net::SocketAddr};
+use std::{error::Error, net::SocketAddr, str::FromStr};
 
 use tracing::{error, warn};
 use zenoh::query::Query;
@@ -74,6 +74,36 @@ pub async fn handle_data_message(
                 warn!("Publisher {id}, does not exist in State");
             }
         }
+        DataMsg::PublisherDelete {
+            id,
+            attachment,
+            timestamp,
+        } => {
+            if let Some(publisher) = state_map.publishers.get(&id) {
+                let mut publisher_builder = publisher.delete();
+                match attachment.map(|x| x.b64_to_bytes()) {
+                    Some(Ok(attachment)) => {
+                        publisher_builder = publisher_builder.attachment(&attachment);
+                    }
+                    Some(Err(e)) => {
+                        error!("{}", e);
+                    }
+                    None => {}
+                }
+
+                match timestamp.map(|x| uhlc::Timestamp::from_str(&x)) {
+                    Some(Err(e)) => error!("{:?}", e),
+                    Some(Ok(timestamp)) => {
+                        publisher_builder = publisher_builder.timestamp(timestamp);
+                    }
+                    None => {} // let uhlc_ts = uhlc::Timestamp::from_str(&ts);
+                }
+
+                if let Err(e) = publisher_builder.await {
+                    error!("Could not publish {e}");
+                };
+            }
+        }
         DataMsg::Queryable(queryable_msg) => match queryable_msg {
             QueryableMsg::Reply { reply } => {
                 let query: Option<Query> = match state_map.unanswered_queries.write() {
@@ -117,7 +147,7 @@ pub async fn handle_data_message(
                 warn!("Plugin should not receive Query from Client, This should go via Get API");
             }
         },
-        data_msg => {
+        DataMsg::Sample(_, _) | DataMsg::GetReply(_) | DataMsg::NewTimestamp(_) => {
             error!("Server Should not recieved a {data_msg:?} Variant from client");
         }
     }

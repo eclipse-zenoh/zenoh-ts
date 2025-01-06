@@ -75,6 +75,11 @@ pub enum DataMsg {
         attachment: Option<B64String>,
         encoding: Option<String>,
     },
+    PublisherDelete {
+        id: Uuid,
+        attachment: Option<B64String>,
+        timestamp: Option<String>,
+    },
     // SVR -> Client
     // Subscriber
     Sample(SampleWS, Uuid),
@@ -82,7 +87,7 @@ pub enum DataMsg {
     GetReply(ReplyWS),
     // Bidirectional
     Queryable(QueryableMsg),
-    NewTimestamp(String)
+    NewTimestamp(String),
 }
 
 #[derive(TS)]

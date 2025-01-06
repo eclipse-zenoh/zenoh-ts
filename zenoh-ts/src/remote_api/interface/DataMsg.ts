@@ -4,4 +4,4 @@ import type { QueryableMsg } from "./QueryableMsg.js";
 import type { ReplyWS } from "./ReplyWS.js";
 import type { SampleWS } from "./SampleWS.js";
 
-export type DataMsg = { "PublisherPut": { id: string, payload: B64String, attachment: B64String | null, encoding: string | null, } } | { "Sample": [SampleWS, string] } | { "GetReply": ReplyWS } | { "Queryable": QueryableMsg };
+export type DataMsg = { "PublisherPut": { id: string, payload: B64String, attachment: B64String | null, encoding: string | null, } } | { "PublisherDelete": { id: string, attachment: B64String | null, timestamp: string | null, } } | { "Sample": [SampleWS, string] } | { "GetReply": ReplyWS } | { "Queryable": QueryableMsg } | { "NewTimestamp": string };
