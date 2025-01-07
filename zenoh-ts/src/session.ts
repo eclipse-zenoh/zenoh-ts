@@ -52,6 +52,7 @@ import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
 import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
+import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
@@ -248,6 +249,23 @@ export class Session {
       _express,
       _attachment,
     );
+  }
+
+  /**
+   * Returns the Zenoh SessionInfo Object
+   *
+   * @returns SessionInfo
+   */
+  async info(): Promise<SessionInfo> {
+    let session_info_iface: SessionInfoIface = await this.remote_session.info();
+
+    let zid = new ZenohId(session_info_iface.zid);
+    let z_peers = session_info_iface.z_peers.map(x => new ZenohId(x));
+    let z_routers = session_info_iface.z_routers.map(x => new ZenohId(x));
+
+    let session_info = new SessionInfo(zid, z_peers, z_routers);
+
+    return session_info;
   }
 
   /**
@@ -749,4 +767,45 @@ export class Receiver {
  */
 export function open(config: Config): Promise<Session> {
   return Session.open(config);
+}
+
+/**
+ *  Struct to expose Info for your Zenoh Session
+ */
+export class SessionInfo {
+  private _zid: ZenohId
+  private _routers: ZenohId[]
+  private _peers: ZenohId[]
+
+  constructor(
+    zid: ZenohId,
+    peers: ZenohId[],
+    routers: ZenohId[],
+  ) {
+    this._zid = zid;
+    this._routers = routers;
+    this._peers = peers;
+  }
+
+  zid(): ZenohId {
+    return this._zid;
+  }
+  routers_zid(): ZenohId[] {
+    return this._routers;
+  }
+  peers_zid(): ZenohId[] {
+    return this._peers;
+  }
+}
+
+export class ZenohId {
+  private zid: string
+
+  constructor(zid: string) {
+    this.zid = zid;
+  }
+
+  toString(): string {
+    return this.zid;
+  }
 }

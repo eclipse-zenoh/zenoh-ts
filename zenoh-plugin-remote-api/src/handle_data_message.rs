@@ -147,7 +147,10 @@ pub async fn handle_data_message(
                 warn!("Plugin should not receive Query from Client, This should go via Get API");
             }
         },
-        DataMsg::Sample(_, _) | DataMsg::GetReply(_) | DataMsg::NewTimestamp(_) => {
+        DataMsg::Sample(_, _)
+        | DataMsg::GetReply(_)
+        | DataMsg::NewTimestamp(_)
+        | DataMsg::SessionInfo(_) => {
             error!("Server Should not recieved a {data_msg:?} Variant from client");
         }
     }
