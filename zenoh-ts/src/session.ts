@@ -55,7 +55,7 @@ import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
-import { locality_to_int, Querier, QuerierOptions, query_target_to_int, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
+import { locality_to_int, Querier, QuerierOptions, query_target_to_int, QueryTarget, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -113,6 +113,7 @@ export interface GetOptions {
   payload?: IntoZBytes,
   attachment?: IntoZBytes
   timeout?: TimeDuration,
+  target?: QueryTarget,
   handler?: ((sample: Reply) => Promise<void>) | Handler,
 }
 
@@ -139,14 +140,15 @@ export interface QueryableOptions {
  * @prop {CongestionControl} congestion_control - Optional, Type of Congestion control to be used (BLOCK / DROP)
  * @prop {Priority} priority - Optional, The Priority of zenoh messages
  * @prop {boolean} express - Optional, The Priority of zenoh messages
- * @prop {Reliability} reliability - Optional, The Priority of zenoh messages
+ * @prop {Reliability} reliability - Optional, The Priority of zenoh messages : Note This is unstable in Zenoh
  */
 export interface PublisherOptions {
   encoding?: Encoding,
   congestion_control?: CongestionControl,
   priority?: Priority,
   express?: boolean,
-  reliability?: Reliability,
+  // Note realiability is unstable in Zenoh
+  reliability?: Reliability, 
 }
 
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -355,6 +357,7 @@ export class Session {
     let _congestion_control = congestion_control_to_int(get_options?.congestion_control);
     let _priority = priority_to_int(get_options?.priority);
     let _express = get_options?.express;
+    let _target = query_target_to_int(get_options?.target);
     let _attachment;
     let _payload;
     let _timeout_millis: number | undefined = undefined;
@@ -377,6 +380,7 @@ export class Session {
       _congestion_control,
       _priority,
       _express,
+      _target,
       _encoding,
       _payload,
       _attachment,

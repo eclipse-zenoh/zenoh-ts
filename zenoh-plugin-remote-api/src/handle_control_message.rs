@@ -105,6 +105,7 @@ pub(crate) async fn handle_control_message(
             congestion_control,
             priority,
             express,
+            target,
             encoding,
             payload,
             attachment,
@@ -118,6 +119,8 @@ pub(crate) async fn handle_control_message(
             add_if_some!(priority, get_builder);
             add_if_some!(express, get_builder);
             add_if_some!(encoding, get_builder);
+            add_if_some!(target, get_builder);
+
             if let Some(payload_b64) = payload {
                 match payload_b64.b64_to_bytes() {
                     Ok(payload) => get_builder = get_builder.payload(payload),

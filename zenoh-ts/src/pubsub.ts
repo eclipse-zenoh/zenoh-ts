@@ -276,10 +276,6 @@ export class Publisher {
    */
   put(
     put_options: PublisherPutOptions,
-
-    // payload: IntoZBytes,
-    // encoding?: IntoEncoding,
-    // attachment?: IntoZBytes,
   ): void {
     let zbytes: ZBytes = new ZBytes(put_options.payload);
     let _encoding;

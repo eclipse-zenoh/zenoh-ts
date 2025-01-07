@@ -152,6 +152,13 @@ pub enum ControlMsg {
         )]
         #[ts(type = "number | undefined")]
         priority: Option<Priority>,
+        #[serde(
+            deserialize_with = "deserialize_query_target",
+            serialize_with = "serialize_query_target",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        target: Option<QueryTarget>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
         #[ts(type = "string | undefined")]
