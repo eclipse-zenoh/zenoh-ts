@@ -21,7 +21,7 @@ export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   console.log!("Get Info...");
-  let info: SessionInfo = await session.info();
+  const info: SessionInfo = await session.info();
 
   console.log!("zid: {}", info.zid());
 
@@ -37,8 +37,5 @@ export async function main() {
 
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 main()

@@ -16,15 +16,23 @@ import {
   Config, Subscriber, Session, KeyExpr,
   SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
+import { parseArgs } from "@std/cli/parse-args";
+
+interface Args {
+  key: string,
+  history: boolean
+}
 
 export async function main() {
+  const [key, history] = get_args();
+
 
   console.log("Opening session...")
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  let key_expr = new KeyExpr("group1/**");
+  const key_expr = new KeyExpr(key);
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
-  let liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: true });
+  const liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: history });
 
 
   let sample = await liveliness_subscriber.receive();
@@ -47,8 +55,26 @@ export async function main() {
     }
     sample = await liveliness_subscriber.receive();
   }
-
   liveliness_subscriber.undeclare();
 }
+
+// Convienence function to parse command line arguments
+function get_args(): [string, boolean] {
+  const args: Args = parseArgs(Deno.args);
+
+  let key_expr = "group1/**";
+  let history = true;
+
+  if (args.key != undefined) {
+    key_expr = args.key;
+  }
+
+  if (args.history != undefined) {
+    history = args.history
+  }
+  return [key_expr, history]
+}
+
+
 
 main();
