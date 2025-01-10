@@ -11,7 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::{error::Error, net::SocketAddr, str::FromStr};
+use std::{error::Error, net::SocketAddr};
 
 use tracing::{error, warn};
 use zenoh::query::Query;
@@ -91,12 +91,8 @@ pub async fn handle_data_message(
                     None => {}
                 }
 
-                match timestamp.map(|x| uhlc::Timestamp::from_str(&x)) {
-                    Some(Err(e)) => error!("{:?}", e),
-                    Some(Ok(timestamp)) => {
-                        publisher_builder = publisher_builder.timestamp(timestamp);
-                    }
-                    None => {} // let uhlc_ts = uhlc::Timestamp::from_str(&ts);
+                if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                    publisher_builder = publisher_builder.timestamp(*ts);
                 }
 
                 if let Err(e) = publisher_builder.await {
@@ -149,7 +145,11 @@ pub async fn handle_data_message(
         },
         DataMsg::Sample(_, _)
         | DataMsg::GetReply(_)
-        | DataMsg::NewTimestamp(_)
+        | DataMsg::NewTimestamp {
+            id: _,
+            string_rep: _,
+            millis_since_epoch: _,
+        }
         | DataMsg::SessionInfo(_) => {
             error!("Server Should not recieved a {data_msg:?} Variant from client");
         }

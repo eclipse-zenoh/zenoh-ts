@@ -78,19 +78,22 @@ pub enum DataMsg {
     PublisherDelete {
         id: Uuid,
         attachment: Option<B64String>,
-        timestamp: Option<String>,
+        timestamp: Option<Uuid>,
     },
     // SVR -> Client
     // Subscriber
     Sample(SampleWS, Uuid),
     // GetReply
     GetReply(ReplyWS),
-    //
     SessionInfo(SessionInfo),
+    NewTimestamp {
+        id: Uuid,
+        string_rep: String,
+        millis_since_epoch: u64,
+    },
 
     // Bidirectional
     Queryable(QueryableMsg),
-    NewTimestamp(String),
 }
 
 #[derive(TS)]
@@ -131,7 +134,7 @@ pub enum ControlMsg {
     OpenSession,
     CloseSession,
     Session(Uuid),
-    NewTimestamp,
+    NewTimestamp(Uuid),
 
     //
     SessionInfo,
@@ -211,6 +214,8 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        timestamp: Option<Uuid>,
     },
     Delete {
         #[ts(as = "OwnedKeyExprWrapper")]
@@ -234,6 +239,8 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        timestamp: Option<Uuid>,
     },
     // Subscriber
     DeclareSubscriber {

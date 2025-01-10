@@ -13,7 +13,6 @@
 //
 
 import { SimpleChannel } from "channel-ts";
-import { v4 as uuidv4 } from "uuid";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 // Import interface
@@ -22,7 +21,7 @@ import { DataMsg } from "./interface/DataMsg.js";
 import { ControlMsg } from "./interface/ControlMsg.js";
 
 // Remote Api
-import { RemoteSession } from "./session.js";
+import { RemoteSession, UUIDv4 } from "./session.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -34,17 +33,15 @@ function executeAsync(func: any) {
 // ██   ██ ██      ██  ██  ██ ██    ██    ██    ██        ██      ██    ██ ██   ██ ██      ██      ██ ██   ██ ██      ██   ██
 // ██   ██ ███████ ██      ██  ██████     ██    ███████   ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
 
-type UUID = typeof uuidv4 | string;
-
 export class RemotePublisher {
   private key_expr: String;
-  private publisher_id: UUID;
+  private publisher_id: UUIDv4;
   private session_ref: RemoteSession;
   private undeclared: boolean;
 
   constructor(
     key_expr: String,
-    publisher_id: UUID,
+    publisher_id: UUIDv4,
     session_ref: RemoteSession,
   ) {
     this.key_expr = key_expr;
@@ -135,7 +132,7 @@ export class RemotePublisher {
 // else, must call receive on the 
 export class RemoteSubscriber {
   private key_expr: String;
-  private subscriber_id: UUID;
+  private subscriber_id: UUIDv4;
   private session_ref: RemoteSession;
   private callback?: (sample: SampleWS) => void;
   private rx: SimpleChannel<SampleWS>;
@@ -144,7 +141,7 @@ export class RemoteSubscriber {
 
   private constructor(
     key_expr: String,
-    subscriber_id: UUID,
+    subscriber_id: UUIDv4,
     session_ref: RemoteSession,
     rx: SimpleChannel<SampleWS>,
     callback?: (sample: SampleWS) => void,
@@ -159,7 +156,7 @@ export class RemoteSubscriber {
 
   static new(
     key_expr: String,
-    subscriber_id: UUID,
+    subscriber_id: UUIDv4,
     session_ref: RemoteSession,
     rx: SimpleChannel<SampleWS>,
     callback?: (sample: SampleWS) => void,

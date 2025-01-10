@@ -15,6 +15,7 @@
 import {
   RemoteRecvErr as GetChannelClose,
   RemoteSession,
+  TimestampMessage as TimestampIface,
 } from "./remote_api/session.js";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
@@ -57,6 +58,7 @@ import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionI
 import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
 import { locality_to_int, Querier, QuerierOptions, query_target_to_int, QueryTarget, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
+import { Timestamp } from "./timestamp.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -77,6 +79,7 @@ export interface PutOptions {
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
+  timestamp?: Timestamp,
 }
 
 /**
@@ -91,6 +94,7 @@ export interface DeleteOptions {
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
+  timestamp?: Timestamp
 }
 
 /**
@@ -149,7 +153,7 @@ export interface PublisherOptions {
   priority?: Priority,
   express?: boolean,
   // Note realiability is unstable in Zenoh
-  reliability?: Reliability, 
+  reliability?: Reliability,
 }
 
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -205,7 +209,7 @@ export class Session {
     Session.registry.unregister(this);
   }
 
-  async is_closed(){
+  is_closed() {
     return this.remote_session.ws.readyState == WebSocket.CLOSED;
   }
   /**
@@ -228,9 +232,12 @@ export class Session {
     let _express;
     let _attachment;
     let _encoding = put_opts?.encoding?.toString()
-
     let _congestion_control = congestion_control_to_int(put_opts?.congestion_control);
+    let _timestamp;
 
+    if (put_opts?.timestamp != undefined) {
+      _timestamp = put_opts?.timestamp.get_resource_uuid() as string;
+    }
     if (put_opts?.priority != undefined) {
       _priority = priority_to_int(put_opts?.priority);
     }
@@ -248,6 +255,7 @@ export class Session {
       _priority,
       _express,
       _attachment,
+      _timestamp,
     );
   }
 
@@ -284,10 +292,15 @@ export class Session {
     let _congestion_control = congestion_control_to_int(delete_opts?.congestion_control);
     let _priority = priority_to_int(delete_opts?.priority);
     let _express = delete_opts?.express;
-    let _attachment
+    let _attachment;
+    let _timestamp;
 
     if (delete_opts?.attachment != undefined) {
       _attachment = Array.from(new ZBytes(delete_opts?.attachment).buffer())
+    }
+
+    if (delete_opts?.timestamp != undefined) {
+      _timestamp = delete_opts?.timestamp.get_resource_uuid() as string;
     }
 
     this.remote_session.delete(
@@ -296,6 +309,7 @@ export class Session {
       _priority,
       _express,
       _attachment,
+      _timestamp
     );
   }
 
@@ -489,8 +503,15 @@ export class Session {
    * 
    * @returns Liveliness
    */
-  liveliness() : Liveliness {
+  liveliness(): Liveliness {
     return new Liveliness(this.remote_session)
+  }
+
+  async new_timestamp(): Promise<Timestamp> {
+
+    let ts_iface: TimestampIface = await this.remote_session.new_timestamp();
+
+    return new Timestamp(ts_iface.id, ts_iface.string_rep, ts_iface.millis_since_epoch);
   }
 
   /**

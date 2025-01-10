@@ -49,6 +49,7 @@ use tokio_rustls::{
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::{debug, error};
+use uhlc::Timestamp;
 use uuid::Uuid;
 use zenoh::{
     bytes::{Encoding, ZBytes},
@@ -477,6 +478,9 @@ struct RemoteState {
     websocket_tx: Sender<RemoteAPIMsg>,
     session_id: Uuid,
     session: Session,
+    // KeyExpr's + Timestamp
+    key_exprs: HashMap<Uuid, OwnedKeyExpr>,
+    timestamps: HashMap<Uuid, Timestamp>,
     // PubSub
     subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
     publishers: HashMap<Uuid, Publisher<'static>>,
@@ -496,6 +500,8 @@ impl RemoteState {
             websocket_tx,
             session_id,
             session,
+            key_exprs: HashMap::new(),
+            timestamps: HashMap::new(),
             subscribers: HashMap::new(),
             publishers: HashMap::new(),
             queryables: HashMap::new(),

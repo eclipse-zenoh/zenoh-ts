@@ -105,23 +105,27 @@ pub(crate) async fn handle_control_message(
                 warn!("State Map Does not contain SocketAddr");
             }
         }
-        ControlMsg::NewTimestamp => {
-            if let Some(ts) = state_map
-                .session
-                .new_timestamp()
-                .to_string_rfc3339_lossy()
-                .split("/")
-                .collect::<Vec<&str>>()
-                .get(0)
+        ControlMsg::NewTimestamp(uuid) => {
+            let ts = state_map.session.new_timestamp();
+            let ts_string = ts.to_string();
+            let _ = state_map.timestamps.insert(uuid, ts);
+
+            let since_the_epoch = ts
+                .get_time()
+                .to_system_time()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_millis() as u64; // JS numbers are F64, is the only way to get a Number that is similar to what is produced by Date.now() in Javascript
+
+            if let Err(e) = state_map
+                .websocket_tx
+                .send(RemoteAPIMsg::Data(DataMsg::NewTimestamp {
+                    id: uuid,
+                    string_rep: ts_string,
+                    millis_since_epoch: since_the_epoch,
+                }))
             {
-                if let Err(e) = state_map
-                    .websocket_tx
-                    .send(RemoteAPIMsg::Data(DataMsg::NewTimestamp(ts.to_string())))
-                {
-                    error!("{}", e);
-                };
-            } else {
-                warn!("Could not get timestamp from Session");
+                error!("{}", e);
             };
         }
         ControlMsg::Get {
@@ -208,6 +212,7 @@ pub(crate) async fn handle_control_message(
             priority,
             express,
             attachment,
+            timestamp,
         } => {
             let mut put_builder = match payload.b64_to_bytes() {
                 Ok(payload) => state_map.session.put(key_expr, payload),
@@ -221,6 +226,10 @@ pub(crate) async fn handle_control_message(
             add_if_some!(congestion_control, put_builder);
             add_if_some!(priority, put_builder);
             add_if_some!(express, put_builder);
+
+            if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                put_builder = put_builder.timestamp(*ts);
+            }
 
             if let Some(attachment_b64) = attachment {
                 match attachment_b64.b64_to_bytes() {
@@ -237,11 +246,16 @@ pub(crate) async fn handle_control_message(
             priority,
             express,
             attachment,
+            timestamp,
         } => {
             let mut delete_builder = state_map.session.delete(key_expr);
             add_if_some!(congestion_control, delete_builder);
             add_if_some!(priority, delete_builder);
             add_if_some!(express, delete_builder);
+            if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                delete_builder = delete_builder.timestamp(*ts);
+            }
+
             if let Some(attachment_b64) = attachment {
                 match attachment_b64.b64_to_bytes() {
                     Ok(attachment) => delete_builder = delete_builder.attachment(attachment),

@@ -26,6 +26,7 @@ import {
   Sample_from_SampleWS,
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
+import { Timestamp } from "./timestamp.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -199,7 +200,7 @@ export interface PublisherPutOptions {
  */
 export interface PublisherDeleteOptions {
   attachment?: IntoZBytes,
-  timestamp?: string
+  timestamp?: Timestamp
 }
 
 export class Publisher {
@@ -350,7 +351,7 @@ export class Publisher {
 
     let _timestamp = null;
     if (delete_options.timestamp != null) {
-      _timestamp = delete_options.timestamp;
+      _timestamp = delete_options.timestamp.get_resource_uuid as unknown as string;
     }
 
     return this._remote_publisher.delete(
