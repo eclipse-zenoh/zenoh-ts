@@ -43,7 +43,7 @@ import { RemoteQuerier } from "./querier.js"
 // ██   ██ ███████ ██      ██  ██████     ██    ███████     ███████ ███████ ███████ ███████ ██  ██████  ██   ████
 
 
-export interface TimestampMessage {
+export interface TimestampIface {
   id: string,
   string_rep: string,
   millis_since_epoch: bigint
@@ -69,7 +69,7 @@ export class RemoteSession {
   liveliness_subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
   liveliness_get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS>>;
   session_info: SessionInfoIface | null;
-  _new_timestamp: TimestampMessage | null;
+  _new_timestamp: TimestampIface | null;
 
   private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
     this.ws = ws;
@@ -466,7 +466,7 @@ export class RemoteSession {
 
   // Note: This method blocks until Timestamp has been created
   // The correct way to do this would be with a request / response
-  async new_timestamp(): Promise<TimestampMessage> {
+  async new_timestamp(): Promise<TimestampIface> {
     let uuid = uuidv4();
     let control_message: ControlMsg = { "NewTimestamp": uuid };
     this._new_timestamp = null;
@@ -590,6 +590,9 @@ export class RemoteSession {
     } else if ("SessionInfo" in data_msg) {
       let session_info: SessionInfoIface = data_msg["SessionInfo"];
       this.session_info = session_info;
+    } else if ("NewTimestamp" in data_msg) {
+      let new_timestamp: TimestampIface = data_msg["NewTimestamp"];
+      this._new_timestamp = new_timestamp;
     } else {
       console.warn("Data Message not recognized Expected Variant", data_msg);
     }

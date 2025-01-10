@@ -15,7 +15,7 @@
 import {
   RemoteRecvErr as GetChannelClose,
   RemoteSession,
-  TimestampMessage as TimestampIface,
+  TimestampIface as TimestampIface,
 } from "./remote_api/session.js";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
