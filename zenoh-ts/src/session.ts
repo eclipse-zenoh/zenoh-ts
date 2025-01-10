@@ -244,12 +244,12 @@ export class Session {
     _express = put_opts?.express?.valueOf();
 
     if (put_opts?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(put_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(put_opts?.attachment).to_bytes())
     }
 
     this.remote_session.put(
       key_expr.toString(),
-      Array.from(z_bytes.buffer()),
+      Array.from(z_bytes.to_bytes()),
       _encoding,
       _congestion_control,
       _priority,
@@ -296,7 +296,7 @@ export class Session {
     let _timestamp;
 
     if (delete_opts?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(delete_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(delete_opts?.attachment).to_bytes())
     }
 
     if (delete_opts?.timestamp != undefined) {
@@ -398,10 +398,10 @@ export class Session {
       _timeout_millis = Duration.milliseconds.from(get_options?.timeout);
     }
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
 
     let chan: SimpleChannel<ReplyWS> = this.remote_session.get(

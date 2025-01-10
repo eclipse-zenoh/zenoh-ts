@@ -215,10 +215,10 @@ export class Querier {
     let _encoding = get_options?.encoding?.toString()
 
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
     if (get_options?.parameters != undefined) {
       _parameters = get_options?.parameters;

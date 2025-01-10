@@ -295,11 +295,11 @@ export class Publisher {
     let _attachment = null;
     if (put_options.attachment != null) {
       let att_bytes = new ZBytes(put_options.attachment);
-      _attachment = Array.from(att_bytes.buffer());
+      _attachment = Array.from(att_bytes.to_bytes());
     }
 
     return this._remote_publisher.put(
-      Array.from(zbytes.buffer()),
+      Array.from(zbytes.to_bytes()),
       _attachment,
       _encoding.toString(),
       _timestamp,
@@ -353,7 +353,7 @@ export class Publisher {
     let _attachment = null;
     if (delete_options.attachment != null) {
       let att_bytes = new ZBytes(delete_options.attachment);
-      _attachment = Array.from(att_bytes.buffer());
+      _attachment = Array.from(att_bytes.to_bytes());
     }
 
     let _timestamp = null;
