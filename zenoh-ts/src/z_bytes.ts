@@ -59,6 +59,16 @@ export class ZBytes {
   }
 
   /**
+  * returns the length of the ZBytes buffer
+  * 
+  * @returns number
+  */
+  is_empty(): boolean {
+    return this._buffer.length == 0;
+  }
+
+
+  /**
    * returns an empty ZBytes buffer
    * 
    * @returns ZBytes
