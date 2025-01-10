@@ -43,6 +43,7 @@ pub async fn handle_data_message(
             payload,
             attachment,
             encoding,
+            timestamp,
         } => {
             if let Some(publisher) = state_map.publishers.get(&id) {
                 let mut put_builder = match payload.b64_to_bytes() {
@@ -67,6 +68,9 @@ pub async fn handle_data_message(
                 if let Some(encoding) = encoding {
                     put_builder = put_builder.encoding(encoding);
                 }
+                if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                    put_builder = put_builder.timestamp(*ts);
+                }
                 if let Err(err) = put_builder.await {
                     error!("PublisherPut {id}, {err}");
                 }
@@ -90,7 +94,6 @@ pub async fn handle_data_message(
                     }
                     None => {}
                 }
-
                 if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
                     publisher_builder = publisher_builder.timestamp(*ts);
                 }

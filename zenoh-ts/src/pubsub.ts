@@ -193,6 +193,7 @@ export interface PublisherPutOptions {
   payload: IntoZBytes,
   encoding?: IntoEncoding,
   attachment?: IntoZBytes,
+  timestamp?: Timestamp;
 }
 
 /**
@@ -280,6 +281,11 @@ export class Publisher {
   ): void {
     let zbytes: ZBytes = new ZBytes(put_options.payload);
     let _encoding;
+    let _timestamp = null;
+    if (put_options.timestamp != null) {
+      _timestamp = put_options.timestamp.get_resource_uuid() as unknown as string;
+    }
+
     if (put_options.encoding != null) {
       _encoding = Encoding.intoEncoding(put_options.encoding);
     } else {
@@ -296,6 +302,7 @@ export class Publisher {
       Array.from(zbytes.buffer()),
       _attachment,
       _encoding.toString(),
+      _timestamp,
     );
   }
 
@@ -351,9 +358,9 @@ export class Publisher {
 
     let _timestamp = null;
     if (delete_options.timestamp != null) {
-      _timestamp = delete_options.timestamp.get_resource_uuid as unknown as string;
+      _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
     }
-
+    
     return this._remote_publisher.delete(
       _attachment,
       _timestamp

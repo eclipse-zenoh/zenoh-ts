@@ -54,6 +54,7 @@ export class RemotePublisher {
     payload: Array<number>,
     attachment: Array<number> | null,
     encoding: string | null,
+    timestamp: string | null,
   ) {
     if (this.undeclared == true) {
       let message =
@@ -77,6 +78,7 @@ export class RemotePublisher {
         payload: b64_str_from_bytes(new Uint8Array(payload)),
         attachment: optional_attachment,
         encoding: encoding,
+        timestamp: timestamp
       },
     };
     this.session_ref.send_data_message(data_msg);

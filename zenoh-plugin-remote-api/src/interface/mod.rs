@@ -74,6 +74,7 @@ pub enum DataMsg {
         payload: B64String,
         attachment: Option<B64String>,
         encoding: Option<String>,
+        timestamp: Option<Uuid>,
     },
     PublisherDelete {
         id: Uuid,
