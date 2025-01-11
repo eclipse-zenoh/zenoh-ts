@@ -74,14 +74,24 @@ pub enum DataMsg {
         payload: B64String,
         attachment: Option<B64String>,
         encoding: Option<String>,
+        timestamp: Option<Uuid>,
+    },
+    PublisherDelete {
+        id: Uuid,
+        attachment: Option<B64String>,
+        timestamp: Option<Uuid>,
     },
     // SVR -> Client
     // Subscriber
     Sample(SampleWS, Uuid),
     // GetReply
     GetReply(ReplyWS),
-    //
     SessionInfo(SessionInfo),
+    NewTimestamp {
+        id: Uuid,
+        string_rep: String,
+        millis_since_epoch: u64,
+    },
 
     // Bidirectional
     Queryable(QueryableMsg),
@@ -125,6 +135,7 @@ pub enum ControlMsg {
     OpenSession,
     CloseSession,
     Session(Uuid),
+    NewTimestamp(Uuid),
 
     //
     SessionInfo,
@@ -160,6 +171,13 @@ pub enum ControlMsg {
         )]
         #[ts(type = "number | undefined")]
         priority: Option<Priority>,
+        #[serde(
+            deserialize_with = "deserialize_query_target",
+            serialize_with = "serialize_query_target",
+            default
+        )]
+        #[ts(type = "number | undefined")]
+        target: Option<QueryTarget>,
         #[ts(type = "boolean | undefined")]
         express: Option<bool>,
         #[ts(type = "string | undefined")]
@@ -197,6 +215,8 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        timestamp: Option<Uuid>,
     },
     Delete {
         #[ts(as = "OwnedKeyExprWrapper")]
@@ -220,6 +240,8 @@ pub enum ControlMsg {
         express: Option<bool>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        #[ts(type = "string | undefined")]
+        timestamp: Option<Uuid>,
     },
     // Subscriber
     DeclareSubscriber {
@@ -269,6 +291,7 @@ pub enum ControlMsg {
         key_expr: OwnedKeyExpr,
         id: Uuid,
         complete: bool,
+        handler: HandlerChannel,
     },
     UndeclareQueryable(Uuid),
     // Quierer

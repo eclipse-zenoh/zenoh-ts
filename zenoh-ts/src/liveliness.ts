@@ -78,6 +78,7 @@ export class Liveliness {
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
+      _key_expr,
       callback_subscriber,
     );
 

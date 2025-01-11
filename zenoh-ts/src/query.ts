@@ -244,7 +244,7 @@ export class Query {
     let qr_variant: QueryReplyVariant = {
       Reply: {
         key_expr: _key_expr.toString(),
-        payload: b64_str_from_bytes(z_bytes.buffer()),
+        payload: b64_str_from_bytes(z_bytes.to_bytes()),
 
       },
     };
@@ -258,7 +258,7 @@ export class Query {
   reply_err(payload: IntoZBytes): void {
     let z_bytes: ZBytes = new ZBytes(payload);
     let qr_variant: QueryReplyVariant = {
-      ReplyErr: { payload: b64_str_from_bytes(z_bytes.buffer()) },
+      ReplyErr: { payload: b64_str_from_bytes(z_bytes.to_bytes()) },
     };
     this.reply_ws(qr_variant);
   }

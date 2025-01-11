@@ -327,7 +327,7 @@ export function SampleWS_from_Sample(
   attachement: ZBytes | undefined,
 ): SampleWS {
   let key_expr: OwnedKeyExprWrapper = sample.keyexpr().toString();
-  let value: Array<number> = Array.from(sample.payload().buffer());
+  let value: Array<number> = Array.from(sample.payload().to_bytes());
 
   let sample_kind: SampleKindWS;
   if (sample.kind() == SampleKind.DELETE) {
@@ -344,7 +344,7 @@ export function SampleWS_from_Sample(
 
   let attach = null;
   if (attachement != null) {
-    attach = b64_str_from_bytes(new Uint8Array(attachement.buffer()));
+    attach = b64_str_from_bytes(new Uint8Array(attachement.to_bytes()));
   }
 
   let sample_ws: SampleWS = {

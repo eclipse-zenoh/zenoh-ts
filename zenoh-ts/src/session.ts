@@ -15,6 +15,7 @@
 import {
   RemoteRecvErr as GetChannelClose,
   RemoteSession,
+  TimestampIface as TimestampIface,
 } from "./remote_api/session.js";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
@@ -56,7 +57,8 @@ import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionI
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
 import { SimpleChannel } from "channel-ts";
-import { locality_to_int, Querier, QuerierOptions, query_target_to_int, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
+import { locality_to_int, Querier, QuerierOptions, query_target_to_int, QueryTarget, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
+import { Timestamp } from "./timestamp.js";
 
 function executeAsync(func: any) {
   setTimeout(func, 0);
@@ -77,6 +79,7 @@ export interface PutOptions {
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
+  timestamp?: Timestamp,
 }
 
 /**
@@ -91,6 +94,7 @@ export interface DeleteOptions {
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
+  timestamp?: Timestamp
 }
 
 /**
@@ -102,6 +106,8 @@ export interface DeleteOptions {
  * @prop {Encoding=} encoding - Encoding type of payload 
  * @prop {IntoZBytes=} payload - Payload associated with getrequest
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {TimeDuration=} timeout - Timeout value for a get request
+ * @prop {((sample: Reply) => Promise<void>) | Handler} handler - either a callback or a polling handler with an underlying handling mechanism
 */
 export interface GetOptions {
   consolidation?: ConsolidationMode,
@@ -112,6 +118,15 @@ export interface GetOptions {
   payload?: IntoZBytes,
   attachment?: IntoZBytes
   timeout?: TimeDuration,
+  target?: QueryTarget,
+  handler?: ((sample: Reply) => Promise<void>) | Handler,
+}
+
+/**
+ * Options for a SubscriberOptions function 
+*/
+export interface SubscriberOptions {
+  handler?: ((sample: Sample) => Promise<void>) | Handler,
 }
 
 /**
@@ -121,7 +136,7 @@ export interface GetOptions {
 */
 export interface QueryableOptions {
   complete?: boolean,
-  callback?: (query: Query) => void,
+  handler?: ((sample: Query) => Promise<void>) | Handler,
 }
 
 /**
@@ -130,13 +145,14 @@ export interface QueryableOptions {
  * @prop {CongestionControl} congestion_control - Optional, Type of Congestion control to be used (BLOCK / DROP)
  * @prop {Priority} priority - Optional, The Priority of zenoh messages
  * @prop {boolean} express - Optional, The Priority of zenoh messages
- * @prop {Reliability} reliability - Optional, The Priority of zenoh messages
+ * @prop {Reliability} reliability - Optional, The Priority of zenoh messages : Note This is unstable in Zenoh
  */
 export interface PublisherOptions {
   encoding?: Encoding,
   congestion_control?: CongestionControl,
   priority?: Priority,
   express?: boolean,
+  // Note realiability is unstable in Zenoh
   reliability?: Reliability,
 }
 
@@ -193,6 +209,9 @@ export class Session {
     Session.registry.unregister(this);
   }
 
+  is_closed() {
+    return this.remote_session.ws.readyState == WebSocket.CLOSED;
+  }
   /**
    * Puts a value on the session, on a specific key expression KeyExpr
    *
@@ -213,26 +232,30 @@ export class Session {
     let _express;
     let _attachment;
     let _encoding = put_opts?.encoding?.toString()
-
     let _congestion_control = congestion_control_to_int(put_opts?.congestion_control);
+    let _timestamp;
 
+    if (put_opts?.timestamp != undefined) {
+      _timestamp = put_opts?.timestamp.get_resource_uuid() as string;
+    }
     if (put_opts?.priority != undefined) {
       _priority = priority_to_int(put_opts?.priority);
     }
     _express = put_opts?.express?.valueOf();
 
     if (put_opts?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(put_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(put_opts?.attachment).to_bytes())
     }
 
     this.remote_session.put(
       key_expr.toString(),
-      Array.from(z_bytes.buffer()),
+      Array.from(z_bytes.to_bytes()),
       _encoding,
       _congestion_control,
       _priority,
       _express,
       _attachment,
+      _timestamp,
     );
   }
 
@@ -269,10 +292,15 @@ export class Session {
     let _congestion_control = congestion_control_to_int(delete_opts?.congestion_control);
     let _priority = priority_to_int(delete_opts?.priority);
     let _express = delete_opts?.express;
-    let _attachment
+    let _attachment;
+    let _timestamp;
 
     if (delete_opts?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(delete_opts?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(delete_opts?.attachment).to_bytes())
+    }
+
+    if (delete_opts?.timestamp != undefined) {
+      _timestamp = delete_opts?.timestamp.get_resource_uuid() as string;
     }
 
     this.remote_session.delete(
@@ -281,6 +309,7 @@ export class Session {
       _priority,
       _express,
       _attachment,
+      _timestamp
     );
   }
 
@@ -320,11 +349,10 @@ export class Session {
    *
    * @returns Receiver
    */
-  async get(
+  get(
     into_selector: IntoSelector,
-    handler: ((sample: Reply) => Promise<void>) | Handler = new FifoChannel(256),
     get_options?: GetOptions
-  ): Promise<Receiver | undefined> {
+  ): Receiver | undefined {
 
     let selector: Selector;
     let key_expr: KeyExpr;
@@ -345,6 +373,13 @@ export class Session {
       selector = new Selector(into_selector);
     }
 
+    let handler;
+    if (get_options?.handler !== undefined) {
+      handler = get_options?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+
     let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
@@ -354,6 +389,7 @@ export class Session {
     let _congestion_control = congestion_control_to_int(get_options?.congestion_control);
     let _priority = priority_to_int(get_options?.priority);
     let _express = get_options?.express;
+    let _target = query_target_to_int(get_options?.target);
     let _attachment;
     let _payload;
     let _timeout_millis: number | undefined = undefined;
@@ -362,13 +398,13 @@ export class Session {
       _timeout_millis = Duration.milliseconds.from(get_options?.timeout);
     }
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
 
-    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
+    let chan: SimpleChannel<ReplyWS> = this.remote_session.get(
       selector.key_expr().toString(),
       selector.parameters().toString(),
       handler_type,
@@ -376,6 +412,7 @@ export class Session {
       _congestion_control,
       _priority,
       _express,
+      _target,
       _encoding,
       _payload,
       _attachment,
@@ -416,13 +453,20 @@ export class Session {
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
-  async declare_subscriber(
+  declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler: ((sample: Sample) => Promise<void>) | Handler = new FifoChannel(256),
-  ): Promise<Subscriber> {
+    subscriber_opts: SubscriberOptions
+  ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
+
     let callback_subscriber = false;
+    let handler;
+    if (subscriber_opts?.handler !== undefined) {
+      handler = subscriber_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
 
     if (callback !== undefined) {
@@ -433,13 +477,13 @@ export class Session {
           callback(sample);
         }
       };
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
+      remote_subscriber = this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
         callback_conversion,
       );
     } else {
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
+      remote_subscriber = this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
       );
@@ -447,6 +491,7 @@ export class Session {
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
+      _key_expr,
       callback_subscriber,
     );
 
@@ -458,8 +503,15 @@ export class Session {
    * 
    * @returns Liveliness
    */
-  liveliness() : Liveliness {
+  liveliness(): Liveliness {
     return new Liveliness(this.remote_session)
+  }
+
+  async new_timestamp(): Promise<Timestamp> {
+
+    let ts_iface: TimestampIface = await this.remote_session.new_timestamp();
+
+    return new Timestamp(ts_iface.id, ts_iface.string_rep, ts_iface.millis_since_epoch);
   }
 
   /**
@@ -473,10 +525,10 @@ export class Session {
   *
   * @returns Queryable
   */
-  async declare_queryable(
+  declare_queryable(
     key_expr: IntoKeyExpr,
     queryable_opts?: QueryableOptions
-  ): Promise<Queryable> {
+  ): Queryable {
     let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
     let reply_tx: SimpleChannel<QueryReplyWS> =
@@ -487,21 +539,31 @@ export class Session {
       _complete = queryable_opts?.complete;
     };
 
+    let handler;
+    if (queryable_opts?.handler !== undefined) {
+      handler = queryable_opts?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+    let [callback, handler_type] = this.check_handler_or_callback<Query>(handler);
+
     let callback_queryable = false;
-    if (queryable_opts?.callback != undefined) {
+    if (callback != undefined) {
       callback_queryable = true;
-      let callback = queryable_opts?.callback;
+      // Typescript cant figure out that calback!=undefined here, so this needs to be explicit
+      let defined_callback = callback;
       const callback_conversion = function (
         query_ws: QueryWS,
       ): void {
         let query: Query = QueryWS_to_Query(query_ws, reply_tx);
 
-        callback(query);
+        defined_callback(query);
       };
       remote_queryable = this.remote_session.declare_remote_queryable(
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type,
         callback_conversion,
       );
     } else {
@@ -509,6 +571,7 @@ export class Session {
         _key_expr.toString(),
         _complete,
         reply_tx,
+        handler_type
       );
     }
 

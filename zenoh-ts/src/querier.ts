@@ -24,6 +24,7 @@ import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
 import { Encoding } from "crypto";
 import { Receiver } from "./session.js";
+import { Parameters } from "./query.js";
 
 export enum QueryTarget {
   /// Let Zenoh find the BestMatching queryable capabale of serving the query.
@@ -116,7 +117,7 @@ export interface QuerierGetOptions {
   encoding?: Encoding,
   payload?: IntoZBytes,
   attachment?: IntoZBytes,
-  parameters?: string
+  parameters?: Parameters
 }
 
 /**
@@ -215,13 +216,13 @@ export class Querier {
     let _encoding = get_options?.encoding?.toString()
 
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).buffer())
+      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).buffer())
+      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
     if (get_options?.parameters != undefined) {
-      _parameters = get_options?.parameters;
+      _parameters = get_options?.parameters.toString();
     }
 
     let chan: SimpleChannel<ReplyWS> = this._remote_querier.get(

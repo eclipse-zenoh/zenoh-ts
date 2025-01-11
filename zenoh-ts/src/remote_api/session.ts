@@ -43,6 +43,12 @@ import { RemoteQuerier } from "./querier.js"
 // ██   ██ ███████ ██      ██  ██████     ██    ███████     ███████ ███████ ███████ ███████ ██  ██████  ██   ████
 
 
+export interface TimestampIface {
+  id: string,
+  string_rep: string,
+  millis_since_epoch: bigint
+}
+
 export enum RemoteRecvErr {
   Disconnected,
 }
@@ -63,6 +69,7 @@ export class RemoteSession {
   liveliness_subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
   liveliness_get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS>>;
   session_info: SessionInfoIface | null;
+  _new_timestamp: TimestampIface | null;
 
   private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
     this.ws = ws;
@@ -74,6 +81,7 @@ export class RemoteSession {
     this.liveliness_subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
     this.liveliness_get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
     this.session_info = null;
+    this._new_timestamp = null;
   }
 
   //
@@ -149,7 +157,6 @@ export class RemoteSession {
     while (this.session_info === null) {
       await sleep(10);
     }
-
     return this.session_info;
   }
 
@@ -160,7 +167,8 @@ export class RemoteSession {
     congestion_control?: number,
     priority?: number,
     express?: boolean,
-    attachment?: Array<number>
+    attachment?: Array<number>,
+    timestamp?:string,
   ): void {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
 
@@ -178,13 +186,14 @@ export class RemoteSession {
         priority: priority,
         express: express,
         attachment: opt_attachment,
+        timestamp: timestamp
       },
     };
     this.send_ctrl_message(ctrl_message);
   }
 
   // get
-  async get(
+  get(
     key_expr: string,
     parameters: string | null,
     handler: HandlerChannel,
@@ -192,11 +201,12 @@ export class RemoteSession {
     congestion_control?: number,
     priority?: number,
     express?: boolean,
+    target?: number,
     encoding?: string,
     payload?: Array<number>,
     attachment?: Array<number>,
     timeout_ms?: number,
-  ): Promise<SimpleChannel<ReplyWS>> {
+  ): SimpleChannel<ReplyWS> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
@@ -220,6 +230,7 @@ export class RemoteSession {
         congestion_control: congestion_control,
         priority: priority,
         express: express,
+        target: target,
         encoding: encoding,
         timeout: timeout_ms,
         payload: opt_payload,
@@ -231,13 +242,14 @@ export class RemoteSession {
   }
 
   // delete
-  async delete(
+  delete(
     key_expr: string,
     congestion_control?: number,
     priority?: number,
     express?: boolean,
-    attachment?: Array<number>
-  ): Promise<void> {
+    attachment?: Array<number>,
+    timestamp?: string,
+  ): void {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
     let opt_attachment = undefined;
     if (attachment != undefined) {
@@ -250,6 +262,7 @@ export class RemoteSession {
         priority: priority,
         express: express,
         attachment: opt_attachment,
+        timestamp: timestamp
       }
     };
     this.send_ctrl_message(data_message);
@@ -261,11 +274,11 @@ export class RemoteSession {
     this.ws.close();
   }
 
-  async declare_remote_subscriber(
+  declare_remote_subscriber(
     key_expr: string,
     handler: HandlerChannel,
-    callback?: (sample: SampleWS) => Promise<void>,
-  ): Promise<RemoteSubscriber> {
+    callback?: (sample: SampleWS) => void,
+  ): RemoteSubscriber {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -293,12 +306,13 @@ export class RemoteSession {
     key_expr: string,
     complete: boolean,
     reply_tx: SimpleChannel<QueryReplyWS>,
+    handler: HandlerChannel,
     callback?: (sample: QueryWS) => void,
   ): RemoteQueryable {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid },
+      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid, handler: handler },
     };
 
     let query_rx: SimpleChannel<QueryWS> = new SimpleChannel<QueryWS>();
@@ -401,7 +415,7 @@ export class RemoteSession {
   declare_liveliness_subscriber(
     key_expr: string,
     history: boolean,
-    callback?: (sample: SampleWS) => Promise<void>,
+    callback?: (sample: SampleWS) => void,
   ): RemoteSubscriber {
     let uuid = uuidv4();
 
@@ -450,6 +464,18 @@ export class RemoteSession {
     return channel;
   }
 
+  // Note: This method blocks until Timestamp has been created
+  // The correct way to do this would be with a request / response
+  async new_timestamp(): Promise<TimestampIface> {
+    let uuid = uuidv4();
+    let control_message: ControlMsg = { "NewTimestamp": uuid };
+    this._new_timestamp = null;
+    this.send_ctrl_message(control_message);
+    while (this._new_timestamp === null) {
+      await sleep(10);
+    }
+    return this._new_timestamp;
+  }
 
   //
   // Sending Messages
@@ -496,7 +522,7 @@ export class RemoteSession {
     console.warn("Closed");
   }
 
-  private async handle_control_message(control_msg: ControlMsg) {
+  private handle_control_message(control_msg: ControlMsg) {
     if (typeof control_msg === "string") {
       console.warn("unhandled Control Message:", control_msg);
     } else if (typeof control_msg === "object") {
@@ -510,7 +536,7 @@ export class RemoteSession {
     }
   }
 
-  private async handle_data_message(data_msg: DataMsg) {
+  private handle_data_message(data_msg: DataMsg) {
     if ("Sample" in data_msg) {
       let subscription_uuid: UUIDv4 = data_msg["Sample"][1];
 
@@ -562,10 +588,11 @@ export class RemoteSession {
         console.warn("Queryable message Variant not recognized");
       }
     } else if ("SessionInfo" in data_msg) {
-
       let session_info: SessionInfoIface = data_msg["SessionInfo"];
       this.session_info = session_info;
-
+    } else if ("NewTimestamp" in data_msg) {
+      let new_timestamp: TimestampIface = data_msg["NewTimestamp"];
+      this._new_timestamp = new_timestamp;
     } else {
       console.warn("Data Message not recognized Expected Variant", data_msg);
     }

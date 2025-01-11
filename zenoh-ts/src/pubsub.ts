@@ -26,6 +26,8 @@ import {
   Sample_from_SampleWS,
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
+import { Timestamp } from "./timestamp.js";
+
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
 // ██      ██    ██ ██   ██ ██      ██      ██   ██ ██ ██   ██ ██      ██   ██
@@ -48,6 +50,10 @@ export class Subscriber {
   /**
    * @ignore 
    */
+  private _key_expr: KeyExpr;
+  /**
+   * @ignore 
+   */
   private callback_subscriber: boolean;
   /** Finalization registry used for cleanup on drop
    * @ignore 
@@ -65,13 +71,22 @@ export class Subscriber {
    */
   private constructor(
     remote_subscriber: RemoteSubscriber,
+    key_expr: KeyExpr,
     callback_subscriber: boolean,
   ) {
     this.remote_subscriber = remote_subscriber;
     this.callback_subscriber = callback_subscriber;
+    this._key_expr = key_expr;
     Subscriber.registry.register(this, remote_subscriber, this)
   }
 
+  /**
+   * returns the key expression of an object
+   * @returns KeyExpr
+   */
+  key_expr(): KeyExpr {
+    return this._key_expr
+  }
   /**
    * Receives a new message on the subscriber
    *  note: If subscriber was created with a callback, this recieve will return undefined, 
@@ -112,9 +127,10 @@ export class Subscriber {
    */
   static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
+    key_expr: KeyExpr,
     callback_subscriber: boolean,
   ): Subscriber {
-    return new Subscriber(remote_subscriber, callback_subscriber);
+    return new Subscriber(remote_subscriber, key_expr, callback_subscriber);
   }
 }
 
@@ -166,6 +182,28 @@ export class FifoChannel implements Handler {
 // ██████  ██    ██ ██████  ██      ██ ███████ ███████ █████   ██████
 // ██      ██    ██ ██   ██ ██      ██      ██ ██   ██ ██      ██   ██
 // ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
+
+/**
+ *  
+ * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
+ * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
+ * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+ */
+export interface PublisherPutOptions {
+  payload: IntoZBytes,
+  encoding?: IntoEncoding,
+  attachment?: IntoZBytes,
+  timestamp?: Timestamp;
+}
+
+/**
+ * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+ */
+export interface PublisherDeleteOptions {
+  attachment?: IntoZBytes,
+  timestamp?: Timestamp
+}
+
 export class Publisher {
   /**
    * Class that represents a Zenoh Publisher, 
@@ -234,35 +272,37 @@ export class Publisher {
   /**
    * Puts a payload on the publisher associated with this class instance
    *
-   * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
-   * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
-   * @param {IntoZBytes=} attachment - optional extra data to send with Payload
+   * @param {PublisherPutOptions} put_options
    *
    * @returns void
    */
   put(
-    payload: IntoZBytes,
-    encoding?: IntoEncoding,
-    attachment?: IntoZBytes,
+    put_options: PublisherPutOptions,
   ): void {
-    let zbytes: ZBytes = new ZBytes(payload);
+    let zbytes: ZBytes = new ZBytes(put_options.payload);
     let _encoding;
-    if (encoding != null) {
-      _encoding = Encoding.intoEncoding(encoding);
+    let _timestamp = null;
+    if (put_options.timestamp != null) {
+      _timestamp = put_options.timestamp.get_resource_uuid() as unknown as string;
+    }
+
+    if (put_options.encoding != null) {
+      _encoding = Encoding.intoEncoding(put_options.encoding);
     } else {
       _encoding = Encoding.default();
     }
 
     let _attachment = null;
-    if (attachment != null) {
-      let att_bytes = new ZBytes(attachment);
-      _attachment = Array.from(att_bytes.buffer());
+    if (put_options.attachment != null) {
+      let att_bytes = new ZBytes(put_options.attachment);
+      _attachment = Array.from(att_bytes.to_bytes());
     }
 
     return this._remote_publisher.put(
-      Array.from(zbytes.buffer()),
+      Array.from(zbytes.to_bytes()),
       _attachment,
       _encoding.toString(),
+      _timestamp,
     );
   }
 
@@ -300,6 +340,31 @@ export class Publisher {
    */
   congestion_control(): CongestionControl {
     return this._congestion_control;
+  }
+
+  /**
+   * 
+   * executes delete on publisher
+   * @param {PublisherDeleteOptions} delete_options:  Options associated with a publishers delete
+   * @returns void
+   */
+  delete(delete_options: PublisherDeleteOptions) {
+
+    let _attachment = null;
+    if (delete_options.attachment != null) {
+      let att_bytes = new ZBytes(delete_options.attachment);
+      _attachment = Array.from(att_bytes.to_bytes());
+    }
+
+    let _timestamp = null;
+    if (delete_options.timestamp != null) {
+      _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
+    }
+    
+    return this._remote_publisher.delete(
+      _attachment,
+      _timestamp
+    );
   }
 
   /**

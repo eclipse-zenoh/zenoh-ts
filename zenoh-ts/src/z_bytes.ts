@@ -59,6 +59,15 @@ export class ZBytes {
   }
 
   /**
+  * returns if the ZBytes Buffer is empty
+  * 
+  * @returns boolean
+  */
+  is_empty(): boolean {
+    return this._buffer.length == 0;
+  }
+
+  /**
    * returns an empty ZBytes buffer
    * 
    * @returns ZBytes
@@ -72,7 +81,7 @@ export class ZBytes {
    * 
    * @returns Uint8Array
    */
-  buffer(): Uint8Array {
+  to_bytes(): Uint8Array {
     return this._buffer
   }
 

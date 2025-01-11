@@ -49,6 +49,7 @@ use tokio_rustls::{
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tracing::{debug, error};
+use uhlc::Timestamp;
 use uuid::Uuid;
 use zenoh::{
     bytes::{Encoding, ZBytes},
@@ -62,7 +63,7 @@ use zenoh::{
     },
     liveliness::LivelinessToken,
     pubsub::Publisher,
-    query::{Querier, Query, Queryable},
+    query::{Querier, Query},
     Session,
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};
@@ -477,11 +478,14 @@ struct RemoteState {
     websocket_tx: Sender<RemoteAPIMsg>,
     session_id: Uuid,
     session: Session,
+    // KeyExpr's + Timestamp
+    key_exprs: HashMap<Uuid, OwnedKeyExpr>,
+    timestamps: HashMap<Uuid, Timestamp>,
     // PubSub
     subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
     publishers: HashMap<Uuid, Publisher<'static>>,
     // Queryable
-    queryables: HashMap<Uuid, (Queryable<()>, OwnedKeyExpr)>,
+    queryables: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
     unanswered_queries: Arc<std::sync::RwLock<HashMap<Uuid, Query>>>,
     // Liveliness
     liveliness_tokens: HashMap<Uuid, LivelinessToken>,
@@ -496,6 +500,8 @@ impl RemoteState {
             websocket_tx,
             session_id,
             session,
+            key_exprs: HashMap::new(),
+            timestamps: HashMap::new(),
             subscribers: HashMap::new(),
             publishers: HashMap::new(),
             queryables: HashMap::new(),
@@ -517,9 +523,7 @@ impl RemoteState {
         }
 
         for (_, (queryable, _)) in self.queryables {
-            if let Err(e) = queryable.undeclare().await {
-                error!("{e}")
-            }
+            queryable.abort();
         }
 
         drop(self.unanswered_queries);
