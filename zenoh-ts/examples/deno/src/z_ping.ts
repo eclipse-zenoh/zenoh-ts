@@ -18,8 +18,8 @@ import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zen
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  let sub = await session.declare_subscriber("test/pong", new FifoChannel(256));
-  let pub = session.declare_publisher(
+  const sub = session.declare_subscriber("test/pong", { handler: new FifoChannel(256) });
+  const pub = session.declare_publisher(
     "test/ping",
     {
       encoding: Encoding.default(),
@@ -30,25 +30,25 @@ export async function main() {
   // Warm up
   console.warn("Warming up for 5 seconds...");
 
-  let startTime = new Date();
-  let data = [122, 101, 110, 111, 104];
+  const startTime = new Date();
+  const data = [122, 101, 110, 111, 104];
 
   while (elapsed(startTime) < 5) {
-    pub.put(data);
+    pub.put({ payload: data });
     await sub.receive();
   }
 
-  let samples = 600;
-  let samples_out = [];
+  const samples = 600;
+  const samples_out = [];
   for (let i = 0; i < samples; i++) {
-    let write_time = new Date();
-    pub.put(data);
+    const write_time = new Date();
+    pub.put({ payload: data });
     await sub.receive();
     samples_out.push(elapsed_ms(write_time));
   }
 
   for (let i = 0; i < samples_out.length; i++) {
-    let rtt = samples_out[i];
+    const rtt = samples_out[i];
     console.warn(
       data.length +
       "bytes: seq=" +
@@ -63,17 +63,17 @@ export async function main() {
 }
 
 function elapsed(startTime: Date) {
-  let endTime = new Date();
+  const endTime = new Date();
 
-  let timeDiff =
+  const timeDiff =
     (endTime.getMilliseconds() - startTime.getMilliseconds()) / 1000; //in s
-  let seconds = Math.round(timeDiff);
+  const seconds = Math.round(timeDiff);
   return seconds;
 }
 
 function elapsed_ms(startTime: Date) {
-  let endTime = new Date();
-  let timeDiff: number =
+  const endTime = new Date();
+  const timeDiff: number =
     endTime.getMilliseconds() - startTime.getMilliseconds(); //in ms
   return timeDiff;
 }

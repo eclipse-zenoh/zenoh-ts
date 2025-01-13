@@ -43,6 +43,7 @@ pub async fn handle_data_message(
             payload,
             attachment,
             encoding,
+            timestamp,
         } => {
             if let Some(publisher) = state_map.publishers.get(&id) {
                 let mut put_builder = match payload.b64_to_bytes() {
@@ -67,11 +68,39 @@ pub async fn handle_data_message(
                 if let Some(encoding) = encoding {
                     put_builder = put_builder.encoding(encoding);
                 }
+                if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                    put_builder = put_builder.timestamp(*ts);
+                }
                 if let Err(err) = put_builder.await {
                     error!("PublisherPut {id}, {err}");
                 }
             } else {
                 warn!("Publisher {id}, does not exist in State");
+            }
+        }
+        DataMsg::PublisherDelete {
+            id,
+            attachment,
+            timestamp,
+        } => {
+            if let Some(publisher) = state_map.publishers.get(&id) {
+                let mut publisher_builder = publisher.delete();
+                match attachment.map(|x| x.b64_to_bytes()) {
+                    Some(Ok(attachment)) => {
+                        publisher_builder = publisher_builder.attachment(&attachment);
+                    }
+                    Some(Err(e)) => {
+                        error!("{}", e);
+                    }
+                    None => {}
+                }
+                if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                    publisher_builder = publisher_builder.timestamp(*ts);
+                }
+
+                if let Err(e) = publisher_builder.await {
+                    error!("Could not publish {e}");
+                };
             }
         }
         DataMsg::Queryable(queryable_msg) => match queryable_msg {
@@ -117,7 +146,14 @@ pub async fn handle_data_message(
                 warn!("Plugin should not receive Query from Client, This should go via Get API");
             }
         },
-        data_msg => {
+        DataMsg::Sample(_, _)
+        | DataMsg::GetReply(_)
+        | DataMsg::NewTimestamp {
+            id: _,
+            string_rep: _,
+            millis_since_epoch: _,
+        }
+        | DataMsg::SessionInfo(_) => {
             error!("Server Should not recieved a {data_msg:?} Variant from client");
         }
     }

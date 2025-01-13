@@ -17,6 +17,8 @@
 // ██  ██  ██         ██        ██       ██ ██  ██      ██   ██
 // ██   ██ ███████    ██        ███████ ██   ██ ██      ██   ██
 
+// import { UUIDv4 } from "./remote_api/session";
+
 export type IntoKeyExpr = KeyExpr | String | string;
 
 export class KeyExpr {
@@ -24,7 +26,7 @@ export class KeyExpr {
    * Class to represent a Key Expression in Zenoh
    */
   private _inner: string;
-
+  // private key_expr_uuid: UUIDv4;
 
   constructor(keyexpr: IntoKeyExpr) {
     if (keyexpr instanceof KeyExpr) {
@@ -34,7 +36,6 @@ export class KeyExpr {
     } else {
       this._inner = keyexpr;
     }
-
   }
 
   toString(): string {

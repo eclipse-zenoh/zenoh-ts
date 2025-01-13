@@ -13,20 +13,18 @@
 //
 
 import { v4 as uuidv4 } from "uuid";
-import { RemoteSession } from "./session.js";
+import { RemoteSession, UUIDv4 } from "./session.js";
 import { ControlMsg } from "./interface/ControlMsg.js"
 import { SimpleChannel } from "channel-ts";
 import { ReplyWS } from "./interface/ReplyWS.js";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
-type UUID = typeof uuidv4 | string;
-
 export class RemoteQuerier {
-    private querier_id: UUID;
+    private querier_id: UUIDv4;
     private session_ref: RemoteSession;
 
     constructor(
-        querier_id: UUID,
+        querier_id: UUIDv4,
         session_ref: RemoteSession,
     ) {
         this.querier_id = querier_id;

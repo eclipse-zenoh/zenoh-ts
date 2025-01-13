@@ -105,6 +105,29 @@ pub(crate) async fn handle_control_message(
                 warn!("State Map Does not contain SocketAddr");
             }
         }
+        ControlMsg::NewTimestamp(uuid) => {
+            let ts = state_map.session.new_timestamp();
+            let ts_string = ts.to_string();
+            let _ = state_map.timestamps.insert(uuid, ts);
+
+            let since_the_epoch = ts
+                .get_time()
+                .to_system_time()
+                .duration_since(std::time::UNIX_EPOCH)
+                .expect("Time went backwards")
+                .as_millis() as u64; // JS numbers are F64, is the only way to get a Number that is similar to what is produced by Date.now() in Javascript
+
+            if let Err(e) = state_map
+                .websocket_tx
+                .send(RemoteAPIMsg::Data(DataMsg::NewTimestamp {
+                    id: uuid,
+                    string_rep: ts_string,
+                    millis_since_epoch: since_the_epoch,
+                }))
+            {
+                error!("{}", e);
+            };
+        }
         ControlMsg::Get {
             key_expr,
             parameters,
@@ -114,6 +137,7 @@ pub(crate) async fn handle_control_message(
             congestion_control,
             priority,
             express,
+            target,
             encoding,
             payload,
             attachment,
@@ -127,6 +151,8 @@ pub(crate) async fn handle_control_message(
             add_if_some!(priority, get_builder);
             add_if_some!(express, get_builder);
             add_if_some!(encoding, get_builder);
+            add_if_some!(target, get_builder);
+
             if let Some(payload_b64) = payload {
                 match payload_b64.b64_to_bytes() {
                     Ok(payload) => get_builder = get_builder.payload(payload),
@@ -186,6 +212,7 @@ pub(crate) async fn handle_control_message(
             priority,
             express,
             attachment,
+            timestamp,
         } => {
             let mut put_builder = match payload.b64_to_bytes() {
                 Ok(payload) => state_map.session.put(key_expr, payload),
@@ -199,6 +226,10 @@ pub(crate) async fn handle_control_message(
             add_if_some!(congestion_control, put_builder);
             add_if_some!(priority, put_builder);
             add_if_some!(express, put_builder);
+
+            if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                put_builder = put_builder.timestamp(*ts);
+            }
 
             if let Some(attachment_b64) = attachment {
                 match attachment_b64.b64_to_bytes() {
@@ -215,11 +246,16 @@ pub(crate) async fn handle_control_message(
             priority,
             express,
             attachment,
+            timestamp,
         } => {
             let mut delete_builder = state_map.session.delete(key_expr);
             add_if_some!(congestion_control, delete_builder);
             add_if_some!(priority, delete_builder);
             add_if_some!(express, delete_builder);
+            if let Some(ts) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                delete_builder = delete_builder.timestamp(*ts);
+            }
+
             if let Some(attachment_b64) = attachment {
                 match attachment_b64.b64_to_bytes() {
                     Ok(attachment) => delete_builder = delete_builder.attachment(attachment),
@@ -237,15 +273,11 @@ pub(crate) async fn handle_control_message(
         } => {
             let key_expr = KeyExpr::new(owned_key_expr.clone())?;
             let ch_tx = state_map.websocket_tx.clone();
+            let subscriber_builder = state_map.session.declare_subscriber(key_expr);
 
             let join_handle = match handler {
                 HandlerChannel::Fifo(size) => {
-                    let subscriber = state_map
-                        .session
-                        .declare_subscriber(key_expr)
-                        .with(FifoChannel::new(size))
-                        .await?;
-
+                    let subscriber = subscriber_builder.with(FifoChannel::new(size)).await?;
                     spawn_future(async move {
                         while let Ok(sample) = subscriber.recv_async().await {
                             let sample_ws = SampleWS::from(sample);
@@ -258,12 +290,7 @@ pub(crate) async fn handle_control_message(
                     })
                 }
                 HandlerChannel::Ring(size) => {
-                    let subscriber = state_map
-                        .session
-                        .declare_subscriber(key_expr)
-                        .with(RingChannel::new(size))
-                        .await?;
-
+                    let subscriber = subscriber_builder.with(RingChannel::new(size)).await?;
                     spawn_future(async move {
                         while let Ok(sample) = subscriber.recv_async().await {
                             let sample_ws = SampleWS::from(sample);
@@ -323,41 +350,77 @@ pub(crate) async fn handle_control_message(
             key_expr,
             complete,
             id: queryable_uuid,
+            handler,
         } => {
             let unanswered_queries = state_map.unanswered_queries.clone();
-            let session = state_map.session.clone();
             let ch_tx = state_map.websocket_tx.clone();
-            let queryable = session
+            let query_builder = state_map
+                .session
                 .declare_queryable(&key_expr)
-                .complete(complete)
-                .callback(move |query| {
-                    let query_uuid = Uuid::new_v4();
-                    let queryable_msg = QueryableMsg::Query {
-                        queryable_uuid,
-                        query: QueryWS::from((&query, query_uuid)),
-                    };
+                .complete(complete);
 
-                    match unanswered_queries.write() {
-                        Ok(mut rw_lock) => {
-                            rw_lock.insert(query_uuid, query);
+            let join_handle = match handler {
+                HandlerChannel::Fifo(size) => {
+                    let queryable = query_builder.with(FifoChannel::new(size)).await?;
+                    spawn_future(async move {
+                        while let Ok(query) = queryable.recv_async().await {
+                            let query_uuid = Uuid::new_v4();
+                            let queryable_msg = QueryableMsg::Query {
+                                queryable_uuid,
+                                query: QueryWS::from((&query, query_uuid)),
+                            };
+
+                            match unanswered_queries.write() {
+                                Ok(mut rw_lock) => {
+                                    rw_lock.insert(query_uuid, query);
+                                }
+                                Err(err) => {
+                                    tracing::error!("Query RwLock has been poisoned {err:?}")
+                                }
+                            }
+
+                            let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
+                            if let Err(err) = ch_tx.send(remote_msg) {
+                                tracing::error!("Could not send Queryable Message on WS {}", err);
+                            };
                         }
-                        Err(err) => tracing::error!("Query RwLock has been poisoned {err:?}"),
-                    }
+                    })
+                }
+                HandlerChannel::Ring(size) => {
+                    let queryable = query_builder.with(RingChannel::new(size)).await?;
+                    spawn_future(async move {
+                        while let Ok(query) = queryable.recv_async().await {
+                            let query_uuid = Uuid::new_v4();
+                            let queryable_msg = QueryableMsg::Query {
+                                queryable_uuid,
+                                query: QueryWS::from((&query, query_uuid)),
+                            };
 
-                    let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
-                    if let Err(err) = ch_tx.send(remote_msg) {
-                        tracing::error!("Could not send Queryable Message on WS {}", err);
-                    };
-                })
-                .await?;
+                            match unanswered_queries.write() {
+                                Ok(mut rw_lock) => {
+                                    rw_lock.insert(query_uuid, query);
+                                }
+                                Err(err) => {
+                                    tracing::error!("Query RwLock has been poisoned {err:?}")
+                                }
+                            }
+
+                            let remote_msg = RemoteAPIMsg::Data(DataMsg::Queryable(queryable_msg));
+                            if let Err(err) = ch_tx.send(remote_msg) {
+                                tracing::error!("Could not send Queryable Message on WS {}", err);
+                            };
+                        }
+                    })
+                }
+            };
 
             state_map
                 .queryables
-                .insert(queryable_uuid, (queryable, key_expr));
+                .insert(queryable_uuid, (join_handle, key_expr));
         }
         ControlMsg::UndeclareQueryable(uuid) => {
             if let Some((queryable, _)) = state_map.queryables.remove(&uuid) {
-                queryable.undeclare().await?;
+                queryable.abort();
             };
         }
         ControlMsg::Liveliness(liveliness_msg) => {

@@ -13,47 +13,63 @@
 //
 
 import {
-  RingChannel, deserialize_string, Sample, Config, Subscriber, Session, KeyExpr,
-  SampleKind,
+  deserialize_string, Sample, Config, Session, KeyExpr,
   Receiver,
   RecvErr,
   ReplyError
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration } from 'typed-duration'
-const { seconds } = Duration
+import { Duration, Milliseconds } from 'typed-duration'
+import { parseArgs } from "@std/cli/parse-args";
+
+const { milliseconds } = Duration
+
+interface Args {
+  key: string;
+  timeout: number
+}
 
 export async function main() {
+  const [key_expr_str, timeout] = get_args();
 
   console.log("Opening session...")
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  let key_expr = new KeyExpr("group1/**");
-  console.log("Sending Liveliness Query '", key_expr.toString(),"'");
+  const key_expr = new KeyExpr(key_expr_str);
+  console.log("Sending Liveliness Query '", key_expr.toString(), "'");
 
-  let receiver = session.liveliness().get(key_expr, {timeout: seconds.of(20)});
+  const receiver: Receiver = session.liveliness().get(key_expr, { timeout: timeout }) as Receiver;
 
-  if (!(receiver instanceof Receiver)){
-    return // Return in case of callback get query
-  }
-  
   let reply = await receiver.receive();
-  
+
   while (reply != RecvErr.Disconnected) {
     if (reply == RecvErr.MalformedReply) {
       console.warn("MalformedReply");
     } else {
-      let resp = reply.result();
+      const resp = reply.result();
       if (resp instanceof Sample) {
-        let sample: Sample = resp;
-        console.warn(">> Alive token ('", sample.keyexpr() ,")");
+        const sample: Sample = resp;
+        console.warn(">> Alive token ('", sample.keyexpr(), ")");
       } else {
-        let reply_error: ReplyError = resp;
+        const reply_error: ReplyError = resp;
         console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
       }
     }
     reply = await receiver.receive();
   }
-
   console.warn("End Liveliness query");
+}
+
+
+function get_args(): [string, Milliseconds] {
+  const args: Args = parseArgs(Deno.args);
+  let key_expr_str = "group1/**";
+  let timeout: Milliseconds = milliseconds.of(10000)
+  if (args.key != undefined) {
+    key_expr_str = args.key
+  }
+  if (args.timeout != undefined) {
+    timeout = milliseconds.of(args.timeout)
+  }
+  return [key_expr_str, timeout]
 }
 
 main()
