@@ -75,9 +75,9 @@ The most simple way to run examples is to install [deno](https://deno.com/), and
 
 1. Install [deno](https://deno.com/)
 2. Install CLI parsing of arguments for deno : `deno add jsr:@std/cli`
-3. Navigate to the `/zenoh-ts/examples` directory
+3. Navigate to the `/zenoh-ts/examples/deno` directory
 4. Install `zenoh-ts` library by running `yarn install`
-5. Then run the examples by running `yarn run <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
+5. Then run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
 
 This will start an instance of Deno running the example.
 The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  

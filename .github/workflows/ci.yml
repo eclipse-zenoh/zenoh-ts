@@ -68,6 +68,11 @@ jobs:
         with:
           node-version: "21"
 
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: latest
+
       - name: Run install
         uses: borales/actions-yarn@v4
         with:
@@ -77,6 +82,31 @@ jobs:
       - name: Transpile Library
         run: |
           yarn run build
+
+      - name: Install dependencies for deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: "zenoh-ts/examples/deno"
+
+         
+      - name: Verify build for deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: verify
+          dir: "zenoh-ts/examples/deno"
+ 
+      - name: Install dependencies for chat example
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: "zenoh-ts/examples/chat"
+
+      - name: Verify build for chat example
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build
+          dir: "zenoh-ts/examples/chat"
  
   markdown_lint:
     runs-on: ubuntu-latest

@@ -7,6 +7,7 @@
   "license": "EPL-2.0",
   "type": "module",
   "scripts": {
+    "clean": "rm -rf ./node_modules ./dist ./esm",
     "build": "rm -rf dist && mkdir dist && tsc && cp assets/* dist/ && jspm link -m dist/index.html",
     "start": "http-server ../.. -c-1 -o examples/chat/dist/index.html"
   },
