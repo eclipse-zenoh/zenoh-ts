@@ -77,6 +77,18 @@ jobs:
       - name: Transpile Library
         run: |
           yarn run build
+
+      - name: Install zenoh-ts for deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: "zenoh-ts/examples/deno"
+
+      - name: Check deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: check
+          dir: "zenoh-ts/examples/deno"
  
   markdown_lint:
     runs-on: ubuntu-latest
