@@ -71,7 +71,7 @@ jobs:
       - name: Install Deno
         uses: denoland/setup-deno@v1
         with:
-          deno-version: v1.x
+          deno-version: latest
 
       - name: Run install
         uses: borales/actions-yarn@v4
