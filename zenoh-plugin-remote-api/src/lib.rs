@@ -478,9 +478,7 @@ struct RemoteState {
     websocket_tx: Sender<RemoteAPIMsg>,
     session_id: Uuid,
     session: Session,
-    // KeyExpr's + Timestamp
-    #[allow(dead_code)] // TODO: Remove this after implementing the functionality
-    key_exprs: HashMap<Uuid, OwnedKeyExpr>,
+    // Timestamp
     timestamps: HashMap<Uuid, Timestamp>,
     // PubSub
     subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
@@ -501,7 +499,6 @@ impl RemoteState {
             websocket_tx,
             session_id,
             session,
-            key_exprs: HashMap::new(),
             timestamps: HashMap::new(),
             subscribers: HashMap::new(),
             publishers: HashMap::new(),
