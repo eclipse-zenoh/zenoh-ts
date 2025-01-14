@@ -479,6 +479,7 @@ struct RemoteState {
     session_id: Uuid,
     session: Session,
     // KeyExpr's + Timestamp
+    #[allow(dead_code)] // TODO: Remove this after implementing the functionality
     key_exprs: HashMap<Uuid, OwnedKeyExpr>,
     timestamps: HashMap<Uuid, Timestamp>,
     // PubSub
