@@ -92,7 +92,7 @@ export class ChatSession {
 		if (reply instanceof Reply) {
 			let resp = reply.result();
 			if (resp instanceof Sample) {
-				let payload = deserialize_string(resp.payload().buffer());
+				let payload = deserialize_string(resp.payload().to_bytes());
 				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
 				this.messages = JSON.parse(payload);
 			}
@@ -101,7 +101,7 @@ export class ChatSession {
 		}
 
 		this.messages_queryable = await this.session.declare_queryable("chat/messages", {
-			callback: (query: Query) => {
+			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
 				query.reply("chat/messages", response);
@@ -113,18 +113,20 @@ export class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
-		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", (sample) => {
-			let message = deserialize_string(sample.payload().buffer());
-			log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
-			let user = ChatUser.fromKeyexpr(sample.keyexpr());
-			if (user) {
-				const timestamp = new Date().toISOString();
-				this.messages.push({ t: timestamp, u: user.username, m: message });
-				if (this.messageCallback) {
-					this.messageCallback(user, message);
+		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", {
+			handler: (sample) => {
+				let message = deserialize_string(sample.payload().to_bytes());
+				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
+				let user = ChatUser.fromKeyexpr(sample.keyexpr());
+				if (user) {
+					const timestamp = new Date().toISOString();
+					this.messages.push({ t: timestamp, u: user.username, m: message });
+					if (this.messageCallback) {
+						this.messageCallback(user, message);
+					}
 				}
+				return Promise.resolve();
 			}
-			return Promise.resolve();
 		});
 		log(`[Session] Declare Subscriber on chat/user/*`);
 
@@ -185,7 +187,9 @@ export class ChatSession {
 	async sendMessage(message: string) {
 		if (this.messages_publisher) {
 			log(`[Publisher] Put message: ${message}`);
-			await this.messages_publisher.put(message);
+			await this.messages_publisher.put({
+				payload: message
+			});
 		}
 	}
 
