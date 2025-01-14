@@ -83,13 +83,20 @@ jobs:
         run: |
           yarn run build
 
+      - name: Install dependencies for deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: install
+          dir: "zenoh-ts/examples/deno"
+
+         
       - name: Verify build for deno examples
         uses: borales/actions-yarn@v4
         with:
           cmd: verify
           dir: "zenoh-ts/examples/deno"
  
-      - name: Install zenoh-ts for chat example
+      - name: Install dependencies for chat example
         uses: borales/actions-yarn@v4
         with:
           cmd: install
