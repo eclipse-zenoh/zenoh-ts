@@ -90,8 +90,9 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    cargo build 
    ```
 
-   Build and run the zenohd from the same sources which were used for the plugin.
-   The zenohd dependency is specified in the `[workspace.metadata.bin]` section in Cargo.toml which is processed by the 3rd party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
+   Build and run `zenohd` from the same sources used for the plugin. The `zenohd` dependency is specified in the `[workspace.metadata.bin]` section in `Cargo.toml`, which is processed by the third-party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
+
+   The `zenohd` binary is built into the `.bin` directory local to the project. If necessary, remove the `.bin` directory with `rm -rf .bin` to rebuild it, as the `cargo-run-bin` tool does not handle this automatically.
 
    ```sh
    cargo install cargo-run-bin
