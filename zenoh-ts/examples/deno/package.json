@@ -5,9 +5,8 @@
   "type": "module",
   "license": "EPL-2.0",
   "scripts": {
-    "build": "tsc",
     "clean": "rm -rf ./node_modules ./dist ./esm",
-    "check": "deno check src/*.ts",
+    "verify": "deno check src",
     "example": "deno run -A --no-prompt" 
   },
   "devDependencies": {

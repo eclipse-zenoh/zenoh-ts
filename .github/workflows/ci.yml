@@ -78,17 +78,23 @@ jobs:
         run: |
           yarn run build
 
-      - name: Install zenoh-ts for deno examples
+      - name: Verify build for deno examples
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: verify
+          dir: "zenoh-ts/examples/deno"
+ 
+      - name: Install zenoh-ts for chat example
         uses: borales/actions-yarn@v4
         with:
           cmd: install
-          dir: "zenoh-ts/examples/deno"
+          dir: "zenoh-ts/examples/chat"
 
-      - name: Check deno examples
+      - name: Verify build for chat example
         uses: borales/actions-yarn@v4
         with:
-          cmd: check
-          dir: "zenoh-ts/examples/deno"
+          cmd: build
+          dir: "zenoh-ts/examples/chat"
  
   markdown_lint:
     runs-on: ubuntu-latest
