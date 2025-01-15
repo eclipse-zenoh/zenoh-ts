@@ -28,7 +28,7 @@ export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const key_expr = new KeyExpr(key);
 
-  const poll_subscriber: Subscriber = session.declare_subscriber(key_expr, { handler: new RingChannel(10) });
+  const poll_subscriber: Subscriber = session.declare_subscriber(key_expr, new RingChannel(10));
 
   let sample = await poll_subscriber.receive();
 
