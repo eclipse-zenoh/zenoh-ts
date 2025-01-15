@@ -34,7 +34,7 @@ export async function main() {
   const data = [122, 101, 110, 111, 104];
 
   while (elapsed(startTime) < 5) {
-    pub.put({ payload: data });
+    pub.put(data);
     await sub.receive();
   }
 
@@ -42,7 +42,7 @@ export async function main() {
   const samples_out = [];
   for (let i = 0; i < samples; i++) {
     const write_time = new Date();
-    pub.put({ payload: data });
+    pub.put(data);
     await sub.receive();
     samples_out.push(elapsed_ms(write_time));
   }

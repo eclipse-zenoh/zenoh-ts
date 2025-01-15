@@ -39,7 +39,7 @@ export async function main() {
   for (let i = 0; i < 1000; i++) {
     await sleep(1000)
     const payload = "[" + i + "]" + _payload;
-    const receiver = querier.get({ payload: payload, parameters: selector.parameters() }) as Receiver;
+    const receiver = querier.get(selector.parameters(), { payload: payload }) as Receiver;
 
     let reply = await receiver.receive();
 
