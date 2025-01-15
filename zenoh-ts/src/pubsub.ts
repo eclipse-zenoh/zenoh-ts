@@ -190,7 +190,6 @@ export class FifoChannel implements Handler {
  * @param {IntoZBytes=} attachment - optional extra data to send with Payload
  */
 export interface PublisherPutOptions {
-  payload: IntoZBytes,
   encoding?: IntoEncoding,
   attachment?: IntoZBytes,
   timestamp?: Timestamp;
@@ -272,14 +271,16 @@ export class Publisher {
   /**
    * Puts a payload on the publisher associated with this class instance
    *
+   * @param {IntoZBytes} payload
    * @param {PublisherPutOptions} put_options
    *
    * @returns void
    */
   put(
+    payload: IntoZBytes,
     put_options: PublisherPutOptions,
   ): void {
-    let zbytes: ZBytes = new ZBytes(put_options.payload);
+    let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     let _timestamp = null;
     if (put_options.timestamp != null) {
