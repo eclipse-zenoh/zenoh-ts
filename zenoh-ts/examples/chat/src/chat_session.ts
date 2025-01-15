@@ -187,9 +187,7 @@ export class ChatSession {
 	async sendMessage(message: string) {
 		if (this.messages_publisher) {
 			log(`[Publisher] Put message: ${message}`);
-			await this.messages_publisher.put({
-				payload: message
-			});
+			await this.messages_publisher.put(message);
 		}
 	}
 
