@@ -278,23 +278,23 @@ export class Publisher {
    */
   put(
     payload: IntoZBytes,
-    put_options: PublisherPutOptions,
+    put_options?: PublisherPutOptions,
   ): void {
     let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     let _timestamp = null;
-    if (put_options.timestamp != null) {
+    if (put_options?.timestamp != null) {
       _timestamp = put_options.timestamp.get_resource_uuid() as unknown as string;
     }
 
-    if (put_options.encoding != null) {
+    if (put_options?.encoding != null) {
       _encoding = Encoding.intoEncoding(put_options.encoding);
     } else {
       _encoding = Encoding.default();
     }
 
     let _attachment = null;
-    if (put_options.attachment != null) {
+    if (put_options?.attachment != null) {
       let att_bytes = new ZBytes(put_options.attachment);
       _attachment = Array.from(att_bytes.to_bytes());
     }
