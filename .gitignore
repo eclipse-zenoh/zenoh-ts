@@ -13,6 +13,9 @@ zenoh-ts/esm/
 
 zenoh-plugin-remote-api/target/** 
 zenoh-plugin-remote-api/bindings/** 
+
+zenoh-keyexpr-wasm/pkg/** 
+
 **/target/** 
 **/node_modules/** 
 **/dist/**
