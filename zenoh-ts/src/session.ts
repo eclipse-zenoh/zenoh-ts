@@ -123,12 +123,6 @@ export interface GetOptions {
 }
 
 /**
- * Options for a SubscriberOptions function 
-*/
-export interface SubscriberOptions {
-}
-
-/**
  * Options for a Queryable
  * @prop complete - Change queryable completeness.
  * @prop callback - Callback function for this queryable
@@ -454,8 +448,7 @@ export class Session {
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler?: ((sample: Sample) => Promise<void>) | Handler,
-    _subscriber_opts?: SubscriberOptions
+    handler?: ((sample: Sample) => Promise<void>) | Handler
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
