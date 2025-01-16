@@ -7,7 +7,7 @@ This crate is intended for Zenoh's internal use.
 
 This crate is not meant to be built by users of Zenoh.
 
-To build 
+To build
 `wasm-pack build`
 
 The files:
@@ -16,4 +16,5 @@ The files:
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper_bg.wasm.d.ts
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper.d.ts
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper.js
+
 Are used from in zenoh-ts under `/src/key_expr`
