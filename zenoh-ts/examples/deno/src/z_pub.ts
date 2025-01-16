@@ -45,7 +45,7 @@ export async function main() {
 
     console.warn("Block statement execution no : " + idx);
     console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
-    publisher.put({ payload: buf, encoding: Encoding.TEXT_PLAIN, attachment: attach });
+    publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: attach });
     await sleep(1000);
   }
 }

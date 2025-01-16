@@ -26,10 +26,10 @@ export async function main() {
   );
 
   const subscriber_callback = async function (sample: Sample): Promise<void> {
-    pub.put({ payload: sample.payload() });
+    pub.put(sample.payload());
   };
 
-  session.declare_subscriber("test/pong", { handler: subscriber_callback });
+  session.declare_subscriber("test/pong", subscriber_callback);
 
   let count = 0;
   while (true) {

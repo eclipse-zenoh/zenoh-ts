@@ -123,13 +123,6 @@ export interface GetOptions {
 }
 
 /**
- * Options for a SubscriberOptions function 
-*/
-export interface SubscriberOptions {
-  handler?: ((sample: Sample) => Promise<void>) | Handler,
-}
-
-/**
  * Options for a Queryable
  * @prop complete - Change queryable completeness.
  * @prop callback - Callback function for this queryable
@@ -455,16 +448,13 @@ export class Session {
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    subscriber_opts: SubscriberOptions
+    handler?: ((sample: Sample) => Promise<void>) | Handler
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
     let callback_subscriber = false;
-    let handler;
-    if (subscriber_opts?.handler !== undefined) {
-      handler = subscriber_opts?.handler;
-    } else {
+    if (handler === undefined) {
       handler = new FifoChannel(256);
     }
     let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);

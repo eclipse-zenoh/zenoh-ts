@@ -113,8 +113,8 @@ export class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
-		this.message_subscriber = await this.session.declare_subscriber("chat/user/*", {
-			handler: (sample) => {
+		this.message_subscriber = await this.session.declare_subscriber("chat/user/*",
+			(sample: Sample) => {
 				let message = deserialize_string(sample.payload().to_bytes());
 				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 				let user = ChatUser.fromKeyexpr(sample.keyexpr());
@@ -127,7 +127,7 @@ export class ChatSession {
 				}
 				return Promise.resolve();
 			}
-		});
+		);
 		log(`[Session] Declare Subscriber on chat/user/*`);
 
 		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
@@ -187,9 +187,7 @@ export class ChatSession {
 	async sendMessage(message: string) {
 		if (this.messages_publisher) {
 			log(`[Publisher] Put message: ${message}`);
-			await this.messages_publisher.put({
-				payload: message
-			});
+			await this.messages_publisher.put(message);
 		}
 	}
 

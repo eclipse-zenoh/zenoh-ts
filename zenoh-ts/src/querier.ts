@@ -117,7 +117,6 @@ export interface QuerierGetOptions {
   encoding?: Encoding,
   payload?: IntoZBytes,
   attachment?: IntoZBytes,
-  parameters?: Parameters
 }
 
 /**
@@ -206,7 +205,9 @@ export class Querier {
    * Issue a Get request on this querier
    * @returns Promise <Receiever | void>
    */
-  get(get_options?: QuerierGetOptions): Receiver | undefined {
+  get(
+    parameters?: Parameters,
+    get_options?: QuerierGetOptions): Receiver | undefined {
     if (this.undeclared == true) {
       return undefined;
     }
@@ -221,8 +222,8 @@ export class Querier {
     if (get_options?.payload != undefined) {
       _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
-    if (get_options?.parameters != undefined) {
-      _parameters = get_options?.parameters.toString();
+    if (parameters != undefined) {
+      _parameters = parameters.toString();
     }
 
     let chan: SimpleChannel<ReplyWS> = this._remote_querier.get(
