@@ -49,20 +49,33 @@ export class KeyExpr {
     return this._inner;
   }
 
+  /*
+  * Joins both sides, inserting a / in between them.
+  * This should be your preferred method when concatenating path segments.
+  */
   join(other: IntoKeyExpr): KeyExpr {
     const key_expr = this.call_wasm<string>(other, join)
     return new KeyExpr(key_expr)
   }
 
+  /*
+  * Performs string concatenation and returns the result as a KeyExpr if possible.
+  */
   concat(other: IntoKeyExpr): KeyExpr {
     const key_expr = this.call_wasm<string>(other, concat)
     return new KeyExpr(key_expr)
   }
 
+  /*
+  * Returns true if this includes other, i.e. the set defined by this contains every key belonging to the set defined by other.
+  */
   includes(other: IntoKeyExpr): boolean {
     return this.call_wasm<boolean>(other, includes)
   }
 
+  /*
+  * Returns true if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the sets defined by self and other.
+  */
   intersects(other: IntoKeyExpr): boolean {
     return this.call_wasm<boolean>(other, intersects)
   }
