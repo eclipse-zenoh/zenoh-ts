@@ -32,7 +32,7 @@
     "typescript": "^5.3.2"
   },
   "scripts": {
-    "build": "npx tsc",
+    "build": "npx tsc && cp ./src/key_expr/*wasm* ./dist/key_expr/",
     "release": "npx release-it",
     "clean": "rm -rf ./node_modules ./dist ./esm"
   },

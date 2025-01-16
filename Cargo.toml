@@ -1,6 +1,6 @@
 
 [workspace]
-members = ["zenoh-plugin-remote-api"]
+members = ["zenoh-plugin-remote-api", "zenoh-keyexpr-wasm"]
 resolver = "1"
 
 [workspace.package]

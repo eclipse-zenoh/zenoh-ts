@@ -31,7 +31,7 @@
     "paths": {
       "*": [
         "src/types/*"
-      ]
+      ], 
     },
     "lib": [
       "DOM",
@@ -44,6 +44,8 @@
     "noImplicitReturns": true
   },
   "include": [
-    "src/*"
+    "./src/**/*.d.ts",
+    "./src/**/*.ts",
+    "./src/**/*.js"
   ]
 }
