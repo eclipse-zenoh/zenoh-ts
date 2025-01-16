@@ -11,6 +11,7 @@ To build
 `wasm-pack build`
 
 The files:
+
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper_bg.js
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper_bg.wasm
 - zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper_bg.wasm.d.ts
