@@ -15,4 +15,4 @@ zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper_bg.wasm.d.ts
 zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper.d.ts 
 zenoh-keyexpr-wasm/pkg/zenoh_keyexpr_wrapper.js
 
-Are used from in Zenoh-ts under /src/key_expr
+Are used from in zenoh-ts under `/src/key_expr`
