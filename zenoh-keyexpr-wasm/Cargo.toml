@@ -3,6 +3,7 @@ name = "zenoh-keyexpr-wrapper"
 version = "0.1.0"
 authors = ["Charles Schleich"]
 edition = "2018"
+publish = false
 
 [lib]
 crate-type = ["cdylib", "rlib"]
