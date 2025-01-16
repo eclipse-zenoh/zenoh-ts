@@ -19,11 +19,14 @@ pub fn join(ke1: String, ke2: String) -> Result<String, String> {
         .map_err(|err| err.to_string())
 }
 
-// Concat is not exposed in the commons::zenoh-keyexpr crate, its exposed in API.
+// Currently concat is not exposed in the commons::zenoh-keyexpr crate,
+// its exposed in API, which does not compile to WASM.
+// For now this is a simple reimplementation of the logic in API
+// TODO: remove this logic and call concat once its been moved to zenoh-keyexpr
 #[wasm_bindgen]
 pub fn concat(ke1: String, ke2: String) -> Result<String, String> {
     if ke1.ends_with('*') && ke2.starts_with('*') {
-        return Err(format!("Tried to concatenate {} (ends with *) and {} (starts with *), which would likely have caused bugs. If you're sure you want to do this, concatenate these into a string and then try to convert.", ke1, ke2));
+        Err(format!("Tried to concatenate {} (ends with *) and {} (starts with *), which would likely have caused bugs. If you're sure you want to do this, concatenate these into a string and then try to convert.", ke1, ke2))
     } else {
         key_expr::OwnedKeyExpr::try_from(format!("{ke1}{ke2}"))
             .map_err(|x| x.to_string())
