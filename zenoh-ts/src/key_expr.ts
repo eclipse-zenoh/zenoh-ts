@@ -17,7 +17,7 @@
 // ██  ██  ██         ██        ██       ██ ██  ██      ██   ██
 // ██   ██ ███████    ██        ███████ ██   ██ ██      ██   ██
 
-import { new_key_expr, join, concat, includes, intersects } from "./key_expr/zenoh_keyexpr_wrapper.js"
+// import { new_key_expr, join, concat, includes, intersects } from "./key_expr/zenoh_keyexpr_wrapper.js"
 
 export type IntoKeyExpr = KeyExpr | String | string;
 
@@ -41,7 +41,8 @@ export class KeyExpr {
     // `new_key_expr` calls the `key_expr::OwnedKeyExpr::new` in Rust
     // if this function fails, the keyexpr is invalid, and an exception is thrown in Wasm and propagated here
     // else the Key Expression is valid and we can store the string it represents in the class
-    new_key_expr(ke);
+    // TODO: Add back in When bundling WASM is fixed
+    // new_key_expr(ke);
     this._inner = ke;
   }
 
@@ -53,43 +54,48 @@ export class KeyExpr {
   * Joins both sides, inserting a / in between them.
   * This should be your preferred method when concatenating path segments.
   */
-  join(other: IntoKeyExpr): KeyExpr {
-    const key_expr = this.call_wasm<string>(other, join)
-    return new KeyExpr(key_expr)
-  }
+// TODO: Add back in When bundling WASM is fixed
+  // join(other: IntoKeyExpr): KeyExpr {
+  //   const key_expr = this.call_wasm<string>(other, join)
+  //   return new KeyExpr(key_expr)
+  // }
 
   /*
   * Performs string concatenation and returns the result as a KeyExpr if possible.
   */
-  concat(other: IntoKeyExpr): KeyExpr {
-    const key_expr = this.call_wasm<string>(other, concat)
-    return new KeyExpr(key_expr)
-  }
+  // TODO: Add back in When bundling WASM is fixed
+  // concat(other: IntoKeyExpr): KeyExpr {
+  //   const key_expr = this.call_wasm<string>(other, concat)
+  //   return new KeyExpr(key_expr)
+  // }
 
   /*
   * Returns true if this includes other, i.e. the set defined by this contains every key belonging to the set defined by other.
   */
-  includes(other: IntoKeyExpr): boolean {
-    return this.call_wasm<boolean>(other, includes)
-  }
+  // TODO: Add back in When bundling WASM is fixed
+  // includes(other: IntoKeyExpr): boolean {
+  //   return this.call_wasm<boolean>(other, includes)
+  // }
 
   /*
   * Returns true if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the sets defined by self and other.
   */
-  intersects(other: IntoKeyExpr): boolean {
-    return this.call_wasm<boolean>(other, intersects)
-  }
+  // TODO: Add back in When bundling WASM is fixed
+  // intersects(other: IntoKeyExpr): boolean {
+  //   return this.call_wasm<boolean>(other, intersects)
+  // }
 
-  private call_wasm<T>(other: IntoKeyExpr, fn: (expr1: string, expr2: string) => T): T {
-    let ke;
-    if (other instanceof KeyExpr) {
-      ke = other._inner;
-    } else if (other instanceof String) {
-      ke = other.toString();
-    } else {
-      ke = other;
-    }
-    return fn(this._inner, ke)
-  }
+  // TODO: Add back in When bundling WASM is fixed
+  // private call_wasm<T>(other: IntoKeyExpr, fn: (expr1: string, expr2: string) => T): T {
+  //   let ke;
+  //   if (other instanceof KeyExpr) {
+  //     ke = other._inner;
+  //   } else if (other instanceof String) {
+  //     ke = other.toString();
+  //   } else {
+  //     ke = other;
+  //   }
+  //   return fn(this._inner, ke)
+  // }
 
 }
