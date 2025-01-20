@@ -1,6 +1,7 @@
 use std::convert::TryFrom;
 
 use wasm_bindgen::prelude::*;
+use zenoh_keyexpr::canon::Canonize;
 use zenoh_keyexpr::key_expr;
 
 #[wasm_bindgen]
@@ -46,4 +47,10 @@ pub fn intersects(ke1: String, ke2: String) -> Result<bool, String> {
     let a = key_expr::OwnedKeyExpr::new(ke1).map_err(|x| x.to_string())?;
     let b = key_expr::OwnedKeyExpr::new(ke2).map_err(|x| x.to_string())?;
     Ok(a.intersects(&b))
+}
+
+#[wasm_bindgen]
+pub fn autocanonize(ke: String) -> Result<String, String> {
+    let keyexpr = key_expr::OwnedKeyExpr::autocanonize(ke).map_err(|x| x.to_string())?;
+    Ok(keyexpr.to_string())
 }
