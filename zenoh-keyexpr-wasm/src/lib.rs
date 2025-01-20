@@ -1,8 +1,7 @@
 use std::convert::TryFrom;
 
 use wasm_bindgen::prelude::*;
-use zenoh_keyexpr::canon::Canonize;
-use zenoh_keyexpr::key_expr;
+use zenoh_keyexpr::{canon::Canonize, key_expr};
 
 #[wasm_bindgen]
 pub fn new_key_expr(key_expr_str: String) -> Result<(), String> {
