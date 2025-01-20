@@ -120,8 +120,8 @@ function takeObject(idx) {
     return ret;
 }
 /**
- * @param {string} key_expr_str
- */
+* @param {string} key_expr_str
+*/
 export function new_key_expr(key_expr_str) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
@@ -139,10 +139,10 @@ export function new_key_expr(key_expr_str) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {string}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {string}
+*/
 export function join(ke1, ke2) {
     let deferred4_0;
     let deferred4_1;
@@ -173,10 +173,10 @@ export function join(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {string}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {string}
+*/
 export function concat(ke1, ke2) {
     let deferred4_0;
     let deferred4_1;
@@ -207,10 +207,10 @@ export function concat(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {boolean}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {boolean}
+*/
 export function includes(ke1, ke2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
@@ -232,10 +232,10 @@ export function includes(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {boolean}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {boolean}
+*/
 export function intersects(ke1, ke2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
@@ -253,6 +253,37 @@ export function intersects(ke1, ke2) {
         return r0 !== 0;
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+
+/**
+* @param {string} ke
+* @returns {string}
+*/
+export function autocanonize(ke) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(ke, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.autocanonize(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        var ptr2 = r0;
+        var len2 = r1;
+        if (r3) {
+            ptr2 = 0; len2 = 0;
+            throw takeObject(r2);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
     }
 }
 
