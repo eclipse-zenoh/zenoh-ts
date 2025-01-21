@@ -7,7 +7,10 @@
   "scripts": {
     "clean": "rm -rf ./node_modules ./dist ./esm",
     "verify": "deno check src",
-    "example": "deno run -A --no-prompt" 
+    "_list_examples": "sh -c 'ls src/*.ts | sed -e \"s/src\\///\" -e \"s/\\.ts//\"'",
+    "_run_example": "sh -c 'deno run -A --no-prompt src/$1.ts' --",
+    "_build": "sh -c '[ ! -d \"node_modules\" ] || [ ! -d \"dist\" ] && yarn clean && yarn install && yarn build || true'",
+    "start": "sh -c '[ -z \"$1\" ] && echo \"Available examples:\" && yarn _list_examples || (yarn _build && yarn _run_example -- $1)' --"
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",
