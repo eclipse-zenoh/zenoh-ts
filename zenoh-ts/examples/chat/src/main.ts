@@ -2,7 +2,7 @@ import { ChatSession, ChatUser } from './chat_session';
 
 let globalChatSession: ChatSession | null = null;
 
-document.addEventListener('DOMContentLoaded', () => {
+function initialize() {
 	const toggleLogButton = document.getElementById('toggle-log-button') as HTMLButtonElement;
 	const technicalLogPanel = document.getElementById('technical-log-panel') as HTMLDivElement;
 	const connectButton = document.getElementById('connect-button') as HTMLButtonElement;
@@ -136,7 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			}
 		}
 	});
-});
+}
+
+if (document.readyState === 'loading') {
+	document.addEventListener('DOMContentLoaded', initialize);
+} else {
+	initialize();
+}
 
 function log(message: string) {
 	const technicalLog = document.getElementById('technical-log') as HTMLDivElement;

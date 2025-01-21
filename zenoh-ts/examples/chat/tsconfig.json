@@ -6,7 +6,8 @@
         "strict": true,
         "baseUrl": ".",
         "esModuleInterop": true,
-        "outDir": "./dist"
+        "outDir": "./dist",
+        "allowJs": true
     },
     "include": [
         "./src/main.ts"

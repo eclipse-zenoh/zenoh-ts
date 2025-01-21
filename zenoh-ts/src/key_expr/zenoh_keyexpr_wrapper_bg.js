@@ -120,8 +120,8 @@ function takeObject(idx) {
     return ret;
 }
 /**
- * @param {string} key_expr_str
- */
+* @param {string} key_expr_str
+*/
 export function new_key_expr(key_expr_str) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
@@ -139,10 +139,10 @@ export function new_key_expr(key_expr_str) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {string}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {string}
+*/
 export function join(ke1, ke2) {
     let deferred4_0;
     let deferred4_1;
@@ -173,10 +173,10 @@ export function join(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {string}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {string}
+*/
 export function concat(ke1, ke2) {
     let deferred4_0;
     let deferred4_1;
@@ -207,10 +207,10 @@ export function concat(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {boolean}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {boolean}
+*/
 export function includes(ke1, ke2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
@@ -232,10 +232,10 @@ export function includes(ke1, ke2) {
 }
 
 /**
- * @param {string} ke1
- * @param {string} ke2
- * @returns {boolean}
- */
+* @param {string} ke1
+* @param {string} ke2
+* @returns {boolean}
+*/
 export function intersects(ke1, ke2) {
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);

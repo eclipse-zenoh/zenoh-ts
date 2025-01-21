@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Charles Schleich"]
 edition = "2018"
 publish = false
+description = "A wrapper for zenoh-keyexpr for use with WebAssembly."
+repository = "https://github.com/eclipse-zenoh/zenoh-ts"
+license = "EPL-2.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -23,3 +26,7 @@ wasm-bindgen-test = "0.3.34"
 [profile.release]
 # Tell `rustc` to optimize for small code size.
 opt-level = "s"
+
+# Disable warninng `unexpected `cfg` condition name: `wasm_bindgen_unstable_test_coverage``
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }

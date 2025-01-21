@@ -32,6 +32,7 @@
     "typescript": "^5.3.2"
   },
   "scripts": {
+    "wasm": "rm -rf src/key_expr && wasm-pack build ../zenoh-keyexpr-wasm --target bundler --out-dir ../zenoh-ts/src/key_expr",
     "build": "npx tsc && cp ./src/key_expr/*wasm* ./dist/key_expr/",
     "release": "npx release-it",
     "clean": "rm -rf ./node_modules ./dist ./esm"

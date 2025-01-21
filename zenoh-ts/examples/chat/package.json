@@ -8,13 +8,15 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf ./node_modules ./dist ./esm",
-    "build": "rm -rf dist && mkdir dist && tsc && cp assets/* dist/ && jspm link -m dist/index.html",
+    "build": "rm -rf dist && mkdir dist && webpack --config webpack.config.js && cp assets/* dist/",
     "start": "http-server ../.. -c-1 -o examples/chat/dist/index.html"
   },
   "devDependencies": {
     "http-server": "^14.1.1",
-    "jspm": "^3.3.3",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.3",
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1",
+    "ts-loader": "^9.2.6"
   },
   "dependencies": {
     "@eclipse-zenoh/zenoh-ts": "file:../.."
