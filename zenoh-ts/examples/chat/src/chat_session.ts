@@ -1,9 +1,11 @@
 import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher, deserialize_string } from '@eclipse-zenoh/zenoh-ts';
-import { validate_keyexpr } from './validate_keyexpr';
 
 export function validate_username(username: string): boolean {
-	return /^[a-zA-Z0-9_-]+$/.test(username) && validate_keyexpr(username);
+	return /^[a-zA-Z0-9_-]+$/.test(username);
 }
+
+const KEYEXPR_CHAT_USER = new KeyExpr("chat/user");
+const KEYEXPR_CHAT_MESSAGES = new KeyExpr("chat/messages");
 
 export class ChatUser {
 	username: string;
@@ -17,18 +19,20 @@ export class ChatUser {
 		return new ChatUser(username);
 	}
 	public static fromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
-		let parts = (keyexpr.toString()).split("/");
-		if (parts.length < 3 || parts[0] != "chat" || parts[1] != "user") {
+		let keyexpr_str = keyexpr.toString();
+		let index = keyexpr_str.lastIndexOf("/");
+		if (index == -1) {
 			return null;
 		}
-		let username = parts[2];
-		if (!validate_username(username)) {
+		let prefix = keyexpr_str.substring(0, index);
+		let username = keyexpr_str.substring(index + 1);
+		if (prefix != KEYEXPR_CHAT_USER.toString() || !validate_username(username)) {
 			return null;
 		}
 		return new ChatUser(username);
 	}
 	public toKeyexpr(): KeyExpr {
-		return new KeyExpr(`chat/user/${this.username}`);
+		return KEYEXPR_CHAT_USER.join(this.username);
 	}
 	public toString(): string {
 		return this.username;
@@ -86,8 +90,8 @@ export class ChatSession {
 
 		let keyexpr = this.user.toKeyexpr();
 
-		let receiver = await this.session.get("chat/messages") as Receiver;
-		log(`[Session] Get from chat/messages`);
+		let receiver = await this.session.get(KEYEXPR_CHAT_MESSAGES) as Receiver;
+		log(`[Session] Get from ${KEYEXPR_CHAT_MESSAGES.toString()}`);
 		let reply = await receiver.receive();
 		if (reply instanceof Reply) {
 			let resp = reply.result();
@@ -100,11 +104,11 @@ export class ChatSession {
 			log(`[Session] GetError ${reply}`);
 		}
 
-		this.messages_queryable = await this.session.declare_queryable("chat/messages", {
+		this.messages_queryable = await this.session.declare_queryable(KEYEXPR_CHAT_MESSAGES, {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
-				query.reply("chat/messages", response);
+				query.reply(KEYEXPR_CHAT_MESSAGES, response);
 			},
 			complete: true
 		});
@@ -113,7 +117,7 @@ export class ChatSession {
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
-		this.message_subscriber = await this.session.declare_subscriber("chat/user/*",
+		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
 			(sample: Sample) => {
 				let message = deserialize_string(sample.payload().to_bytes());
 				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
@@ -128,13 +132,13 @@ export class ChatSession {
 				return Promise.resolve();
 			}
 		);
-		log(`[Session] Declare Subscriber on chat/user/*`);
+		log(`[Session] Declare Subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
 
 		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
 
 		// Subscribe to changes of users presence
-		this.liveliness_subscriber = this.session.liveliness().declare_subscriber("chat/user/*", {
+		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
 			callback: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);
@@ -165,7 +169,7 @@ export class ChatSession {
 			},
 			history: true
 		});
-		log(`[Session] Declare liveliness subscriber on chat/user/*`);
+		log(`[Session] Declare liveliness subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
