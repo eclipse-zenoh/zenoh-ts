@@ -154,14 +154,14 @@ To run an example, execute the command `yarn start example_dir [example_name]`
 The following examples are available:
 
 - Command line examples
-   - Publisher and subscriber
+  - Publisher and subscriber
 
       ```sh
       yarn start deno z_pub
       yarn start deno z_sub
       ```
 
-   - Queryable and get
+  - Queryable and get
 
       ```sh
       yarn start deno z_queryable
