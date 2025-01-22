@@ -176,4 +176,16 @@ The following examples are available:
   yarn start chat
   ```
 
-  The browser window with chat interface should open. Open another one with same address, press "Connect" buttons in both and see how they interact.
+  The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with chat interface should open. Open another one with same address, press "Connect" buttons in both and see how do they interact.
+
+### Generating Documentation
+
+1. Make sure that the [typedoc](https://typedoc.org/) dependency is installed.
+
+2. Navigate to the directory `zenoh-ts`
+
+3. Run the commands:
+
+```bash
+npx typedoc src/index.ts
+```
