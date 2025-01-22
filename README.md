@@ -19,16 +19,24 @@ Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.c
 
 ## Typescript/Javascript API
 
-This repository provides a Typescript / Javascript binding through the use of the `remote-api-plugin` in this repo.
+This repository provides a Typescript / Javascript binding through the use of the `zenoh-plugin-remote-api` in this repo.
 The long-term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.
 In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and it will need to undergo a fair
 amount of refactoring before that can happen.
 
+The latest version of zenoh-ts library can be installed from npm:
+
+```sh
+npm install @eclipse-zenoh/zenoh-ts
+```
+
 Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
+
+Library requires websocket connection to `zenohd` daemon through the `zenohd-plugin-remote-api` in the daemon. See corresponding section below.
 
 ---
 
-## How to build and run it
+## How to build and use zenoh-ts
 
 > :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also
 build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git
@@ -111,13 +119,15 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/...
    ```
 
-### Building the library
+### Building the library from sources
 
 1. Make sure that the following utilities are available on your platform.
 
    - [NPM](https://www.npmjs.com/package/npm)
    - [yarn](https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable)
    - [Typescript](https://www.typescriptlang.org/download/)
+   - [Rust](https://www.rust-lang.org)
+   - [deno](https://deno.com/) - for command line examples
 
 2. Navigate to the directory `zenoh-ts`
 
@@ -125,47 +135,45 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
 
    ```sh
    yarn install 
-   yarn run build
+   yarn build
    ```
 
-### Build and run the command line examples
+   The result is placed into `zenoh-ts/dist` directory.
 
-This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
-To run the command line examples use the javascript runtime [deno](https://deno.com/) which is expected to be consistent with the browser.
+   This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
 
-1. Install [deno](https://deno.com/)
-2. Navigate to the `zenoh-ts/examples/deno` directory
-3. Install the `zenoh-ts` library by running `yarn install`
-4. Run zenohd with the remote_api plugin, configured to websocket port 10000, as described above
-5. Run the examples by running `yarn example <PATH TO EXAMPLE>`, i.e. `yarn example src/z_sub.ts`
+### Build and run examples
 
-To run publisher and subscriber examples:
+For simplicity the examples can be executed from `zenoh-ts` directory. You may also go directly to `zenoh-ts/examples`
+directory and explore and run examples there.
 
-```sh
-yarn example src/z_pub.rs
-```
+Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on localhost and websocket port is 10000.
 
-```sh
-yarn example src/z_sub.rs
-```
+To run example execute command `yarn start example_dir [example_name]`
 
-The subscriber should start to receive messages from publisher:
+The following examples are available:
 
-```text
->> [Subscriber] Received PUT ('demo/example/zenoh-ts-pub': '[0] 122,101,110,111,104')
->> [Subscriber] Received PUT ('demo/example/zenoh-ts-pub': '[1] 122,101,110,111,104')
->> [Subscriber] Received PUT ('demo/example/zenoh-ts-pub': '[2] 122,101,110,111,104')
-```
+- Command line examples
+   - Publisher and subscriber
 
-This will start an instance of Deno running the example.
-The application will attempt to connect to a `websocket_port` : `10000` where the Remote API plugin is expected to be running.  
+      ```sh
+      yarn start deno z_pub
+      yarn start deno z_sub
+      ```
 
-### Adding Typescript to your application
+   - Queryable and get
 
-The latest version of zenoh-ts library can be installed from npm:
+      ```sh
+      yarn start deno z_queryable
+      yarn start deno z_get
+      ```
 
-```sh
-npm install @eclipse-zenoh/zenoh-ts
-```
+      and many more
 
-See also example application in the [zenoh-ts/examples/chat](zenoh-ts/examples/chat/README.md)
+- Chat in browswer example
+
+  ```sh
+  yarn start chat
+  ```
+
+  The browser window with chat interface should open. Open another one with same address, press "Connect" buttons in both and see how they interact.
