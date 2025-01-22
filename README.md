@@ -24,7 +24,7 @@ The long-term plan is to use zenoh [Zenoh written in Rust](https://github.com/ec
 In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and it will need to undergo a fair
 amount of refactoring before that can happen.
 
-The latest version of zenoh-ts library can be installed from npm:
+The latest version of the zenoh-ts library can be installed from npm:
 
 ```sh
 npm install @eclipse-zenoh/zenoh-ts
@@ -32,7 +32,7 @@ npm install @eclipse-zenoh/zenoh-ts
 
 Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
-Library requires websocket connection to `zenohd` daemon through the `zenohd-plugin-remote-api` in the daemon. See corresponding section below.
+The library requires a websocket connection to the `zenohd` daemon through the `zenohd-plugin-remote-api` in the daemon. See the corresponding section below.
 
 ---
 
@@ -49,9 +49,9 @@ The `zenohd` router and its plugins should be built with the same Zenoh sources,
 same set of features. This requirement exists because the router and plugins share common Rust structures, and Rust doesn't guarantee
 ABI compatibility of the memory representation of these structures.
 
-Therefore one of the methods below is recommended to ensure that plugin and router are compatible.
+Therefore, one of the methods below is recommended to ensure that the plugin and router are compatible.
 
-The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_CONFIG.json5` with minimal necessary set of options to run the plugin. See also full set of available options, like ssl certificate settings in `zenoh-plugin-remote-api\config.json5`.
+The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_CONFIG.json5` with the minimal necessary set of options to run the plugin. See also the full set of available options, like SSL certificate settings in `zenoh-plugin-remote-api\config.json5`.
 
 1. Install the latest release of `zenohd` and `zenoh-plugin-remote-api`
 
@@ -72,13 +72,13 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    brew install zenoh-plugin-remote-api
    ```
 
-   Run the installed zenoh router with example config
+   Run the installed zenoh router with the example config
 
    ```sh
    zenohd --config EXAMPLE_CONFIG.json5
    ```
   
-   Expected output should be something similar to:
+   The expected output should be something similar to:
 
     ```txt
    zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
@@ -107,7 +107,7 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    cargo bin zenohd --config EXAMPLE_CONFIG.json5
    ```  
 
-   Expected output should be something similar to:
+   The expected output should be something similar to:
 
    ```txt
    zenohd: zenohd vc764bf9b built with rustc 1.75.0 (82e1608df 2023-12-21)
@@ -138,18 +138,18 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    yarn build
    ```
 
-   The result is placed into `zenoh-ts/dist` directory.
+   The result is placed into the `zenoh-ts/dist` directory.
 
    This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
 
 ### Build and run examples
 
-For simplicity the examples can be executed from `zenoh-ts` directory. You may also go directly to `zenoh-ts/examples`
+For simplicity, the examples can be executed from the `zenoh-ts` directory. You may also go directly to the `zenoh-ts/examples`
 directory and explore and run examples there.
 
-Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on localhost and websocket port is 10000.
+Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on localhost and the websocket port is 10000.
 
-To run example execute command `yarn start example_dir [example_name]`
+To run an example, execute the command `yarn start example_dir [example_name]`
 
 The following examples are available:
 
@@ -170,13 +170,13 @@ The following examples are available:
 
       and many more
 
-- Chat in browswer example
+- Chat in browser example
 
   ```sh
   yarn start chat
   ```
 
-  The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with chat interface should open. Open another one with same address, press "Connect" buttons in both and see how do they interact.
+  The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with the chat interface should open. Open another one with the same address, press the "Connect" buttons in both and see how they interact.
 
 ### Generating Documentation
 
