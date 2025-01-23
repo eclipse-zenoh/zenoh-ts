@@ -25,6 +25,7 @@ export class KeyExpr {
   /**
    * Class to represent a Key Expression in Zenoh
    */
+
   // not to be used directly 
   private _inner: string;
 
@@ -49,39 +50,44 @@ export class KeyExpr {
     return this._inner;
   }
 
-  /*
+  /**
   * Joins both sides, inserting a / in between them.
   * This should be your preferred method when concatenating path segments.
+  * @returns KeyExpr
   */
   join(other: IntoKeyExpr): KeyExpr {
     const key_expr = this.call_wasm<string>(other, join)
     return new KeyExpr(key_expr)
   }
 
-  /*
+  /**
   * Performs string concatenation and returns the result as a KeyExpr if possible.
+  * @returns KeyExpr
   */
   concat(other: IntoKeyExpr): KeyExpr {
     const key_expr = this.call_wasm<string>(other, concat)
     return new KeyExpr(key_expr)
   }
 
-  /*
+  /**
   * Returns true if this includes other, i.e. the set defined by this contains every key belonging to the set defined by other.
+  * @returns KeyExpr
   */
   includes(other: IntoKeyExpr): boolean {
     return this.call_wasm<boolean>(other, includes)
   }
 
-  /*
+  /**
   * Returns true if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the sets defined by self and other.
+  * @returns KeyExpr
   */
   intersects(other: IntoKeyExpr): boolean {
     return this.call_wasm<boolean>(other, intersects)
   }
 
-  /*
-  * Returns true if the keyexprs intersect, i.e. there exists at least one key which is contained in both of the sets defined by self and other.
+  /**
+  * Returns the canon form of a key_expr
+  * @returns KeyExpr
   */
   autocanonize(other: IntoKeyExpr): KeyExpr {
     const key_expr = this.call_wasm<String>(other, autocanonize)
