@@ -32,7 +32,7 @@
     "typescript": "^5.3.2"
   },
   "scripts": {
-    "wasm": "wasm-pack build ../zenoh-keyexpr-wasm --target bundler --out-dir ../zenoh-ts/src/key_expr",
+    "wasm": "cd ../zenoh-keyexpr-wasm && cargo install wasm-pack && wasm-pack build --target bundler --out-dir ../zenoh-ts/src/key_expr",
     "compile": "npx tsc && cp ./src/key_expr/*wasm* ./dist/key_expr/",
     "build": "npm run wasm && npm run compile",
     "release": "npx release-it",
