@@ -41,7 +41,6 @@ export class KeyExpr {
     // `new_key_expr` calls the `key_expr::OwnedKeyExpr::new` in Rust
     // if this function fails, the keyexpr is invalid, and an exception is thrown in Wasm and propagated here
     // else the Key Expression is valid and we can store the string it represents in the class
-
     new_key_expr(ke);
     this._inner = ke;
   }

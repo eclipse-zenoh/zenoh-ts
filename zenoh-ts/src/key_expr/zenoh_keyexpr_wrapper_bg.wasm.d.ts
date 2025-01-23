@@ -6,7 +6,10 @@ export function join(a: number, b: number, c: number, d: number, e: number): voi
 export function concat(a: number, b: number, c: number, d: number, e: number): void;
 export function includes(a: number, b: number, c: number, d: number, e: number): void;
 export function intersects(a: number, b: number, c: number, d: number, e: number): void;
+<<<<<<< HEAD
 export function autocanonize(a: number, b: number, c: number): void;
+=======
+>>>>>>> main
 export function __wbindgen_add_to_stack_pointer(a: number): number;
 export function __wbindgen_malloc(a: number, b: number): number;
 export function __wbindgen_realloc(a: number, b: number, c: number, d: number): number;
