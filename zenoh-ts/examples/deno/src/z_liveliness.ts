@@ -14,17 +14,14 @@
 import {
   Config, Session, KeyExpr, LivelinessToken
 } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  key: string,
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  const [key] = get_args();
-  console.log("Opening session...")
+  const args = new ParseArgs();
+
+  console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(key);
+  const key_expr = new KeyExpr(args.key);
   console.log("Declaring Liveliness token on ", key_expr.toString());
 
   const token: LivelinessToken = session.liveliness().declare_token(key_expr);
@@ -34,22 +31,27 @@ export async function main() {
   while (true) {
     await sleep(10000);
     token;
-    console.log("Tick")
+    console.log("Tick");
   }
 }
 
-function get_args(): [string] {
-  const args: Args = parseArgs(Deno.args);
-  let key_expr_str = "group1/zenoh-ts";
-  if (args.key != undefined) {
-    key_expr_str = args.key
-  }
-  return [key_expr_str]
-}
+class ParseArgs extends BaseParseArgs {
+  public key: string = "group1/zenoh-ts";
 
+  constructor() {
+    super();
+    this.parse();
+  }
+
+  public get_help(): Record<string, string> {
+    return {
+      key: "Key expression for the liveliness token"
+    };
+  }
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-main()
+main();
