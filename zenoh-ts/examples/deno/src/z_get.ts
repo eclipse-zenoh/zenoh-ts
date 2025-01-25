@@ -15,10 +15,10 @@
 import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 const { milliseconds } = Duration
-import { ParseArgs } from "./parse_args.ts";
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  let args = new Args();
+  let args = new ParseArgs();
 
   console.warn("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -68,7 +68,7 @@ export async function main() {
   console.warn("Get Finished");
 }
 
-class Args extends ParseArgs {
+class ParseArgs extends BaseParseArgs {
   public selector: string = "demo/example/**";
   public payload: string = "";
   public target: string = "BEST_MATCHING";
@@ -96,12 +96,14 @@ class Args extends ParseArgs {
     }
   }
 
-  static _help: Record<string, string> = { 
-    selector: "Selector for the query", 
-    payload: "Payload for the query", 
-    target: "Query target. Possible values: BEST_MATCHING, ALL, ALL_COMPLETE", 
-    timeout: "Timeout for the query" 
-  };
+  public get_help(): Record<string, string> {
+    return {
+      selector: "Selector for the query",
+      payload: "Payload for the query",
+      target: "Query target. Possible values: BEST_MATCHING, ALL, ALL_COMPLETE",
+      timeout: "Timeout for the query"
+    };
+  }
 }
 
 main();

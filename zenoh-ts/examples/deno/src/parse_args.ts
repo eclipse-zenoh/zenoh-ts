@@ -1,8 +1,9 @@
 import { parseArgs } from "@std/cli/parse-args";
 
-export class ParseArgs {
-  static _help: Record<string, string> = {}; // Help messages for the arguments in format { arg: help_message }
+export abstract class BaseParseArgs {
   [key: string]: any;
+
+  abstract get_help(): Record<string, string>;
 
   static fillTypesFromObject(obj: Record<string, any>): Record<string, any> {
     const types: Record<string, any> = {};
@@ -17,12 +18,13 @@ export class ParseArgs {
   }
 
   public parse() {
-    const types = (this.constructor as typeof ParseArgs).fillTypesFromObject(this);
+    const types = (this.constructor as typeof BaseParseArgs).fillTypesFromObject(this);
     const args = parseArgs(Deno.args, types);
     if (args.help) {
         console.log("Usage:");
         console.log("--help\n\tPrint this help message");
-        for (const [arg, help] of Object.entries((this.constructor as typeof ParseArgs)._help)) {
+        const help = this.get_help();
+        for (const [arg, helpMessage] of Object.entries(help)) {
             // find type of the argument
             let type = Object.keys(types).find(key => types[key].includes(arg));
             console.log(`--${arg} <${type}>`);
@@ -30,7 +32,7 @@ export class ParseArgs {
             if (default_value) {
                 console.log(`\t[default: ${default_value}]`);
             }
-            console.log(`\t${help}`);
+            console.log(`\t${helpMessage}`);
         }
         Deno.exit(0);
     }
