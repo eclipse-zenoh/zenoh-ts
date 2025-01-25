@@ -3062,7 +3062,7 @@ dependencies = [
 [[package]]
 name = "zenoh-keyexpr"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#d37fc807d3ac272f1d48243109f0b7886a34a321"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#eb3a7a47eaa8c771e88a114713550b993410674a"
 dependencies = [
  "getrandom",
  "hashbrown",
@@ -3344,7 +3344,7 @@ dependencies = [
 [[package]]
 name = "zenoh-result"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#d37fc807d3ac272f1d48243109f0b7886a34a321"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#eb3a7a47eaa8c771e88a114713550b993410674a"
 dependencies = [
  "anyhow",
 ]
