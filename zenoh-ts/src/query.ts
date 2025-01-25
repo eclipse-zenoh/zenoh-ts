@@ -276,6 +276,9 @@ export class Query {
     this.reply_ws(qr_variant);
   }
 
+  toString(): string {
+    return this.key_expr.toString() + "?" + this.parameters.toString()
+  }
 }
 
 
@@ -331,8 +334,6 @@ export class Parameters {
   static equals() {
     return new Parameters("");
   }
-
-
 
   /**
    * removes a key from the parameters

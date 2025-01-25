@@ -253,6 +253,15 @@ export class Session {
   }
 
   /**
+   * Creates a Key Expression
+   *
+   * @returns KeyExpr
+   */
+  declare_keyexpr(key_expr: IntoKeyExpr): KeyExpr {
+    return new KeyExpr(key_expr)
+  }
+
+  /**
    * Returns the Zenoh SessionInfo Object
    *
    * @returns SessionInfo

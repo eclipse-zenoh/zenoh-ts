@@ -26,6 +26,10 @@ import { Encoding } from "crypto";
 import { Receiver } from "./session.js";
 import { Parameters } from "./query.js";
 
+/**
+ * Target For Get queries
+ * @default BestMatching
+ */
 export enum QueryTarget {
   /// Let Zenoh find the BestMatching queryable capabale of serving the query.
   BestMatching,
