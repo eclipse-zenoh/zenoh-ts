@@ -70,7 +70,7 @@ export async function main() {
 
 class Args extends ParseArgs {
   public selector: string = "demo/example/**";
-  public payload?: string;
+  public payload: string = "";
   public target: string = "BEST_MATCHING";
   public timeout: number = 10000;
 
@@ -96,14 +96,10 @@ class Args extends ParseArgs {
     }
   }
 
-  static _types: Record<string, any> = { 
-    string: ["selector", "payload", "target"], 
-    number: ["timeout"],
-  };
   static _help: Record<string, string> = { 
     selector: "Selector for the query", 
     payload: "Payload for the query", 
-    target: "Query target", 
+    target: "Query target. Possible values: BEST_MATCHING, ALL, ALL_COMPLETE", 
     timeout: "Timeout for the query" 
   };
 }
