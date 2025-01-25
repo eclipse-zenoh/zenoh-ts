@@ -56,7 +56,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   join(other: IntoKeyExpr): KeyExpr {
-    const key_expr = this.call_wasm<string>(other, join)
+    const key_expr = join(this._inner, KeyExpr.into_string(other));
     return new KeyExpr(key_expr)
   }
 
@@ -65,7 +65,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   concat(other: IntoKeyExpr): KeyExpr {
-    const key_expr = this.call_wasm<string>(other, concat)
+    const key_expr = concat(this._inner, KeyExpr.into_string(other));
     return new KeyExpr(key_expr)
   }
 
@@ -74,7 +74,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   includes(other: IntoKeyExpr): boolean {
-    return this.call_wasm<boolean>(other, includes)
+    return includes(this._inner, KeyExpr.into_string(other))
   }
 
   /**
@@ -82,29 +82,25 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   intersects(other: IntoKeyExpr): boolean {
-    return this.call_wasm<boolean>(other, intersects)
+    return intersects(this._inner, KeyExpr.into_string(other))
   }
 
   /**
   * Returns the canon form of a key_expr
   * @returns KeyExpr
   */
-  autocanonize(other: IntoKeyExpr): KeyExpr {
-    const key_expr = this.call_wasm<String>(other, autocanonize)
+  static autocanonize(other: IntoKeyExpr): KeyExpr {
+    const key_expr = autocanonize(KeyExpr.into_string(other));
     return new KeyExpr(key_expr)
   }
 
-
-  private call_wasm<T>(other: IntoKeyExpr, fn: (expr1: string, expr2: string) => T): T {
-    let ke;
+  private static into_string(other: IntoKeyExpr): string {
     if (other instanceof KeyExpr) {
-      ke = other._inner;
+      return other._inner;
     } else if (other instanceof String) {
-      ke = other.toString();
+      return other.toString();
     } else {
-      ke = other;
+      return other;
     }
-    return fn(this._inner, ke)
   }
-
 }

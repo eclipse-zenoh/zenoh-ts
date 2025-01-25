@@ -26,7 +26,7 @@ class ParseArgs extends BaseParseArgs {
   }
 
   public get_keyexpr(): KeyExpr {
-    return new KeyExpr(this.key).autocanonize(this.key);
+    return KeyExpr.autocanonize(this.key);
   }
 
   public get_help(): Record<string, string> {
