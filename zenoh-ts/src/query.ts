@@ -316,6 +316,23 @@ export class Parameters {
     }
   }
 
+  /**
+   * Creates empty Parameters Structs
+   * @returns void
+   */
+  static empty() {
+    return new Parameters("");
+  }
+
+  /**
+   * Creates empty Parameters Structs
+   * @returns void
+   */
+  static equals() {
+    return new Parameters("");
+  }
+
+
 
   /**
    * removes a key from the parameters
@@ -510,7 +527,7 @@ export class Selector {
   }
 
   toString(): string {
-    if(this._parameters !=undefined) {
+    if (this._parameters != undefined) {
       return this._key_expr.toString() + "?" + this._parameters?.toString()
     } else {
       return this._key_expr.toString()
@@ -526,7 +543,7 @@ export class Selector {
     if (selector instanceof Selector) {
       this._key_expr = selector._key_expr;
       this._parameters = selector._parameters;
-      return ;
+      return;
     } else if (selector instanceof KeyExpr) {
       key_expr = selector;
     } else {

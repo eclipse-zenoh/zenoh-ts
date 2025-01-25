@@ -149,7 +149,7 @@ export enum ChannelType {
  * @ignore
  */
 export interface Handler {
-  size: number;
+  capacity: number;
   channel_type: ChannelType;
 }
 
@@ -158,10 +158,10 @@ export interface Handler {
   *   Semantic: will drop oldest data when full
  */
 export class RingChannel implements Handler {
-  size: number
+  capacity: number
   channel_type: ChannelType = ChannelType.Ring;
   constructor(size: number) {
-    this.size = size;
+    this.capacity = size;
   }
 }
 
@@ -170,10 +170,10 @@ export class RingChannel implements Handler {
   *   Semantic: will block incoming messages when full
  */
 export class FifoChannel implements Handler {
-  size: number
+  capacity: number
   channel_type: ChannelType = ChannelType.Fifo;
   constructor(size: number) {
-    this.size = size;
+    this.capacity = size;
   }
 }
 

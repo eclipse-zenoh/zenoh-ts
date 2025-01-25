@@ -317,11 +317,11 @@ export class Session {
     if (handler instanceof FifoChannel || handler instanceof RingChannel) {
       switch (handler.channel_type) {
         case ChannelType.Ring: {
-          handler_type = { "Ring": handler.size };
+          handler_type = { "Ring": handler.capacity };
           break;
         }
         case ChannelType.Fifo: {
-          handler_type = { "Fifo": handler.size };
+          handler_type = { "Fifo": handler.capacity };
           break;
         }
         default: {
