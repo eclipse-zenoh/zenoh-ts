@@ -13,23 +13,18 @@
 //
 
 import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
 import { Duration, Milliseconds } from 'typed-duration'
 const { milliseconds } = Duration
-
-interface Args {
-  selector: string,
-  payload?: string,
-  target: string,
-  timeout: number,
-}
+import { ParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  const [selector, payload, timeout, query_target] = get_args()
+  let args = new Args();
 
+  console.warn("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   // Callback get query
+  console.warn("Sending Query '" + args.selector + "'...");
 
   // const get_callback = async function (reply: Reply): Promise<void> {
   //   let resp = reply.result();
@@ -43,10 +38,13 @@ export async function main() {
   // };
 
   // await session.get("demo/example/**", get_callback);
-  console.warn("Start z_get")
 
-  // Poll receiever
-  const receiver: void | Receiver = session.get(selector, { payload: payload, timeout: timeout, target: query_target });
+  // Poll receiver
+  const receiver: void | Receiver = session.get(args.selector, { 
+    payload: args.payload, 
+    timeout: args.get_timeout(), 
+    target: args.get_query_target() 
+  });
   if (!(receiver instanceof Receiver)) {
     return // Return in case of callback get query
   }
@@ -70,43 +68,44 @@ export async function main() {
   console.warn("Get Finished");
 }
 
+class Args extends ParseArgs {
+  public selector: string = "demo/example/**";
+  public payload?: string;
+  public target: string = "BEST_MATCHING";
+  public timeout: number = 10000;
 
+  constructor() {
+    super();
+    this.parse();
+  }
 
-// Convienence function to parse command line arguments
-function get_args(): [string, string | undefined, Milliseconds, QueryTarget] {
-  const args: Args = parseArgs(Deno.args);
-  let selector = "demo/example/**";
-  let payload = undefined;
-  let target = "BEST_MATCHING";
-  let timeout: Milliseconds = milliseconds.of(10000)
-  if (args.selector != undefined) {
-    selector = args.selector
+  public get_timeout(): Milliseconds {
+    return milliseconds.of(this.timeout);
   }
-  if (args.payload != undefined) {
-    payload = args.payload
+
+  public get_query_target(): QueryTarget {
+    switch (this.target) {
+      case "BEST_MATCHING":
+        return QueryTarget.BestMatching;
+      case "ALL":
+        return QueryTarget.All;
+      case "ALL_COMPLETE":
+        return QueryTarget.AllComplete;
+      default:
+        return QueryTarget.BestMatching;
+    }
   }
-  if (args.timeout != undefined) {
-    timeout = milliseconds.of(args.timeout)
-  }
-  if (args.target != undefined) {
-    target = args.target
-  }
-  let query_target;
-  switch (target) {
-    case "BEST_MATCHING":
-      query_target = QueryTarget.BestMatching
-      break;
-    case "ALL":
-      query_target = QueryTarget.All
-      break;
-    case "ALL_COMPLETE":
-      query_target = QueryTarget.AllComplete
-      break;
-    default:
-      query_target = QueryTarget.BestMatching
-  }
-  return [selector, payload, timeout, query_target]
+
+  static _types: Record<string, any> = { 
+    string: ["selector", "payload", "target"], 
+    number: ["timeout"],
+  };
+  static _help: Record<string, string> = { 
+    selector: "Selector for the query", 
+    payload: "Payload for the query", 
+    target: "Query target", 
+    timeout: "Timeout for the query" 
+  };
 }
 
-
-main()
+main();
