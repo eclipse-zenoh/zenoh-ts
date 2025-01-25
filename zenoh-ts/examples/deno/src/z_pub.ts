@@ -25,6 +25,10 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
+  public get_keyexpr(): KeyExpr {
+    return new KeyExpr(this.key).autocanonize(this.key);
+  }
+
   public get_help(): Record<string, string> {
     return {
       payload: "Payload for the publication",
@@ -40,7 +44,7 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = new KeyExpr(args.key);
+  const key_expr = args.get_keyexpr();
   const publisher: Publisher = session.declare_publisher(
     key_expr,
     {
