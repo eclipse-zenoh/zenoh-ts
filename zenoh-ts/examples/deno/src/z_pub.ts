@@ -15,29 +15,6 @@
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
-class ParseArgs extends BaseParseArgs {
-  public payload: string = "Pub from Typescript!";
-  public key: string = "demo/example/zenoh-ts-pub";
-  public attach: string = "";
-
-  constructor() {
-    super();
-    this.parse();
-  }
-
-  public get_keyexpr(): KeyExpr {
-    return KeyExpr.autocanonize(this.key);
-  }
-
-  public get_help(): Record<string, string> {
-    return {
-      payload: "Payload for the publication",
-      key: "Key expression for the publication",
-      attach: "Attachment for the publication"
-    };
-  }
-}
-
 export async function main() {
   const args = new ParseArgs();
 
@@ -63,6 +40,29 @@ export async function main() {
     console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
     publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
     await sleep(1000);
+  }
+}
+
+class ParseArgs extends BaseParseArgs {
+  public payload: string = "Pub from Typescript!";
+  public key: string = "demo/example/zenoh-ts-pub";
+  public attach: string = "";
+
+  constructor() {
+    super();
+    this.parse();
+  }
+
+  public get_keyexpr(): KeyExpr {
+    return KeyExpr.autocanonize(this.key);
+  }
+
+  public get_help(): Record<string, string> {
+    return {
+      payload: "Payload for the publication",
+      key: "Key expression for the publication",
+      attach: "Attachment for the publication"
+    };
   }
 }
 

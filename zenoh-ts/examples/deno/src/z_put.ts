@@ -13,36 +13,31 @@
 //
 
 import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  payload: string,
-  key: string
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  const [key, payload] = get_args();
-
+  const args = new ParseArgs();
   console.warn('Running Zenoh Put !');
 
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  session.put(key, payload);
-
+  session.put(args.key, args.payload);
 }
 
-function get_args(): [string, string] {
-  const args: Args = parseArgs(Deno.args);
-  let key_expr_str = "demo/example/zenoh-ts-put";
-  let payload = "Put from Typescript!";
+class ParseArgs extends BaseParseArgs {
+  public payload: string = "Put from Typescript!";
+  public key: string = "demo/example/zenoh-ts-put";
 
-  if (args.key != undefined) {
-    key_expr_str = args.key
-  }
-  if (args.payload != undefined) {
-    payload = args.payload
+  constructor() {
+    super();
+    this.parse();
   }
 
-  return [key_expr_str, payload]
+  public get_help(): Record<string, string> {
+    return {
+      payload: "Payload for the put operation",
+      key: "Key expression for the put operation"
+    };
+  }
 }
 
-main()
+main();
