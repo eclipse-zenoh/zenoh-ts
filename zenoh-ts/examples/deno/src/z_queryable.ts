@@ -13,22 +13,16 @@
 //
 
 import { Config, KeyExpr, Query, Queryable, Session, ZBytes } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  key: string,
-  payload?: string,
-  complete: boolean
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
+  const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const [key, _payload, complete] = get_args()
 
-  const key_expr = new KeyExpr(key);
+  const key_expr = new KeyExpr(args.key);
   console.warn("Declare Queryable on KeyExpr:", key_expr.toString());
 
-  const response = "Queryable from Typescript!";
+  const response = args.payload;
 
   // Declaring a queryable with a callback
   // function callback(query: Query) {
@@ -56,14 +50,13 @@ export async function main() {
   // queryable_cb.undeclare()
 
 
-  // Declaring a Queryable with a handler
+
   const queryable: Queryable = session.declare_queryable(key_expr, {
-    complete: complete,
+    complete: args.complete,
   });
 
   let query = await queryable.receive();
   while (query instanceof Query) {
-
     const zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == null) {
@@ -83,24 +76,24 @@ export async function main() {
   }
 }
 
-// Convienence function to parse command line arguments
-function get_args(): [string, string | undefined, boolean] {
-  const args: Args = parseArgs(Deno.args);
+class ParseArgs extends BaseParseArgs {
+  public key: string = "demo/example/zenoh-ts-queryable";
+  public payload: string = "Querier Get from Zenoh-ts!";
+  public complete: boolean = true;
 
-  let key_expr = "demo/example/zenoh-ts-queryable";
-  let payload = "Querier Get from Zenoh-ts!";
-  let complete = true;
+  constructor() {
+    super();
+    this.parse();
+  }
 
-  if (args.key != undefined) {
-    key_expr = args.key;
+  public get_help(): Record<string, string> {
+    return {
+      key: "Key expression for the queryable",
+      payload: "Payload for the queryable",
+      complete: "Complete flag for the queryable"
+    };
   }
-  if (args.payload != undefined) {
-    payload = args.payload
-  }
-  if (args.complete != undefined) {
-    complete = args.complete
-  }
-  return [key_expr, payload, complete]
 }
+
 
 main()
