@@ -16,17 +16,13 @@ import {
   RingChannel, deserialize_string, Config, Subscriber, Session, KeyExpr
 } from "@eclipse-zenoh/zenoh-ts";
 import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  key: string;
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  const [key] = get_args();
-
-  console.log("Starting zenoh Subscriber ! ")
+  const args = new ParseArgs();
+  console.log("Starting zenoh Subscriber!");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(key);
+  const key_expr = new KeyExpr(args.key);
 
   const poll_subscriber: Subscriber = session.declare_subscriber(key_expr, new RingChannel(10));
 
@@ -45,13 +41,19 @@ export async function main() {
   poll_subscriber.undeclare();
 }
 
-function get_args(): [string] {
-  const args: Args = parseArgs(Deno.args);
-  let key_expr_str = "demo/example/**";
-  if (args.key != undefined) {
-    key_expr_str = args.key
+class ParseArgs extends BaseParseArgs {
+  public key: string = "demo/example/**";
+
+  constructor() {
+    super();
+    this.parse();
   }
-  return [key_expr_str]
+
+  public get_help(): Record<string, string> {
+    return {
+      key: "Key expression for the subscriber"
+    };
+  }
 }
 
-main()
+main();
