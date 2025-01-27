@@ -357,6 +357,7 @@ pub enum ControlMsg {
         payload: Option<B64String>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        handler: HandlerChannel,
     },
 
     // Liveliness

@@ -18,6 +18,7 @@ import { ControlMsg } from "./interface/ControlMsg.js"
 import { SimpleChannel } from "channel-ts";
 import { ReplyWS } from "./interface/ReplyWS.js";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
+import { HandlerChannel } from "./interface/HandlerChannel.js";
 
 export class RemoteQuerier {
     private querier_id: UUIDv4;
@@ -41,6 +42,7 @@ export class RemoteQuerier {
     }
 
     get(
+        _handler_type: HandlerChannel,
         _encoding?: string,
         _parameters?: string,
         _attachment?: Array<number>,
@@ -66,6 +68,7 @@ export class RemoteQuerier {
                 encoding: _encoding,
                 payload: payload,
                 attachment: attachment,
+                handler: _handler_type
             }
         };
 

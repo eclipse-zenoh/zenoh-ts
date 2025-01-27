@@ -25,6 +25,7 @@ import { encode as b64_str_from_bytes, decode as b64_bytes_from_str, } from "bas
 /**
  * Kinds of Samples that can be received from Zenoh
  * @enum
+ * @default PUT
  */
 export enum SampleKind {
   PUT = "PUT",
@@ -285,7 +286,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 
   let key_exr = new KeyExpr(sample_ws.key_expr);
 
-  let encoding = Encoding.from_str(sample_ws.encoding);
+  let encoding = Encoding.from_string(sample_ws.encoding);
 
   let priority = priority_from_int(sample_ws.priority);
 

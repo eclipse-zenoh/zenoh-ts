@@ -124,7 +124,7 @@ export function QueryWS_to_Query(
     attachment = new ZBytes(query_ws.attachment);
   }
   if (query_ws.encoding != null) {
-    encoding = Encoding.from_str(query_ws.encoding);
+    encoding = Encoding.from_string(query_ws.encoding);
   }
 
   return new Query(
@@ -449,7 +449,7 @@ export class ReplyError {
     */
   constructor(reply_err_ws: ReplyErrorWS) {
     let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(reply_err_ws.payload)));
-    let encoding = Encoding.from_str(reply_err_ws.encoding);
+    let encoding = Encoding.from_string(reply_err_ws.encoding);
     this._encoding = encoding;
     this._payload = payload;
   }

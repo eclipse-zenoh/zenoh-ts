@@ -80,7 +80,7 @@ export class Encoding {
     this._schema = str_rep;
   }
 
-  with_schema(input: string): Encoding {
+  with_schema(input: string){
     this._schema = input;
   }
 
@@ -91,7 +91,7 @@ export class Encoding {
   toString(): string {
     return this._schema;
   }
-  static from_strings(input: string): Encoding {
+  static from_string(input: string): Encoding {
     return new Encoding(input);
   }
 

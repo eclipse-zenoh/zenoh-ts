@@ -27,6 +27,7 @@ import {
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
+import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -177,6 +178,36 @@ export class FifoChannel implements Handler {
   }
 }
 
+/** 
+ * @ignore internal function for handlers
+*/
+export function check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
+  [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
+
+  let handler_type: HandlerChannel;
+  let callback = undefined;
+  if (handler instanceof FifoChannel || handler instanceof RingChannel) {
+    switch (handler.channel_type) {
+      case ChannelType.Ring: {
+        handler_type = { "Ring": handler.capacity };
+        break;
+      }
+      case ChannelType.Fifo: {
+        handler_type = { "Fifo": handler.capacity };
+        break;
+      }
+      default: {
+        throw "channel type undetermined"
+      }
+    }
+  } else {
+    handler_type = { "Fifo": 256 };
+    callback = handler;
+  }
+  return [callback, handler_type]
+}
+
+
 // ██████  ██    ██ ██████  ██      ██ ███████ ██   ██ ███████ ██████
 // ██   ██ ██    ██ ██   ██ ██      ██ ██      ██   ██ ██      ██   ██
 // ██████  ██    ██ ██████  ██      ██ ███████ ███████ █████   ██████
@@ -288,7 +319,7 @@ export class Publisher {
     }
 
     if (put_options?.encoding != null) {
-      _encoding = Encoding.intoEncoding(put_options.encoding);
+      _encoding = Encoding.from_string(put_options.encoding.toString());
     } else {
       _encoding = Encoding.default();
     }
@@ -361,7 +392,7 @@ export class Publisher {
     if (delete_options.timestamp != null) {
       _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
     }
-    
+
     return this._remote_publisher.delete(
       _attachment,
       _timestamp
