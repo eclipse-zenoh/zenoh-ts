@@ -8,9 +8,9 @@
     "clean": "rm -rf ./node_modules",
     "verify": "deno check src",
     "_list_examples": "sh -c 'ls src/*.ts | sed -e \"s/src\\///\" -e \"s/\\.ts//\"'",
-    "_run_example": "sh -c 'deno run -A --no-prompt src/$0.ts'",
+    "_run_example": "sh -c 'deno run -A --no-prompt src/$0.ts $@'",
     "_build": "sh -c '[ ! -d \"node_modules\" ] && yarn clean && yarn install || true'",
-    "start": "sh -c '[ -z \"$0\" ] || [ ! -f \"src/$0.ts\" ] && echo \"Available examples:\" && yarn _list_examples || (yarn _build && yarn _run_example $0)'"
+    "start": "sh -c '[ -z \"$0\" ] || [ ! -f \"src/$0.ts\" ] && echo \"Available examples:\" && yarn _list_examples || (yarn _build && yarn _run_example \"$0\" \"$@\")'"
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",

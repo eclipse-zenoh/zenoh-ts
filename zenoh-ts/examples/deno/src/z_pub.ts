@@ -13,22 +13,15 @@
 //
 
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  payload: string,
-  key: string
-  attach: string
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
+  const args = new ParseArgs();
 
-  const [key, payload, attach] = get_args();
-
-  console.log("Opening session...")
+  console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = new KeyExpr(key);
+  const key_expr = args.get_keyexpr();
   const publisher: Publisher = session.declare_publisher(
     key_expr,
     {
@@ -41,37 +34,40 @@ export async function main() {
   );
 
   for (let idx = 0; idx < Number.MAX_VALUE; idx++) {
-    const buf = `[${idx}] ${payload}`;
+    const buf = `[${idx}] ${args.payload}`;
 
     console.warn("Block statement execution no : " + idx);
     console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
-    publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: attach });
+    publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
     await sleep(1000);
   }
 }
 
-function get_args(): [string, string, string | undefined] {
-  const args: Args = parseArgs(Deno.args);
-  let key_expr_str = "demo/example/zenoh-ts-pub";
-  let payload = "Pub from Typescript!";
-  let attach = undefined;
+class ParseArgs extends BaseParseArgs {
+  public payload: string = "Pub from Typescript!";
+  public key: string = "demo/example/zenoh-ts-pub";
+  public attach: string = "";
 
-  if (args.key != undefined) {
-    key_expr_str = args.key
-  }
-  if (args.payload != undefined) {
-    payload = args.payload
-  }
-  if (args.attach != undefined) {
-    attach = args.attach
+  constructor() {
+    super();
+    this.parse();
   }
 
-  return [key_expr_str, payload, attach]
+  public get_keyexpr(): KeyExpr {
+    return KeyExpr.autocanonize(this.key);
+  }
+
+  public get_help(): Record<string, string> {
+    return {
+      payload: "Payload for the publication",
+      key: "Key expression for the publication",
+      attach: "Attachment for the publication"
+    };
+  }
 }
-
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-main()
+main();

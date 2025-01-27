@@ -19,24 +19,19 @@ import {
   ReplyError
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
-import { parseArgs } from "@std/cli/parse-args";
+import { BaseParseArgs } from "./parse_args.ts";
 
 const { milliseconds } = Duration
 
-interface Args {
-  key: string;
-  timeout: number
-}
-
 export async function main() {
-  const [key_expr_str, timeout] = get_args();
+  const args = new ParseArgs();
 
-  console.log("Opening session...")
+  console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(key_expr_str);
+  const key_expr = new KeyExpr(args.key);
   console.log("Sending Liveliness Query '", key_expr.toString(), "'");
 
-  const receiver: Receiver = session.liveliness().get(key_expr, { timeout: timeout }) as Receiver;
+  const receiver: Receiver = session.liveliness().get(key_expr, { timeout: args.get_timeout() }) as Receiver;
 
   let reply = await receiver.receive();
 
@@ -58,18 +53,25 @@ export async function main() {
   console.warn("End Liveliness query");
 }
 
+class ParseArgs extends BaseParseArgs {
+  public key: string = "group1/**";
+  public timeout: number = 10000;
 
-function get_args(): [string, Milliseconds] {
-  const args: Args = parseArgs(Deno.args);
-  let key_expr_str = "group1/**";
-  let timeout: Milliseconds = milliseconds.of(10000)
-  if (args.key != undefined) {
-    key_expr_str = args.key
+  constructor() {
+    super();
+    this.parse();
   }
-  if (args.timeout != undefined) {
-    timeout = milliseconds.of(args.timeout)
+
+  public get_timeout(): Milliseconds {
+    return milliseconds.of(this.timeout);
   }
-  return [key_expr_str, timeout]
+
+  public get_help(): Record<string, string> {
+    return {
+      key: "Key expression for the liveliness query",
+      timeout: "Timeout for the liveliness query"
+    };
+  }
 }
 
-main()
+main();
