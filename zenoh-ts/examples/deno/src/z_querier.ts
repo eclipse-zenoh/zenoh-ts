@@ -14,32 +14,23 @@
 
 import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget, Selector, } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
-import { parseArgs } from "@std/cli/parse-args";
+import { BaseParseArgs } from "./parse_args.ts";
 
 const { milliseconds } = Duration
 
-interface Args {
-  selector: string,
-  payload?: string,
-  target: string,
-  timeout: number,
-}
-
 export async function main() {
+  const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const [selector, _payload, timeout, query_target] = get_args()
 
-  const querier = session.declare_querier(selector.key_expr(),
-    {
-      target: query_target,
-      timeout: timeout,
-    }
-  );
+  const querier = session.declare_querier(args.get_selector().key_expr(), {
+    target: args.get_query_target(),
+    timeout: args.get_timeout(),
+  });
 
   for (let i = 0; i < 1000; i++) {
-    await sleep(1000)
-    const payload = "[" + i + "]" + _payload;
-    const receiver = querier.get(selector.parameters(), { payload: payload }) as Receiver;
+    await sleep(1000);
+    const payload = `[${i}] ${args.payload}`;
+    const receiver = querier.get(args.get_selector().parameters(), { payload: payload }) as Receiver;
 
     let reply = await receiver.receive();
 
@@ -62,42 +53,49 @@ export async function main() {
   }
 }
 
-// Convienence function to parse command line arguments
-function get_args(): [Selector, string | undefined, Milliseconds, QueryTarget] {
-  const args: Args = parseArgs(Deno.args);
-  let selector = new Selector("demo/example/**");
-  let payload = "Querier Get from Zenoh-ts!";
-  let target = "BEST_MATCHING";
-  let timeout: Milliseconds = milliseconds.of(10000)
-  if (args.selector != undefined) {
-    const [key_expr, parameters] = args.selector.split("?")
-    selector = new Selector(key_expr, parameters);
+class ParseArgs extends BaseParseArgs {
+  public selector: string = "demo/example/**";
+  public payload: string = "Querier Get from Zenoh-ts!";
+  public target: string = "BEST_MATCHING";
+  public timeout: number = 10000;
+
+  constructor() {
+    super();
+    this.parse();
   }
-  if (args.payload != undefined) {
-    payload = args.payload
+
+  public get_help(): Record<string, string> {
+    return {
+      selector: "Selector for the query",
+      payload: "Payload for the query",
+      target: "Target for the query",
+      timeout: "Timeout for the query in milliseconds"
+    };
   }
-  if (args.timeout != undefined) {
-    timeout = milliseconds.of(args.timeout)
+
+  public get_selector(): Selector {
+    const [key_expr, parameters] = this.selector.split("?");
+    return new Selector(key_expr, parameters);
   }
-  if (args.target != undefined) {
-    target = args.target
+
+  public get_query_target(): QueryTarget {
+    switch (this.target) {
+      case "BEST_MATCHING":
+        return QueryTarget.BestMatching;
+      case "ALL":
+        return QueryTarget.All;
+      case "ALL_COMPLETE":
+        return QueryTarget.AllComplete;
+      default:
+        return QueryTarget.BestMatching;
+    }
   }
-  let query_target;
-  switch (target) {
-    case "BEST_MATCHING":
-      query_target = QueryTarget.BestMatching
-      break;
-    case "ALL":
-      query_target = QueryTarget.All
-      break;
-    case "ALL_COMPLETE":
-      query_target = QueryTarget.AllComplete
-      break;
-    default:
-      query_target = QueryTarget.BestMatching
+
+  public get_timeout(): Milliseconds {
+    return milliseconds.of(this.timeout);
   }
-  return [selector, payload, timeout, query_target]
 }
+
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

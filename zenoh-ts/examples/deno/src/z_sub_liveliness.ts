@@ -16,24 +16,16 @@ import {
   Config, Subscriber, Session, KeyExpr,
   SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
-
-interface Args {
-  key: string,
-  history: boolean
-}
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
-  const [key, history] = get_args();
-
-
-  console.log("Opening session...")
+  const args = new ParseArgs();
+  console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(key);
+  const key_expr = new KeyExpr(args.key);
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
-  const liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: history });
-
+  const liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: args.history });
 
   let sample = await liveliness_subscriber.receive();
   while (sample != undefined) {
@@ -42,14 +34,14 @@ export async function main() {
         console.log!(
           ">> [LivelinessSubscriber] New alive token ",
           sample.keyexpr().toString()
-        )
+        );
         break;
       }
       case SampleKind.DELETE: {
         console.log!(
           ">> [LivelinessSubscriber] Dropped token ",
           sample.keyexpr().toString()
-        )
+        );
         break;
       }
     }
@@ -58,23 +50,21 @@ export async function main() {
   liveliness_subscriber.undeclare();
 }
 
-// Convienence function to parse command line arguments
-function get_args(): [string, boolean] {
-  const args: Args = parseArgs(Deno.args);
+class ParseArgs extends BaseParseArgs {
+  public key: string = "group1/**";
+  public history: boolean = true;
 
-  let key_expr = "group1/**";
-  let history = true;
-
-  if (args.key != undefined) {
-    key_expr = args.key;
+  constructor() {
+    super();
+    this.parse();
   }
 
-  if (args.history != undefined) {
-    history = args.history
+  public get_help(): Record<string, string> {
+    return {
+      key: "Key expression for the liveliness subscriber",
+      history: "History flag for the liveliness subscriber"
+    };
   }
-  return [key_expr, history]
 }
-
-
 
 main();

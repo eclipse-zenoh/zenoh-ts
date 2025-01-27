@@ -28,3 +28,8 @@ export function includes(ke1: string, ke2: string): boolean;
 * @returns {boolean}
 */
 export function intersects(ke1: string, ke2: string): boolean;
+/**
+* @param {string} ke
+* @returns {string}
+*/
+export function autocanonize(ke: string): string;
