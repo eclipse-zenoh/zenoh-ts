@@ -97,7 +97,8 @@ export class ChatSession {
 			let resp = reply.result();
 			if (resp instanceof Sample) {
 				let payload = deserialize_string(resp.payload().to_bytes());
-				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
+				let attachment = deserialize_string(resp.attachment()?.to_bytes() ?? Uint8Array.from([]));
+				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}, from user: ${attachment}`);
 				this.messages = JSON.parse(payload);
 			}
 		} else {
@@ -108,7 +109,9 @@ export class ChatSession {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
-				query.reply(KEYEXPR_CHAT_MESSAGES, response);
+				query.reply(KEYEXPR_CHAT_MESSAGES, response, {
+					attachment: this.user.username
+				});
 			},
 			complete: true
 		});

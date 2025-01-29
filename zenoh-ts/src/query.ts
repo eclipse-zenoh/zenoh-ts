@@ -26,8 +26,10 @@ import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 // API
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import { Sample, Sample_from_SampleWS } from "./sample.js";
+import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, Sample_from_SampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
+import { Timestamp } from "./timestamp.js";
+import { B64String } from "./remote_api/interface/B64String.js";
 
 
 
@@ -146,6 +148,51 @@ export function QueryWS_to_Query(
 //     ▀▀
 
 /**
+ * Options for a Query::reply operation
+ * @prop {Encoding=} encoding - Encoding type of payload 
+ * @prop {Priority=} priority - priority of the written data
+ * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
+ * @prop {boolean=} express  - Express 
+ * @prop {Timestamp=} timestamp - Timestamp of the message
+ * @prop {ConsolidationMode=} consolidation - consolidation mode
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+*/
+export interface ReplyOptions {
+  encoding?: Encoding,
+  priority?: Priority,
+  congestion_control?: CongestionControl,
+  express?: boolean,
+  timestamp?: Timestamp;
+  attachment?: IntoZBytes
+}
+
+/**
+ * Options for a Query::reply_err operation
+ * @prop {Encoding=} encoding - Encoding type of payload
+ */
+export interface ReplyErrOptions {
+  encoding?: Encoding,
+}
+
+/**
+ * Options for a Query::reply_del operation
+ * @prop {Priority=} priority - priority of the written data
+ * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
+ * @prop {boolean=} express  - Express
+ * @prop {Timestamp=} timestamp - Timestamp of the message
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {ConsolidationMode=} consolidation - consolidation mode
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ */
+export interface ReplyDelOptions {
+  priority?: Priority,
+  congestion_control?: CongestionControl,
+  express?: boolean,
+  timestamp?: Timestamp;
+  attachment?: IntoZBytes
+}
+
+/**
  * Query Class to handle  
  */
 export class Query {
@@ -236,16 +283,26 @@ export class Query {
     * Sends a Reply to for Query
     * @param {IntoKeyExpr} key_expr 
     * @param {IntoZBytes} payload
+    * @param {ReplyOptions=} options
     * @returns void
     */
-  reply(key_expr: IntoKeyExpr, payload: IntoZBytes): void {
+  reply(key_expr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions): void {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
     let z_bytes: ZBytes = new ZBytes(payload);
+    let opt_attachment: B64String | null = null;
+    if (options?.attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(new ZBytes(options?.attachment).to_bytes());
+    }
     let qr_variant: QueryReplyVariant = {
       Reply: {
         key_expr: _key_expr.toString(),
         payload: b64_str_from_bytes(z_bytes.to_bytes()),
-
+        encoding: options?.encoding?.toString() ?? null,
+        priority: priority_to_int(options?.priority),
+        congestion_control: congestion_control_to_int(options?.congestion_control),
+        express: options?.express ?? false,
+        timestamp: options?.timestamp?.toString() ?? null,
+        attachment: opt_attachment
       },
     };
     this.reply_ws(qr_variant);
@@ -253,12 +310,16 @@ export class Query {
   /**
   * Sends an Error Reply to a query
   * @param {IntoZBytes} payload
+  * @param {ReplyErrOptions=} options
   * @returns void
   */
-  reply_err(payload: IntoZBytes): void {
+  reply_err(payload: IntoZBytes, options?: ReplyErrOptions): void {
     let z_bytes: ZBytes = new ZBytes(payload);
     let qr_variant: QueryReplyVariant = {
-      ReplyErr: { payload: b64_str_from_bytes(z_bytes.to_bytes()) },
+      ReplyErr: {
+        payload: b64_str_from_bytes(z_bytes.to_bytes()),
+        encoding: options?.encoding?.toString() ?? null,
+      },
     };
     this.reply_ws(qr_variant);
   }
@@ -266,12 +327,24 @@ export class Query {
   /**
     * Sends an Error Reply to a query
     * @param key_expr IntoKeyExpr
+    * @param {ReplyDelOptions=} options
     * @returns void
     */
-  reply_del(key_expr: IntoKeyExpr): void {
+  reply_del(key_expr: IntoKeyExpr, options?: ReplyDelOptions): void {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
+    let opt_attachment : B64String | null = null;
+    if (options?.attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(new ZBytes(options?.attachment).to_bytes());
+    }
     let qr_variant: QueryReplyVariant = {
-      ReplyDelete: { key_expr: _key_expr.toString() },
+      ReplyDelete: {
+        key_expr: _key_expr.toString(),
+        priority: priority_to_int(options?.priority),
+        congestion_control: congestion_control_to_int(options?.congestion_control),
+        express: options?.express ?? false,
+        timestamp: options?.timestamp?.toString() ?? null,
+        attachment: opt_attachment
+      },
     };
     this.reply_ws(qr_variant);
   }
