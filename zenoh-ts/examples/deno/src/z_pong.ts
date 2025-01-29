@@ -29,7 +29,7 @@ export async function main() {
     pub.put(sample.payload());
   };
 
-  session.declare_subscriber("test/pong", subscriber_callback);
+  session.declare_subscriber("test/pong", { handler: subscriber_callback } );
 
   let count = 0;
   while (true) {
