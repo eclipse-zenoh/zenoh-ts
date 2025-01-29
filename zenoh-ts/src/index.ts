@@ -14,7 +14,8 @@
 
 // API Layer Files
 import { KeyExpr, IntoKeyExpr } from "./key_expr.js";
-import { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int, deserialize_float, deserialize_string } from "./z_bytes.js";
+import { ZBytes, IntoZBytes } from "./z_bytes.js";
+import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, ZType, ZPrimitiveType, ZArrayType, ZMapType, ZObjectType, zserialize, zdeserialize } from "./ext/serialization.js"
 import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample.js";
 import { Publisher, Subscriber, FifoChannel, RingChannel } from "./pubsub.js";
 import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query.js";
@@ -30,7 +31,8 @@ import { Duration } from 'typed-duration'
 
 // Exports
 export { KeyExpr, IntoKeyExpr };
-export { ZBytes, IntoZBytes, deserialize_bool, deserialize_uint, deserialize_int, deserialize_float, deserialize_string };
+export { ZBytes, IntoZBytes };
+export { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, ZType, ZPrimitiveType, ZArrayType, ZMapType, ZObjectType, zserialize, zdeserialize }
 export { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind };
 export { Publisher, Subscriber, FifoChannel, RingChannel };
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector };

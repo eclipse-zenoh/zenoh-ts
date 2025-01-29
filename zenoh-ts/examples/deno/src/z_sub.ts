@@ -13,7 +13,7 @@
 //
 
 import {
-  RingChannel, deserialize_string, Config, Subscriber, Session, KeyExpr
+  RingChannel, Config, Subscriber, Session, KeyExpr
 } from "@eclipse-zenoh/zenoh-ts";
 import { parseArgs } from "@std/cli/parse-args";
 import { BaseParseArgs } from "./parse_args.ts";
@@ -33,7 +33,7 @@ export async function main() {
       ">> [Subscriber] Received " +
       sample.kind() + " ('" +
       sample.keyexpr() + "': '" +
-      sample.payload().deserialize(deserialize_string) + "')",
+      sample.payload().to_string() + "')",
     );
     sample = await poll_subscriber.receive();
   }

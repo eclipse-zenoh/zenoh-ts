@@ -13,7 +13,7 @@
 //
 
 import {
-  deserialize_string, Sample, Config, Session, KeyExpr,
+  Sample, Config, Session, KeyExpr,
   Receiver,
   RecvErr,
   ReplyError
@@ -45,7 +45,7 @@ export async function main() {
         console.warn(">> Alive token ('", sample.keyexpr(), ")");
       } else {
         const reply_error: ReplyError = resp;
-        console.warn(">> Received (ERROR: '", reply_error.payload().deserialize(deserialize_string), "')");
+        console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
       }
     }
     reply = await receiver.receive();
