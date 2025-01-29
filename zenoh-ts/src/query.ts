@@ -26,8 +26,9 @@ import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 // API
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import { Sample, Sample_from_SampleWS } from "./sample.js";
+import { CongestionControl, Priority, Sample, Sample_from_SampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
+import { Timestamp } from "./timestamp.js";
 
 
 
@@ -144,6 +145,51 @@ export function QueryWS_to_Query(
 // ██ ▄▄ ██ ██    ██ ██      ██   ██    ██
 //  ██████   ██████  ███████ ██   ██    ██
 //     ▀▀
+
+/**
+ * Options for a Query::reply operation
+ * @prop {Encoding=} encoding - Encoding type of payload 
+ * @prop {Priority=} priority - priority of the written data
+ * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
+ * @prop {boolean=} express  - Express 
+ * @prop {Timestamp=} timestamp - Timestamp of the message
+ * @prop {ConsolidationMode=} consolidation - consolidation mode
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+*/
+export interface ReplyOptions {
+  encoding?: Encoding,
+  priority?: Priority,
+  congestion_control?: CongestionControl,
+  express?: boolean,
+  timestamp?: Timestamp;
+  attachment?: IntoZBytes
+}
+
+/**
+ * Options for a Query::reply_err operation
+ * @prop {Encoding=} encoding - Encoding type of payload
+ */
+export interface ReplyErrOptions {
+  encoding?: Encoding,
+}
+
+/**
+ * Options for a Query::reply_del operation
+ * @prop {Priority=} priority - priority of the written data
+ * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
+ * @prop {boolean=} express  - Express
+ * @prop {Timestamp=} timestamp - Timestamp of the message
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {ConsolidationMode=} consolidation - consolidation mode
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ */
+export interface ReplyDelOptions {
+  priority?: Priority,
+  congestion_control?: CongestionControl,
+  express?: boolean,
+  timestamp?: Timestamp;
+  attachment?: IntoZBytes
+}
 
 /**
  * Query Class to handle  
@@ -268,7 +314,9 @@ export class Query {
     * @param key_expr IntoKeyExpr
     * @returns void
     */
-  reply_del(key_expr: IntoKeyExpr): void {
+  reply_del(key_expr: IntoKeyExpr
+    options?: ReplyDelOptions
+  ): void {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
     let qr_variant: QueryReplyVariant = {
       ReplyDelete: { key_expr: _key_expr.toString() },

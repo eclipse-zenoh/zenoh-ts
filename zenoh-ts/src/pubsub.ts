@@ -215,8 +215,6 @@ export function check_handler_or_callback<T>(handler?: FifoChannel | RingChannel
 // ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
 
 /**
- *  
- * @param {IntoZBytes} payload  - user payload, type that can be converted into a ZBytes
  * @param {IntoEncoding=} encoding  - Encoding parameter for Zenoh data
  * @param {IntoZBytes=} attachment - optional extra data to send with Payload
  */

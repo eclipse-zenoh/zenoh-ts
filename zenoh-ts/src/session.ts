@@ -70,6 +70,7 @@ function executeAsync(func: any) {
  * @prop {Priority=} priority - priority of the written data
  * @prop {boolean=} express  - express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 
 export interface PutOptions {
@@ -87,6 +88,7 @@ export interface PutOptions {
  * @prop {Priority=} priority - priority of the written data
  * @prop {boolean=} express  - Express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 export interface DeleteOptions {
   congestion_control?: CongestionControl,
@@ -476,6 +478,11 @@ export class Session {
     return new Liveliness(this.remote_session)
   }
 
+  /**
+   * Creates a new Timestamp instance
+   * 
+   * @returns Timestamp
+   */
   async new_timestamp(): Promise<Timestamp> {
 
     let ts_iface: TimestampIface = await this.remote_session.new_timestamp();
