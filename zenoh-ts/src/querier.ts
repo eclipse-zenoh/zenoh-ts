@@ -24,8 +24,13 @@ import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
 import { Encoding } from "crypto";
 import { Receiver } from "./session.js";
-import { Parameters } from "./query.js";
+import { Parameters, Reply } from "./query.js";
+import { check_handler_or_callback, FifoChannel, Handler } from "./pubsub.js";
 
+/**
+ * Target For Get queries
+ * @default BestMatching
+ */
 export enum QueryTarget {
   /// Let Zenoh find the BestMatching queryable capabale of serving the query.
   BestMatching,
@@ -100,7 +105,10 @@ export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
   }
 }
 
-
+/**
+ * QuerierOptions When initializing a Querier
+ * 
+ */
 export interface QuerierOptions {
   congestion_control?: CongestionControl,
   consolidation?: ConsolidationMode,
@@ -117,6 +125,7 @@ export interface QuerierGetOptions {
   encoding?: Encoding,
   payload?: IntoZBytes,
   attachment?: IntoZBytes,
+  handler?: ((sample: Reply) => Promise<void>) | Handler
 }
 
 /**
@@ -226,36 +235,46 @@ export class Querier {
       _parameters = parameters.toString();
     }
 
+    let handler;
+    if (get_options?.handler !== undefined) {
+      handler = get_options?.handler;
+    } else {
+      handler = new FifoChannel(256);
+    }
+    let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
+
     let chan: SimpleChannel<ReplyWS> = this._remote_querier.get(
+      handler_type,
       _encoding,
       _parameters,
       _attachment,
       _payload,
     );
 
-    let receiver = new Receiver(chan);
 
-    return receiver;
-    // if (callback != undefined) {
-    //   executeAsync(async () => {
-    //     for await (const message of chan) {
-    //       // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
-    //       if (message != undefined && (message as unknown as number) != 0) {
-    //         let reply = new Reply(message);
-    //         if (callback != undefined) {
-    //           callback(reply);
-    //         }
-    //       } else {
-    //         break
-    //       }
-    //     }
-    //   });
-    //   return undefined;
-    // } else {
-    //   return receiver;
-    // }
+    if (callback != undefined) {
+      executeAsync(async () => {
+        for await (const message of chan) {
+          // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
+          if (message != undefined && (message as unknown as number) != 0) {
+            let reply = new Reply(message);
+            if (callback != undefined) {
+              callback(reply);
+            }
+          } else {
+            break
+          }
+        }
+      });
+      return undefined;
+    } else {
+      let receiver = new Receiver(chan);
+      return receiver;
+    }
 
   }
+}
 
-
+function executeAsync(func: any) {
+  setTimeout(func, 0);
 }

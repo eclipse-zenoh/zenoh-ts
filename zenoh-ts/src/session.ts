@@ -35,7 +35,7 @@ import {
   Reply,
   Selector,
 } from "./query.js";
-import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub.js";
+import { check_handler_or_callback, FifoChannel, Handler, NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -52,7 +52,6 @@ import { ChannelState } from "channel-ts";
 import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
 import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
-import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
@@ -253,6 +252,15 @@ export class Session {
   }
 
   /**
+   * Creates a Key Expression
+   *
+   * @returns KeyExpr
+   */
+  declare_keyexpr(key_expr: IntoKeyExpr): KeyExpr {
+    return new KeyExpr(key_expr)
+  }
+
+  /**
    * Returns the Zenoh SessionInfo Object
    *
    * @returns SessionInfo
@@ -306,35 +314,6 @@ export class Session {
     );
   }
 
-  /** 
-   * @ignore internal function for handlers
-  */
-  private check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
-    [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
-
-    let handler_type: HandlerChannel;
-    let callback = undefined;
-    if (handler instanceof FifoChannel || handler instanceof RingChannel) {
-      switch (handler.channel_type) {
-        case ChannelType.Ring: {
-          handler_type = { "Ring": handler.size };
-          break;
-        }
-        case ChannelType.Fifo: {
-          handler_type = { "Fifo": handler.size };
-          break;
-        }
-        default: {
-          throw "channel type undetermined"
-        }
-      }
-    } else {
-      handler_type = { "Fifo": 256 };
-      callback = handler;
-    }
-    return [callback, handler_type]
-  }
-
   /**
    * Issues a get query on a Zenoh session
    *
@@ -373,7 +352,7 @@ export class Session {
       handler = new FifoChannel(256);
     }
 
-    let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
 
@@ -457,7 +436,7 @@ export class Session {
     if (handler === undefined) {
       handler = new FifoChannel(256);
     }
-    let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Sample>(handler);
 
     if (callback !== undefined) {
       callback_subscriber = true;
@@ -535,7 +514,7 @@ export class Session {
     } else {
       handler = new FifoChannel(256);
     }
-    let [callback, handler_type] = this.check_handler_or_callback<Query>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Query>(handler);
 
     let callback_queryable = false;
     if (callback != undefined) {

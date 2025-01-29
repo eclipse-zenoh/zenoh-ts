@@ -80,12 +80,8 @@ export class Encoding {
     this._schema = str_rep;
   }
 
-  static intoEncoding(input: IntoEncoding): Encoding {
-    if (input instanceof Encoding) {
-      return input;
-    } else {
-      return new Encoding(input.toString());
-    }
+  with_schema(input: string){
+    this._schema = input;
   }
 
   static default(): Encoding {
@@ -95,7 +91,7 @@ export class Encoding {
   toString(): string {
     return this._schema;
   }
-  static from_str(input: string): Encoding {
+  static from_string(input: string): Encoding {
     return new Encoding(input);
   }
 

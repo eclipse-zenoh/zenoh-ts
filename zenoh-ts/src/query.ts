@@ -124,7 +124,7 @@ export function QueryWS_to_Query(
     attachment = new ZBytes(query_ws.attachment);
   }
   if (query_ws.encoding != null) {
-    encoding = Encoding.from_str(query_ws.encoding);
+    encoding = Encoding.from_string(query_ws.encoding);
   }
 
   return new Query(
@@ -276,6 +276,9 @@ export class Query {
     this.reply_ws(qr_variant);
   }
 
+  toString(): string {
+    return this.key_expr.toString() + "?" + this.parameters.toString()
+  }
 }
 
 
@@ -316,6 +319,21 @@ export class Parameters {
     }
   }
 
+  /**
+   * Creates empty Parameters Structs
+   * @returns void
+   */
+  static empty() {
+    return new Parameters("");
+  }
+
+  /**
+   * Creates empty Parameters Structs
+   * @returns void
+   */
+  static equals() {
+    return new Parameters("");
+  }
 
   /**
    * removes a key from the parameters
@@ -431,7 +449,7 @@ export class ReplyError {
     */
   constructor(reply_err_ws: ReplyErrorWS) {
     let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(reply_err_ws.payload)));
-    let encoding = Encoding.from_str(reply_err_ws.encoding);
+    let encoding = Encoding.from_string(reply_err_ws.encoding);
     this._encoding = encoding;
     this._payload = payload;
   }
@@ -510,7 +528,7 @@ export class Selector {
   }
 
   toString(): string {
-    if(this._parameters !=undefined) {
+    if (this._parameters != undefined) {
       return this._key_expr.toString() + "?" + this._parameters?.toString()
     } else {
       return this._key_expr.toString()
@@ -526,7 +544,7 @@ export class Selector {
     if (selector instanceof Selector) {
       this._key_expr = selector._key_expr;
       this._parameters = selector._parameters;
-      return ;
+      return;
     } else if (selector instanceof KeyExpr) {
       key_expr = selector;
     } else {
