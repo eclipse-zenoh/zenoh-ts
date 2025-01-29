@@ -1,4 +1,3 @@
-use core::time;
 //
 // Copyright (c) 2024 ZettaScale Technology
 //
@@ -12,10 +11,9 @@ use core::time;
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::{error::Error, f32::consts::E, net::SocketAddr};
+use std::{error::Error, net::SocketAddr};
 
 use tracing::{error, warn};
-use uuid::timestamp;
 use zenoh::{
     qos::{CongestionControl, Priority},
     query::Query,
@@ -134,8 +132,6 @@ pub async fn handle_data_message(
                                     warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {priority} to Priority:");
                                     Priority::default()
                                 });
-                                // TODO: add try_into for CongestionControl in zenoh: the
-                                // exact values 0 and 1 are public anyway
                                 let congestion_control = if congestion_control == 0 {
                                     CongestionControl::Drop
                                 } else if congestion_control == 1 {
@@ -144,13 +140,13 @@ pub async fn handle_data_message(
                                     warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {congestion_control} to CongestionControl:");
                                     CongestionControl::default()
                                 };
-                                let builder = q
+                                let mut builder = q
                                     .reply(key_expr, payload)
                                     .priority(priority)
                                     .congestion_control(congestion_control)
                                     .express(express);
                                 if let Some(encoding) = encoding {
-                                    builder.encoding(encoding);
+                                    builder = builder.encoding(encoding);
                                 }
                                 if let Some(attachment_b64) = attachment {
                                     match attachment_b64.b64_to_bytes() {
@@ -166,7 +162,7 @@ pub async fn handle_data_message(
                                 if let Some(timestamp) =
                                     timestamp.and_then(|k| state_map.timestamps.get(&k))
                                 {
-                                    builder.timestamp(*timestamp);
+                                    builder = builder.timestamp(*timestamp);
                                 }
                                 builder.await?
                             }
@@ -175,18 +171,60 @@ pub async fn handle_data_message(
                                 return Err(Box::new(err));
                             }
                         },
-                        QueryReplyVariant::ReplyErr { payload, encoding } => {
-                            match payload.b64_to_bytes() {
-                                Ok(payload) => { q.reply_err(payload).await? },
-                                Err(err) => {
-                                    warn!("QueryReplyVariant::Reply : Could not decode B64 encoded bytes {err}");
-                                    return Err(Box::new(err));
+                        QueryReplyVariant::ReplyErr { payload, encoding } => match payload.b64_to_bytes() {
+                            Ok(payload) => {
+                                let mut builder = q.reply_err(payload);
+                                if let Some(encoding) = encoding {
+                                    builder = builder.encoding(encoding);
+                                }
+                                builder.await?
+                            }
+                            Err(err) => {
+                                warn!("QueryReplyVariant::ReplyErr : Could not decode B64 encoded bytes {err}");
+                                return Err(Box::new(err));
+                            }
+                        },
+                        QueryReplyVariant::ReplyDelete {
+                            key_expr,
+                            priority,
+                            congestion_control,
+                            express,
+                            timestamp,
+                            attachment,
+                        } => {
+                            let priority = priority.try_into().unwrap_or({
+                                warn!("DataMsg::QueryReplyVariant::ReplyDelete : Could not convert value {priority} to Priority:");
+                                Priority::default()
+                            });
+                            let congestion_control = if congestion_control == 0 {
+                                CongestionControl::Drop
+                            } else if congestion_control == 1 {
+                                CongestionControl::Block
+                            } else {
+                                warn!("DataMsg::QueryReplyVariant::ReplyDelete : Could not convert value {congestion_control} to CongestionControl:");
+                                CongestionControl::default()
+                            };
+                            let mut builder = q
+                                .reply_del(key_expr)
+                                .priority(priority)
+                                .congestion_control(congestion_control)
+                                .express(express);
+                            if let Some(attachment_b64) = attachment {
+                                match attachment_b64.b64_to_bytes() {
+                                    Ok(payload) => builder = builder.attachment(payload),
+                                    Err(err) => {
+                                        warn!(
+                                            "DataMsg::QueryReplyVariant::ReplyDelete : Could not decode B64 encoded bytes {err}"
+                                        );
+                                        return Err(Box::new(err));
+                                    }
                                 }
                             }
-                        }
-                        QueryReplyVariant::ReplyDelete { key_expr } => {
-                            q.reply_del(key_expr).await?
-                        }
+                            if let Some(timestamp) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                                builder = builder.timestamp(*timestamp);
+                            }
+                            builder.await?
+                        },
                     }
                 } else {
                     tracing::error!("Query id not found in map {}", reply.query_uuid);
