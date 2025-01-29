@@ -145,7 +145,7 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    yarn build
    ```
 
-   The result are placed into the `zenoh-ts/dist` directory.
+   The result is placed into the `zenoh-ts/dist` directory.
 
    This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
 
