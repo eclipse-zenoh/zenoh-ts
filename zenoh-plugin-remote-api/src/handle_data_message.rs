@@ -171,19 +171,21 @@ pub async fn handle_data_message(
                                 return Err(Box::new(err));
                             }
                         },
-                        QueryReplyVariant::ReplyErr { payload, encoding } => match payload.b64_to_bytes() {
-                            Ok(payload) => {
-                                let mut builder = q.reply_err(payload);
-                                if let Some(encoding) = encoding {
-                                    builder = builder.encoding(encoding);
+                        QueryReplyVariant::ReplyErr { payload, encoding } => {
+                            match payload.b64_to_bytes() {
+                                Ok(payload) => {
+                                    let mut builder = q.reply_err(payload);
+                                    if let Some(encoding) = encoding {
+                                        builder = builder.encoding(encoding);
+                                    }
+                                    builder.await?
                                 }
-                                builder.await?
+                                Err(err) => {
+                                    warn!("QueryReplyVariant::ReplyErr : Could not decode B64 encoded bytes {err}");
+                                    return Err(Box::new(err));
+                                }
                             }
-                            Err(err) => {
-                                warn!("QueryReplyVariant::ReplyErr : Could not decode B64 encoded bytes {err}");
-                                return Err(Box::new(err));
-                            }
-                        },
+                        }
                         QueryReplyVariant::ReplyDelete {
                             key_expr,
                             priority,
@@ -220,11 +222,13 @@ pub async fn handle_data_message(
                                     }
                                 }
                             }
-                            if let Some(timestamp) = timestamp.and_then(|k| state_map.timestamps.get(&k)) {
+                            if let Some(timestamp) =
+                                timestamp.and_then(|k| state_map.timestamps.get(&k))
+                            {
                                 builder = builder.timestamp(*timestamp);
                             }
                             builder.await?
-                        },
+                        }
                     }
                 } else {
                     tracing::error!("Query id not found in map {}", reply.query_uuid);
