@@ -80,14 +80,14 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize length of the sequence. Can be used when defining serialization for custom containers.
+     * Serializes length of the sequence. Can be used when defining serialization for custom containers.
      */
     public write_sequence_length(len: number) {
       this.append(leb.encodeULEB128(len))
     }
 
     /**
-     * Serialize a utf-8 encoded string.
+     * Serializes a utf-8 encoded string.
      */
     public serialize_string(val: string) {
         const encoder = new TextEncoder();
@@ -97,7 +97,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize bigint as 64 bit signed integer.
+     * Serializes bigint as 64 bit signed integer.
      */
     public serialize_bigint64(val: bigint) {
       let data = new Uint8Array(8);
@@ -107,7 +107,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize number as 64 bit floating point number.
+     * Serializes number as 64 bit floating point number.
      */
     public serialize_float64(val: number) {
       let data = new Uint8Array(8);
@@ -117,7 +117,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize boolean.
+     * Serializes boolean.
      */
     public serialize_boolean(val: Boolean) {
       const b:Uint8Array = new Uint8Array(1)
@@ -126,7 +126,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize an array.
+     * Serializes an array.
      */
     public serialize_array<T>(val: EnsureSerializeable<T>[]) {
       this.write_sequence_length(val.length)
@@ -134,7 +134,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize a map.
+     * Serializes a map.
      */
     public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) {
       this.write_sequence_length(m.size)
@@ -168,7 +168,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialize any supported type and append it to existing serialized payload.
+     * Serializes any supported type and append it to existing serialized payload.
      * Supported types are:
      *   - built-in types: number, bigint, string, boolean,
      *   - types that implement ZSerializeable interface,
@@ -179,7 +179,7 @@ export class ZBytesSerializer {
     }
   
     /**
-     * Extract ZBytes from ZBytesSerializer
+     * Extracts ZBytes from ZBytesSerializer
      * 
      * @returns ZBytes
      */
@@ -205,7 +205,7 @@ class ZPartialDeserializer<T> {
 
 export namespace ZSerDe{
   /**
-   * Indicate that value should be deserialized as a number.
+   * Indicates that value should be deserialized as a number.
    * @returns Number deserialization tag.
    */
   export function number(): ZPartialDeserializer<number> {
@@ -213,7 +213,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as a bigint.
+   * Indicates that data should be deserialized as a bigint.
    * @returns Bigint deserialization tag.
    */
   export function bigint(): ZPartialDeserializer<bigint> {
@@ -221,7 +221,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as a string.
+   * Indicates that data should be deserialized as a string.
    * @returns String deserialization tag.
    */
   export function string(): ZPartialDeserializer<string> {
@@ -229,7 +229,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as a boolean.
+   * Indicates that data should be deserialized as a boolean.
    * @returns Boolean deserialization tag.
    */
   export function boolean(): ZPartialDeserializer<boolean> {
@@ -237,7 +237,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as an object.
+   * Indicates that data should be deserialized as an object.
    * @param proto An eventually empty object instance, used as an initial value for deserialization.
    * @returns Object deserialization tag.
    */
@@ -246,7 +246,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as an array.
+   * Indicates that data should be deserialized as an array.
    * @param p An array element deserialization tag.
    * @returns Array deserialization tag.
    */
@@ -255,7 +255,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialized as a map.
+   * Indicates that data should be deserialized as a map.
    * @param p An array element deserialization tag.
    * @returns Array deserialization tag.
    */
@@ -288,7 +288,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Read length of the sequence previously written by {@link ZBytesSerializer.write_sequence_length} and advance the reading position.
+   * Reads length of the sequence previously written by {@link ZBytesSerializer.write_sequence_length} and advance the reading position.
    * @returns Number of sequence elements.
    */
   public read_sequence_length(): number {
@@ -301,7 +301,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data as string and advance the reading position.
+   * Deserializes next portion of data as string and advance the reading position.
    */
   public deserialize_string(): string {
       let len = this.read_sequence_length()
@@ -310,7 +310,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data (serialized as 64 bit signed integer) as bigint and advance the reading position.
+   * Deserializes next portion of data (serialized as 64 bit signed integer) as bigint and advance the reading position.
    */
   public deserialize_bigint64(): bigint {
     let data = this._read_slice(8);
@@ -319,7 +319,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data (serialized as 64 bit floating point number) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 64 bit floating point number) as number and advance the reading position.
    */
   public deserialize_float64(): number {
     let data = this._read_slice(8);
@@ -328,7 +328,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data as a boolean and advance the reading position.
+   * Deserializes next portion of data as a boolean and advance the reading position.
    */
   public deserialize_boolean(): boolean {
     if (this._idx  >= this._buffer.length) {
@@ -346,7 +346,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data as an array of specified type and advance the reading position.
+   * Deserializes next portion of data as an array of specified type and advance the reading position.
    * @param p Deserialization tag for array element.
    */
   public deserialize_array<T>(p: ZPartialDeserializer<T>): T[] {
@@ -359,7 +359,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data as a map of specified key and value types and advance the reading position.
+   * Deserializes next portion of data as a map of specified key and value types and advance the reading position.
    * @param p_key Deserialization tag for map key.
    * @param p_value Deserialization tag for map value.
    */
@@ -375,7 +375,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data as an object of specified type and advance the reading position.
+   * Deserializes next portion of data as an object of specified type and advance the reading position.
    * @param o An eventually empty object instance to deserialize into.
    */
   public deserialize_object<T extends ZDeserializeable>(o: T): T {
@@ -384,7 +384,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data into any supported type and advance the reading position.
+   * Deserializes next portion of data into any supported type and advance the reading position.
    * Supported types are:
    *   - built-in types: number, bigint, string, boolean,
    *   - types that implement ZDeserializeable interface,
@@ -405,7 +405,7 @@ export class ZBytesDeserializer {
 }
 
 /**
- * Serialize any supported type.
+ * Serializes any supported type.
  * Supported types are:
  *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZSerializeable interface,
@@ -420,7 +420,7 @@ export function zserialize<T>(val: EnsureSerializeable<T>): ZBytes {
 }
 
 /**
- * Deserialize payload into any supported type and advance the reading position.
+ * Deserializes payload into any supported type and advance the reading position.
  * Supported types are:
  *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZDeserializeable interface,

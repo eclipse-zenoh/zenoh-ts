@@ -72,7 +72,7 @@ export class ZBytes {
   }
 
   /**
-   * return the underlying Uint8Array buffer
+   * returns the underlying Uint8Array buffer
    * 
    * @returns Uint8Array
    */
@@ -81,9 +81,9 @@ export class ZBytes {
   }
 
   /**
-   * return the underlying Uint8Array buffer as string
+   * decodes the underlying Uint8Array buffer as UTF-8 string
    * 
-   * @returns Uint8Array
+   * @returns string
    */
   public to_string(): string {
     let decoder = new TextDecoder();
