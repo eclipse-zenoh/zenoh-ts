@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2024 ZettaScale Technology
+// Copyright (c) 2025 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -15,10 +15,17 @@
 import * as leb from "@thi.ng/leb128";
 
 import { ZBytes } from '../z_bytes.js';
+
+/**
+ * Interface for adding support for custom types serialization.
+ */ 
 export interface ZSerializeable {
   serialize_with_zserializer(serializer: ZBytesSerializer): void;
 }
 
+/**
+ * Interface for adding support for custom types deserialization.
+ */ 
 export interface ZDeserializeable {
   deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void;
 }
@@ -36,25 +43,28 @@ type Select<X, Y, Z> = (X & Y) extends never ? never : Z;
 
 type IsSerializeableInner<T, X = T> =
   T extends ZSerializeable ? X
-  : T extends number | boolean | string | bigint ? X
-  //: T extends [infer U] ? IsSerializeable<U, X>
-  //: T extends [infer Head, ...infer Tail] ? Select<IsSerializeable<Head, X>, IsSerializeable<Tail, X>, X>
-  : T extends Array<infer U> ? IsSerializeable<U, X>
-  : T extends Map<infer K, infer V> ? IsSerializeable<K, X> & IsSerializeable<V, X>
+  : T extends number ? X
+  : T extends bigint ? X
+  : T extends string ? X
+  : T extends boolean ? X
+  : T extends Array<infer U> ? EnsureSerializeable<U, X>
+  : T extends Map<infer K, infer V> ? EnsureSerializeable<K, X> & EnsureSerializeable<V, X>
   : never;
 
-type IsSerializeable<T, X = T> = Select<IsSerializeableInner<T>, IsNotUnion<T>, X>
-
-
+export type EnsureSerializeable<T, X = T> = Select<IsSerializeableInner<T>, IsNotUnion<T>, X>
 
 function is_serializeable(s: any): s is ZSerializeable {
   return (<ZSerializeable>s).serialize_with_zserializer !== undefined;
 }
 
+/**
+ * A Zenoh serializer.
+ * Provides functionality for tuple-like serialization.
+ */
 export class ZBytesSerializer {
     private _buffer: Uint8Array
     /**
-     * new function to create a ZBytesSerializer
+     * new function to create a ZBytesSerializer.
      * 
      * @returns ZBytesSerializer
      */
@@ -69,10 +79,16 @@ export class ZBytesSerializer {
       this._buffer = b
     }
 
+    /**
+     * Serialize length of the sequence. Can be used when defining serialization for custom containers.
+     */
     public write_sequence_length(len: number) {
       this.append(leb.encodeULEB128(len))
     }
 
+    /**
+     * Serialize a utf-8 encoded string.
+     */
     public serialize_string(val: string) {
         const encoder = new TextEncoder();
         const encoded = encoder.encode(val);
@@ -80,7 +96,9 @@ export class ZBytesSerializer {
         this.append(encoded)
     }
 
-    /// Serialize bigint as int64
+    /**
+     * Serialize bigint as 64 bit signed integer.
+     */
     public serialize_bigint64(val: bigint) {
       let data = new Uint8Array(8);
       let view = new DataView(data.buffer);
@@ -88,7 +106,9 @@ export class ZBytesSerializer {
       this.append(data)
     }
 
-    /// Serialize number as double
+    /**
+     * Serialize number as 64 bit floating point number.
+     */
     public serialize_float64(val: number) {
       let data = new Uint8Array(8);
       let view = new DataView(data.buffer);
@@ -96,19 +116,27 @@ export class ZBytesSerializer {
       this.append(data)
     }
 
-    /// Serialize number as double
+    /**
+     * Serialize boolean.
+     */
     public serialize_boolean(val: Boolean) {
       const b:Uint8Array = new Uint8Array(1)
       b[0] = val === true ? 1 : 0
       this.append(b)
     }
 
-    public serialize_array<T>(val: T[]) {
+    /**
+     * Serialize an array.
+     */
+    public serialize_array<T>(val: EnsureSerializeable<T>[]) {
       this.write_sequence_length(val.length)
       val.forEach( (element) => this._serialize_inner(element));
     }
 
-    public serialize_map<K, V>(m: Map<K, V>) {
+    /**
+     * Serialzie a map.
+     */
+    public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) {
       this.write_sequence_length(m.size)
       m.forEach( (v, k) => { 
           this._serialize_inner(k);
@@ -139,12 +167,19 @@ export class ZBytesSerializer {
       }
     }
 
-    public serialize<T>(val: T) {
-        this._serialize_inner(val);
+    /**
+     * Serialize any supported type and append it to existing serialized payload.
+     * Supported types are:
+     *   - built-in types: number, bigint, string, bool,
+     *   - types that implement ZSerializeable interface,
+     *   - arrays and maps of supported types.
+     */
+    public serialize<T>(val: EnsureSerializeable<T>) {
+      this._serialize_inner(val);
     }
   
     /**
-     * extract ZBytes from ZBytesSerializer
+     * Extract ZBytes from ZBytesSerializer
      * 
      * @returns ZBytes
      */
@@ -169,30 +204,61 @@ class ZPartialDeserializer<T> {
 }
 
 export namespace ZSerDe{
+  /**
+   * Indicate that value should be deserialzied as a number.
+   * @returns Number deserialization tag.
+   */
   export function number(): ZPartialDeserializer<number> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_float64() });
   }
 
+  /**
+   * Indicate that data should be deserialzied as a bigint.
+   * @returns Bigint deserialization tag.
+   */
   export function bigint(): ZPartialDeserializer<bigint> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_bigint64() });
   }
 
+  /**
+   * Indicate that data should be deserialzied as a string.
+   * @returns String deserialization tag.
+   */
   export function string(): ZPartialDeserializer<string> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_string() });
   }
 
+  /**
+   * Indicate that data should be deserialzied as a boolean.
+   * @returns Boolean deserialization tag.
+   */
   export function boolean(): ZPartialDeserializer<boolean> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_boolean() });
   }
 
+  /**
+   * Indicate that data should be deserialzied as an object.
+   * @param proto An eventually empty object instance, used as an initial value for deserialization.
+   * @returns Object deserialization tag.
+   */
   export function object<T extends ZDeserializeable>(proto: T): ZPartialDeserializer<T> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_object(proto)})
   }
 
+  /**
+   * Indicate that data should be deserialzied as an array.
+   * @param p An array element deserialization tag.
+   * @returns Array deserialization tag.
+   */
   export function array<T>(p: ZPartialDeserializer<T>): ZPartialDeserializer<T[]> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_array(p)})
   }
 
+  /**
+   * Indicate that data should be deserialzied as a map.
+   * @param p An array element deserialization tag.
+   * @returns Array deserialization tag.
+   */
   export function map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): ZPartialDeserializer<Map<K, V>> {
     return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_map(p_key, p_value)})
   }
@@ -204,7 +270,7 @@ export class ZBytesDeserializer {
   private _idx: number
   /**
    * new function to create a ZBytesDeserializer
-   * 
+   * @param p payload to deserialize.
    * @returns ZBytesSerializer
    */
   constructor(zbytes: ZBytes) {
@@ -221,6 +287,10 @@ export class ZBytesDeserializer {
     return s
   }
 
+  /**
+   * Read length of the sequence previously written by {@link ZBytesSerializer.write_sequence_length} and advance the reading position.
+   * @returns Number of sequence elements.
+   */
   public read_sequence_length(): number {
     let [res, bytes_read] = leb.decodeULEB128(this._buffer, this._idx)
     this._idx += bytes_read
@@ -230,27 +300,36 @@ export class ZBytesDeserializer {
     return new Number(res).valueOf()
   }
 
+  /**
+   * Deserialize next portion of data as string and advance the reading position.
+   */
   public deserialize_string(): string {
       let len = this.read_sequence_length()
       const decoder = new TextDecoder()
       return decoder.decode(this._read_slice(len))
   }
 
-  /// Deserialize int64 as bigint
+  /**
+   * Deserialize next portion of data (serialzied as 64 bit signed integer) as bigint and advance the reading position.
+   */
   public deserialize_bigint64(): bigint {
     let data = this._read_slice(8);
     let view = new DataView(data.buffer);
     return view.getBigInt64(0, true);
   }
 
-  /// Deserialize double as number
+  /**
+   * Deserialize next portion of data (serialized as 64 bit floating point number) as number and advance the reading position.
+   */
   public deserialize_float64(): number {
     let data = this._read_slice(8);
     let view = new DataView(data.buffer);
     return view.getFloat64(0, true);
   }
 
-  /// Deserialize boolean
+  /**
+   * Deserialize next portion of data as a boolean and advance the reading position.
+   */
   public deserialize_boolean(): boolean {
     if (this._idx  >= this._buffer.length) {
       throw new Error(`Array index is out of bounds: ${this._idx} / ${this._buffer.length}`); 
@@ -266,7 +345,10 @@ export class ZBytesDeserializer {
     }
   }
 
-  /// Deserialize an array
+  /**
+   * Deserialize next portion of data as an array of specified type and advance the reading position.
+   * @param p Deserialziation tag for array element.
+   */
   public deserialize_array<T>(p: ZPartialDeserializer<T>): T[] {
     const len = this.read_sequence_length()
     let out = new Array<T>(len)
@@ -276,7 +358,11 @@ export class ZBytesDeserializer {
     return out
   }
 
-  /// Deserialzie a map
+  /**
+   * Deserialize next portion of data as a map of specified key and value types and advance the reading position.
+   * @param p_key Deserialziation tag for map key.
+   * @param p_value Deserialization tag for map value.
+   */
   public deserialize_map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): Map<K, V> {
     const len = this.read_sequence_length()
     let out = new Map<K, V>()
@@ -288,12 +374,24 @@ export class ZBytesDeserializer {
     return out
   }
 
+  /**
+   * Deserialize next portion of data as an object of specified type and advance the reading position.
+   * @param o An eventually empty object instance to deserialize into.
+   */
   public deserialize_object<T extends ZDeserializeable>(o: T): T {
     o.deserialize_with_zdeserializer(this)
     return o
   }
 
-
+  /**
+   * Deserialize next portion of data into any supported type and advance the reading position.
+   * Supported types are:
+   *   - built-in types: number, bigint, string, bool,
+   *   - types that implement ZSerializeable interface,
+   *   - arrays and maps of supported types.
+   * @param p Deserialization tag.
+   * @returns Deserialized value.
+   */
   public deserialize<T>(p: ZPartialDeserializer<T>): T {
     return p.call(this)
   }
@@ -306,12 +404,31 @@ export class ZBytesDeserializer {
   }
 }
 
-export function zserialize<T>(val: T): ZBytes {
+/**
+ * Serialize any supported type.
+ * Supported types are:
+ *   - built-in types: number, bigint, string, bool,
+ *   - types that implement ZSerializeable interface,
+ *   - arrays and maps of supported types.
+ * @param val Value to serialize.
+ * @returns Payload.
+ */
+export function zserialize<T>(val: EnsureSerializeable<T>): ZBytes {
   const s = new ZBytesSerializer()
   s.serialize(val)
   return s.finish()
 }
 
+/**
+ * Deserialize payload into any supported type and advance the reading position.
+ * Supported types are:
+ *   - built-in types: number, bigint, string, bool,
+ *   - types that implement ZSerializeable interface,
+ *   - arrays and maps of supported types.
+ * @param p Deserialization tag.
+ * @param data Payload to deserialize.
+ * @returns Deserialized value.
+ */
 export function zdeserialize<T>(p: ZPartialDeserializer<T>, data: ZBytes): T  {
   const d = new ZBytesDeserializer(data)
   const res = d.deserialize(p)
