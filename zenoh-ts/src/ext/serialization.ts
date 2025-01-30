@@ -129,7 +129,7 @@ export class ZBytesSerializer {
     }
 
     private append(buf: Uint8Array) {
-      let b = new Uint8Array(this._buffer.length +buf.length)
+      let b = new Uint8Array(this._buffer.length + buf.length)
       b.set(this._buffer)
       b.set(buf, this._buffer.length)
       this._buffer = b

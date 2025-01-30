@@ -23,19 +23,27 @@ class MyStruct implements ZSerializeable, ZDeserializeable {
     constructor(v1?: bigint, v2?: string, v3?: number[]) {
         if (typeof v1 !== `undefined`) {
             this.v1 = v1;
+        } else {
+            this.v1 = 0n;
         }
         if (typeof v2 !== `undefined`) {
             this.v2 = v2;
+        } else {
+            this.v2 = ""
         }
         if (typeof v3 !== `undefined`) {
             this.v3 = v3;
+        } else {
+            this.v3 = new Array<number>()
         }
     }
+
     serialize_with_zserializer(serializer: ZBytesSerializer): void {
         serializer.serialize(this.v1)
         serializer.serialize(this.v2)
         serializer.serialize(this.v3)
     }
+
     deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
         this.v1 = deserializer.deserialize(ZPrimitiveType.BigInt)
         this.v2 = deserializer.deserialize(ZPrimitiveType.String)
@@ -89,7 +97,7 @@ export async function main() {
         console.table(output)
     }
 
-    // Custom serialization / deserialization
+    // Custom class
     {
         let input = new MyStruct(1234n, "test", [1, 2, 3, 4])
         let payload = zserialize(input)

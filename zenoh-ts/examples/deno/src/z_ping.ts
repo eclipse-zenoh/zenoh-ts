@@ -31,7 +31,7 @@ export async function main() {
   console.warn("Warming up for 5 seconds...");
 
   const startTime = new Date();
-  const data = [122, 101, 110, 111, 104];
+  const data = new Uint8Array([122, 101, 110, 111, 104]);
 
   while (elapsed(startTime) < 5) {
     pub.put(data);
