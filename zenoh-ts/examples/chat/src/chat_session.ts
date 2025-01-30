@@ -121,18 +121,20 @@ export class ChatSession {
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
 		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
-			(sample: Sample) => {
-				let message = deserialize_string(sample.payload().to_bytes());
-				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
-				let user = ChatUser.fromKeyexpr(sample.keyexpr());
-				if (user) {
-					const timestamp = new Date().toISOString();
-					this.messages.push({ t: timestamp, u: user.username, m: message });
-					if (this.messageCallback) {
-						this.messageCallback(user, message);
+			{ 
+				handler: (sample: Sample) => {
+					let message = deserialize_string(sample.payload().to_bytes());
+					log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
+					let user = ChatUser.fromKeyexpr(sample.keyexpr());
+					if (user) {
+						const timestamp = new Date().toISOString();
+						this.messages.push({ t: timestamp, u: user.username, m: message });
+						if (this.messageCallback) {
+							this.messageCallback(user, message);
+						}
 					}
+					return Promise.resolve();
 				}
-				return Promise.resolve();
 			}
 		);
 		log(`[Session] Declare Subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
@@ -142,7 +144,7 @@ export class ChatSession {
 
 		// Subscribe to changes of users presence
 		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
-			callback: (sample: Sample) => {
+			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);
 				if (!user) {

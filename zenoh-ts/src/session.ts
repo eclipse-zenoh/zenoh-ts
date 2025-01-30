@@ -150,6 +150,14 @@ export interface PublisherOptions {
   reliability?: Reliability,
 }
 
+/**
+ * Options for a Subscriber
+ * @prop handler - Callback function for this subscriber
+ */
+export interface SubscriberOptions {
+  handler?: ((sample: Sample) => Promise<void>) | Handler,
+}
+
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
 // ██      ██      ██      ██      ██ ██    ██ ████   ██
 // ███████ █████   ███████ ███████ ██ ██    ██ ██ ██  ██
@@ -422,20 +430,23 @@ export class Session {
    *  If a Subscriber is created with a callback, it cannot be simultaneously polled for new values
    * 
    * @param {IntoKeyExpr} key_expr - string of key_expression
-   * @param {((sample: Sample) => Promise<void>) | Handler} handler - Either a HandlerChannel or a Callback Function to be called for all samples
+   * @param {SubscriberOptions} subscriber_opts - Options for the subscriber, including a handler
    *
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler?: ((sample: Sample) => Promise<void>) | Handler
+    subscriber_opts?: SubscriberOptions
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
     let callback_subscriber = false;
-    if (handler === undefined) {
+    let handler;
+    if (subscriber_opts?.handler !== undefined) {
+      handler = subscriber_opts?.handler;
+    } else {
       handler = new FifoChannel(256);
     }
     let [callback, handler_type] = check_handler_or_callback<Sample>(handler);
