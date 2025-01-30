@@ -134,7 +134,7 @@ export class ZBytesSerializer {
     }
 
     /**
-     * Serialzie a map.
+     * Serialize a map.
      */
     public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) {
       this.write_sequence_length(m.size)
@@ -205,7 +205,7 @@ class ZPartialDeserializer<T> {
 
 export namespace ZSerDe{
   /**
-   * Indicate that value should be deserialzied as a number.
+   * Indicate that value should be deserialized as a number.
    * @returns Number deserialization tag.
    */
   export function number(): ZPartialDeserializer<number> {
@@ -213,7 +213,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as a bigint.
+   * Indicate that data should be deserialized as a bigint.
    * @returns Bigint deserialization tag.
    */
   export function bigint(): ZPartialDeserializer<bigint> {
@@ -221,7 +221,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as a string.
+   * Indicate that data should be deserialized as a string.
    * @returns String deserialization tag.
    */
   export function string(): ZPartialDeserializer<string> {
@@ -229,7 +229,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as a boolean.
+   * Indicate that data should be deserialized as a boolean.
    * @returns Boolean deserialization tag.
    */
   export function boolean(): ZPartialDeserializer<boolean> {
@@ -237,7 +237,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as an object.
+   * Indicate that data should be deserialized as an object.
    * @param proto An eventually empty object instance, used as an initial value for deserialization.
    * @returns Object deserialization tag.
    */
@@ -246,7 +246,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as an array.
+   * Indicate that data should be deserialized as an array.
    * @param p An array element deserialization tag.
    * @returns Array deserialization tag.
    */
@@ -255,7 +255,7 @@ export namespace ZSerDe{
   }
 
   /**
-   * Indicate that data should be deserialzied as a map.
+   * Indicate that data should be deserialized as a map.
    * @param p An array element deserialization tag.
    * @returns Array deserialization tag.
    */
@@ -310,7 +310,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserialize next portion of data (serialzied as 64 bit signed integer) as bigint and advance the reading position.
+   * Deserialize next portion of data (serialized as 64 bit signed integer) as bigint and advance the reading position.
    */
   public deserialize_bigint64(): bigint {
     let data = this._read_slice(8);
@@ -347,7 +347,7 @@ export class ZBytesDeserializer {
 
   /**
    * Deserialize next portion of data as an array of specified type and advance the reading position.
-   * @param p Deserialziation tag for array element.
+   * @param p Deserialization tag for array element.
    */
   public deserialize_array<T>(p: ZPartialDeserializer<T>): T[] {
     const len = this.read_sequence_length()
@@ -360,7 +360,7 @@ export class ZBytesDeserializer {
 
   /**
    * Deserialize next portion of data as a map of specified key and value types and advance the reading position.
-   * @param p_key Deserialziation tag for map key.
+   * @param p_key Deserialization tag for map key.
    * @param p_value Deserialization tag for map value.
    */
   public deserialize_map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): Map<K, V> {
