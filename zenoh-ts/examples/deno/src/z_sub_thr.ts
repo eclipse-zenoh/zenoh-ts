@@ -63,7 +63,7 @@ export async function main() {
   console.warn("Declare subscriber");
   session.declare_subscriber(
     "test/thr",
-    subscriber_callback
+    { handler: subscriber_callback }
   );
 
   let count = 0;

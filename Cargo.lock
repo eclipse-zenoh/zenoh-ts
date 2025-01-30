@@ -2926,7 +2926,7 @@ dependencies = [
 [[package]]
 name = "zenoh"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "ahash",
  "async-trait",
@@ -2957,12 +2957,12 @@ dependencies = [
  "zenoh-collections",
  "zenoh-config",
  "zenoh-core",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-keyexpr",
  "zenoh-link",
  "zenoh-macros",
  "zenoh-plugin-trait",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
  "zenoh-sync",
  "zenoh-task",
@@ -2973,7 +2973,7 @@ dependencies = [
 [[package]]
 name = "zenoh-buffers"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "zenoh-collections",
 ]
@@ -2981,7 +2981,7 @@ dependencies = [
 [[package]]
 name = "zenoh-codec"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "tracing",
  "uhlc",
@@ -2992,12 +2992,12 @@ dependencies = [
 [[package]]
 name = "zenoh-collections"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 
 [[package]]
 name = "zenoh-config"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "json5",
  "num_cpus",
@@ -3009,41 +3009,41 @@ dependencies = [
  "uhlc",
  "validated_struct",
  "zenoh-core",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-keyexpr",
  "zenoh-macros",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-util",
 ]
 
 [[package]]
 name = "zenoh-core"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "lazy_static",
  "tokio",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
 ]
 
 [[package]]
 name = "zenoh-crypto"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "aes",
  "hmac",
  "rand",
  "rand_chacha",
  "sha3",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh-ext"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "bincode",
@@ -3062,7 +3062,7 @@ dependencies = [
 [[package]]
 name = "zenoh-keyexpr"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#eb3a7a47eaa8c771e88a114713550b993410674a"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "getrandom",
  "hashbrown",
@@ -3071,22 +3071,7 @@ dependencies = [
  "schemars",
  "serde",
  "token-cell",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=main)",
-]
-
-[[package]]
-name = "zenoh-keyexpr"
-version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
-dependencies = [
- "getrandom",
- "hashbrown",
- "keyed-set",
- "rand",
- "schemars",
- "serde",
- "token-cell",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
@@ -3095,13 +3080,13 @@ version = "0.1.0"
 dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-test",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=main)",
+ "zenoh-keyexpr",
 ]
 
 [[package]]
 name = "zenoh-link"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "zenoh-config",
  "zenoh-link-commons",
@@ -3112,13 +3097,13 @@ dependencies = [
  "zenoh-link-unixsock_stream",
  "zenoh-link-ws",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh-link-commons"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "flume",
@@ -3134,7 +3119,7 @@ dependencies = [
  "zenoh-codec",
  "zenoh-core",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
  "zenoh-util",
 ]
@@ -3142,7 +3127,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-quic"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3162,14 +3147,14 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-util",
 ]
 
 [[package]]
 name = "zenoh-link-tcp"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "socket2",
@@ -3180,13 +3165,13 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh-link-tls"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "base64 0.22.1",
@@ -3208,14 +3193,14 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
 ]
 
 [[package]]
 name = "zenoh-link-udp"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "socket2",
@@ -3226,7 +3211,7 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-sync",
  "zenoh-util",
 ]
@@ -3234,7 +3219,7 @@ dependencies = [
 [[package]]
 name = "zenoh-link-unixsock_stream"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "nix",
@@ -3245,14 +3230,14 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
 ]
 
 [[package]]
 name = "zenoh-link-ws"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "futures-util",
@@ -3264,7 +3249,7 @@ dependencies = [
  "zenoh-core",
  "zenoh-link-commons",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
  "zenoh-util",
 ]
@@ -3272,12 +3257,12 @@ dependencies = [
 [[package]]
 name = "zenoh-macros"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.77",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-keyexpr",
 ]
 
 [[package]]
@@ -3306,7 +3291,7 @@ dependencies = [
  "zenoh",
  "zenoh-ext",
  "zenoh-plugin-trait",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-util",
  "zenoh_backend_traits",
 ]
@@ -3314,45 +3299,37 @@ dependencies = [
 [[package]]
 name = "zenoh-plugin-trait"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "git-version",
  "libloading",
  "serde",
  "tracing",
  "zenoh-config",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-keyexpr",
  "zenoh-macros",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-util",
 ]
 
 [[package]]
 name = "zenoh-protocol"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "const_format",
  "rand",
  "serde",
  "uhlc",
  "zenoh-buffers",
- "zenoh-keyexpr 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-keyexpr",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh-result"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#eb3a7a47eaa8c771e88a114713550b993410674a"
-dependencies = [
- "anyhow",
-]
-
-[[package]]
-name = "zenoh-result"
-version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "anyhow",
 ]
@@ -3360,7 +3337,7 @@ dependencies = [
 [[package]]
 name = "zenoh-runtime"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "lazy_static",
  "ron",
@@ -3368,13 +3345,13 @@ dependencies = [
  "tokio",
  "tracing",
  "zenoh-macros",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh-sync"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "event-listener",
  "futures",
@@ -3387,7 +3364,7 @@ dependencies = [
 [[package]]
 name = "zenoh-task"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "futures",
  "tokio",
@@ -3400,7 +3377,7 @@ dependencies = [
 [[package]]
 name = "zenoh-transport"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "crossbeam-utils",
@@ -3423,7 +3400,7 @@ dependencies = [
  "zenoh-crypto",
  "zenoh-link",
  "zenoh-protocol",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-runtime",
  "zenoh-sync",
  "zenoh-task",
@@ -3433,7 +3410,7 @@ dependencies = [
 [[package]]
 name = "zenoh-util"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "const_format",
@@ -3452,13 +3429,13 @@ dependencies = [
  "tracing-subscriber",
  "winapi",
  "zenoh-core",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
 ]
 
 [[package]]
 name = "zenoh_backend_traits"
 version = "1.1.1"
-source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1#c0689b58eb0edfd690a0cb1f47d147cecc250253"
+source = "git+https://github.com/eclipse-zenoh/zenoh.git?branch=main#ba64d7a0b60f6dde3e2de6b30ec5c37cdc26b6b9"
 dependencies = [
  "async-trait",
  "const_format",
@@ -3468,7 +3445,7 @@ dependencies = [
  "serde_json",
  "zenoh",
  "zenoh-plugin-trait",
- "zenoh-result 1.1.1 (git+https://github.com/eclipse-zenoh/zenoh.git?branch=release/1.1.1)",
+ "zenoh-result",
  "zenoh-util",
 ]
 

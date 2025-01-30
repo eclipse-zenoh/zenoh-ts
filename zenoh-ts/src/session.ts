@@ -35,7 +35,7 @@ import {
   Reply,
   Selector,
 } from "./query.js";
-import { ChannelType, FifoChannel, Handler, NewSubscriber, Publisher, RingChannel, Subscriber } from "./pubsub.js";
+import { check_handler_or_callback, FifoChannel, Handler, NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -52,7 +52,6 @@ import { ChannelState } from "channel-ts";
 import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
 import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
-import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
 import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
@@ -71,6 +70,7 @@ function executeAsync(func: any) {
  * @prop {Priority=} priority - priority of the written data
  * @prop {boolean=} express  - express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 
 export interface PutOptions {
@@ -88,6 +88,7 @@ export interface PutOptions {
  * @prop {Priority=} priority - priority of the written data
  * @prop {boolean=} express  - Express 
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 export interface DeleteOptions {
   congestion_control?: CongestionControl,
@@ -147,6 +148,14 @@ export interface PublisherOptions {
   express?: boolean,
   // Note realiability is unstable in Zenoh
   reliability?: Reliability,
+}
+
+/**
+ * Options for a Subscriber
+ * @prop handler - Callback function for this subscriber
+ */
+export interface SubscriberOptions {
+  handler?: ((sample: Sample) => Promise<void>) | Handler,
 }
 
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -253,6 +262,15 @@ export class Session {
   }
 
   /**
+   * Creates a Key Expression
+   *
+   * @returns KeyExpr
+   */
+  declare_keyexpr(key_expr: IntoKeyExpr): KeyExpr {
+    return new KeyExpr(key_expr)
+  }
+
+  /**
    * Returns the Zenoh SessionInfo Object
    *
    * @returns SessionInfo
@@ -306,35 +324,6 @@ export class Session {
     );
   }
 
-  /** 
-   * @ignore internal function for handlers
-  */
-  private check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
-    [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
-
-    let handler_type: HandlerChannel;
-    let callback = undefined;
-    if (handler instanceof FifoChannel || handler instanceof RingChannel) {
-      switch (handler.channel_type) {
-        case ChannelType.Ring: {
-          handler_type = { "Ring": handler.size };
-          break;
-        }
-        case ChannelType.Fifo: {
-          handler_type = { "Fifo": handler.size };
-          break;
-        }
-        default: {
-          throw "channel type undetermined"
-        }
-      }
-    } else {
-      handler_type = { "Fifo": 256 };
-      callback = handler;
-    }
-    return [callback, handler_type]
-  }
-
   /**
    * Issues a get query on a Zenoh session
    *
@@ -373,7 +362,7 @@ export class Session {
       handler = new FifoChannel(256);
     }
 
-    let [callback, handler_type] = this.check_handler_or_callback<Reply>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
 
     // Optional Parameters 
 
@@ -441,23 +430,26 @@ export class Session {
    *  If a Subscriber is created with a callback, it cannot be simultaneously polled for new values
    * 
    * @param {IntoKeyExpr} key_expr - string of key_expression
-   * @param {((sample: Sample) => Promise<void>) | Handler} handler - Either a HandlerChannel or a Callback Function to be called for all samples
+   * @param {SubscriberOptions} subscriber_opts - Options for the subscriber, including a handler
    *
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   declare_subscriber(
     key_expr: IntoKeyExpr,
-    handler?: ((sample: Sample) => Promise<void>) | Handler
+    subscriber_opts?: SubscriberOptions
   ): Subscriber {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
     let callback_subscriber = false;
-    if (handler === undefined) {
+    let handler;
+    if (subscriber_opts?.handler !== undefined) {
+      handler = subscriber_opts?.handler;
+    } else {
       handler = new FifoChannel(256);
     }
-    let [callback, handler_type] = this.check_handler_or_callback<Sample>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Sample>(handler);
 
     if (callback !== undefined) {
       callback_subscriber = true;
@@ -497,6 +489,11 @@ export class Session {
     return new Liveliness(this.remote_session)
   }
 
+  /**
+   * Creates a new Timestamp instance
+   * 
+   * @returns Timestamp
+   */
   async new_timestamp(): Promise<Timestamp> {
 
     let ts_iface: TimestampIface = await this.remote_session.new_timestamp();
@@ -535,7 +532,7 @@ export class Session {
     } else {
       handler = new FifoChannel(256);
     }
-    let [callback, handler_type] = this.check_handler_or_callback<Query>(handler);
+    let [callback, handler_type] = check_handler_or_callback<Query>(handler);
 
     let callback_queryable = false;
     if (callback != undefined) {

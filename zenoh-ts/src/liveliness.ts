@@ -25,12 +25,12 @@ function executeAsync(func: any) {
 }
 
 interface LivelinessSubscriberOptions {
-  callback?: (sample: Sample) => Promise<void>,
+  handler?: (sample: Sample) => Promise<void>, // TODO: add | Handler,
   history: boolean,
 }
 
 interface LivelinessGetOptions {
-  callback?: (reply: Reply) => Promise<void>,
+  handler?: (reply: Reply) => Promise<void>, // TODO: add | Handler,
   timeout?: TimeDuration,
 }
 
@@ -61,8 +61,8 @@ export class Liveliness {
     let remote_subscriber;
     let callback_subscriber = false;
 
-    if (options?.callback !== undefined) {
-      let callback = options?.callback;
+    if (options?.handler !== undefined) {
+      let callback = options?.handler;
       callback_subscriber = true;
       const callback_conversion = async function (sample_ws: SampleWS,): Promise<void> {
         let sample: Sample = Sample_from_SampleWS(sample_ws);
@@ -102,7 +102,7 @@ export class Liveliness {
 
     let receiver = Receiver.new(chan);
 
-    let callback = options?.callback;
+    let callback = options?.handler;
     if (callback !== undefined) {
       executeAsync(async () => {
         for await (const message of chan) {

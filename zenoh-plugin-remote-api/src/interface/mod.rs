@@ -357,6 +357,7 @@ pub enum ControlMsg {
         payload: Option<B64String>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
+        handler: HandlerChannel,
     },
 
     // Liveliness
@@ -496,13 +497,25 @@ pub enum QueryReplyVariant {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
         payload: B64String,
+        encoding: Option<String>,
+        priority: u8,
+        congestion_control: u8,
+        express: bool,
+        timestamp: Option<Uuid>,
+        attachment: Option<B64String>,
     },
     ReplyErr {
         payload: B64String,
+        encoding: Option<String>,
     },
     ReplyDelete {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
+        priority: u8,
+        congestion_control: u8,
+        express: bool,
+        timestamp: Option<Uuid>,
+        attachment: Option<B64String>,
     },
 }
 

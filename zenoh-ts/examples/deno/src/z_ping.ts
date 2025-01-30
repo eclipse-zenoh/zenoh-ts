@@ -18,7 +18,7 @@ import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zen
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const sub = session.declare_subscriber("test/pong", new FifoChannel(256) );
+  const sub = session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
   const pub = session.declare_publisher(
     "test/ping",
     {

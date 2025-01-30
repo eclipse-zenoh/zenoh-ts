@@ -2,4 +2,4 @@
 import type { B64String } from "./B64String.js";
 import type { OwnedKeyExprWrapper } from "./OwnedKeyExprWrapper.js";
 
-export type QueryReplyVariant = { "Reply": { key_expr: OwnedKeyExprWrapper, payload: B64String, } } | { "ReplyErr": { payload: B64String, } } | { "ReplyDelete": { key_expr: OwnedKeyExprWrapper, } };
+export type QueryReplyVariant = { "Reply": { key_expr: OwnedKeyExprWrapper, payload: B64String, encoding: string | null, priority: number, congestion_control: number, express: boolean, timestamp: string | null, attachment: B64String | null, } } | { "ReplyErr": { payload: B64String, encoding: string | null, } } | { "ReplyDelete": { key_expr: OwnedKeyExprWrapper, priority: number, congestion_control: number, express: boolean, timestamp: string | null, attachment: B64String | null, } };

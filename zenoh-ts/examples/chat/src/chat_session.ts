@@ -97,7 +97,8 @@ export class ChatSession {
 			let resp = reply.result();
 			if (resp instanceof Sample) {
 				let payload = resp.payload().to_string();
-				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}`);
+				let attachment = resp.attachment()?.to_string() ?? "";
+				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}, from user: ${attachment}`);
 				this.messages = JSON.parse(payload);
 			}
 		} else {
@@ -108,7 +109,9 @@ export class ChatSession {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
-				query.reply(KEYEXPR_CHAT_MESSAGES, response);
+				query.reply(KEYEXPR_CHAT_MESSAGES, response, {
+					attachment: this.user.username
+				});
 			},
 			complete: true
 		});
@@ -118,18 +121,20 @@ export class ChatSession {
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
 		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
-			(sample: Sample) => {
-				let message = sample.payload().to_string();
-				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
-				let user = ChatUser.fromKeyexpr(sample.keyexpr());
-				if (user) {
-					const timestamp = new Date().toISOString();
-					this.messages.push({ t: timestamp, u: user.username, m: message });
-					if (this.messageCallback) {
-						this.messageCallback(user, message);
+			{ 
+				handler: (sample: Sample) => {
+					let message = sample.payload().to_string();
+					log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
+					let user = ChatUser.fromKeyexpr(sample.keyexpr());
+					if (user) {
+						const timestamp = new Date().toISOString();
+						this.messages.push({ t: timestamp, u: user.username, m: message });
+						if (this.messageCallback) {
+							this.messageCallback(user, message);
+						}
 					}
+					return Promise.resolve();
 				}
-				return Promise.resolve();
 			}
 		);
 		log(`[Session] Declare Subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
@@ -139,7 +144,7 @@ export class ChatSession {
 
 		// Subscribe to changes of users presence
 		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
-			callback: (sample: Sample) => {
+			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);
 				if (!user) {

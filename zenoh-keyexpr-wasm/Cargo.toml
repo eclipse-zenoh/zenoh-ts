@@ -16,7 +16,7 @@ default = []
 
 [dependencies]
 wasm-bindgen = "0.2.84"
-zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.0.0-dev", features = [
+zenoh-keyexpr = { workspace = true, features = [
     "js",
 ] }
 

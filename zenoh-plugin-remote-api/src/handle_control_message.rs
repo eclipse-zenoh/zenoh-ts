@@ -467,6 +467,7 @@ pub(crate) async fn handle_control_message(
             encoding,
             payload,
             attachment,
+            handler,
         } => {
             if let Some(querier) = state_map.queriers.get(&querier_id) {
                 let mut get_builder = querier.get();
@@ -493,22 +494,44 @@ pub(crate) async fn handle_control_message(
                 add_if_some!(encoding, get_builder);
                 add_if_some!(payload, get_builder);
                 add_if_some!(attachment, get_builder);
-                let receiver = get_builder.await?;
+
                 let ws_tx = state_map.websocket_tx.clone();
                 let finish_msg = RemoteAPIMsg::Control(ControlMsg::GetFinished { id: get_id });
 
-                spawn_future(async move {
-                    while let Ok(reply) = receiver.recv_async().await {
-                        let reply_ws = ReplyWS::from((reply, get_id));
-                        let remote_api_msg = RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
-                        if let Err(err) = ws_tx.send(remote_api_msg) {
-                            tracing::error!("{}", err);
-                        }
+                match handler {
+                    HandlerChannel::Fifo(size) => {
+                        let receiver = get_builder.with(FifoChannel::new(size)).await?;
+                        spawn_future(async move {
+                            while let Ok(reply) = receiver.recv_async().await {
+                                let reply_ws = ReplyWS::from((reply, get_id));
+                                let remote_api_msg =
+                                    RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
+                                if let Err(err) = ws_tx.send(remote_api_msg) {
+                                    tracing::error!("{}", err);
+                                }
+                            }
+                            if let Err(err) = ws_tx.send(finish_msg) {
+                                tracing::error!("{}", err);
+                            }
+                        });
                     }
-                    if let Err(err) = ws_tx.send(finish_msg) {
-                        tracing::error!("{}", err);
+                    HandlerChannel::Ring(size) => {
+                        let receiver = get_builder.with(RingChannel::new(size)).await?;
+                        spawn_future(async move {
+                            while let Ok(reply) = receiver.recv_async().await {
+                                let reply_ws = ReplyWS::from((reply, get_id));
+                                let remote_api_msg =
+                                    RemoteAPIMsg::Data(DataMsg::GetReply(reply_ws));
+                                if let Err(err) = ws_tx.send(remote_api_msg) {
+                                    tracing::error!("{}", err);
+                                }
+                            }
+                            if let Err(err) = ws_tx.send(finish_msg) {
+                                tracing::error!("{}", err);
+                            }
+                        });
                     }
-                });
+                };
             } else {
                 // TODO: Do we want to add an error here ?
                 warn!("No Querier With ID {querier_id} found")
