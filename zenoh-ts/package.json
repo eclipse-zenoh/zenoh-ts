@@ -5,8 +5,14 @@
   "type": "module",
   "description": "Zenoh: The Zero Overhead Pub/Sub/Query Protocol",
   "exports": {
-    "import": "./dist/index.js",
-    "types": "./dist/index.d.ts"
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./ext": {
+      "import": "./dist/ext/index.js",
+      "types": "./dist/ext/index.d.ts"
+    }
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

@@ -12,7 +12,8 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytes, ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZSerDe } from "@eclipse-zenoh/zenoh-ts";
+import { ZBytes } from "@eclipse-zenoh/zenoh-ts";
+import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZSerDe } from "@eclipse-zenoh/zenoh-ts/ext";
 
 
 class MyStruct implements ZSerializeable, ZDeserializeable {

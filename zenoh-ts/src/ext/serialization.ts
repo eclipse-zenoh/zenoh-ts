@@ -170,7 +170,7 @@ export class ZBytesSerializer {
     /**
      * Serialize any supported type and append it to existing serialized payload.
      * Supported types are:
-     *   - built-in types: number, bigint, string, bool,
+     *   - built-in types: number, bigint, string, boolean,
      *   - types that implement ZSerializeable interface,
      *   - arrays and maps of supported types.
      */
@@ -386,8 +386,8 @@ export class ZBytesDeserializer {
   /**
    * Deserialize next portion of data into any supported type and advance the reading position.
    * Supported types are:
-   *   - built-in types: number, bigint, string, bool,
-   *   - types that implement ZSerializeable interface,
+   *   - built-in types: number, bigint, string, boolean,
+   *   - types that implement ZDeserializeable interface,
    *   - arrays and maps of supported types.
    * @param p Deserialization tag.
    * @returns Deserialized value.
@@ -407,7 +407,7 @@ export class ZBytesDeserializer {
 /**
  * Serialize any supported type.
  * Supported types are:
- *   - built-in types: number, bigint, string, bool,
+ *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZSerializeable interface,
  *   - arrays and maps of supported types.
  * @param val Value to serialize.
@@ -422,8 +422,8 @@ export function zserialize<T>(val: EnsureSerializeable<T>): ZBytes {
 /**
  * Deserialize payload into any supported type and advance the reading position.
  * Supported types are:
- *   - built-in types: number, bigint, string, bool,
- *   - types that implement ZSerializeable interface,
+ *   - built-in types: number, bigint, string, boolean,
+ *   - types that implement ZDeserializeable interface,
  *   - arrays and maps of supported types.
  * @param p Deserialization tag.
  * @param data Payload to deserialize.
