@@ -66,7 +66,6 @@ export async function main() {
         let output = payload.to_string()
         console.log(`Input: ${input}, Output: ${output}`)
     }
-
     // Uint8Array
     {
         let input = new Uint8Array([1, 2, 3, 4])
@@ -83,8 +82,6 @@ export async function main() {
         let output = zdeserialize(ZSerDe.array(ZSerDe.number()), payload)
         console.log(`Input: ${input}, Output: ${output}`)
     }
-
-    // serialization
     // map
     {
         let input = new Map<bigint, string>()
@@ -97,7 +94,6 @@ export async function main() {
         console.log(`Output:`)
         console.table(output)
     }
-
     // Custom class
     {
         let input = new MyStruct(1234n, "test", [1, 2, 3, 4])
