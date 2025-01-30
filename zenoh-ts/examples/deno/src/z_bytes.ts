@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytes, ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZArrayType, ZPrimitiveType, ZMapType, ZObjectType } from "@eclipse-zenoh/zenoh-ts";
+import { ZBytes, ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZSerDe } from "@eclipse-zenoh/zenoh-ts";
 
 
 class MyStruct implements ZSerializeable, ZDeserializeable {
@@ -45,9 +45,9 @@ class MyStruct implements ZSerializeable, ZDeserializeable {
     }
 
     deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
-        this.v1 = deserializer.deserialize(ZPrimitiveType.BigInt)
-        this.v2 = deserializer.deserialize(ZPrimitiveType.String)
-        this.v3 = deserializer.deserialize(ZArrayType.create(ZPrimitiveType.Number))
+        this.v1 = deserializer.deserialize(ZSerDe.bigint())
+        this.v2 = deserializer.deserialize(ZSerDe.string())
+        this.v3 = deserializer.deserialize(ZSerDe.array(ZSerDe.number()))
     }
 
     to_string(): string {
@@ -79,7 +79,7 @@ export async function main() {
     {
         let input = [0.5, 1.0, 3.0, 5.5]
         let payload = zserialize(input)
-        let output = zdeserialize(ZArrayType.create(ZPrimitiveType.Number), payload)
+        let output = zdeserialize(ZSerDe.array(ZSerDe.number()), payload)
         console.log(`Input: ${input}, Output: ${output}`)
     }
 
@@ -90,7 +90,7 @@ export async function main() {
         input.set(0n, "abc")
         input.set(1n, "def")
         let payload = zserialize(input)
-        let output = zdeserialize(ZMapType.create(ZPrimitiveType.BigInt, ZPrimitiveType.String), payload)
+        let output = zdeserialize(ZSerDe.map(ZSerDe.bigint(), ZSerDe.string()), payload)
         console.log(`Input:`)
         console.table(input)
         console.log(`Output:`)
@@ -101,7 +101,7 @@ export async function main() {
     {
         let input = new MyStruct(1234n, "test", [1, 2, 3, 4])
         let payload = zserialize(input)
-        let output: MyStruct = zdeserialize(ZObjectType.create(new MyStruct), payload)
+        let output = zdeserialize(ZSerDe.object(new MyStruct), payload)
         console.log(`Input: ${input.to_string()}, Output: ${output.to_string()}`)
     }
 }

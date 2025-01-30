@@ -15,7 +15,6 @@
 import * as leb from "@thi.ng/leb128";
 
 import { ZBytes } from '../z_bytes.js';
-
 export interface ZSerializeable {
   serialize_with_zserializer(serializer: ZBytesSerializer): void;
 }
@@ -50,71 +49,6 @@ type IsSerializeable<T, X = T> = Select<IsSerializeableInner<T>, IsNotUnion<T>, 
 
 function is_serializeable(s: any): s is ZSerializeable {
   return (<ZSerializeable>s).serialize_with_zserializer !== undefined;
-}
-
-function is_deserializeable(s: any): s is ZDeserializeable {
-  return (<ZDeserializeable>s).deserialize_with_zdeserializer !== undefined;
-}
-
-export enum ZPrimitiveType {
-  Number = 1,
-  BigInt,
-  Boolean,
-  String
-}
-
-export class ZObjectType {
-  readonly proto: any
-  private constructor(proto: any) {
-    this.proto = proto
-  }
-
-  public static create<T extends ZDeserializeable>(proto: T) {
-    return new ZObjectType(proto)
-  }
-}
-
-export class ZArrayType {
-  readonly element_type: ZType
-  private constructor(element_type: ZType) {
-    this.element_type = element_type
-  }
-
-  public static create(element_type: ZType): ZArrayType {
-    return new ZArrayType(element_type)
-  }
-}
-
-export class ZMapType {
-  readonly key_type: ZType
-  readonly value_type: ZType
-  private constructor(key_type: ZType, value_type: ZType) {
-    this.key_type = key_type
-    this.value_type = value_type
-  }
-
-
-  public static create(key_type: ZType, value_type: ZType): ZMapType {
-    return new ZMapType(key_type, value_type)
-  }
-}
-
-export type ZType = ZPrimitiveType | ZArrayType | ZObjectType | ZMapType;
-
-function is_array(t: ZType): t is ZArrayType {
-  return (t as ZArrayType).element_type !== undefined;
-}
-
-function is_map(t: ZType): t is ZMapType {
-  return (t as ZMapType).key_type !== undefined;
-}
-
-function is_object(t: ZType): t is ZObjectType {
-  return (t as ZObjectType).proto !== undefined;
-}
-
-function is_primitive(t: ZType): t is ZPrimitiveType {
-  return typeof t == "number"
 }
 
 export class ZBytesSerializer {
@@ -221,6 +155,49 @@ export class ZBytesSerializer {
     }
 }
 
+class ZPartialDeserializer<T> {
+  private _call: (deserializer: ZBytesDeserializer) => T
+
+  constructor(call: (deserializer: ZBytesDeserializer) => T ) {
+    this._call = call
+  }
+
+  /** @internal */
+  call(deserializer: ZBytesDeserializer): T {
+    return this._call(deserializer)
+  }
+}
+
+export namespace ZSerDe{
+  export function number(): ZPartialDeserializer<number> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_float64() });
+  }
+
+  export function bigint(): ZPartialDeserializer<bigint> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_bigint64() });
+  }
+
+  export function string(): ZPartialDeserializer<string> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_string() });
+  }
+
+  export function boolean(): ZPartialDeserializer<boolean> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_boolean() });
+  }
+
+  export function object<T extends ZDeserializeable>(proto: T): ZPartialDeserializer<T> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_object(proto)})
+  }
+
+  export function array<T>(p: ZPartialDeserializer<T>): ZPartialDeserializer<T[]> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_array(p)})
+  }
+
+  export function map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): ZPartialDeserializer<Map<K, V>> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_map(p_key, p_value)})
+  }
+}
+
 
 export class ZBytesDeserializer {
   private _buffer: Uint8Array;
@@ -252,7 +229,6 @@ export class ZBytesDeserializer {
     }
     return new Number(res).valueOf()
   }
-
 
   public deserialize_string(): string {
       let len = this.read_sequence_length()
@@ -290,21 +266,23 @@ export class ZBytesDeserializer {
     }
   }
 
-  public deserialize_array(type: ZType): any {
+  /// Deserialize an array
+  public deserialize_array<T>(p: ZPartialDeserializer<T>): T[] {
     const len = this.read_sequence_length()
-    let out = new Array(len)
+    let out = new Array<T>(len)
     for (let i = 0; i < len; i++) {
-      out[i] = this.deserialize(type)
+      out[i] = p.call(this)
     }
     return out
   }
 
-  public deserialize_map(key_type: ZType, value_type: ZType): any {
+  /// Deserialzie a map
+  public deserialize_map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): Map<K, V> {
     const len = this.read_sequence_length()
-    let out = new Map()
+    let out = new Map<K, V>()
     for (let i = 0; i < len; i++) {
-      const key = this.deserialize(key_type)
-      const value = this.deserialize(value_type)
+      const key = p_key.call(this)
+      const value = p_value.call(this)
       out.set(key, value)
     }
     return out
@@ -312,39 +290,12 @@ export class ZBytesDeserializer {
 
   public deserialize_object<T extends ZDeserializeable>(o: T): T {
     o.deserialize_with_zdeserializer(this)
-    return o as T
+    return o
   }
 
 
-  public deserialize(type: ZType): any {
-    if (is_primitive(type)) {
-      switch(type) { 
-        case ZPrimitiveType.BigInt: { 
-           return this.deserialize_bigint64()
-        } 
-        case ZPrimitiveType.Number: { 
-           return this.deserialize_float64()
-        }
-        case ZPrimitiveType.Boolean: { 
-          return this.deserialize_boolean()
-        } 
-        case ZPrimitiveType.String: { 
-          return this.deserialize_string()
-        } 
-        default: { 
-          throw new Error(`Unexpected primitive type: ${type}`); 
-        } 
-     }     
-    } else if (is_array(type)) {
-      return this.deserialize_array(type.element_type)
-    } else if (is_map(type)) {
-      return this.deserialize_map(type.key_type, type.value_type)
-    } else if (is_object(type) && is_deserializeable(type.proto)) {
-      let o = Object.assign(type.proto)
-      return this.deserialize_object(o)
-    }
-    // should never happen
-    throw new Error(`Non-Deerializeable type`); 
+  public deserialize<T>(p: ZPartialDeserializer<T>): T {
+    return p.call(this)
   }
 
   /**
@@ -361,9 +312,9 @@ export function zserialize<T>(val: T): ZBytes {
   return s.finish()
 }
 
-export function zdeserialize(type: ZType, data: ZBytes): any  {
+export function zdeserialize<T>(p: ZPartialDeserializer<T>, data: ZBytes): T  {
   const d = new ZBytesDeserializer(data)
-  const res = d.deserialize(type)
+  const res = d.deserialize(p)
   if (!d.is_done()) {
     throw new Error(`Payload contains more bytes than required for deserialization`); 
   }
