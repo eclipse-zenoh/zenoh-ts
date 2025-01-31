@@ -238,11 +238,11 @@ export namespace ZSerDe{
 
   /**
    * Indicates that data should be deserialized as an object.
-   * @param proto An eventually empty object instance, used as an initial value for deserialization.
+   * @param create A new function to create an object instance where data will be deserialized.
    * @returns Object deserialization tag.
    */
-  export function object<T extends ZDeserializeable>(proto: T): ZPartialDeserializer<T> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_object(proto)})
+  export function object<T extends ZDeserializeable>(create: new() => T): ZPartialDeserializer<T> {
+    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_object(create)})
   }
 
   /**
@@ -376,9 +376,10 @@ export class ZBytesDeserializer {
 
   /**
    * Deserializes next portion of data as an object of specified type and advance the reading position.
-   * @param o An eventually empty object instance to deserialize into.
+   * @param create A new function to create an object instance where data will be deserialized.
    */
-  public deserialize_object<T extends ZDeserializeable>(o: T): T {
+  public deserialize_object<T extends ZDeserializeable>(create: new () => T): T {
+    let o = new create()
     o.deserialize_with_zdeserializer(this)
     return o
   }

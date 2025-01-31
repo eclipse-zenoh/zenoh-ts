@@ -98,7 +98,7 @@ export async function main() {
     {
         let input = new MyStruct(1234n, "test", [1, 2, 3, 4])
         let payload = zserialize(input)
-        let output = zdeserialize(ZSerDe.object(new MyStruct), payload)
+        let output = zdeserialize(ZSerDe.object(MyStruct), payload)
         console.log(`Input: ${input.to_string()}, Output: ${output.to_string()}`)
     }
 }
