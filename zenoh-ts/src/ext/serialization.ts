@@ -47,6 +47,7 @@ type IsSerializeableInner<T, X = T> =
   : T extends bigint ? X
   : T extends string ? X
   : T extends boolean ? X
+  : T extends Uint8Array<infer _> ? X
   : T extends Array<infer U> ? EnsureSerializeable<U, X>
   : T extends Map<infer K, infer V> ? EnsureSerializeable<K, X> & EnsureSerializeable<V, X>
   : never;
@@ -90,10 +91,18 @@ export class ZBytesSerializer {
      * Serializes a utf-8 encoded string.
      */
     public serialize_string(val: string) {
-        const encoder = new TextEncoder();
-        const encoded = encoder.encode(val);
-        this.write_sequence_length(encoded.length)
-        this.append(encoded)
+      const encoder = new TextEncoder();
+      const encoded = encoder.encode(val);
+      this.write_sequence_length(encoded.length)
+      this.append(encoded)
+    }
+
+    /**
+     * Serializes a Uint8Array.
+     */
+    public serialize_uint8array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Uint8Array<TArrayBuffer>) {
+      this.write_sequence_length(val.length)
+      this.append(val)
     }
 
     /**
@@ -256,6 +265,8 @@ export class ZBytesSerializer {
           t = this._get_default_serialization_tag(data[0])
         }
         return ZS.array(t) as ZSTypeInfo<EnsureSerializeable<T>>
+      } else if (data instanceof Uint8Array) {
+        return ZS.uint8array() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (data instanceof Map) {
         let t_key = undefined
         let t_value = undefined
@@ -278,7 +289,7 @@ export class ZBytesSerializer {
      * Supported types are:
      *   - built-in types: number, bigint, string, boolean,
      *   - types that implement ZSerializeable interface,
-     *   - arrays and maps of supported types.
+     *   - Uint8Array, arrays and maps of supported types.
      * @param val Value to serialize.
      * @param t An optional serialization tag (if ommited, the default one will be used).
      */
@@ -431,6 +442,16 @@ export namespace ZD{
   }
 
   /**
+   * Indicates that data should be deserialized as a Uint8Array.
+   * @returns Uint8Array deserialization tag.
+   */
+  export function uint8array(): ZDTypeInfo<Uint8Array> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_uint8array() }
+    );
+  }
+
+  /**
    * Indicates that data should be deserialized as an object.
    * @param create A new function to create an object instance where data will be deserialized.
    * @returns Object deserialization tag.
@@ -545,6 +566,16 @@ export namespace ZS{
   }
 
   /**
+   * Indicates that data should be serialized as a Uint8Array.
+   * @returns Uint8Array serialization tag.
+   */
+  export function uint8array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(): ZSTypeInfo<Uint8Array<TArrayBuffer>> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: Uint8Array) => {z.serialize_uint8array(val);}
+    );
+  }
+
+  /**
    * Indicates that data should be deserialized as an object.
    * @returns Object serialization tag.
    */
@@ -601,7 +632,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Reads length of the sequence previously written by {@link ZBytesSerializer.write_sequence_length} and advance the reading position.
+   * Reads length of the sequence previously written by {@link ZBytesSerializer.write_sequence_length} and advances the reading position.
    * @returns Number of sequence elements.
    */
   public read_sequence_length(): number {
@@ -614,7 +645,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data as string and advance the reading position.
+   * Deserializes next portion of data as string and advances the reading position.
    */
   public deserialize_string(): string {
       let len = this.read_sequence_length()
@@ -623,7 +654,15 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 64 bit signed integer) as bigint and advance the reading position.
+   * Deserializes next portion of data as Uint8Array and advances the reading position.
+   */
+  public deserialize_uint8array(): Uint8Array {
+    let len = this.read_sequence_length();
+    return this._read_slice(len)
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 64 bit signed integer) as bigint and advances the reading position.
    */
   public deserialize_bigint_int64(): bigint {
     let data = this._read_slice(8);
@@ -632,7 +671,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 64 bit unsigned integer) as bigint and advance the reading position.
+   * Deserializes next portion of data (serialized as 64 bit unsigned integer) as bigint and advances the reading position.
    */
   public deserialize_bigint_uint64(): bigint {
     let data = this._read_slice(8);
@@ -641,7 +680,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 64 bit floating point number) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 64 bit floating point number) as number and advances the reading position.
    */
   public deserialize_number_float64(): number {
     let data = this._read_slice(8);
@@ -650,7 +689,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 32 bit floating point number) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 32 bit floating point number) as number and advances the reading position.
    */
   public deserialize_number_float32(): number {
     let data = this._read_slice(4);
@@ -659,7 +698,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 32 bit signed integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 32 bit signed integer) as number and advances the reading position.
    */
   public deserialize_number_int32(): number {
     let data = this._read_slice(4);
@@ -668,7 +707,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 32 bit unsigned integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 32 bit unsigned integer) as number and advances the reading position.
    */
   public deserialize_number_uint32(): number {
     let data = this._read_slice(4);
@@ -677,7 +716,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 16 bit signed integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 16 bit signed integer) as number and advances the reading position.
    */
   public deserialize_number_int16(): number {
     let data = this._read_slice(2);
@@ -686,7 +725,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 16 bit unsigned integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 16 bit unsigned integer) as number and advances the reading position.
    */
   public deserialize_number_uint16(): number {
     let data = this._read_slice(2);
@@ -695,7 +734,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 8 bit signed integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 8 bit signed integer) as number and advances the reading position.
    */
   public deserialize_number_int8(): number {
     let data = this._read_slice(1);
@@ -704,7 +743,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data (serialized as 8 bit unsigned integer) as number and advance the reading position.
+   * Deserializes next portion of data (serialized as 8 bit unsigned integer) as number and advances the reading position.
    */
   public deserialize_number_uint8(): number {
     let data = this._read_slice(1);
@@ -713,7 +752,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data as a boolean and advance the reading position.
+   * Deserializes next portion of data as a boolean and advances the reading position.
    */
   public deserialize_boolean(): boolean {
     if (this._idx  >= this._buffer.length) {
@@ -731,7 +770,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data as an array of specified type and advance the reading position.
+   * Deserializes next portion of data as an array of specified type and advances the reading position.
    * @param p Deserialization tag for array element.
    */
   public deserialize_array<T>(p: ZDTypeInfo<T>): T[] {
@@ -744,7 +783,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data as a map of specified key and value types and advance the reading position.
+   * Deserializes next portion of data as a map of specified key and value types and advances the reading position.
    * @param p_key Deserialization tag for map key.
    * @param p_value Deserialization tag for map value.
    */
@@ -760,7 +799,7 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data as an object of specified type and advance the reading position.
+   * Deserializes next portion of data as an object of specified type and advances the reading position.
    * @param create A new function to create an object instance where data will be deserialized.
    */
   public deserialize_object<T extends ZDeserializeable>(create: new () => T): T {
@@ -770,11 +809,11 @@ export class ZBytesDeserializer {
   }
 
   /**
-   * Deserializes next portion of data into any supported type and advance the reading position.
+   * Deserializes next portion of data into any supported type and advances the reading position.
    * Supported types are:
    *   - built-in types: number, bigint, string, boolean,
    *   - types that implement ZDeserializeable interface,
-   *   - arrays and maps of supported types.
+   *   - Uint8Array, arrays and maps of supported types.
    * @param p Deserialization tag.
    * @returns Deserialized value.
    */
@@ -795,7 +834,7 @@ export class ZBytesDeserializer {
  * Supported types are:
  *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZSerializeable interface,
- *   - arrays and maps of supported types.
+ *   - Uint8Array, arrays and maps of supported types.
  * @param val Value to serialize.
  * @param t An optional serialization tag (if ommited, the default one will be used).
  * @returns Payload.
@@ -807,11 +846,11 @@ export function zserialize<T>(val: EnsureSerializeable<T>, t?: ZSTypeInfo<Ensure
 }
 
 /**
- * Deserializes payload into any supported type and advance the reading position.
+ * Deserializes payload into any supported type and advances the reading position.
  * Supported types are:
  *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZDeserializeable interface,
- *   - arrays and maps of supported types.
+ *   - Uint8Array, arrays and maps of supported types.
  * @param t Deserialization tag.
  * @param data Payload to deserialize.
  * @returns Deserialized value.
