@@ -99,7 +99,7 @@ export class ZBytesSerializer {
     /**
      * Serializes bigint as 64 bit signed integer.
      */
-    public serialize_bigint64(val: bigint) {
+    public serialize_bigint_int64(val: bigint) {
       let data = new Uint8Array(8);
       let view = new DataView(data.buffer);
       view.setBigInt64(0, val, true);
@@ -107,12 +107,92 @@ export class ZBytesSerializer {
     }
 
     /**
+     * Serializes bigint as 64 bit unsigned integer.
+     */
+    public serialize_bigint_uint64(val: bigint) {
+      let data = new Uint8Array(8);
+      let view = new DataView(data.buffer);
+      view.setBigUint64(0, val, true);
+      this.append(data)
+    }
+
+    /**
      * Serializes number as 64 bit floating point number.
      */
-    public serialize_float64(val: number) {
+    public serialize_number_float64(val: number) {
       let data = new Uint8Array(8);
       let view = new DataView(data.buffer);
       view.setFloat64(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 32 bit floating point number.
+     */
+    public serialize_number_float32(val: number) {
+      let data = new Uint8Array(4);
+      let view = new DataView(data.buffer);
+      view.setFloat32(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 32 bit integer.
+     */
+    public serialize_number_int32(val: number) {
+      let data = new Uint8Array(4);
+      let view = new DataView(data.buffer);
+      view.setInt32(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 32 bit unsigned integer.
+     */
+    public serialize_number_uint32(val: number) {
+      let data = new Uint8Array(4);
+      let view = new DataView(data.buffer);
+      view.setUint32(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 16 bit integer.
+     */
+    public serialize_number_int16(val: number) {
+      let data = new Uint8Array(2);
+      let view = new DataView(data.buffer);
+      view.setInt16(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 16 bit unsigned integer.
+     */
+    public serialize_number_uint16(val: number) {
+      let data = new Uint8Array(2);
+      let view = new DataView(data.buffer);
+      view.setUint16(0, val, true);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 8 bit integer.
+     */
+    public serialize_number_int8(val: number) {
+      let data = new Uint8Array(1);
+      let view = new DataView(data.buffer);
+      view.setInt8(0, val);
+      this.append(data)
+    }
+
+    /**
+     * Serializes number as 8 bit unsigned integer.
+     */
+    public serialize_number_uint8(val: number) {
+      let data = new Uint8Array(1);
+      let view = new DataView(data.buffer);
+      view.setUint8(0, val);
       this.append(data)
     }
 
@@ -128,41 +208,67 @@ export class ZBytesSerializer {
     /**
      * Serializes an array.
      */
-    public serialize_array<T>(val: EnsureSerializeable<T>[]) {
+    public serialize_array<T>(val: EnsureSerializeable<T>[], t?: ZSTypeInfo<EnsureSerializeable<T>>) {
       this.write_sequence_length(val.length)
-      val.forEach( (element) => this._serialize_inner(element));
+      if (val.length > 0 && t === undefined) {
+        t = this._get_default_serialization_tag(val[0] as any) as ZSTypeInfo<EnsureSerializeable<T>>
+      }
+      val.forEach( (element) => (t as ZSTypeInfo<EnsureSerializeable<T>>).serialize(this, element));
     }
 
     /**
      * Serializes a map.
      */
-    public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) {
+    public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>, t_key?:ZSTypeInfo<EnsureSerializeable<K>>, t_value?: ZSTypeInfo<EnsureSerializeable<V>>) {
       this.write_sequence_length(m.size)
-      m.forEach( (v, k) => { 
-          this._serialize_inner(k);
-          this._serialize_inner(v);
+      if (m.size > 0) {
+        let val = m.entries().next()
+        if (val !== undefined ) {
+          let value = val.value
+          if (value !== undefined) {
+            t_key ??= this._get_default_serialization_tag(value[0] as any) as ZSTypeInfo<EnsureSerializeable<K>>
+            t_value ??= this._get_default_serialization_tag(value[1] as any) as ZSTypeInfo<EnsureSerializeable<V>>
+          }
         }
-      );
+      }
+      m.forEach( (v, k) => { 
+        (t_key as ZSTypeInfo<EnsureSerializeable<K>>).serialize(this, k);
+        (t_value as ZSTypeInfo<EnsureSerializeable<V>>).serialize(this, v);
+      }
+    );
     }
     
-
-    private _serialize_inner(data: any) {
+    private _get_default_serialization_tag<T>(data: EnsureSerializeable<T>): ZSTypeInfo<EnsureSerializeable<T>> {
       if (is_serializeable(data)) {
-        data.serialize_with_zserializer(this);
+        type R = typeof data
+        return ZS.object<R>() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (typeof data == "number") {
-        this.serialize_float64(data)
+        return ZS.number() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (typeof data == "bigint") {
-        this.serialize_bigint64(data)
+        return ZS.bigint() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (typeof data == "string") {
-        this.serialize_string(data)
+        return ZS.string() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (typeof data == "boolean") {
-        this.serialize_boolean(data)
+        return ZS.boolean() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (Array.isArray(data)) {
-        this.serialize_array(data)
+        let t = undefined
+        if (data.length > 0) {
+          t = this._get_default_serialization_tag(data[0])
+        }
+        return ZS.array(t) as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (data instanceof Map) {
-        this.serialize_map(data)
-      } else {
-        // should never happen
+        let t_key = undefined
+        let t_value = undefined
+        let val = data.entries().next()
+        if (val !== undefined ) {
+          let value = val.value
+          if (value !== undefined) {
+            t_key = this._get_default_serialization_tag(value[0] as any)
+            t_value = this._get_default_serialization_tag(value[1] as any)
+          }
+        }
+        return ZS.map(t_key, t_value) as ZSTypeInfo<EnsureSerializeable<T>>
+      } else {   // should never happen
         throw new Error(`Non-ZSerializeable type`); 
       }
     }
@@ -173,9 +279,15 @@ export class ZBytesSerializer {
      *   - built-in types: number, bigint, string, boolean,
      *   - types that implement ZSerializeable interface,
      *   - arrays and maps of supported types.
+     * @param val Value to serialize.
+     * @param t An optional serialization tag (if ommited, the default one will be used).
      */
-    public serialize<T>(val: EnsureSerializeable<T>) {
-      this._serialize_inner(val);
+    public serialize<T>(val: EnsureSerializeable<T>, t?: ZSTypeInfo<EnsureSerializeable<T>>) {
+      if (t === undefined) {
+        this._get_default_serialization_tag(val).serialize(this, val)
+      } else {
+        t.serialize(this, val)
+      }
     }
   
     /**
@@ -190,50 +302,132 @@ export class ZBytesSerializer {
     }
 }
 
-class ZPartialDeserializer<T> {
-  private _call: (deserializer: ZBytesDeserializer) => T
+/**
+ * Format for `number` type serialization/deserialzation.
+ */
+export enum NumberFormat {
+  Float64 = 1,
+  Float32,
+  Int32,
+  Uint32,
+  Int16,
+  Uint16,
+  Int8,
+  Uint8
+}
 
-  constructor(call: (deserializer: ZBytesDeserializer) => T ) {
-    this._call = call
+/**
+ * Format for `bigint` type serialization/deserialzation.
+ */
+export enum BigIntFormat {
+  Int64 = 1,
+  Uint64
+}
+
+
+class ZDTypeInfo<T> {
+  private _deserialize: (deserializer: ZBytesDeserializer) => T
+
+  constructor(deserialize: (deserializer: ZBytesDeserializer) => T ) {
+    this._deserialize = deserialize
   }
 
   /** @internal */
-  call(deserializer: ZBytesDeserializer): T {
-    return this._call(deserializer)
+  deserialize(deserializer: ZBytesDeserializer): T {
+    return this._deserialize(deserializer)
   }
 }
 
-export namespace ZSerDe{
+class ZSTypeInfo<T> {
+  private _serialize: (serializer: ZBytesSerializer, val: T) => void
+
+  constructor(serialize: (serializer: ZBytesSerializer, val: T) => void) {
+    this._serialize = serialize
+  }
+
+  /** @internal */
+  serialize(serializer: ZBytesSerializer, val: T): void {
+    this._serialize(serializer, val)
+  }
+}
+
+export namespace ZD{
   /**
-   * Indicates that value should be deserialized as a number.
+   * Indicates that value should be deserialized as a number in specified format.
    * @returns Number deserialization tag.
    */
-  export function number(): ZPartialDeserializer<number> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_float64() });
+  export function number(format: NumberFormat = NumberFormat.Float64): ZDTypeInfo<number> {
+    switch(format) {
+      case NumberFormat.Float64:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_float64() }
+        );
+      case NumberFormat.Float32:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_float32() }
+        );
+      case NumberFormat.Int32:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_int32() }
+        );
+      case NumberFormat.Uint32:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_uint32() }
+        );
+      case NumberFormat.Int16:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_int16() }
+        );
+      case NumberFormat.Uint16:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_uint16() }
+        );
+      case NumberFormat.Int8:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_int8() }
+        );
+      case NumberFormat.Uint8:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_int16() }
+        );
+    }
   }
 
   /**
-   * Indicates that data should be deserialized as a bigint.
+   * Indicates that data should be deserialized as a bigint in specified format.
    * @returns Bigint deserialization tag.
    */
-  export function bigint(): ZPartialDeserializer<bigint> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_bigint64() });
+  export function bigint(format:BigIntFormat = BigIntFormat.Int64): ZDTypeInfo<bigint> {
+    switch (format) {
+      case BigIntFormat.Int64:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_bigint_int64() }
+        );
+      case BigIntFormat.Uint64:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_bigint_uint64() }
+        );
+    }
   }
 
   /**
    * Indicates that data should be deserialized as a string.
    * @returns String deserialization tag.
    */
-  export function string(): ZPartialDeserializer<string> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_string() });
+  export function string(): ZDTypeInfo<string> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_string() }
+    );
   }
 
   /**
    * Indicates that data should be deserialized as a boolean.
    * @returns Boolean deserialization tag.
    */
-  export function boolean(): ZPartialDeserializer<boolean> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_boolean() });
+  export function boolean(): ZDTypeInfo<boolean> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_boolean() }
+    );
   }
 
   /**
@@ -241,29 +435,148 @@ export namespace ZSerDe{
    * @param create A new function to create an object instance where data will be deserialized.
    * @returns Object deserialization tag.
    */
-  export function object<T extends ZDeserializeable>(create: new() => T): ZPartialDeserializer<T> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_object(create)})
+  export function object<T extends ZDeserializeable>(create: new() => T): ZDTypeInfo<T> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_object(create) }
+    );
   }
 
   /**
    * Indicates that data should be deserialized as an array.
-   * @param p An array element deserialization tag.
+   * @param t An array element deserialization tag.
    * @returns Array deserialization tag.
    */
-  export function array<T>(p: ZPartialDeserializer<T>): ZPartialDeserializer<T[]> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_array(p)})
+  export function array<T>(t: ZDTypeInfo<T>): ZDTypeInfo<T[]> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_array(t) }
+    );
   }
 
   /**
    * Indicates that data should be deserialized as a map.
-   * @param p An array element deserialization tag.
+   * @param t_key A key type deserialization tag.
+   * @param t_value A value type deserialization tag.
    * @returns Array deserialization tag.
    */
-  export function map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): ZPartialDeserializer<Map<K, V>> {
-    return new ZPartialDeserializer((z: ZBytesDeserializer) => { return z.deserialize_map(p_key, p_value)})
+  export function map<K, V>(t_key: ZDTypeInfo<K>, t_value: ZDTypeInfo<V>): ZDTypeInfo<Map<K, V>> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return z.deserialize_map(t_key, t_value) }
+    );
   }
 }
 
+export namespace ZS{
+  /**
+   * Indicates that value should be serialized as a number in specified format.
+   * @returns Number serialization tag.
+   */
+  export function number(format: NumberFormat = NumberFormat.Float64): ZSTypeInfo<number> {
+    switch(format) {
+      case NumberFormat.Float64:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_float64(val);}
+        );
+      case NumberFormat.Float32:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_float32(val);}
+        );
+      case NumberFormat.Int32:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_int32(val);}
+        );
+      case NumberFormat.Uint32:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_uint32(val);}
+        );
+      case NumberFormat.Int16:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_int16(val);}
+        );
+      case NumberFormat.Uint16:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_uint16(val);}
+        );
+      case NumberFormat.Int8:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_int8(val);}
+        );
+      case NumberFormat.Uint8:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_int16(val);}
+        );
+    }
+  }
+
+  /**
+   * Indicates that data should be serialized as a bigint in specified format.
+   * @returns Bigint serialization tag.
+   */
+  export function bigint(format:BigIntFormat = BigIntFormat.Int64): ZSTypeInfo<bigint> {
+    switch (format) {
+      case BigIntFormat.Int64:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: bigint) => {z.serialize_bigint_int64(val);}
+        );
+      case BigIntFormat.Uint64:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: bigint) => {z.serialize_bigint_uint64(val);}
+        );
+    }
+  }
+
+  /**
+   * Indicates that data should be serialized as a string.
+   * @returns String serialization tag.
+   */
+  export function string(): ZSTypeInfo<string> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: string) => {z.serialize_string(val);}
+    );
+  }
+
+  /**
+   * Indicates that data should be serialized as a boolean.
+   * @returns Boolean serialization tag.
+   */
+  export function boolean(): ZSTypeInfo<boolean> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: boolean) => {z.serialize_boolean(val);}
+    );
+  }
+
+  /**
+   * Indicates that data should be deserialized as an object.
+   * @returns Object serialization tag.
+   */
+  export function object<T extends ZSerializeable>(): ZSTypeInfo<T> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: T) => {val.serialize_with_zserializer(z)}
+    );
+  }
+
+  /**
+   * Indicates that data should be serialized as an array.
+   * @param t An optional array element serialization tag (if omitted the default one will be used).
+   * @returns Array serialization tag.
+   */
+  export function array<T>(t?: ZSTypeInfo<EnsureSerializeable<T>>): ZSTypeInfo<EnsureSerializeable<T>[]> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: EnsureSerializeable<T>[]) => {z.serialize_array(val, t)}
+    );
+  }
+
+  /**
+   * Indicates that data should be serialized as a map.
+   * @param t_key An optional key type serialization tag (if omitted the default one will be used).
+   * @param t_value An optional value type serialization tag (if omitted the default one will be used).
+   * @returns Array serialization tag.
+   */
+  export function map<K, V>(t_key?: ZSTypeInfo<EnsureSerializeable<K>>, t_value?: ZSTypeInfo<EnsureSerializeable<V>>): ZSTypeInfo<Map<EnsureSerializeable<K>, EnsureSerializeable<V>>> {
+    return new ZSTypeInfo(
+      (z: ZBytesSerializer, val: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) => {z.serialize_map(val, t_key, t_value)},
+    );
+  }
+}
 
 export class ZBytesDeserializer {
   private _buffer: Uint8Array;
@@ -312,19 +625,91 @@ export class ZBytesDeserializer {
   /**
    * Deserializes next portion of data (serialized as 64 bit signed integer) as bigint and advance the reading position.
    */
-  public deserialize_bigint64(): bigint {
+  public deserialize_bigint_int64(): bigint {
     let data = this._read_slice(8);
     let view = new DataView(data.buffer);
     return view.getBigInt64(0, true);
   }
 
   /**
+   * Deserializes next portion of data (serialized as 64 bit unsigned integer) as bigint and advance the reading position.
+   */
+  public deserialize_bigint_uint64(): bigint {
+    let data = this._read_slice(8);
+    let view = new DataView(data.buffer);
+    return view.getBigUint64(0, true);
+  }
+
+  /**
    * Deserializes next portion of data (serialized as 64 bit floating point number) as number and advance the reading position.
    */
-  public deserialize_float64(): number {
+  public deserialize_number_float64(): number {
     let data = this._read_slice(8);
     let view = new DataView(data.buffer);
     return view.getFloat64(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 32 bit floating point number) as number and advance the reading position.
+   */
+  public deserialize_number_float32(): number {
+    let data = this._read_slice(4);
+    let view = new DataView(data.buffer);
+    return view.getFloat32(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 32 bit signed integer) as number and advance the reading position.
+   */
+  public deserialize_number_int32(): number {
+    let data = this._read_slice(4);
+    let view = new DataView(data.buffer);
+    return view.getInt32(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 32 bit unsigned integer) as number and advance the reading position.
+   */
+  public deserialize_number_uint32(): number {
+    let data = this._read_slice(4);
+    let view = new DataView(data.buffer);
+    return view.getUint32(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 16 bit signed integer) as number and advance the reading position.
+   */
+  public deserialize_number_int16(): number {
+    let data = this._read_slice(2);
+    let view = new DataView(data.buffer);
+    return view.getInt16(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 16 bit unsigned integer) as number and advance the reading position.
+   */
+  public deserialize_number_uint16(): number {
+    let data = this._read_slice(2);
+    let view = new DataView(data.buffer);
+    return view.getUint16(0, true);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 8 bit signed integer) as number and advance the reading position.
+   */
+  public deserialize_number_int8(): number {
+    let data = this._read_slice(1);
+    let view = new DataView(data.buffer);
+    return view.getInt8(0);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 8 bit unsigned integer) as number and advance the reading position.
+   */
+  public deserialize_number_uint8(): number {
+    let data = this._read_slice(1);
+    let view = new DataView(data.buffer);
+    return view.getInt8(0);
   }
 
   /**
@@ -349,11 +734,11 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data as an array of specified type and advance the reading position.
    * @param p Deserialization tag for array element.
    */
-  public deserialize_array<T>(p: ZPartialDeserializer<T>): T[] {
+  public deserialize_array<T>(p: ZDTypeInfo<T>): T[] {
     const len = this.read_sequence_length()
     let out = new Array<T>(len)
     for (let i = 0; i < len; i++) {
-      out[i] = p.call(this)
+      out[i] = p.deserialize(this)
     }
     return out
   }
@@ -363,12 +748,12 @@ export class ZBytesDeserializer {
    * @param p_key Deserialization tag for map key.
    * @param p_value Deserialization tag for map value.
    */
-  public deserialize_map<K, V>(p_key: ZPartialDeserializer<K>, p_value: ZPartialDeserializer<V>): Map<K, V> {
+  public deserialize_map<K, V>(p_key: ZDTypeInfo<K>, p_value: ZDTypeInfo<V>): Map<K, V> {
     const len = this.read_sequence_length()
     let out = new Map<K, V>()
     for (let i = 0; i < len; i++) {
-      const key = p_key.call(this)
-      const value = p_value.call(this)
+      const key = p_key.deserialize(this)
+      const value = p_value.deserialize(this)
       out.set(key, value)
     }
     return out
@@ -393,8 +778,8 @@ export class ZBytesDeserializer {
    * @param p Deserialization tag.
    * @returns Deserialized value.
    */
-  public deserialize<T>(p: ZPartialDeserializer<T>): T {
-    return p.call(this)
+  public deserialize<T>(p: ZDTypeInfo<T>): T {
+    return p.deserialize(this)
   }
 
   /**
@@ -412,11 +797,12 @@ export class ZBytesDeserializer {
  *   - types that implement ZSerializeable interface,
  *   - arrays and maps of supported types.
  * @param val Value to serialize.
+ * @param t An optional serialization tag (if ommited, the default one will be used).
  * @returns Payload.
  */
-export function zserialize<T>(val: EnsureSerializeable<T>): ZBytes {
+export function zserialize<T>(val: EnsureSerializeable<T>, t?: ZSTypeInfo<EnsureSerializeable<T>>): ZBytes {
   const s = new ZBytesSerializer()
-  s.serialize(val)
+  s.serialize(val, t)
   return s.finish()
 }
 
@@ -426,13 +812,13 @@ export function zserialize<T>(val: EnsureSerializeable<T>): ZBytes {
  *   - built-in types: number, bigint, string, boolean,
  *   - types that implement ZDeserializeable interface,
  *   - arrays and maps of supported types.
- * @param p Deserialization tag.
+ * @param t Deserialization tag.
  * @param data Payload to deserialize.
  * @returns Deserialized value.
  */
-export function zdeserialize<T>(p: ZPartialDeserializer<T>, data: ZBytes): T  {
+export function zdeserialize<T>(t: ZDTypeInfo<T>, data: ZBytes): T  {
   const d = new ZBytesDeserializer(data)
-  const res = d.deserialize(p)
+  const res = d.deserialize(t)
   if (!d.is_done()) {
     throw new Error(`Payload contains more bytes than required for deserialization`); 
   }

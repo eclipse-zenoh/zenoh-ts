@@ -13,19 +13,19 @@
 //
 
 import { ZBytes } from "@eclipse-zenoh/zenoh-ts";
-import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZSerDe } from "@eclipse-zenoh/zenoh-ts/ext";
+import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, ZS, ZD, NumberFormat, BigIntFormat } from "@eclipse-zenoh/zenoh-ts/ext";
 
 
 class MyStruct implements ZSerializeable, ZDeserializeable {
-    v1: bigint;
+    v1: number;
     v2: string;
     v3: number[];
 
-    constructor(v1?: bigint, v2?: string, v3?: number[]) {
+    constructor(v1?: number, v2?: string, v3?: number[]) {
         if (typeof v1 !== `undefined`) {
             this.v1 = v1;
         } else {
-            this.v1 = 0n;
+            this.v1 = 0;
         }
         if (typeof v2 !== `undefined`) {
             this.v2 = v2;
@@ -40,19 +40,19 @@ class MyStruct implements ZSerializeable, ZDeserializeable {
     }
 
     serialize_with_zserializer(serializer: ZBytesSerializer): void {
-        serializer.serialize(this.v1)
+        serializer.serialize(this.v1, ZS.number(NumberFormat.Int32))
         serializer.serialize(this.v2)
-        serializer.serialize(this.v3)
+        serializer.serialize(this.v3, ZS.array(ZS.number(NumberFormat.Int8)))
     }
 
     deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
-        this.v1 = deserializer.deserialize(ZSerDe.bigint())
-        this.v2 = deserializer.deserialize(ZSerDe.string())
-        this.v3 = deserializer.deserialize(ZSerDe.array(ZSerDe.number()))
+        this.v1 = deserializer.deserialize(ZD.number(NumberFormat.Uint32))
+        this.v2 = deserializer.deserialize(ZD.string())
+        this.v3 = deserializer.deserialize(ZD.array(ZD.number(NumberFormat.Int8)))
     }
 
     to_string(): string {
-        return JSON.stringify(this, (_, v) => typeof v === 'bigint' ? v.toString() : v)
+        return JSON.stringify(this)
     }
 
 }
@@ -77,9 +77,13 @@ export async function main() {
     // serialization
     // array
     {
-        let input = [0.5, 1.0, 3.0, 5.5]
-        let payload = zserialize(input)
-        let output = zdeserialize(ZSerDe.array(ZSerDe.number()), payload)
+        let input = [1, 2, 3, 5]
+        // by default number is serialized/deserialized as 64-bit float, 
+        // other formats, like Int32, for example, must be specified explicitly
+        let payload = zserialize(input, ZS.array(ZS.number(NumberFormat.Int32)))
+        let output = zdeserialize(ZD.array(ZD.number(NumberFormat.Int32)), payload)
+        // let payload = zserialize(input)
+        // let output = zdeserialize(ZD.array(ZD.number()), payload)
         console.log(`Input: ${input}, Output: ${output}`)
     }
     // map
@@ -87,8 +91,12 @@ export async function main() {
         let input = new Map<bigint, string>()
         input.set(0n, "abc")
         input.set(1n, "def")
-        let payload = zserialize(input)
-        let output = zdeserialize(ZSerDe.map(ZSerDe.bigint(), ZSerDe.string()), payload)
+        // by default bigint is serialized/deserialized as 64-bit signed integer, 
+        // other formats, like UInt64, for example, must be specified explicitly
+        let payload = zserialize(input, ZS.map(ZS.bigint(BigIntFormat.Uint64), ZS.string()))
+        let output = zdeserialize(ZD.map(ZD.bigint(BigIntFormat.Uint64), ZD.string()), payload)
+        // let payload = zserialize(input)
+        // let output = zdeserialize(ZD.map(ZD.bigint(), ZD.string()), payload)
         console.log(`Input:`)
         console.table(input)
         console.log(`Output:`)
@@ -96,9 +104,9 @@ export async function main() {
     }
     // Custom class
     {
-        let input = new MyStruct(1234n, "test", [1, 2, 3, 4])
+        let input = new MyStruct(1234, "test", [1, 2, 3, 4])
         let payload = zserialize(input)
-        let output = zdeserialize(ZSerDe.object(MyStruct), payload)
+        let output = zdeserialize(ZD.object(MyStruct), payload)
         console.log(`Input: ${input.to_string()}, Output: ${output.to_string()}`)
     }
 }
