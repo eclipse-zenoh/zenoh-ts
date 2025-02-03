@@ -77,13 +77,20 @@ export async function main() {
     // serialization
     // array
     {
-        let input = [1, 2, 3, 5]
+        let input = [1, 2, 3, 4]
         // by default number is serialized/deserialized as 64-bit float, 
         // other formats, like Int32, for example, must be specified explicitly
         let payload = zserialize(input, ZS.array(ZS.number(NumberFormat.Int32)))
         let output = zdeserialize(ZD.array(ZD.number(NumberFormat.Int32)), payload)
         // let payload = zserialize(input)
         // let output = zdeserialize(ZD.array(ZD.number()), payload)
+        console.log(`Input: ${input}, Output: ${output}`)
+    }
+    // typed array
+    {
+        let input = new Int32Array([1, 2, 3, 4])
+        let payload = zserialize(input)
+        let output = zdeserialize(ZD.int32array(), payload)
         console.log(`Input: ${input}, Output: ${output}`)
     }
     // map
