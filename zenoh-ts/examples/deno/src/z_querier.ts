@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { deserialize_string, ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget, Selector, } from "@eclipse-zenoh/zenoh-ts";
+import { ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget, Selector, } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -41,10 +41,10 @@ export async function main() {
         const resp = reply.result();
         if (resp instanceof Sample) {
           const sample: Sample = resp;
-          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().deserialize(deserialize_string), "')");
+          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().to_string(), "')");
         } else {
           const reply_error: ReplyError = resp;
-          console.warn(">> Received (ERROR: '{", reply_error.payload().deserialize(deserialize_string), "}')");
+          console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
         }
       }
       reply = await receiver.receive();
