@@ -168,7 +168,7 @@ export class RemoteSession {
     priority?: number,
     express?: boolean,
     attachment?: Array<number>,
-    timestamp?:string,
+    timestamp?: string,
   ): void {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
 

@@ -654,11 +654,7 @@ export class Session {
     }
 
     let _congestion_control;
-    let congestion_control = CongestionControl.DROP;
-    if (querier_opts?.congestion_control != null) {
-      _congestion_control = congestion_control_to_int(querier_opts?.congestion_control);
-      congestion_control = querier_opts?.congestion_control;
-    }
+    let congestion_control = querier_opts?.congestion_control ?? null;
 
     let _accept_replies;
     let accept_replies = ReplyKeyExpr.Any;

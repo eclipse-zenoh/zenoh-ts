@@ -132,13 +132,14 @@ pub async fn handle_data_message(
                                     warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {priority} to Priority:");
                                     Priority::default()
                                 });
-                                let congestion_control = if congestion_control == 0 {
-                                    CongestionControl::Drop
-                                } else if congestion_control == 1 {
-                                    CongestionControl::Block
-                                } else {
-                                    warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {congestion_control} to CongestionControl:");
-                                    CongestionControl::default()
+                                let congestion_control = match congestion_control {
+                                    0 => CongestionControl::Drop,
+                                    1 => CongestionControl::Block,
+                                    u8::MAX => CongestionControl::DEFAULT_RESPONSE,
+                                    unknown => {
+                                        warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {unknown} to CongestionControl:");
+                                        CongestionControl::DEFAULT_RESPONSE
+                                    }
                                 };
                                 let mut builder = q
                                     .reply(key_expr, payload)
@@ -198,13 +199,14 @@ pub async fn handle_data_message(
                                 warn!("DataMsg::QueryReplyVariant::ReplyDelete : Could not convert value {priority} to Priority:");
                                 Priority::default()
                             });
-                            let congestion_control = if congestion_control == 0 {
-                                CongestionControl::Drop
-                            } else if congestion_control == 1 {
-                                CongestionControl::Block
-                            } else {
-                                warn!("DataMsg::QueryReplyVariant::ReplyDelete : Could not convert value {congestion_control} to CongestionControl:");
-                                CongestionControl::default()
+                            let congestion_control = match congestion_control {
+                                0 => CongestionControl::Drop,
+                                1 => CongestionControl::Block,
+                                u8::MAX => CongestionControl::DEFAULT_RESPONSE,
+                                unknown => {
+                                    warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {unknown} to CongestionControl:");
+                                    CongestionControl::DEFAULT_RESPONSE
+                                }
                             };
                             let mut builder = q
                                 .reply_del(key_expr)

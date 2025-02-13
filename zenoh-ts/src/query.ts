@@ -332,7 +332,7 @@ export class Query {
     */
   reply_del(key_expr: IntoKeyExpr, options?: ReplyDelOptions): void {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
-    let opt_attachment : B64String | null = null;
+    let opt_attachment: B64String | null = null;
     if (options?.attachment != undefined) {
       opt_attachment = b64_str_from_bytes(new ZBytes(options?.attachment).to_bytes());
     }

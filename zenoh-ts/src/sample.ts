@@ -108,9 +108,9 @@ export function congestion_control_to_int(
       return 0;
     case CongestionControl.BLOCK:
       return 1;
-    // Default is Drop
+    // Default is unset
     default:
-      return 0;
+      return 255;
   }
 }
 
