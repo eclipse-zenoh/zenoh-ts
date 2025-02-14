@@ -1,4 +1,4 @@
-import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher, deserialize_string } from '@eclipse-zenoh/zenoh-ts';
+import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
 
 export function validate_username(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
@@ -96,8 +96,8 @@ export class ChatSession {
 		if (reply instanceof Reply) {
 			let resp = reply.result();
 			if (resp instanceof Sample) {
-				let payload = deserialize_string(resp.payload().to_bytes());
-				let attachment = deserialize_string(resp.attachment()?.to_bytes() ?? Uint8Array.from([]));
+				let payload = resp.payload().to_string();
+				let attachment = resp.attachment()?.to_string() ?? "";
 				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}, from user: ${attachment}`);
 				this.messages = JSON.parse(payload);
 			}
@@ -123,7 +123,7 @@ export class ChatSession {
 		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
 			{ 
 				handler: (sample: Sample) => {
-					let message = deserialize_string(sample.payload().to_bytes());
+					let message = sample.payload().to_string();
 					log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 					let user = ChatUser.fromKeyexpr(sample.keyexpr());
 					if (user) {
