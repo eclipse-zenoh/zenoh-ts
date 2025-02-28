@@ -8,8 +8,7 @@ function initialize() {
 	const connectButton = document.getElementById('connect-button') as HTMLButtonElement;
 	const disconnectButton = document.getElementById('disconnect-button') as HTMLButtonElement;
 	const sendButton = document.getElementById('send-button') as HTMLButtonElement;
-	const serverNameInput = document.getElementById('server-name') as HTMLInputElement;
-	const serverPortInput = document.getElementById('server-port') as HTMLInputElement;
+	const serverUrlInput = document.getElementById('server-url') as HTMLInputElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const messageInput = document.getElementById('message-input') as HTMLInputElement;
 	const usersList = document.getElementById('users') as HTMLUListElement;
@@ -108,7 +107,7 @@ function initialize() {
 				await globalChatSession.disconnect();
 			}
 			globalChatSession = chatSession;
-			await chatSession.connect(serverNameInput.value, serverPortInput.value);
+			await chatSession.connect(serverUrlInput.value);
 		});
 	});
 

@@ -82,11 +82,10 @@ export class ChatSession {
 		this.user = user;
 	}
 
-	public async connect(serverName: string, serverPort: string): Promise<void> {
-		let locator = `ws/${serverName}:${serverPort}`;
-		let config = new Config(locator);
+	public async connect(serverUrl: string): Promise<void> {
+		let config = new Config(serverUrl);
 		this.session = await Session.open(config);
-		log(`[Session] Open ${locator}`);
+		log(`[Session] Open ${serverUrl}`);
 
 		let keyexpr = this.user.toKeyexpr();
 
