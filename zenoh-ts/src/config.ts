@@ -27,7 +27,7 @@ export class Config {
   /**
    * Construct a new config, containing a locator
    * @param {string} locator - A string that respects the Locator to connect to. Currently this can be only the address of zenohd websocket plugin.
-   * It accepth either 
+   * It accepts either 
    * - zenoh canon form: `<proto>/<address>[?<metadata>]` where <proto> can be `ws` and `wss` only, e.g. `ws/127.0.0.1:10000`
    * - common url form, e.g. `ws://127.0.0.1:10000`
    * @returns {Config} configuration instance
