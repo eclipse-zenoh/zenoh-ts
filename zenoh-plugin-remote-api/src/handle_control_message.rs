@@ -314,6 +314,9 @@ pub(crate) async fn handle_control_message(
         ControlMsg::UndeclareSubscriber(uuid) => {
             if let Some((join_handle, _)) = state_map.subscribers.remove(&uuid) {
                 join_handle.abort(); // This should drop the underlying subscriber of the future
+                                     // Send the same message back to the server to confirm that the subscriber has been undeclared.
+                let remote_api_msg = RemoteAPIMsg::Control(ControlMsg::UndeclareSubscriber(uuid));
+                state_map.websocket_tx.send(remote_api_msg)?;
             } else {
                 warn!("UndeclareSubscriber: No Subscriber with UUID {uuid}");
             }
@@ -421,6 +424,8 @@ pub(crate) async fn handle_control_message(
         ControlMsg::UndeclareQueryable(uuid) => {
             if let Some((queryable, _)) = state_map.queryables.remove(&uuid) {
                 queryable.abort();
+                let remote_api_msg = RemoteAPIMsg::Control(ControlMsg::UndeclareQueryable(uuid));
+                state_map.websocket_tx.send(remote_api_msg)?;
             };
         }
         ControlMsg::Liveliness(liveliness_msg) => {
