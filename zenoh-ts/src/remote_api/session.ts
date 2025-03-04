@@ -544,6 +544,16 @@ export class RemoteSession {
         let channel = this.get_receiver.get(control_msg["GetFinished"].id);
         channel?.send(RemoteRecvErr.Disconnected);
         this.get_receiver.delete(control_msg["GetFinished"].id);
+      } else if ("UndeclareSubscriber" in control_msg) {
+        let subscriber_uuid = control_msg["UndeclareSubscriber"];
+        let subscriber_channel = this.subscribers.get(subscriber_uuid);
+        subscriber_channel?.close();
+        this.subscribers.delete(subscriber_uuid);
+      } else if ("UndeclareQueryable" in control_msg) {
+        let queryable_uuid = control_msg["UndeclareQueryable"];
+        let subscriber_channel = this.queryables.get(queryable_uuid);
+        subscriber_channel?.close();
+        this.subscribers.delete(queryable_uuid);
       }
     }
   }

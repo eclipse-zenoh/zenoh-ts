@@ -218,6 +218,5 @@ export class RemoteSubscriber {
       UndeclareSubscriber: this.subscriber_id.toString(),
     };
     this.session_ref.send_ctrl_message(ctrl_message);
-    this.rx.close();
   }
 }
