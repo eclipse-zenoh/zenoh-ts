@@ -84,12 +84,24 @@ export class RemoteSession {
     this._new_timestamp = null;
   }
 
+  private static parse_zenoh_locator(locator: string): string {
+    let parts = locator.split("/", 2);
+    if (parts.length != 2) {
+      return locator;
+    }
+    let protocol = parts[0];
+    let address = parts[1];
+    if (protocol != "ws" && protocol != "wss") {
+      return locator;
+    }
+    return `${protocol}://${address}`;
+  }
+
   //
   // Initialize Class
   //
-  static async new(url: string): Promise<RemoteSession> {
-    let split = url.split("/");
-    let websocket_endpoint = split[0] + "://" + split[1];
+  static async new(locator: string): Promise<RemoteSession> {
+    const websocket_endpoint = this.parse_zenoh_locator(locator);
 
     const MAX_RETRIES: number = 10;
     let retries: number = 0;
@@ -125,7 +137,7 @@ export class RemoteSession {
         if (wait > (retry_timeout_ms * exponential_multiplier)) {
           ws.close();
           if (retries > MAX_RETRIES) {
-            throw new Error(`Failed to Connect to locator endpoint: ${url} after ${MAX_RETRIES}`);
+            throw new Error(`Failed to Connect to websocket endpoint: ${websocket_endpoint} after ${MAX_RETRIES}`);
           }
           exponential_multiplier = exponential_multiplier * 2;
           break;
