@@ -142,6 +142,7 @@ export class RemoteQueryable {
       UndeclareQueryable: this.queryable_id.toString(),
     };
     this.session_ref.send_ctrl_message(ctrl_message);
+    this.session_ref.queryables.delete(this.queryable_id);
     this.query_rx.close();
   }
 }
