@@ -24,6 +24,27 @@ on:
     - cron: "0 6 * * 1-5"
 
 jobs:
+  check_rust:
+      name: Check zenoh-ts using Rust 1.75
+      runs-on: ubuntu-latest
+      strategy:
+        fail-fast: false
+      steps:
+        - name: Clone this repository
+          uses: actions/checkout@v4
+
+        - name: Update Rust 1.75.0 toolchain
+          run: rustup update 1.75.0
+
+        - name: Setup rust-cache
+          uses: Swatinem/rust-cache@v2
+          with:
+            cache-bin: false
+
+        - name: Check zenoh-ts with rust 1.75.0
+          run: |
+            cargo +1.75.0 check --release --bins --lib
+
   build-rs:
     name: Build Rust plugin on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -125,7 +146,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [build-rs, build-ts, markdown_lint]
+    needs: [check_rust, build-rs, build-ts, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass
