@@ -121,13 +121,13 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install
-          dir: "zenoh-ts/examples/chat"
+          dir: "zenoh-ts/examples/browser/chat"
 
       - name: Verify build for chat example
         uses: borales/actions-yarn@v4
         with:
           cmd: build
-          dir: "zenoh-ts/examples/chat"
+          dir: "zenoh-ts/examples/browser/chat"
  
   markdown_lint:
     runs-on: ubuntu-latest
