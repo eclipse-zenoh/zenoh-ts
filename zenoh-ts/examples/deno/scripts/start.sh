@@ -1,14 +1,8 @@
 #!/bin/bash
 
+ORIGINAL_DIR="$(pwd)"
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-pushd "$SCRIPTDIR/.."
-
-# if no arugments are passed, show available examples:
-# with this command
-# ls src/*.ts | sed -e \"s/src\\///\" -e \"s/\\.ts//\"'"
-# otherwise run the example
-# with command
-# deno run -A --no-prompt src/$0.ts $@
+cd "$SCRIPTDIR/.."
 
 if [ "$1" = "" ]; then
   echo
@@ -20,6 +14,4 @@ else
   deno run -A --no-prompt src/$1.ts "${@:2}"
 fi
 
-
-
-popd
+cd "$ORIGINAL_DIR"

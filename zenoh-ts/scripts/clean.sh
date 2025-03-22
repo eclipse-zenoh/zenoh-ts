@@ -1,10 +1,11 @@
 #!/bin/bash
 
+ORIGINAL_DIR="$(pwd)"
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-pushd "$SCRIPTDIR/.."
+cd "$SCRIPTDIR/.."
 
-rm -rf ./node_modules ./dist ./esm 
-pushd examples/deno && yarn clean || exit 1 && popd
-pushd examples/browser/chat && yarn clean || exit 1 && popd
+rm -rf ./node_modules ./dist ./esm
+cd examples/deno && yarn clean || exit 1 && cd "$SCRIPTDIR/.."
+cd examples/browser/chat && yarn clean || exit 1 && cd "$SCRIPTDIR/.."
 
-popd
+cd "$ORIGINAL_DIR"

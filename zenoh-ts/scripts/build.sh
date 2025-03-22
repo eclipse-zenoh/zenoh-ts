@@ -1,7 +1,8 @@
 #!/bin/bash
 
+ORIGINAL_DIR="$(pwd)"
 SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-pushd "$SCRIPTDIR/.."
+cd "$SCRIPTDIR/.."
 
 # install dependencies if needed
 if [ ! -d "./node_modules" ]; then
@@ -9,13 +10,13 @@ if [ ! -d "./node_modules" ]; then
 fi
 
 # build wasm module
-pushd ../zenoh-keyexpr-wasm
+cd ../zenoh-keyexpr-wasm
 cargo install wasm-pack || exit 1
 wasm-pack build --target bundler --out-dir ../zenoh-ts/src/key_expr || exit 1
-popd
+cd "$SCRIPTDIR/.."
 
 # compile typescript and copy wasm module
 npx tsc || exit 1
 cp ./src/key_expr/*wasm* ./dist/key_expr/
 
-popd
+cd "$ORIGINAL_DIR"
