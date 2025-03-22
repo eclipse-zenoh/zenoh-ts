@@ -1,7 +1,7 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ORIGINAL_DIR="$(pwd)"
-SCRIPTDIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+SCRIPTDIR="$(cd "$(dirname "$0")" >/dev/null 2>&1 && pwd)"
 cd "$SCRIPTDIR/.."
 
 rm -rf ./node_modules ./dist ./esm
