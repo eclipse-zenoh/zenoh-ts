@@ -12,6 +12,14 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { Config, RingChannel, Session, Subscriber } from "@eclipse-zenoh/zenoh-ts";
 
-// const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+export async function main() {
+  console.log("Starting zenoh Session");
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  console.log("Session opened");
+  const subscriber: Subscriber = session.declare_subscriber("test/pub_sub", { handler: new RingChannel(10) });
+  console.log("Subscriber declared");
+}
+
+main();
