@@ -12,12 +12,11 @@ fi
 if [ "$1" = "test" ]; then
   cd tests
   yarn install || exit 1
-  yarn build || exit 1
-  yarn start "${@:2}" || exit 1
+  yarn start "${@:2}"
 elif [ "$1" = "example" ] && [ "$2" = "deno" ]; then
   cd examples/deno
   yarn install || exit 1
-  yarn start "${@:3}" || exit 1
+  yarn start "${@:3}"
 elif [ "$1" = "example" ] && [ "$2" = "browser" ] && [ "$3" = "" ]; then
   # there is only "chat" example for now, but later list of examples can be shown
   cd examples/browser/chat
@@ -28,7 +27,7 @@ else
   echo
   echo "Available options:"
   echo
-  echo "yarn start test [test-name]"
+  echo "yarn start test [test-name] | ALL"
   echo "yarn start example deno [example-name]"
   echo "yarn start example browser"
   echo

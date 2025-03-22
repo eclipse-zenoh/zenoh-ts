@@ -6,12 +6,18 @@ cd "$SCRIPTDIR/.."
 
 if [ "$1" = "" ]; then
   echo
-  echo "Available examples:"
+  echo "Available tests. Pass 'ALL' to run all tests:"
   echo
   ls src/*.ts | sed -e "s/src\///" -e "s/\.ts//"
   echo
 else
-  deno run -A --no-prompt src/$1.ts "${@:2}"
+  if [ "$1" = "ALL" ]; then
+    for test in src/*.ts; do
+      deno run -A --no-prompt $test
+    done
+  else
+    deno run -A --no-prompt src/$1.ts
+  fi
 fi
 
 cd "$ORIGINAL_DIR"

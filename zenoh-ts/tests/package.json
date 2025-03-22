@@ -1,0 +1,19 @@
+{
+  "name": "zenoh-ts-tests",
+  "private": false,
+  "version": "0.0.0",
+  "type": "module",
+  "license": "EPL-2.0",
+  "scripts": {
+    "clean": "rm -rf ./node_modules",
+    "verify": "deno check src",
+    "start": "sh scripts/start.sh"
+  },
+  "devDependencies": {
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "@eclipse-zenoh/zenoh-ts": "file:.."
+  }
+}
