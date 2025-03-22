@@ -9,8 +9,7 @@
   "scripts": {
     "clean": "rm -rf ./node_modules ./dist ./esm",
     "build": "rm -rf dist && mkdir dist && webpack --config webpack.config.js && cp assets/* dist/",
-    "_build": "sh -c '[ ! -d \"node_modules\" ] || [ ! -d \"dist\" ] && yarn clean && yarn install && yarn build || true'",
-    "start": "sh -c 'yarn _build && http-server dist -c-1 -o index.html'"
+    "start": "http-server dist -c-1 -o index.html"
   },
   "devDependencies": {
     "http-server": "^14.1.1",
@@ -20,6 +19,6 @@
     "ts-loader": "^9.2.6"
   },
   "dependencies": {
-    "@eclipse-zenoh/zenoh-ts": "file:../.."
+    "@eclipse-zenoh/zenoh-ts": "file:../../.."
   }
 }
