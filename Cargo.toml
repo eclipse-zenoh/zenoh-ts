@@ -4,7 +4,7 @@ members = ["zenoh-plugin-remote-api", "zenoh-keyexpr-wasm"]
 resolver = "1"
 
 [workspace.package]
-version = "1.3.0"
+version = "1.3.0-10-g13391c8"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = ["Charles Schleich <charles.schleich@zettascale.tech>"]
