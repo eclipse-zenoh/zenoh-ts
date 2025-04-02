@@ -64,16 +64,32 @@ jobs:
       - name: Clippy
         run: cargo clippy --all -- -D warnings
 
-  # build-and-test:
-  #   name: Build Rust plugin on ${{ matrix.os }}
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       os: [ubuntu-latest, macOS-latest, windows-latest]
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: dtolnay/rust-toolchain@1.75.0
+  build-and-test:
+    name: Build Rust plugin, start daemon with it and run typescript tests ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: 
+          components: cargo-run-bin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
+
+      - name: Build typescript plugin
+        run: cargo build --release --all-targets
+
+      - name: Run rust tests
+        run: cargo test
+
+      - name: Build zenohd and start it with plugin
+        run: |
+          cargo bin zenohd --config EXAMPLE_CONFIG.json5
+
   #     - name: Install Rust toolchain
   #       run: |
   #         rustup show
