@@ -39,9 +39,9 @@
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "clean": "sh scripts/clean.sh",
-    "build": "sh scripts/build.sh",
-    "start": "sh scripts/start.sh",
+    "clean": "./scripts/clean.sh",
+    "build": "./scripts/build.sh",
+    "start": "./scripts/start.sh",
     "release": "npx release-it"
   },
   "publishConfig": {

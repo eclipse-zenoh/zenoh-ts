@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "rm -rf ./node_modules",
     "verify": "deno check src",
-    "start": "sh scripts/start.sh"
+    "start": "./scripts/start.sh"
   },
   "devDependencies": {
     "@types/uuid": "^10.0.0",
