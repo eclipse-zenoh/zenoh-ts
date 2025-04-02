@@ -55,3 +55,7 @@ uhlc = { version = "0.8.0", default-features = false } # Default features are di
 
 [workspace.metadata.bin]
 zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.3.0" }
+
+[profile.release.package.zenoh-keyexpr-wasm]
+# Tell `rustc` to optimize for small code size for wasm project
+opt-level = "s"

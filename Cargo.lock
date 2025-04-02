@@ -3691,7 +3691,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "zenoh-keyexpr-wrapper"
+name = "zenoh-keyexpr-wasm"
 version = "0.1.0"
 dependencies = [
  "wasm-bindgen",
