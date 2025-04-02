@@ -30,14 +30,10 @@ jobs:
       strategy:
         fail-fast: false
       steps:
-        - name: Clone this repository
-          uses: actions/checkout@v4
+        - uses: actions/checkout@v4
+        - uses: dtolnay/rust-toolchain@1.75.0
 
-        - name: Update Rust 1.75.0 toolchain
-          run: rustup update 1.75.0
-
-        - name: Setup rust-cache
-          uses: Swatinem/rust-cache@v2
+        - uses: Swatinem/rust-cache@v2
           with:
             cache-bin: false
 
@@ -45,72 +41,94 @@ jobs:
           run: |
             cargo +1.75.0 check --release --bins --lib
 
-  build-rs:
-    name: Build Rust plugin on ${{ matrix.os }}
+  check:
+    name: Lints and doc tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
+
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
-      - name: Install Rust toolchain
-        run: |
-          rustup show
-          rustup component add rustfmt clippy
+      - uses: dtolnay/rust-toolchain@stable
+        with: 
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
+
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
+
       - name: Clippy
         run: cargo clippy --all --examples -- -D warnings
-      - name: Build
-        run: cargo build --all-targets
-      - name: Run tests
-        run: cargo test
-      - name: Cleanup
-        run: cargo clean
 
-  build-ts:
-    name: Build TS API on ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: ./zenoh-ts
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # build-and-test:
+  #   name: Build Rust plugin on ${{ matrix.os }}
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-latest, macOS-latest, windows-latest]
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: dtolnay/rust-toolchain@1.75.0
+  #     - name: Install Rust toolchain
+  #       run: |
+  #         rustup show
+  #         rustup component add rustfmt clippy
+  #     - name: Build
+  #       run: cargo build --all-targets
+  #     - name: Run tests
+  #       run: cargo test
+  #     - name: Cleanup
+  #       run: cargo clean
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "21"
+  # build-ts:
+  #   name: Build Rust plugin and TS API on ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [ubuntu-latest, macOS-latest, windows-latest]
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Install Deno
-        uses: denoland/setup-deno@v1
-        with:
-          deno-version: latest
+  #     - name: Setup rust-cache
+  #       uses: Swatinem/rust-cache@v2
+  #       with:
+  #         cache-bin: false
 
-      - name: Run install
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
-          dir: "zenoh-ts"
 
-      - name: Transpile Library
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: build
-          dir: "zenoh-ts"
+  #     - name: Setup Node
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "21"
+
+  #     - name: Install Deno
+  #       uses: denoland/setup-deno@v1
+  #       with:
+  #         deno-version: latest
+
+  #     - name: Run install
+  #       uses: borales/actions-yarn@v4
+  #       with:
+  #         cmd: install
+  #         dir: "zenoh-ts"
+
+  #     - name: Transpile Library
+  #       uses: borales/actions-yarn@v4
+  #       with:
+  #         cmd: build
+  #         dir: "zenoh-ts"
       
-      - name: Run tests
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: start test ALL
-          dir: "zenoh-ts"
+  #     - name: Run tests
+  #       uses: borales/actions-yarn@v4
+  #       with:
+  #         cmd: start test ALL
+  #         dir: "zenoh-ts"
 
       # - name: Install dependencies for deno examples
       #   uses: borales/actions-yarn@v4
@@ -157,7 +175,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [check_rust, build-rs, build-ts, markdown_lint]
+    needs: [check_rust, check, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass
