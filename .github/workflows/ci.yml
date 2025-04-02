@@ -84,10 +84,10 @@ jobs:
       - name: Run rust tests
         run: cargo test
 
-      - name: Build zenohd and start it with plugin
+      - name: Install zenohd for testing
         run: |
           cargo install cargo-run-bin
-          cargo bin zenohd --config EXAMPLE_CONFIG.json5
+          cargo bin --install zenohd
 
   #     - name: Install Rust toolchain
   #       run: |
