@@ -74,8 +74,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-        with: 
-          components: cargo-run-bin
       - uses: Swatinem/rust-cache@v2
         with:
           cache-bin: false
@@ -88,6 +86,7 @@ jobs:
 
       - name: Build zenohd and start it with plugin
         run: |
+          cargo install cargo-run-bin
           cargo bin zenohd --config EXAMPLE_CONFIG.json5
 
   #     - name: Install Rust toolchain
