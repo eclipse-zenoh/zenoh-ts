@@ -14,6 +14,13 @@
 
 import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
 
+// Replace console.assert with a custom assertion function
+function assert(condition: boolean, message: string): void {
+  if (!condition) {
+    throw new Error(message);
+  }
+}
+
 export async function putSubTest() {
   console.log("Starting zenoh Sessions");
 
@@ -48,19 +55,24 @@ export async function putSubTest() {
   // Delay to ensure messages are received
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  // Assertions
-  console.assert(receivedMessages.length === 2, "Expected 2 messages");
-  console.assert(receivedMessages[0].key === "zenoh/test", "Key mismatch for first message");
-  console.assert(receivedMessages[0].payload === "first", "Payload mismatch for first message");
-  console.assert(receivedMessages[1].key === "zenoh/test", "Key mismatch for second message");
-  console.assert(receivedMessages[1].payload === "second", "Payload mismatch for second message");
+  try {
+    // Assertions
+    assert(receivedMessages.length === 2, "Expected 2 messages");
+    assert(receivedMessages[0].key === "zenoh/test", "Key mismatch for first message");
+    assert(receivedMessages[0].payload === "first", "Payload mismatch for first message");
+    assert(receivedMessages[1].key === "zenoh/test", "Key mismatch for second message");
+    assert(receivedMessages[1].payload === "second", "Payload mismatch for second message");
 
-  // Cleanup
-  subscriber.undeclare();
-  await session1.close();
-  await session2.close();
-
-  console.log("Test completed successfully");
+    console.log("Test completed successfully");
+  } catch (error) {
+    console.error("Test failed:", error);
+    process.exit(1); // Exit with code 1 on failure
+  } finally {
+    // Cleanup
+    subscriber.undeclare();
+    await session1.close();
+    await session2.close();
+  }
 }
 
 putSubTest();

@@ -6,7 +6,7 @@
 # http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
 # which is available at https://www.apache.org/licenses/LICENSE-2.0.
 #
-# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+# SPDX-License: EPL-2.0 OR Apache-2.0
 #
 # Contributors:
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
@@ -101,34 +101,45 @@ jobs:
           dir: "zenoh-ts"
 
       - name: Transpile Library
-        run: |
-          yarn run build
-
-      - name: Install dependencies for deno examples
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
-          dir: "zenoh-ts/examples/deno"
-
-         
-      - name: Verify build for deno examples
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: verify
-          dir: "zenoh-ts/examples/deno"
- 
-      - name: Install dependencies for chat example
-        uses: borales/actions-yarn@v4
-        with:
-          cmd: install
-          dir: "zenoh-ts/examples/browser/chat"
-
-      - name: Verify build for chat example
         uses: borales/actions-yarn@v4
         with:
           cmd: build
-          dir: "zenoh-ts/examples/browser/chat"
+          dir: "zenoh-ts"
+      
+      - name: Run tests
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: start test ALL
+          dir: "zenoh-ts"
+
+      # - name: Install dependencies for deno examples
+      #   uses: borales/actions-yarn@v4
+      #   with:
+      #     cmd: install
+      #     dir: "zenoh-ts/examples/deno"
+
+         
+      # - name: Verify build for deno examples
+      #   uses: borales/actions-yarn@v4
+      #   with:
+      #     cmd: verify
+      #     dir: "zenoh-ts/examples/deno"
  
+      # - name: Install dependencies for chat example
+      #   uses: borales/actions-yarn@v4
+      #   with:
+      #     cmd: install
+      #     dir: "zenoh-ts/examples/browser/chat"
+
+      # - name: Verify build for chat example
+      #   uses: borales/actions-yarn@v4
+      #   with:
+      #     cmd: build
+      #     dir: "zenoh-ts/examples/browser/chat"
+
+      # - name: Build and run tests
+      #   uses: borales/actions-yarn@v4
+
   markdown_lint:
     runs-on: ubuntu-latest
     steps:
