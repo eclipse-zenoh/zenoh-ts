@@ -6,18 +6,52 @@ cd "$SCRIPTDIR/.."
 
 if [ "$1" = "" ]; then
   echo
-  echo "Available tests. Pass 'ALL' to run all tests:"
+  echo "Arguments: test_name|ALL [DAEMON]"
+  echo "  test_name: name of the test to run or ALL to run all tests"
+  echo "  DAEMON: start the zenoh daemon before running the test"
   echo
+  echo "Available tests:"
   ls src/*.ts | sed -e "s/src\///" -e "s/\.ts//"
   echo
 else
+  if [ "$2" = "DAEMON" ]; then
+    cd "$SCRIPTDIR/../../.."
+    cargo bin -i zenohd
+    # search for zenohd in the .bin directory
+    ZENOHD=$(find ./.bin -name "zenohd" -type f | head -n 1)
+    if [ -z "$ZENOHD" ]; then
+      echo "zenohd not found in .bin directory"
+      exit 1
+    fi
+    "$ZENOHD" --config EXAMPLE_CONFIG.json5 &
+
+    ZPID=$!
+    echo "zenohd started with PID $ZPID"
+    sleep 1
+    cd "$SCRIPTDIR/.."
+  fi
+
+  EXIT_CODE=0
+
   if [ "$1" = "ALL" ]; then
     for test in src/*.ts; do
-      deno run -A --no-prompt $test
+      deno run -A --no-prompt "$test"
+      if [ $? -ne 0 ]; then
+        EXIT_CODE=1
+      fi
     done
   else
-    deno run -A --no-prompt src/$1.ts
+    deno run -A --no-prompt "src/$1.ts"
+    if [ $? -ne 0 ]; then
+      EXIT_CODE=1
+    fi
+  fi
+
+  if [ ! -z "$ZPID" ]; then
+    echo "Stopping zenohd with PID $ZPID"
+    kill "$ZPID"
   fi
 fi
 
 cd "$ORIGINAL_DIR"
+exit $EXIT_CODE
