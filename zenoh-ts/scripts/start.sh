@@ -9,20 +9,25 @@ if [ ! -d "./dist" ]; then
   yarn build || exit 1
 fi
 
+EXIT_CODE=0
+
 if [ "$1" = "test" ]; then
   cd tests
   yarn install || exit 1
   yarn start "${@:2}"
+  EXIT_CODE=$?
 elif [ "$1" = "example" ] && [ "$2" = "deno" ]; then
   cd examples/deno
   yarn install || exit 1
   yarn start "${@:3}"
+  EXIT_CODE=$?
 elif [ "$1" = "example" ] && [ "$2" = "browser" ] && [ "$3" = "" ]; then
   # there is only "chat" example for now, but later list of examples can be shown
   cd examples/browser/chat
   yarn install || exit 1
   yarn build || exit 1
   yarn start "${@:4}"
+  EXIT_CODE=$?
 else
   echo
   echo "Available options:"
@@ -34,3 +39,4 @@ else
 fi
 
 cd "$ORIGINAL_DIR"
+exit $EXIT_CODE

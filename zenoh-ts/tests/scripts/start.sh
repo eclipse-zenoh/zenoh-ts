@@ -33,7 +33,7 @@ else
     cd "$SCRIPTDIR/.."
 
     # Trap SIGINT to ensure zenohd is killed on ^C
-    trap "echo 'Stopping zenohd with PID $ZPID'; kill $ZPID; exit 1" SIGINT
+    trap "echo 'Stopping zenohd with PID by ^C $ZPID'; kill $ZPID; exit 1" SIGINT
   fi
 
   EXIT_CODE=0
