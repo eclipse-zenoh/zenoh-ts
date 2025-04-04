@@ -18,9 +18,10 @@ else
     cd "$SCRIPTDIR/../../.."
     cargo build --release
     cargo bin -i zenohd
-    ZENOHD=$(find ./.bin -name "zenohd" -type f | head -n 1)
-    if [ -z "$ZENOHD" ]; then
-      echo "zenohd not found in .bin directory"
+    ZENOHD=$(find ./.bin/rust-* -name "zenohd" -type f | head -n 2)
+    if [ $(echo "$ZENOHD" | wc -l) -ne 1 ]; then
+      echo "Error: More than one or no 'zenohd' file found in ./.bin/rust-* directories:"
+      echo "$ZENOHD"
       exit 1
     fi
     pwd
