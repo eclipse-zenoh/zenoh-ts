@@ -14,11 +14,14 @@
 
 import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
 
-// Replace console.assert with a custom assertion function
 function assert(condition: boolean, message: string): void {
   if (!condition) {
     throw new Error(message);
   }
+}
+
+function assert_eq<T>(actual: T, expected: T, message: string): void {
+  assert(actual === expected, `${message}: expected '${expected}', but got '${actual}'`);
 }
 
 export async function putSubTest() {
@@ -38,7 +41,7 @@ export async function putSubTest() {
     handler: (sample: Sample) => {
       receivedMessages.push({
         key: sample.keyexpr().toString(),
-        payload: sample.payload().toString(),
+        payload: sample.payload().to_string(),
       });
     },
   });
@@ -57,11 +60,11 @@ export async function putSubTest() {
 
   try {
     // Assertions
-    assert(receivedMessages.length === 2, "Expected 2 messages");
-    assert(receivedMessages[0].key === "zenoh/test", "Key mismatch for first message");
-    assert(receivedMessages[0].payload === "first", "Payload mismatch for first message");
-    assert(receivedMessages[1].key === "zenoh/test", "Key mismatch for second message");
-    assert(receivedMessages[1].payload === "second", "Payload mismatch for second message");
+    assert_eq(receivedMessages.length, 2, "Expected 2 messages");
+    assert_eq(receivedMessages[0].key, "zenoh/test", "Key mismatch for first message");
+    assert_eq(receivedMessages[0].payload, "first", "Payload mismatch for first message");
+    assert_eq(receivedMessages[1].key, "zenoh/test", "Key mismatch for second message");
+    assert_eq(receivedMessages[1].payload, "second", "Payload mismatch for second message");
 
     console.log("Test completed successfully");
   } catch (error) {
