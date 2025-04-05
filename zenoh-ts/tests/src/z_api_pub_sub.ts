@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2024 ZettaScale Technology
+// Copyright (c) 2025 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
 // terms of the Eclipse Public License 2.0 which is available at
@@ -13,16 +13,7 @@
 //
 
 import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
-
-function assert(condition: boolean, message: string): void {
-  if (!condition) {
-    throw new Error(message);
-  }
-}
-
-function assert_eq<T>(actual: T, expected: T, message: string): void {
-  assert(actual === expected, `${message}: expected '${expected}', but got '${actual}'`);
-}
+import { assert, assert_eq } from "./common/assertions.ts";
 
 export async function putSubTest() {
   console.log("Starting zenoh Sessions");

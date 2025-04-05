@@ -41,6 +41,7 @@ else
 
   if [ "$1" = "ALL" ]; then
     for test in src/*.ts; do
+      echo "Test: $test"
       deno run -A --no-prompt "$test"
       if [ $? -ne 0 ]; then
         EXIT_CODE=1
