@@ -12,123 +12,113 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Query, Reply, KeyExpr, ZBytes, Receiver, Sample, FifoChannel } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq } from "./common/assertions.ts";
+import { Config, Session, Query, Reply, KeyExpr, Receiver, ZBytes, Selector } from "@eclipse-zenoh/zenoh-ts";
+import { assert_eq } from "./common/assertions";
 
-interface QueryData {
-    key: string;
-    params: string;
-    payload: string;
-}
-
-    // const queryable = await session1.declare_queryable(ke, {
-    //     handler: async (query: Query) => {
-    //         const payload = query.payload()?.to_string() || "";
-    //         const params = query.parameters().toString();
-    //         const qd: QueryData = {
-    //             key: query.key_expr().toString(),
-    //             params: params,
-    //             payload: payload,
-    //         };
-    //         queries.push(qd);
-    //         if (params === "ok") {
-    //             query.reply(query.key_expr(), payload);
-    //         } else {
-    //             query.reply_err("err");
-    //         }
-    //     },
-    // });
-
-async function queryable_get_channel() {
+async function queryable_get_callback() {
     const ke = new KeyExpr("zenoh/test/*");
     const selector = new KeyExpr("zenoh/test/1");
-    const queries: QueryData[] = [];
+    const queries: { key: string; params: string; payload: string }[] = [];
+    const replies: string[] = [];
+    const errors: string[] = [];
 
     const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
     const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-    const replies = await session1.declare_queryable(ke, { handler: new FifoChannel(3) });
+    const queryable = session1.declare_queryable(ke, {
+        handler: async (query: Query) => {
+            assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
+            const payload = query.payload()?.to_string() || "";
+            queries.push({
+                key: query.key_expr().toString(),
+                params: query.parameters().toString(),
+                payload: payload,
+            });
+            if (query.parameters().toString() === "ok") {
+                query.reply(query.key_expr(), payload);
+            } else {
+                query.reply_err("err");
+            }
+        },
+    });
 
-    const receiver1 = await session2.get(selector, { payload: "1" }) as Receiver;
+    session2.get(new Selector(selector, "ok"), {
+        payload: "1",
+        handler: async (reply: Reply) => {
+            if (reply.isOk()) {
+                replies.push(reply.payload().to_string());
+            } else {
+                errors.push(reply.payload().to_string());
+            }
+        },
+    });
 
-    let query_ = await replies.receive();
-    assert(query_ instanceof Query, "Expected a Query");
-    let query = query_ as Query;
-    assert_eq(query.key_expr().toString(), "zenoh/test/1", "Key mismatch");
-    assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
-    assert_eq(query.parameters().toString(), "ok", "Parameters mismatch");
-    query.reply(query.key_expr(), query.payload() as ZBytes);
+    await session2.get(selector, "err", {
+        payload: "2",
+        onReply: (reply: Reply) => {
+            if (reply.isOk()) {
+                replies.push(reply.payload().to_string());
+            } else {
+                errors.push(reply.payload().to_string());
+            }
+        },
+    });
 
-    let reply = await receiver1.receive();
-    assert(reply instanceof Reply, "Expected a Reply");
-    let result = (reply as Reply).result();
-    assert(result instanceof Sample, "Expected a Sample");
-    let sample = result as Sample;
-    assert_eq(sample.keyexpr().toString(), "zenoh/test/1", "Key mismatch");
-    assert_eq(sample.payload().to_string(), "1", "Payload mismatch");
+    await queryable.undeclare();
 
-    let reply2 = await receiver1.receive();
-
-
-    // while (reply !== null) {
-    //     if (reply instanceof Reply && reply.isOk()) {
-    //         replies.push(reply.payload().to_string());
-    //     } else if (reply instanceof Reply) {
-    //         errors.push(reply.payload().to_string());
-    //     }
-    //     reply = await receiver1.receive();
-    // }
-
-    // const receiver2 = await session2.get(selector, { payload: "2" });
-    // reply = await receiver2.receive();
-    // while (reply !== null) {
-    //     if (reply instanceof Reply && reply.isOk()) {
-    //         replies.push(reply.payload().to_string());
-    //     } else if (reply instanceof Reply) {
-    //         errors.push(reply.payload().to_string());
-    //     }
-    //     reply = await receiver2.receive();
-    // }
-
-    // const receiver3 = await session2.get(selector, { payload: "3" });
-    // reply = await receiver3.receive();
-    // while (reply !== null) {
-    //     if (reply instanceof Reply && reply.isOk()) {
-    //         replies.push(reply.payload().to_string());
-    //     } else if (reply instanceof Reply) {
-    //         errors.push(reply.payload().to_string());
-    //     }
-    //     reply = await receiver3.receive();
-    // }
-
-    // await queryable.undeclare();
-
-    // assert_eq(queries.length, 3, "Expected 3 queries");
-    // assert_eq(
-    //     JSON.stringify(queries[0]),
-    //     JSON.stringify({ key: "zenoh/test/1", params: "ok", payload: "1" }),
-    //     "First query mismatch"
-    // );
-    // assert_eq(
-    //     JSON.stringify(queries[1]),
-    //     JSON.stringify({ key: "zenoh/test/1", params: "ok", payload: "2" }),
-    //     "Second query mismatch"
-    // );
-    // assert_eq(
-    //     JSON.stringify(queries[2]),
-    //     JSON.stringify({ key: "zenoh/test/1", params: "err", payload: "3" }),
-    //     "Third query mismatch"
-    // );
-
-    // assert_eq(replies.length, 2, "Expected 2 replies");
-    // assert_eq(replies[0], "1", "First reply mismatch");
-    // assert_eq(replies[1], "2", "Second reply mismatch");
-
-    // assert_eq(errors.length, 1, "Expected 1 error");
-    // assert_eq(errors[0], "err", "Error mismatch");
-
-    await session1.close();
-    await session2.close();
+    assert_eq(queries.length, 2, "Expected 2 queries");
+    assert_eq(replies.length, 1, "Expected 1 reply");
+    assert_eq(errors.length, 1, "Expected 1 error");
 }
 
-queryable_get_channel()
+async function queryable_get_channel() {
+    const ke = new KeyExpr("zenoh/test/*");
+    const selector = new KeyExpr("zenoh/test/1");
+
+    const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
+    const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
+
+    const queryable = await session1.declare_queryable(ke, { complete: true });
+
+    const receiver1 = await session2.get(selector, { payload: "1" });
+    let query = await queryable.receive();
+    assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
+    if (query instanceof Query) {
+        assert_eq(query.keyexpr().to_string(), selector.to_string(), "Key mismatch");
+        assert_eq(query.parameters(), "ok", "Parameters mismatch");
+        assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
+        query.reply(query.keyexpr(), "1");
+    }
+
+    let reply = await receiver1.receive();
+    assert_eq(reply instanceof Reply, true, "Expected reply to be an instance of Reply");
+    if (reply instanceof Reply) {
+        assert_eq(reply.isOk(), true, "Reply should be OK");
+        assert_eq(reply.payload().to_string(), "1", "Reply payload mismatch");
+    }
+
+    const receiver2 = await session2.get(selector, { payload: "3" });
+    query = await queryable.receive();
+    assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
+    if (query instanceof Query) {
+        assert_eq(query.keyexpr().to_string(), selector.to_string(), "Key mismatch");
+        assert_eq(query.parameters(), "err", "Parameters mismatch");
+        assert_eq(query.payload()?.to_string(), "3", "Payload mismatch");
+        query.replyErr("err");
+    }
+
+    reply = await receiver2.receive();
+    assert_eq(reply instanceof Reply, true, "Expected reply to be an instance of Reply");
+    if (reply instanceof Reply) {
+        assert_eq(reply.isOk(), false, "Reply should be an error");
+        assert_eq(reply.payload().to_string(), "err", "Error payload mismatch");
+    }
+
+    await queryable.undeclare();
+}
+
+(async () => {
+    await queryable_get_callback();
+    await queryable_get_channel();
+    console.log("Tests completed successfully");
+})();
