@@ -29,7 +29,7 @@ export async function putSubTest() {
 
   // Declare a subscriber on session2
   const subscriber: Subscriber = session2.declare_subscriber("zenoh/test", {
-    handler: (sample: Sample) => {
+    handler: async (sample: Sample) => {
       receivedMessages.push({
         key: sample.keyexpr().toString(),
         payload: sample.payload().to_string(),
@@ -60,7 +60,7 @@ export async function putSubTest() {
     console.log("Test completed successfully");
   } catch (error) {
     console.error("Test failed:", error);
-    process.exit(1); // Exit with code 1 on failure
+    throw error; // This will make the test fail
   } finally {
     // Cleanup
     subscriber.undeclare();
