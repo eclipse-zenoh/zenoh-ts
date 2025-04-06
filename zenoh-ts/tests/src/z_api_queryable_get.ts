@@ -69,11 +69,13 @@ async function queryable_get_callback() {
         },
     });
 
+    // sleep for 2 seconds to ensure the requests are handled
+    await new Promise((resolve) => setTimeout(resolve, 2000));
     await queryable.undeclare();
 
-    assert_eq(queries.length, 2, "Expected 2 queries");
-    assert_eq(replies.length, 1, "Expected 1 reply");
-    assert_eq(errors.length, 1, "Expected 1 error");
+    assert_eq(queries.length, 2, "Queries received");
+    assert_eq(replies.length, 1, "Replies received");
+    assert_eq(errors.length, 1, "Errors received");
 
     await session1.close();
     await session2.close();
