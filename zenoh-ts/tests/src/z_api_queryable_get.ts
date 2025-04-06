@@ -42,6 +42,9 @@ async function queryable_get_callback() {
         },
     });
 
+    // sleep for 2 seconds to ensure the queryable is ready
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     session2.get(new Selector(selector, "ok"), {
         payload: "1",
         handler: async (reply: Reply) => {
@@ -71,6 +74,9 @@ async function queryable_get_callback() {
     assert_eq(queries.length, 2, "Expected 2 queries");
     assert_eq(replies.length, 1, "Expected 1 reply");
     assert_eq(errors.length, 1, "Expected 1 error");
+
+    await session1.close();
+    await session2.close();
 }
 
 async function queryable_get_channel() {
