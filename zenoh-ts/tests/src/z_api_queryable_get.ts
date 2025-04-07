@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Query, Reply, KeyExpr, Receiver, ZBytes, Selector, ReplyError, Parameters } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, Query, Reply, KeyExpr, Receiver, ZBytes, Selector, ReplyError, Parameters, Sample } from "@eclipse-zenoh/zenoh-ts";
 import { assert_eq } from "./common/assertions.ts";
 
 async function queryableGetCallbackTest() {
@@ -49,13 +49,17 @@ async function queryableGetCallbackTest() {
         handler: handler,
     });
 
-    await session2.get(new Selector(ke_get, "p=err"), {
+    // sleep to ensure the request is handled
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    session2.get(new Selector(ke_get, "p=err"), {
         payload: "2",
         handler: handler,
     });
 
-    // sleep for 1 seconds to ensure the requests are handled
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // sleep to ensure the request is handled
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     await queryable.undeclare();
 
     assert_eq(queries.length, 2, "Queries received");
@@ -67,8 +71,8 @@ async function queryableGetCallbackTest() {
     assert_eq(queries[1].key_expr().toString(), ke_get.toString(), "Query 1 key mismatch");
     assert_eq(queries[1].parameters().toString(), "p=err", "Query 1 parameters mismatch");
     assert_eq(queries[1].payload()?.to_string(), "2", "Query 1 payload mismatch");
-    assert_eq(replies[0].result() instanceof Reply, false, "Reply 0 should be OK");
-    assert_eq(replies[1].result() instanceof ReplyError, true, "Reply 0 should be an error");
+    assert_eq(replies[0].result() instanceof Sample, true, "Reply 0 should be Sample");
+    assert_eq(replies[1].result() instanceof ReplyError, true, "Reply 1 should be ReplyError");
     if (replies[0].result() instanceof Reply) {
         assert_eq(replies[0].result().payload().to_string(), "1", "Reply 0 payload mismatch");
     }
