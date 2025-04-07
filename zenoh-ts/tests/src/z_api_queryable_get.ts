@@ -12,29 +12,23 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Query, Reply, KeyExpr, Receiver, ZBytes, Selector, ReplyError } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, Query, Reply, KeyExpr, Receiver, ZBytes, Selector, ReplyError, Parameters } from "@eclipse-zenoh/zenoh-ts";
 import { assert_eq } from "./common/assertions.ts";
 
-async function queryable_get_callback() {
-    const ke = new KeyExpr("zenoh/test/*");
-    const selector = new KeyExpr("zenoh/test/1");
-    const queries: { key: string; params: string; payload: string }[] = [];
-    const replies: string[] = [];
-    const errors: string[] = [];
+async function queryableGetCallbackTest() {
+    const ke_queryable = new KeyExpr("zenoh/test/*");
+    const ke_get = new KeyExpr("zenoh/test/1");
+    const queries: Query[] = [];
+    const replies: Reply[] = [];
 
     const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
     const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-    const queryable = session1.declare_queryable(ke, {
+    const queryable = session1.declare_queryable(ke_queryable, {
         handler: async (query: Query) => {
-            assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
-            const payload = query.payload()?.toString() || "";
-            queries.push({
-                key: query.key_expr().toString(),
-                params: query.parameters().toString(),
-                payload: payload,
-            });
-            if (query.parameters().toString() === "ok") {
+            queries.push(query);
+            if (query.parameters().toString() === "p=ok") {
+                let payload = query.payload() || "";
                 query.reply(query.key_expr(), payload);
             } else {
                 query.reply_err("err");
@@ -42,46 +36,51 @@ async function queryable_get_callback() {
         },
     });
 
-    // sleep for 2 seconds to ensure the queryable is ready
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // sleep for 1 seconds to ensure the queryable is ready
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    session2.get(new Selector(selector, "ok"), {
+    // Similar test in C++ passes just "ok" in parameters, but this doesn't work in
+    // zenoh-ts due to https://github.com/eclipse-zenoh/zenoh-ts/issues/191
+    // TODO: restore just "ok" in parameters after fixing the issue
+    const handler = async (reply: Reply) => { replies.push(reply); };
+
+    session2.get(new Selector(ke_get, "p=ok"), {
         payload: "1",
-        handler: async (reply: Reply) => {
-            const result = reply.result();
-            if (result instanceof ReplyError) {
-                errors.push(result.payload().toString());
-            } else {
-                replies.push(result.payload().toString());
-            }
-        },
+        handler: handler,
     });
 
-    await session2.get(new Selector(selector, "err"), {
+    await session2.get(new Selector(ke_get, "p=err"), {
         payload: "2",
-        handler: async (reply: Reply) => {
-            const result = reply.result();
-            if (result instanceof ReplyError) {
-                errors.push(result.payload().toString());
-            } else {
-                replies.push(result.payload().toString());
-            }
-        },
+        handler: handler,
     });
 
-    // sleep for 2 seconds to ensure the requests are handled
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    // sleep for 1 seconds to ensure the requests are handled
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     await queryable.undeclare();
 
     assert_eq(queries.length, 2, "Queries received");
-    assert_eq(replies.length, 1, "Replies received");
-    assert_eq(errors.length, 1, "Errors received");
+    assert_eq(replies.length, 2, "Replies received");
+
+    assert_eq(queries[0].key_expr().toString(), ke_get.toString(), "Query 0 key mismatch");
+    assert_eq(queries[0].parameters().toString(), "p=ok", "Query 0 parameters mismatch");
+    assert_eq(queries[0].payload()?.to_string(), "1", "Query 0 payload mismatch");
+    assert_eq(queries[1].key_expr().toString(), ke_get.toString(), "Query 1 key mismatch");
+    assert_eq(queries[1].parameters().toString(), "p=err", "Query 1 parameters mismatch");
+    assert_eq(queries[1].payload()?.to_string(), "2", "Query 1 payload mismatch");
+    assert_eq(replies[0].result() instanceof Reply, false, "Reply 0 should be OK");
+    assert_eq(replies[1].result() instanceof ReplyError, true, "Reply 0 should be an error");
+    if (replies[0].result() instanceof Reply) {
+        assert_eq(replies[0].result().payload().to_string(), "1", "Reply 0 payload mismatch");
+    }
+    if (replies[1].result() instanceof ReplyError) {
+        assert_eq(replies[1].result().payload().to_string(), "err", "Reply 1 payload mismatch");
+    }
 
     await session1.close();
     await session2.close();
 }
 
-async function queryable_get_channel() {
+async function queryableGetChannelTest() {
     const ke = new KeyExpr("zenoh/test/*");
     const selector = new KeyExpr("zenoh/test/1");
 
@@ -90,13 +89,17 @@ async function queryable_get_channel() {
 
     const queryable = await session1.declare_queryable(ke, { complete: true });
 
-    const receiver1 = await session2.get(new Selector(selector, "ok"), { payload: "1" });
+    // Similar test in C++ passes just "ok" in parameters, but this doesn't work in
+    // zenoh-ts due to https://github.com/eclipse-zenoh/zenoh-ts/issues/191
+    // TODO: restore just "ok" in parameters after fixing the issue
+    const receiver1 = await session2.get(new Selector(selector, "p=ok"), { payload: "1" });
     let query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "ok", "Parameters mismatch");
-        assert_eq(query.payload()?.toString(), "1", "Payload mismatch");
+        assert_eq(query.parameters().toString(), "p=ok", "Parameters mismatch");
+        let decoder = new TextDecoder();
+        assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
         query.reply(query.key_expr(), "1");
     }
 
@@ -107,18 +110,18 @@ async function queryable_get_channel() {
             const result = reply.result();
             assert_eq(result instanceof ReplyError, false, "Reply should be OK");
             if (!(result instanceof ReplyError)) {
-                assert_eq(result.payload().toString(), "1", "Reply payload mismatch");
+                assert_eq(result.payload().to_string(), "1", "Reply payload mismatch");
             }
         }
     }
 
-    const receiver2 = await session2.get(new Selector(selector, "err"), { payload: "3" });
+    const receiver2 = await session2.get(new Selector(selector, "p=err"), { payload: "3" });
     query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "err", "Parameters mismatch");
-        assert_eq(query.payload()?.toString(), "3", "Payload mismatch");
+        assert_eq(query.parameters().toString(), "p=err", "Parameters mismatch");
+        assert_eq(query.payload()?.to_string(), "3", "Payload mismatch");
         query.reply_err("err");
     }
 
@@ -129,16 +132,16 @@ async function queryable_get_channel() {
             const result = reply.result();
             assert_eq(result instanceof ReplyError, true, "Reply should be an error");
             if (result instanceof ReplyError) {
-                assert_eq(result.payload().toString(), "err", "Error payload mismatch");
+                assert_eq(result.payload().to_string(), "err", "Error payload mismatch");
             }
         }
     }
 
     await queryable.undeclare();
+
+    await session1.close();
+    await session2.close();
 }
 
-(async () => {
-    await queryable_get_callback();
-    await queryable_get_channel();
-    console.log("Tests completed successfully");
-})();
+await queryableGetCallbackTest();
+await queryableGetChannelTest();

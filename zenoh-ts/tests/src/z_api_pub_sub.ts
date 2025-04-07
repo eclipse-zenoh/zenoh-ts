@@ -16,8 +16,6 @@ import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
 import { assert, assert_eq } from "./common/assertions.ts";
 
 export async function putSubTest() {
-  console.log("Starting zenoh Sessions");
-
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -37,8 +35,6 @@ export async function putSubTest() {
     },
   });
 
-  console.log("Subscriber declared");
-
   // Delay to ensure subscriber is ready
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -49,24 +45,16 @@ export async function putSubTest() {
   // Delay to ensure messages are received
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  try {
-    // Assertions
-    assert_eq(receivedMessages.length, 2, "Expected 2 messages");
-    assert_eq(receivedMessages[0].key, "zenoh/test", "Key mismatch for first message");
-    assert_eq(receivedMessages[0].payload, "first", "Payload mismatch for first message");
-    assert_eq(receivedMessages[1].key, "zenoh/test", "Key mismatch for second message");
-    assert_eq(receivedMessages[1].payload, "second", "Payload mismatch for second message");
+  assert_eq(receivedMessages.length, 2, "Expected 2 messages");
+  assert_eq(receivedMessages[0].key, "zenoh/test", "Key mismatch for first message");
+  assert_eq(receivedMessages[0].payload, "first", "Payload mismatch for first message");
+  assert_eq(receivedMessages[1].key, "zenoh/test", "Key mismatch for second message");
+  assert_eq(receivedMessages[1].payload, "second", "Payload mismatch for second message");
 
-    console.log("Test completed successfully");
-  } catch (error) {
-    console.error("Test failed:", error);
-    throw error; // This will make the test fail
-  } finally {
-    // Cleanup
-    subscriber.undeclare();
-    await session1.close();
-    await session2.close();
-  }
+  // Cleanup
+  subscriber.undeclare();
+  await session1.close();
+  await session2.close();
 }
 
 putSubTest();
