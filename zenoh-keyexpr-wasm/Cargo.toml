@@ -1,5 +1,5 @@
 [package]
-name = "zenoh-keyexpr-wrapper"
+name = "zenoh-keyexpr-wasm"
 version = "0.1.0"
 authors = ["Charles Schleich"]
 edition = "2018"
@@ -22,10 +22,6 @@ zenoh-keyexpr = { workspace = true, features = [
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
-
-[profile.release]
-# Tell `rustc` to optimize for small code size.
-opt-level = "s"
 
 # Disable warninng `unexpected `cfg` condition name: `wasm_bindgen_unstable_test_coverage``
 [lints.rust]

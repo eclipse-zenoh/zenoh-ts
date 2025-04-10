@@ -120,10 +120,10 @@ export function QueryWS_to_Query(
   let encoding: Encoding | undefined = undefined;
 
   if (query_ws.payload != null) {
-    payload = new ZBytes(query_ws.payload);
+    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.payload)));
   }
   if (query_ws.attachment != null) {
-    attachment = new ZBytes(query_ws.attachment);
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.attachment)));
   }
   if (query_ws.encoding != null) {
     encoding = Encoding.from_string(query_ws.encoding);
