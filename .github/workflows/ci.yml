@@ -30,14 +30,9 @@ jobs:
       strategy:
         fail-fast: false
       steps:
-        - name: Clone this repository
-          uses: actions/checkout@v4
-
-        - name: Update Rust 1.75.0 toolchain
-          run: rustup update 1.75.0
-
-        - name: Setup rust-cache
-          uses: Swatinem/rust-cache@v2
+        - uses: actions/checkout@v4
+        - uses: dtolnay/rust-toolchain@1.75.0
+        - uses: Swatinem/rust-cache@v2
           with:
             cache-bin: false
 
@@ -45,44 +40,53 @@ jobs:
           run: |
             cargo +1.75.0 check --release --bins --lib
 
-  build-rs:
-    name: Build Rust plugin on ${{ matrix.os }}
+  rust:
+    name: Lints and doc tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
+
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@1.75.0
-      - name: Install Rust toolchain
-        run: |
-          rustup show
-          rustup component add rustfmt clippy
+      - uses: dtolnay/rust-toolchain@stable
+        with: 
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
+
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
-      - name: Clippy
-        run: cargo clippy --all --examples -- -D warnings
-      - name: Build
-        run: cargo build --all-targets
-      - name: Run tests
-        run: cargo test
-      - name: Cleanup
-        run: cargo clean
 
-  build-ts:
-    name: Build TS API on ${{ matrix.os }}
+      - name: Clippy
+        run: cargo clippy --all -- -D warnings
+
+      - name: Run rust tests
+        run: cargo test
+
+  typescript:
+    name: Run typescript tests on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-    defaults:
-      run:
-        working-directory: ./zenoh-ts
+        os: [ubuntu-latest, macOS-latest]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
+
+      - name: Build typescript plugin
+        run: cargo build --release --all-targets
+
+      - name: Install zenohd for testing
+        run: |
+          cargo install cargo-run-bin
+          cargo bin --install zenohd
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -94,23 +98,20 @@ jobs:
         with:
           deno-version: latest
 
-      - name: Run install
+      - name: Run tests
         uses: borales/actions-yarn@v4
         with:
-          cmd: install
+          cmd: start test ALL DAEMON
           dir: "zenoh-ts"
-
-      - name: Transpile Library
-        run: |
-          yarn run build
-
+      
+      # zenoh-ts is already built by test script, so we need only to install
+      # it into corresponding examples directories to check if examples compiles
       - name: Install dependencies for deno examples
         uses: borales/actions-yarn@v4
         with:
           cmd: install
           dir: "zenoh-ts/examples/deno"
-
-         
+        
       - name: Verify build for deno examples
         uses: borales/actions-yarn@v4
         with:
@@ -121,14 +122,14 @@ jobs:
         uses: borales/actions-yarn@v4
         with:
           cmd: install
-          dir: "zenoh-ts/examples/chat"
+          dir: "zenoh-ts/examples/browser/chat"
 
       - name: Verify build for chat example
         uses: borales/actions-yarn@v4
         with:
           cmd: build
-          dir: "zenoh-ts/examples/chat"
- 
+          dir: "zenoh-ts/examples/browser/chat"
+
   markdown_lint:
     runs-on: ubuntu-latest
     steps:
@@ -146,7 +147,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [check_rust, build-rs, build-ts, markdown_lint]
+    needs: [check_rust, rust, typescript, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass

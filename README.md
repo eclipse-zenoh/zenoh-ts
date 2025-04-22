@@ -156,7 +156,7 @@ directory and explore and run examples there.
 
 Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on localhost and the websocket port is 10000.
 
-To run an example, execute the command `yarn start example_dir [example_name]`
+To run an example, execute the command `yarn start example deno [example_name]` or `yarn start example browser`
 
 The following examples are available:
 
@@ -164,15 +164,15 @@ The following examples are available:
   - Publisher and subscriber
 
       ```sh
-      yarn start deno z_pub
-      yarn start deno z_sub
+      yarn start example deno z_pub
+      yarn start example deno z_sub
       ```
 
   - Queryable and get
 
       ```sh
-      yarn start deno z_queryable
-      yarn start deno z_get
+      yarn start example deno z_queryable
+      yarn start example deno z_get
       ```
 
       and many more
@@ -180,7 +180,7 @@ The following examples are available:
 - Chat in browser example
 
   ```sh
-  yarn start chat
+  yarn start example browser
   ```
 
   The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with the chat interface should open. Open another one with the same address, press the "Connect" buttons in both and see how they interact.

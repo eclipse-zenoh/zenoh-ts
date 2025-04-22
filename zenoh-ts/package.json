@@ -39,13 +39,10 @@
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "wasm": "cd ../zenoh-keyexpr-wasm && cargo install wasm-pack && wasm-pack build --target bundler --out-dir ../zenoh-ts/src/key_expr",
-    "compile": "npx tsc && cp ./src/key_expr/*wasm* ./dist/key_expr/",
-    "build": "npm run wasm && npm run compile",
-    "release": "npx release-it",
-    "clean": "rm -rf ./node_modules ./dist ./esm && (cd examples/deno && yarn clean) && (cd examples/chat && yarn clean)",
-    "_build": "sh -c '[ ! -d \"node_modules\" ] || [ ! -d \"dist\" ] && yarn clean && yarn install && yarn build || true'",
-    "start": "sh -c '[ -z \"$0\" ] || [ ! -d \"examples/$0\" ] && echo \"Available examples:\" && ls -d examples/*/ | sed -e \"s/examples\\///\" -e \"s/\\///\" || (yarn _build && cd examples/$0 && yarn start \"$@\")'"
+    "clean": "./scripts/clean.sh",
+    "build": "./scripts/build.sh",
+    "start": "./scripts/start.sh",
+    "release": "npx release-it"
   },
   "publishConfig": {
     "access": "public",
