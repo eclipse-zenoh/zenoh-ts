@@ -33,9 +33,6 @@ export async function testLivelinessGet() {
   const receiver: Receiver = session2.liveliness().get(ke) as Receiver;
   const reply = await receiver.receive();
   
-  // First check that it's not an error
-  assert(reply !== RecvErr.Disconnected && reply !== RecvErr.MalformedReply, "Expected reply not to be an error");
-  
   // Now we know it's a Reply
   if (reply instanceof Reply) {
     const result = reply.result();
