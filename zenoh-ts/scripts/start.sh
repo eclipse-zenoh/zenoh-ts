@@ -32,7 +32,7 @@ else
   echo
   echo "Available options:"
   echo
-  echo "yarn start test [test-name] | ALL"
+  echo "yarn start test test-name|ALL [DAEMON]"
   echo "yarn start example deno [example-name]"
   echo "yarn start example browser"
   echo
