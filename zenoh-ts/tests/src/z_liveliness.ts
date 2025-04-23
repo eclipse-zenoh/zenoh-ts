@@ -13,9 +13,9 @@
 //
 
 import { Config, Session, Subscriber, Sample, Receiver, KeyExpr, SampleKind, Reply, RecvErr } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq } from "./common/assertions.ts";
+import { assert, assert_eq, run_test } from "./common/assertions.ts";
 
-export async function testLivelinessGet() {
+async function testLivelinessGet() {
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -52,7 +52,7 @@ export async function testLivelinessGet() {
   await session2.close();
 }
 
-export async function testLivelinessSubscriber() {
+async function testLivelinessSubscriber() {
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -118,5 +118,5 @@ export async function testLivelinessSubscriber() {
 }
 
 // Run the tests
-testLivelinessGet();
-testLivelinessSubscriber();
+await run_test('testLivelinessGet', testLivelinessGet);
+await run_test('testLivelinessSubscriber', testLivelinessSubscriber);

@@ -13,7 +13,7 @@
 //
 
 import { Config, Session, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq } from "./common/assertions.ts";
+import { assert, assert_eq, run_test } from "./common/assertions.ts";
 
 export async function testKeyExpr() {
   const foo = new KeyExpr("FOO");
@@ -93,11 +93,11 @@ export async function testDeclare() {
 }
 
 // Run all tests
-testKeyExpr();
-testCanonize();
-testConcat();
-testJoin();
-testEquals();
-testIncludes();
-testIntersects();
-testDeclare();
+await run_test('testKeyExpr', testKeyExpr);
+await run_test('testCanonize', testCanonize);
+await run_test('testConcat', testConcat);
+await run_test('testJoin', testJoin);
+await run_test('testEquals', testEquals);
+await run_test('testIncludes', testIncludes);
+await run_test('testIntersects', testIntersects);
+await run_test('testDeclare', testDeclare);

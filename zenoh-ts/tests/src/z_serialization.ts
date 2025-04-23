@@ -204,8 +204,8 @@ export async function testBinaryFormat() {
 }
 
 // Run all tests
-testSerializePrimitive();
-testSerializeTuple();
-testSerializeContainer();
-testSerializeCustom();
-testBinaryFormat();
+await run_test('testSerializePrimitive', testSerializePrimitive);
+await run_test('testSerializeTuple', testSerializeTuple);
+await run_test('testSerializeContainer', testSerializeContainer);
+await run_test('testSerializeCustom', testSerializeCustom);
+await run_test('testBinaryFormat', testBinaryFormat);
