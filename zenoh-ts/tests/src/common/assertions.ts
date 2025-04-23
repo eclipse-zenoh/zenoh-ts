@@ -56,7 +56,7 @@ export function assert_eq<T>(actual: T, expected: T, message: string): void {
     }
 }
 
-export async function run_test(name: string, fn: () => Promise<void>): Promise<void> {
-    console.warn(`Running test: ${name}`);
+export async function run_test(fn: () => Promise<void>): Promise<void> {
+    console.warn(`Running test: ${fn.name}`);
     await fn();
 }

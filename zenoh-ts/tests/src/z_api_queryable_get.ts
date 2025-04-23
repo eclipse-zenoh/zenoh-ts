@@ -300,7 +300,7 @@ async function queriableQuerierGetCallbackTest() {
     await session2.close();
 }
 
-await run_test('queryableSessionGetCallbackTest', queryableSessionGetCallbackTest);
-await run_test('queryableSessionGetChannelTest', queryableSessionGetChannelTest);
-await run_test('queriableQuerierGetChannelTest', queriableQuerierGetChannelTest);
-await run_test('queriableQuerierGetCallbackTest', queriableQuerierGetCallbackTest);
+await run_test(queryableSessionGetCallbackTest);
+await run_test(queryableSessionGetChannelTest);
+await run_test(queriableQuerierGetChannelTest);
+await run_test(queriableQuerierGetCallbackTest);

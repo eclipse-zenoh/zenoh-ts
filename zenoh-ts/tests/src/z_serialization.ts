@@ -13,7 +13,7 @@
 //
 
 import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, NumberFormat, BigIntFormat, ZS, ZD } from "@eclipse-zenoh/zenoh-ts/ext";
-import { assert, assert_eq } from "./common/assertions.ts";
+import { assert, assert_eq, run_test } from "./common/assertions.ts";
 
 class CustomStruct implements ZSerializeable, ZDeserializeable {
     constructor(
@@ -204,8 +204,8 @@ export async function testBinaryFormat() {
 }
 
 // Run all tests
-await run_test('testSerializePrimitive', testSerializePrimitive);
-await run_test('testSerializeTuple', testSerializeTuple);
-await run_test('testSerializeContainer', testSerializeContainer);
-await run_test('testSerializeCustom', testSerializeCustom);
-await run_test('testBinaryFormat', testBinaryFormat);
+await run_test(testSerializePrimitive);
+await run_test(testSerializeTuple);
+await run_test(testSerializeContainer);
+await run_test(testSerializeCustom);
+await run_test(testBinaryFormat);

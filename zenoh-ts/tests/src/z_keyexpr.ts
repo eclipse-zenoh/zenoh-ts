@@ -93,11 +93,11 @@ export async function testDeclare() {
 }
 
 // Run all tests
-await run_test('testKeyExpr', testKeyExpr);
-await run_test('testCanonize', testCanonize);
-await run_test('testConcat', testConcat);
-await run_test('testJoin', testJoin);
-await run_test('testEquals', testEquals);
-await run_test('testIncludes', testIncludes);
-await run_test('testIntersects', testIntersects);
-await run_test('testDeclare', testDeclare);
+await run_test(testKeyExpr);
+await run_test(testCanonize);
+await run_test(testConcat);
+await run_test(testJoin);
+await run_test(testEquals);
+await run_test(testIncludes);
+await run_test(testIntersects);
+await run_test(testDeclare);

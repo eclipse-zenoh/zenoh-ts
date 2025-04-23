@@ -57,4 +57,4 @@ async function putSubTest() {
   await session2.close();
 }
 
-await run_test('putSubTest', putSubTest);
+await run_test(putSubTest);

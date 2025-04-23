@@ -118,5 +118,5 @@ async function testLivelinessSubscriber() {
 }
 
 // Run the tests
-await run_test('testLivelinessGet', testLivelinessGet);
-await run_test('testLivelinessSubscriber', testLivelinessSubscriber);
+await run_test(testLivelinessGet);
+await run_test(testLivelinessSubscriber);
