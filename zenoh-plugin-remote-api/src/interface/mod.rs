@@ -352,6 +352,8 @@ pub enum ControlMsg {
         querier_id: Uuid,
         get_id: Uuid,
         #[ts(type = "string | undefined")]
+        parameters: Option<String>,
+        #[ts(type = "string | undefined")]
         encoding: Option<String>,
         #[ts(type = "string | undefined")]
         payload: Option<B64String>,
