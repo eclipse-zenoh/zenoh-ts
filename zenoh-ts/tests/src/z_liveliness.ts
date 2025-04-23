@@ -28,6 +28,9 @@ async function testLivelinessGet() {
   
   // Declare a token on session1
   const token = session1.liveliness().declare_token(tokenKe);
+
+  // Delay to ensure token is declared
+  await new Promise((resolve) => setTimeout(resolve, 500));
   
   // Get liveliness on session2
   const receiver: Receiver = session2.liveliness().get(ke) as Receiver;
