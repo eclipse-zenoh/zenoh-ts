@@ -13,9 +13,9 @@
 //
 
 import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq } from "./common/assertions.ts";
+import { assert, assert_eq, run_test } from "./common/assertions.ts";
 
-export async function putSubTest() {
+async function putSubTest() {
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -57,4 +57,4 @@ export async function putSubTest() {
   await session2.close();
 }
 
-putSubTest();
+await run_test(putSubTest);

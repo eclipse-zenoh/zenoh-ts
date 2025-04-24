@@ -12,6 +12,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "paths": {
+      "@eclipse-zenoh/zenoh-ts": ["../../src/index.ts"],
+      "@eclipse-zenoh/zenoh-ts/*": ["../../src/*"]
+    },
 
     /* Linting */
     "strict": true,

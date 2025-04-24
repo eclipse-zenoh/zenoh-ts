@@ -471,6 +471,7 @@ pub(crate) async fn handle_control_message(
         ControlMsg::QuerierGet {
             get_id,
             querier_id,
+            parameters,
             encoding,
             payload,
             attachment,
@@ -501,6 +502,7 @@ pub(crate) async fn handle_control_message(
                 add_if_some!(encoding, get_builder);
                 add_if_some!(payload, get_builder);
                 add_if_some!(attachment, get_builder);
+                add_if_some!(parameters, get_builder);
 
                 let ws_tx = state_map.websocket_tx.clone();
                 let finish_msg = RemoteAPIMsg::Control(ControlMsg::GetFinished { id: get_id });

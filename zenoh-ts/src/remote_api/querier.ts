@@ -42,33 +42,34 @@ export class RemoteQuerier {
     }
 
     get(
-        _handler_type: HandlerChannel,
-        _encoding?: string,
-        _parameters?: string,
-        _attachment?: Array<number>,
-        _payload?: Array<number>,
+        handler_type: HandlerChannel,
+        encoding?: string,
+        parameters?: string,
+        attachment?: Array<number>,
+        payload?: Array<number>,
     ): SimpleChannel<ReplyWS> {
         let get_id = uuidv4();
         let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
         this.session_ref.get_receiver.set(get_id, channel);
 
-        let payload = undefined;
-        if (_payload != undefined) {
-            payload = b64_str_from_bytes(new Uint8Array(_payload))
+        let payload_str = undefined;
+        if (payload != undefined) {
+            payload_str = b64_str_from_bytes(new Uint8Array(payload))
         }
-        let attachment = undefined;
-        if (_attachment != undefined) {
-            attachment = b64_str_from_bytes(new Uint8Array(_attachment))
+        let attachment_str = undefined;
+        if (attachment != undefined) {
+            attachment_str = b64_str_from_bytes(new Uint8Array(attachment))
         }
 
         let control_msg: ControlMsg = {
             QuerierGet: {
                 querier_id: this.querier_id as string,
                 get_id: get_id,
-                encoding: _encoding,
-                payload: payload,
-                attachment: attachment,
-                handler: _handler_type
+                parameters: parameters,
+                encoding: encoding,
+                payload: payload_str,
+                attachment: attachment_str,
+                handler: handler_type
             }
         };
 
