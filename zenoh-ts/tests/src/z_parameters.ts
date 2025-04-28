@@ -20,11 +20,6 @@ export async function testParametersBasic() {
   const emptyParams = new Parameters("");
   assert(emptyParams.is_empty(), "Empty string should create empty parameters");
 
-  // Test single parameter without value
-  const singleNoValue = new Parameters("p1");
-  const singleNoValueExpected = new Parameters("p1=");
-  assert_eq(singleNoValue.toString(), singleNoValueExpected.toString(), "Parameter without value should be equivalent to empty value");
-
   // Test single parameter with value
   const singleParam = new Parameters("p1=v1");
   assert_eq(singleParam.get("p1"), "v1", "Single parameter with value not matched");
@@ -68,6 +63,13 @@ export async function testParametersMap() {
   const mapParams = new Parameters(map);
   const stringParams = new Parameters("p1=v1");
   assert_eq(mapParams.toString(), stringParams.toString(), "Map initialization not equivalent to string initialization");
+
+  // Test parameter without value using Map
+  const singleNoValue = new Parameters("p1");
+  const emptyMap = new Map<string, string>();
+  emptyMap.set("p1", "");
+  const singleNoValueExpected = new Parameters(emptyMap);
+  assert_eq(singleNoValue.toString(), singleNoValueExpected.toString(), "Parameter without value should be equivalent to empty value");
 }
 
 export async function testParametersInsert() {
