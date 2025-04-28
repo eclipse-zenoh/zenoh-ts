@@ -102,6 +102,41 @@ export async function testParametersDelete() {
   assert_eq(params.get("key1"), undefined, "Parameter removal failed");
 }
 
+export async function testParametersPerformance() {
+  const numOperations = 10000;
+  const params = Parameters.empty();
+  
+  // Test insert performance
+  const insertStart = performance.now();
+  for (let i = 0; i < numOperations; i++) {
+    params.insert(`key${i}`, `value${i}`);
+  }
+  const insertEnd = performance.now();
+  const insertTime = insertEnd - insertStart;
+  console.log(`Insert ${numOperations} parameters took ${insertTime.toFixed(2)}ms (${(insertTime/numOperations).toFixed(3)}ms per operation)`);
+
+  // Verify all insertions were successful
+  for (let i = 0; i < numOperations; i++) {
+    assert_eq(params.get(`key${i}`), `value${i}`, `Insert verification failed for key${i}`);
+  }
+
+  // Test remove performance
+  const removeStart = performance.now();
+  for (let i = 0; i < numOperations; i++) {
+    params.remove(`key${i}`);
+  }
+  const removeEnd = performance.now();
+  const removeTime = removeEnd - removeStart;
+  console.log(`Remove ${numOperations} parameters took ${removeTime.toFixed(2)}ms (${(removeTime/numOperations).toFixed(3)}ms per operation)`);
+
+  // Verify all removals were successful
+  for (let i = 0; i < numOperations; i++) {
+    assert_eq(params.get(`key${i}`), undefined, `Remove verification failed for key${i}`);
+  }
+
+  assert(params.is_empty(), "Parameters should be empty after removing all entries");
+}
+
 // Run all tests
 await run_test(testParametersBasic);
 await run_test(testParametersNonexistent);
@@ -110,3 +145,4 @@ await run_test(testParametersInsert);
 await run_test(testParametersExtend);
 await run_test(testParametersEmpty);
 await run_test(testParametersDelete);
+await run_test(testParametersPerformance);
