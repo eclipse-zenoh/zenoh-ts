@@ -372,9 +372,9 @@ export class Parameters {
     if (p instanceof Parameters) {
       this._source = p._source;
     } else if (p instanceof Map) {
-      // Convert Map to string format
+      // Convert Map to string format, handling empty values
       this._source = Array.from(p.entries())
-        .map(([k, v]) => `${k}=${v}`)
+        .map(([k, v]) => v ? `${k}=${v}` : k)
         .join(';');
     } else {
       this._source = p.toString();
@@ -389,8 +389,7 @@ export class Parameters {
       if (!pair) continue; // Skip empty segments
       const eqIndex = pair.indexOf('=');
       if (eqIndex === -1) {
-        // Handle parameter without value (equivalent to empty value)
-        yield [pair, ''];
+        yield [pair, '']; // Handle parameter without value
       } else {
         const key = pair.slice(0, eqIndex);
         const value = pair.slice(eqIndex + 1);
@@ -465,7 +464,7 @@ export class Parameters {
    */
   contains_key(key: string): boolean {
     for (const [k] of this._iter()) {
-      if (k === key) return true;
+      if (k == key) return true;
     }
     return false;
   }
@@ -476,7 +475,7 @@ export class Parameters {
    */
   get(key: string): string | undefined {
     for (const [k, v] of this._iter()) {
-      if (k === key) return v;
+      if (k == key) return v;
     }
     return undefined;
   }
@@ -487,7 +486,7 @@ export class Parameters {
    */
   insert(key: string, value: string): void {
     const entries = Array.from(this._iter());
-    const index = entries.findIndex(([k]) => k === key);
+    const index = entries.findIndex(([k]) => k == key);
     if (index !== -1) {
       entries[index] = [key, value];
     } else {
