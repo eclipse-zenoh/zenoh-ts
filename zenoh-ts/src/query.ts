@@ -426,20 +426,31 @@ export class Parameters {
    * @returns boolean
    */
   remove(key: string): boolean {
+    let found = false;
+    let newSource = '';
+    let lastPos = 0;
+
     for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
       const currentKey = this._source.slice(keyStart, keyStart + keyLen);
-      if (currentKey === key) {
-        // Calculate total length to remove including separator
-        const totalLen = valueStart >= 0 ? 
-          valueStart + valueLen - keyStart + (keyStart + valueLen + valueStart < this._source.length ? 1 : 0) : 
-          keyLen + (keyStart + keyLen < this._source.length ? 1 : 0);
-        
-        // Remove the key-value pair and any trailing separator
-        this._source = this._source.slice(0, keyStart) + this._source.slice(keyStart + totalLen);
-        return true;
+      if (currentKey == key) {
+        // Add the part between last position and current key
+        newSource += this._source.slice(lastPos, keyStart);
+        // Calculate where the next parameter starts
+        lastPos = valueStart >= 0 ? 
+          valueStart + valueLen + 1 : // +1 for semicolon
+          keyStart + keyLen + 1;
+        found = true;
       }
     }
-    return false;
+    
+    if (found) {
+      // Add remaining part of string
+      newSource += this._source.slice(lastPos);
+      // Clean up consecutive semicolons and trailing/leading semicolons
+      this._source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
+    }
+    
+    return found;
   }
 
   *keys(): Generator<string> {
@@ -486,7 +497,7 @@ export class Parameters {
   }
 
   /**
-   * gets value with associated key, returning undefined if key does not exist
+   * gets first found value with associated key, returning undefined if key does not exist
    * @returns string | undefined
    */
   get(key: string): string | undefined {
@@ -503,8 +514,11 @@ export class Parameters {
    * @returns void
    */
   insert(key: string, value: string): void {
+    // Remove any existing instances of the key
     this.remove(key);
-    if (this._source && !this._source.endsWith(';')) {
+    
+    // Add new key-value pair
+    if (this._source && !this._source.endsWith(';') && this._source.length > 0) {
       this._source += ';';
     }
     this._source += `${key}=${value}`;

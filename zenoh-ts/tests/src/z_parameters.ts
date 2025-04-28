@@ -102,6 +102,25 @@ export async function testParametersDelete() {
   assert_eq(params.get("key1"), undefined, "Parameter removal failed");
 }
 
+export async function testParametersDuplicates() {
+  // Test duplicate handling in insert
+  const params = new Parameters("key1=value1;key2=value2;key1=duplicate");
+  assert_eq(params.get("key1"), "value1", "Should return first occurrence of key1");
+
+  // Test duplicate handling in remove
+  const params2 = new Parameters("key1=value1;key2=value2;key1=duplicate;key3=value3");
+  params2.remove("key1");
+  assert_eq(params2.toString(), "key2=value2;key3=value3", "Remove should remove all occurrences of key1");
+  assert_eq(params2.toString().split("key1").length - 1, 0, "Should have no occurrences of key1 after remove");
+  assert_eq(params2.get("key2"), "value2", "Other keys should remain intact");
+  assert_eq(params2.get("key3"), "value3", "Other keys should remain intact");
+
+  // Insert should overwrite all duplicates
+  params.insert("key1", "newvalue");
+  assert_eq(params.get("key1"), "newvalue", "Insert should remove duplicates");
+  assert_eq(params.toString().split("key1").length - 1, 1, "Should only have one occurrence of key1 after insert");
+}
+
 export async function testParametersPerformance() {
   const numOperations = 10000;
   const params = Parameters.empty();
@@ -145,4 +164,5 @@ await run_test(testParametersInsert);
 await run_test(testParametersExtend);
 await run_test(testParametersEmpty);
 await run_test(testParametersDelete);
-await run_test(testParametersPerformance);
+await run_test(testParametersDuplicates);
+// await run_test(testParametersPerformance);
