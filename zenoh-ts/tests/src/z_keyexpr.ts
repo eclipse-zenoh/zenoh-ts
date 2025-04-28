@@ -93,15 +93,51 @@ export async function testKeyExprDeclare() {
 }
 
 export async function testParameters() {
-  // Test string initialization
-  const params = new Parameters("key1=value1;key2=value2");
-  assert_eq(params.get("key1"), "value1", "Parameter key1 value mismatch");
-  assert_eq(params.get("key2"), "value2", "Parameter key2 value mismatch");
-  assert_eq(params.get("nonexistent"), undefined, "Nonexistent parameter should return undefined");
+  // Test empty string initialization
+  const emptyParams = new Parameters("");
+  assert(emptyParams.is_empty(), "Empty string should create empty parameters");
 
-  // Test contains_key
-  assert(params.contains_key("key1"), "Parameter should contain key1");
-  assert(!params.contains_key("nonexistent"), "Parameter should not contain nonexistent key");
+  // Test single parameter without value
+  const singleNoValue = new Parameters("p1");
+  const singleNoValueExpected = new Parameters("p1=");
+  assert_eq(singleNoValue.toString(), singleNoValueExpected.toString(), "Parameter without value should be equivalent to empty value");
+
+  // Test single parameter with value
+  const singleParam = new Parameters("p1=v1");
+  assert_eq(singleParam.get("p1"), "v1", "Single parameter with value not matched");
+
+  // Test multiple parameters with trailing semicolon
+  const multiParamTrailing = new Parameters("p1=v1;p2=v2;");
+  assert_eq(multiParamTrailing.get("p1"), "v1", "First parameter not matched");
+  assert_eq(multiParamTrailing.get("p2"), "v2", "Second parameter not matched");
+
+  // Test parameters with extra delimiters
+  const extraDelim = new Parameters("p1=v1;p2=v2;|=");
+  assert_eq(extraDelim.get("p1"), "v1", "Parameter p1 not matched with extra delimiters");
+  assert_eq(extraDelim.get("p2"), "v2", "Parameter p2 not matched with extra delimiters");
+
+  // Test mix of parameters with and without values
+  const mixedParams = new Parameters("p1=v1;p2;p3=v3");
+  assert_eq(mixedParams.get("p1"), "v1", "Parameter p1 not matched in mixed params");
+  assert_eq(mixedParams.get("p2"), "", "Parameter p2 should have empty value");
+  assert_eq(mixedParams.get("p3"), "v3", "Parameter p3 not matched in mixed params");
+
+  // Test parameters with spaces in values and keys
+  const spacedParams = new Parameters("p1=v 1;p 2=v2");
+  assert_eq(spacedParams.get("p1"), "v 1", "Parameter with space in value not matched");
+  assert_eq(spacedParams.get("p 2"), "v2", "Parameter with space in key not matched");
+
+  // Test parameters with equals signs in values
+  const equalsParams = new Parameters("p1=x=y;p2=a==b");
+  assert_eq(equalsParams.get("p1"), "x=y", "Parameter with equals in value not matched");
+  assert_eq(equalsParams.get("p2"), "a==b", "Parameter with multiple equals in value not matched");
+
+  // Test Map initialization
+  const map = new Map<string, string>();
+  map.set("p1", "v1");
+  const mapParams = new Parameters(map);
+  const stringParams = new Parameters("p1=v1");
+  assert_eq(mapParams.toString(), stringParams.toString(), "Map initialization not equivalent to string initialization");
 }
 
 export async function testParametersInsert() {
