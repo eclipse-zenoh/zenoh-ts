@@ -68,7 +68,6 @@ elif [ "$1" = "example" ] && [ "$2" = "browser" ] && [ "$3" = "" ]; then
   # there is only "chat" example for now, but later list of examples can be shown
   cd examples/browser/chat
   yarn install || exit 1
-  yarn build || exit 1
   if [ $USE_DAEMON -eq 1 ]; then
     start_daemon
   fi

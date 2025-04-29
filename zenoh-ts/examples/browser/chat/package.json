@@ -8,7 +8,7 @@
   "type": "module",
   "scripts": {
     "clean": "rm -rf ./node_modules ./dist ./esm",
-    "build": "rm -rf dist && mkdir dist && webpack --config webpack.config.js && cp assets/* dist/",
+    "build": "webpack --config webpack.config.js",
     "start": "webpack serve --config webpack.config.js --mode development"
   },
   "devDependencies": {
