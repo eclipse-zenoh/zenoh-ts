@@ -452,20 +452,29 @@ export class Parameters {
     
     return found;
   }
-
-  *keys(): Generator<string> {
-    for (const [keyStart, keyLen] of this._iter()) {
-      yield this._source.slice(keyStart, keyStart + keyLen);
+  /**
+   * gets an generator over the pairs (key,value) of the Parameters
+   * @returns Generator<string>
+   */
+  *iter(): Generator<[string, string]> {
+    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
+      let key = this._source.slice(keyStart, keyStart + keyLen);
+      let value = valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+      yield [key, value];
     }
   }
 
   /**
-   * gets an iterator over the values of the Parameters
-   * @returns Iterator<string>
+   * gets an generator over the values separated by `|`  in multivalue parameters
+   * @returns Generator<string>
    */
-  *values(): Generator<string> {
-    for (const [, , valueStart, valueLen] of this._iter()) {
-      yield valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+  *values(key: string): Generator<string> {
+    let value = this.get(key);
+    if (value != undefined) {
+      let values = value.split('|');
+      for (const v of values) {
+        yield v;
+      }
     }
   }
 

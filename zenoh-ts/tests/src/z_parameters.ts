@@ -49,11 +49,37 @@ export async function testParametersBasic() {
   const equalsParams = new Parameters("p1=x=y;p2=a==b");
   assert_eq(equalsParams.get("p1"), "x=y", "Parameter with equals in value not matched");
   assert_eq(equalsParams.get("p2"), "a==b", "Parameter with multiple equals in value not matched");
+
+  // Test `values(key)` function
+  const mulitivalueParams = new Parameters("p1=v1|v2|v3|v4;p2=v5|v6|v7|v8");
+  assert_eq([...mulitivalueParams.values("p1")], ["v1", "v2", "v3", "v4"], "values() function not returning expected values");
+  assert_eq([...mulitivalueParams.values("p2")], ["v5", "v6", "v7", "v8"], "values() function not returning expected values");
 }
 
 export async function testParametersNonexistent() {
   const params = new Parameters("key1=value1");
   assert_eq(params.get("nonexistent"), undefined, "Nonexistent parameter should return undefined");
+}
+
+export async function testParametersIter() {
+  const map = new Map<string, string>();
+  map.set("p1", "v1");
+  map.set("p2", "v2");
+  map.set("p3", "v3");
+  const mapParams = new Parameters(map);
+  let count = 0;
+  for (const [key, value] of params.iter()) {
+    count++;
+    assert_eq(mapParams.get(key), value, `Iterated key ${key} does not match expected value ${value}`);
+  }
+  assert_eq(count, 3, "Iterating over parameters should yield 3 results");
+  // Test iterating over empty parameters
+  const emptyParams = new Parameters("");
+  let count0 = 0;
+  for (const _ of emptyParams.iter()) {
+    count0++;
+  }
+  assert_eq(count0, 0, "Iterating over empty parameters should yield no results");
 }
 
 export async function testParametersMap() {
