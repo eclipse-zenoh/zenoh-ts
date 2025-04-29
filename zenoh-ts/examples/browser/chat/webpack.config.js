@@ -30,5 +30,13 @@ export default {
         asyncWebAssembly: true
     },
     devtool: 'source-map',
-    mode: 'development'
+    mode: 'development',
+    devServer: {
+        static: {
+            directory: path.join(__dirname, 'assets'),
+        },
+        compress: true,
+        port: 8080,
+        open: true
+    }
 };

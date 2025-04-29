@@ -9,13 +9,13 @@
   "scripts": {
     "clean": "rm -rf ./node_modules ./dist ./esm",
     "build": "rm -rf dist && mkdir dist && webpack --config webpack.config.js && cp assets/* dist/",
-    "start": "http-server dist -c-1 -o index.html"
+    "start": "webpack serve --config webpack.config.js --mode development"
   },
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "typescript": "^5.7.3",
     "webpack": "^5.64.4",
     "webpack-cli": "^4.9.1",
+    "webpack-dev-server": "^4.15.1",
+    "typescript": "^5.7.3",
     "ts-loader": "^9.2.6"
   },
   "dependencies": {
