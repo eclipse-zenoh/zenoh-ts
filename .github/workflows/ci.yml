@@ -101,7 +101,7 @@ jobs:
       - name: Run tests
         uses: borales/actions-yarn@v4
         with:
-          cmd: start DAEMON test AL
+          cmd: start DAEMON test ALL
           dir: "zenoh-ts"
       
       # zenoh-ts is already built by test script, so we need only to install
