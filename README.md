@@ -1,6 +1,5 @@
 <img src="https://raw.githubusercontent.com/eclipse-zenoh/zenoh/master/zenoh-dragon.png" height="150">
 
-> :warning: **This is a WIP Active development project**: Experiment with it, but it is **Not** production ready!
 
 [![Discord](https://img.shields.io/badge/chat-on%20discord-blue)](https://discord.gg/2GJ958VuHs)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -37,11 +36,6 @@ The library requires a websocket connection to the `zenohd` daemon through the `
 ---
 
 ## How to build and use zenoh-ts
-
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also
-build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git
-are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort into maintaining
-compatibility between the various git repositories in the Zenoh project.
 
 ### Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
