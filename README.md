@@ -1,7 +1,5 @@
 <img src="https://raw.githubusercontent.com/eclipse-zenoh/zenoh/master/zenoh-dragon.png" height="150">
 
-> :warning: **This is a WIP Active development project**: Experiment with it, but it is **Not** production ready!
-
 [![Discord](https://img.shields.io/badge/chat-on%20discord-blue)](https://discord.gg/2GJ958VuHs)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -29,7 +27,6 @@ The latest version of the zenoh-ts library can be installed from npm:
 ```sh
 npm install @eclipse-zenoh/zenoh-ts
 ```
-
 Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
 The library requires a websocket connection to the `zenohd` daemon through the `zenohd-plugin-remote-api` in the daemon. See the corresponding section below.
@@ -37,11 +34,6 @@ The library requires a websocket connection to the `zenohd` daemon through the `
 ---
 
 ## How to build and use zenoh-ts
-
-> :warning: **WARNING** :warning: : Zenoh and its ecosystem are under active development. When you build from git, make sure you also
-build from git any other Zenoh repository you plan to use (e.g. binding, plugin, backend, etc.). It may happen that some changes in git
-are not compatible with the most recent packaged Zenoh release (e.g. deb, docker, pip). We put particular effort into maintaining
-compatibility between the various git repositories in the Zenoh project.
 
 ### Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
@@ -71,7 +63,7 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    brew install zenoh
    brew install zenoh-plugin-remote-api
    ```
-
+   
    Run the installed zenoh router with the example config
 
    ```sh
@@ -81,6 +73,7 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    The expected output should be something similar to:
 
     ```txt
+    
    zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
    zenoh::net::runtime: Using ZID: f7bc54e0941036422ec08ebac6fbdb40
    zenoh::api::loader: Loading  plugin "remote_api"
@@ -125,7 +118,7 @@ The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_
    zenoh::api::loader: Finished loading plugins
    zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/...
    ```
-
+   
 ### Building the library from sources
 
 1. Make sure that the following utilities are available on your platform.
