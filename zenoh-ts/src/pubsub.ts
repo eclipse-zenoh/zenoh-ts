@@ -63,8 +63,8 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  dispose() {
-    this.undeclare();
+  async asyncDispose() {
+    await this.undeclare();
     Subscriber.registry.unregister(this);
   }
   /**
@@ -115,8 +115,8 @@ export class Subscriber {
    * Undeclares a subscriber on the session
    *
    */
-  undeclare() {
-    this.remote_subscriber.undeclare();
+  async undeclare() {
+    await this.remote_subscriber.undeclare();
     Subscriber.registry.unregister(this);
   }
 
@@ -251,8 +251,8 @@ export class Publisher {
   /** 
    * @ignore 
    */
-  dispose() {
-    this.undeclare();
+  async asyncDispose() {
+    await this.undeclare();
     Publisher.registry.unregister(this);
   }
 

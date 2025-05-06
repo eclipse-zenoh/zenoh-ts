@@ -56,8 +56,8 @@ export class Queryable {
   /** 
    * @ignore
    */
-  dispose() {
-    this.undeclare();
+  async asyncDispose() {
+    await this.undeclare();
     Queryable.registry.unregister(this);
   }
   /** 

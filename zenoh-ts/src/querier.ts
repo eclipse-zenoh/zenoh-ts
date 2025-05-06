@@ -142,8 +142,8 @@ export class Querier {
   /** 
    * @ignore
    */
-  dispose() {
-    this.undeclare();
+  async asyncDispose() {
+    await this.undeclare();
   }
 
   /** 

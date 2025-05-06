@@ -175,8 +175,8 @@ export class Session {
    */
   static registry: FinalizationRegistry<RemoteSession> = new FinalizationRegistry((r_session: RemoteSession) => r_session.close());
 
-  dispose() {
-    this.close();
+  async asyncDispose() {
+    await this.close();
     Session.registry.unregister(this);
   }
 
