@@ -50,7 +50,7 @@ export class RemotePublisher {
     this.undeclared = false;
   }
 
-  put(
+  async put(
     payload: Array<number>,
     attachment: Array<number> | null,
     encoding: string | null,
@@ -81,11 +81,11 @@ export class RemotePublisher {
         timestamp: timestamp
       },
     };
-    this.session_ref.send_data_message(data_msg);
+    await this.session_ref.send_data_message(data_msg);
   }
 
   // Delete 
-  delete(
+  async delete(
     attachment: Array<number> | null,
     timestamp: string | null,
   ) {
@@ -102,10 +102,10 @@ export class RemotePublisher {
         timestamp: timestamp,
       },
     };
-    this.session_ref.send_data_message(data_msg);
+    await this.session_ref.send_data_message(data_msg);
   }
 
-  undeclare() {
+  async undeclare() {
     if (this.undeclared == true) {
       let message =
         "Publisher keyexpr:`" +
@@ -120,7 +120,7 @@ export class RemotePublisher {
     let ctrl_message: ControlMsg = {
       UndeclarePublisher: this.publisher_id.toString(),
     };
-    this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrl_message);
   }
 }
 
@@ -203,7 +203,7 @@ export class RemoteSubscriber {
     return this.rx.receive();
   }
 
-  undeclare() {
+  async undeclare() {
     if (this.undeclared == true) {
       console.warn("Subscriber keyexpr:`" +
         this.key_expr +
@@ -217,7 +217,7 @@ export class RemoteSubscriber {
     let ctrl_message: ControlMsg = {
       UndeclareSubscriber: this.subscriber_id.toString(),
     };
-    this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrl_message);
     this.rx.close();
   }
 }

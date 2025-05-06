@@ -18,8 +18,8 @@ import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zen
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const sub = session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
-  const pub = session.declare_publisher(
+  const sub = await session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
+  const pub = await session.declare_publisher(
     "test/ping",
     {
       encoding: Encoding.default(),
@@ -34,7 +34,7 @@ export async function main() {
   const data = new Uint8Array([122, 101, 110, 111, 104]);
 
   while (elapsed(startTime) < 5) {
-    pub.put(data);
+    await pub.put(data);
     await sub.receive();
   }
 
@@ -42,7 +42,7 @@ export async function main() {
   const samples_out = [];
   for (let i = 0; i < samples; i++) {
     const write_time = new Date();
-    pub.put(data);
+    await pub.put(data);
     await sub.receive();
     samples_out.push(elapsed_ms(write_time));
   }

@@ -24,7 +24,7 @@ export async function main() {
   const key_expr = new KeyExpr(args.key);
   console.log("Declaring Liveliness token on ", key_expr.toString());
 
-  const token: LivelinessToken = session.liveliness().declare_token(key_expr);
+  const token: LivelinessToken = await session.liveliness().declare_token(key_expr);
   // LivelinessTokens are NOT automatically closed when dropped
   // please call token.undeclare();
 

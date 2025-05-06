@@ -91,7 +91,7 @@ export class RemoteQueryable {
       for await (const message of reply_tx) {
         let queryable_msg: QueryableMsg = { Reply: { reply: message } };
         let data_msg: DataMsg = { Queryable: queryable_msg };
-        session_ref.send_data_message(data_msg);
+        await session_ref.send_data_message(data_msg);
       }
     });
 
@@ -127,7 +127,7 @@ export class RemoteQueryable {
     return [await this.query_rx.receive(), this.reply_tx];
   }
 
-  undeclare() {
+  async undeclare() {
     if (this.undeclared == true) {
       console.warn("Queryable keyexpr:`" +
         this.key_expr +
@@ -141,7 +141,7 @@ export class RemoteQueryable {
     let ctrl_message: ControlMsg = {
       UndeclareQueryable: this.queryable_id.toString(),
     };
-    this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrl_message);
     this.query_rx.close();
   }
 }

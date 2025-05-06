@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
@@ -21,25 +21,45 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  console.log("Deleting resources matching '", args.key, "'...");
-  await session.delete(args.key);
+  const publisher: Publisher = await session.declare_publisher(
+    "test/thr",
+    {
+    }
+  );
+  
+  let payload_size = args.sz;
+  let payload = new Uint8Array(args.sz);
+  console.warn(`Will publish ${payload_size} B payload.`);
+  for (let i = 0; i < args.sz; i++) {
+    payload[i] = i;
+  }
 
-  await session.close();
+  while (true) {
+    await publisher.put(payload);
+  }
 }
 
 class ParseArgs extends BaseParseArgs {
-  public key: string = "demo/example/zenoh-ts-put";
+  public sz: number = 8;
 
   constructor() {
     super();
     this.parse();
   }
 
+  public get_keyexpr(): KeyExpr {
+    return KeyExpr.autocanonize(this.key);
+  }
+
   public get_help(): Record<string, string> {
     return {
-      key: "Key expression for the deletion"
+      sz: "Payload size for the publication",
     };
   }
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 main();

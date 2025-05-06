@@ -31,7 +31,7 @@ export async function main() {
   const key_expr = new KeyExpr(args.key);
   console.log("Sending Liveliness Query '", key_expr.toString(), "'");
 
-  const receiver: Receiver = session.liveliness().get(key_expr, { timeout: args.get_timeout() }) as Receiver;
+  const receiver: Receiver = await session.liveliness().get(key_expr, { timeout: args.get_timeout() }) as Receiver;
 
   let reply = await receiver.receive();
 

@@ -51,7 +51,7 @@ export async function main() {
 
 
 
-  const queryable: Queryable = session.declare_queryable(key_expr, {
+  const queryable: Queryable = await session.declare_queryable(key_expr, {
     complete: args.complete,
   });
 

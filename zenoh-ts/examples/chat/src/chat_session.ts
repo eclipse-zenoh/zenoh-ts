@@ -117,7 +117,7 @@ export class ChatSession {
 		});
 		log(`[Session] Declare queryable on ${keyexpr}`);
 
-		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
+		this.messages_publisher = await this.session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 
 		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
@@ -139,11 +139,11 @@ export class ChatSession {
 		);
 		log(`[Session] Declare Subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
 
-		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
+		this.liveliness_token = await this.session.liveliness().declare_token(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
 
 		// Subscribe to changes of users presence
-		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
+		this.liveliness_subscriber = await this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = ChatUser.fromKeyexpr(keyexpr);

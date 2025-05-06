@@ -22,7 +22,7 @@ export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   const key_expr = args.get_keyexpr();
-  const publisher: Publisher = session.declare_publisher(
+  const publisher: Publisher = await session.declare_publisher(
     key_expr,
     {
       encoding: Encoding.default(),
@@ -38,7 +38,7 @@ export async function main() {
 
     console.warn("Block statement execution no : " + idx);
     console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
-    publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
+    await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
     await sleep(1000);
   }
 }

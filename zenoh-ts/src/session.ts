@@ -331,10 +331,10 @@ export class Session {
    *
    * @returns Receiver
    */
-  get(
+  async get(
     into_selector: IntoSelector,
     get_options?: GetOptions
-  ): Receiver | undefined {
+  ): Promise<Receiver | undefined> {
 
     let selector: Selector;
     let key_expr: KeyExpr;
@@ -386,7 +386,7 @@ export class Session {
       _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
 
-    let chan: SimpleChannel<ReplyWS> = this.remote_session.get(
+    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
       selector.key_expr().toString(),
       selector.parameters().toString(),
       handler_type,
@@ -435,10 +435,10 @@ export class Session {
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
-  declare_subscriber(
+  async declare_subscriber(
     key_expr: IntoKeyExpr,
     subscriber_opts?: SubscriberOptions
-  ): Subscriber {
+  ): Promise<Subscriber> {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
@@ -459,13 +459,13 @@ export class Session {
           callback(sample);
         }
       };
-      remote_subscriber = this.remote_session.declare_remote_subscriber(
+      remote_subscriber = await this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
         callback_conversion,
       );
     } else {
-      remote_subscriber = this.remote_session.declare_remote_subscriber(
+      remote_subscriber = await this.remote_session.declare_remote_subscriber(
         _key_expr.toString(),
         handler_type,
       );
@@ -512,10 +512,10 @@ export class Session {
   *
   * @returns Queryable
   */
-  declare_queryable(
+  async declare_queryable(
     key_expr: IntoKeyExpr,
     queryable_opts?: QueryableOptions
-  ): Queryable {
+  ): Promise<Queryable> {
     let _key_expr = new KeyExpr(key_expr);
     let remote_queryable: RemoteQueryable;
     let reply_tx: SimpleChannel<QueryReplyWS> =
@@ -546,7 +546,7 @@ export class Session {
 
         defined_callback(query);
       };
-      remote_queryable = this.remote_session.declare_remote_queryable(
+      remote_queryable = await this.remote_session.declare_remote_queryable(
         _key_expr.toString(),
         _complete,
         reply_tx,
@@ -554,7 +554,7 @@ export class Session {
         callback_conversion,
       );
     } else {
-      remote_queryable = this.remote_session.declare_remote_queryable(
+      remote_queryable = await this.remote_session.declare_remote_queryable(
         _key_expr.toString(),
         _complete,
         reply_tx,
@@ -576,10 +576,10 @@ export class Session {
   * @param {PublisherOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
-  declare_publisher(
+  async declare_publisher(
     keyexpr: IntoKeyExpr,
     publisher_opts: PublisherOptions
-  ): Publisher {
+  ): Promise<Publisher> {
     let _key_expr: KeyExpr = new KeyExpr(keyexpr);
 
     let _express = publisher_opts?.express;
@@ -612,7 +612,7 @@ export class Session {
     }
 
     let remote_publisher: RemotePublisher =
-      this.remote_session.declare_remote_publisher(
+      await this.remote_session.declare_remote_publisher(
         _key_expr.toString(),
         _encoding,
         _congestion_control,
@@ -639,10 +639,10 @@ export class Session {
   * @param {QuerierOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
-  declare_querier(
+  async declare_querier(
     into_keyexpr: IntoKeyExpr,
     querier_opts: QuerierOptions,
-  ): Querier {
+  ): Promise<Querier> {
     const key_expr = new KeyExpr(into_keyexpr);
 
     // Optional Parameters 
@@ -677,7 +677,7 @@ export class Session {
       _timeout_millis = Duration.milliseconds.from(querier_opts?.timeout);
     }
 
-    let remote_querier = this.remote_session.declare_remote_querier(
+    let remote_querier = await this.remote_session.declare_remote_querier(
       key_expr.toString(),
       _consolidation,
       _congestion_control,

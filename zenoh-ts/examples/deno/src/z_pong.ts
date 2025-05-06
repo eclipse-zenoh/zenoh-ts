@@ -17,7 +17,7 @@ import { Encoding, CongestionControl, Sample, Config, Session } from "@eclipse-z
 export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const pub = session.declare_publisher(
+  const pub = await session.declare_publisher(
     "test/ping",
     {
       encoding: Encoding.default(),
@@ -29,7 +29,7 @@ export async function main() {
     pub.put(sample.payload());
   };
 
-  session.declare_subscriber("test/pong", { handler: subscriber_callback } );
+  await session.declare_subscriber("test/pong", { handler: subscriber_callback } );
 
   let count = 0;
   while (true) {

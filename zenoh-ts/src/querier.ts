@@ -171,11 +171,11 @@ export class Querier {
    * Undeclares Queryable
    * @returns void
    */
-  undeclare() {
+  async undeclare() {
     this.undeclared = true;
     // Finalization registry
     // Queryable.registry.unregister(this);
-    this._remote_querier.undeclare()
+    await this._remote_querier.undeclare()
   }
 
   /**
@@ -214,9 +214,9 @@ export class Querier {
    * Issue a Get request on this querier
    * @returns Promise <Receiever | void>
    */
-  get(
+  async get(
     parameters?: Parameters,
-    get_options?: QuerierGetOptions): Receiver | undefined {
+    get_options?: QuerierGetOptions): Promise<Receiver | undefined> {
     if (this.undeclared == true) {
       return undefined;
     }
@@ -243,7 +243,7 @@ export class Querier {
     }
     let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
 
-    let chan: SimpleChannel<ReplyWS> = this._remote_querier.get(
+    let chan: SimpleChannel<ReplyWS> = await this._remote_querier.get(
       handler_type,
       _encoding,
       _parameters,

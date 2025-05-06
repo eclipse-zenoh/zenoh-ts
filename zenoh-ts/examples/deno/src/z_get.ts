@@ -40,7 +40,7 @@ export async function main() {
   // await session.get("demo/example/**", get_callback);
 
   // Poll receiver
-  const receiver: void | Receiver = session.get(args.selector, { 
+  const receiver: void | Receiver = await session.get(args.selector, { 
     payload: args.payload, 
     timeout: args.get_timeout(), 
     target: args.get_query_target() 

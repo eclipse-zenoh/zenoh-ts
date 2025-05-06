@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Sample } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, Sample, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 // Throughput test
 class Stats {
   round_count: number;
@@ -55,13 +55,12 @@ class Stats {
 export async function main() {
   console.warn("Open Session");
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const stats = new Stats(100000);
+  const stats = new Stats(1000);
   const subscriber_callback = async function (_sample: Sample): Promise<void> {
     stats.increment();
   };
 
-  console.warn("Declare subscriber");
-  session.declare_subscriber(
+  await session.declare_subscriber(
     "test/thr",
     { handler: subscriber_callback }
   );

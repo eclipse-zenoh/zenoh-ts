@@ -25,7 +25,7 @@ export async function main() {
   const key_expr = new KeyExpr(args.key);
   console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
 
-  const liveliness_subscriber: Subscriber = session.liveliness().declare_subscriber(key_expr, { history: args.history });
+  const liveliness_subscriber: Subscriber = await session.liveliness().declare_subscriber(key_expr, { history: args.history });
 
   let sample = await liveliness_subscriber.receive();
   while (sample != undefined) {
@@ -47,7 +47,7 @@ export async function main() {
     }
     sample = await liveliness_subscriber.receive();
   }
-  liveliness_subscriber.undeclare();
+  await liveliness_subscriber.undeclare();
 }
 
 class ParseArgs extends BaseParseArgs {

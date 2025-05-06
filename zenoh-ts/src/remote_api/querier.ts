@@ -32,22 +32,22 @@ export class RemoteQuerier {
         this.session_ref = session_ref;
     }
 
-    undeclare() {
+    async undeclare() {
 
         let control_msg: ControlMsg = {
             UndeclareQuerier: this.querier_id as string
         };
 
-        this.session_ref.send_ctrl_message(control_msg);
+        await this.session_ref.send_ctrl_message(control_msg);
     }
 
-    get(
+    async get(
         _handler_type: HandlerChannel,
         _encoding?: string,
         _parameters?: string,
         _attachment?: Array<number>,
         _payload?: Array<number>,
-    ): SimpleChannel<ReplyWS> {
+    ): Promise<SimpleChannel<ReplyWS>> {
         let get_id = uuidv4();
         let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
         this.session_ref.get_receiver.set(get_id, channel);
@@ -72,7 +72,7 @@ export class RemoteQuerier {
             }
         };
 
-        this.session_ref.send_ctrl_message(control_msg);
+        await this.session_ref.send_ctrl_message(control_msg);
         return channel;
     }
 

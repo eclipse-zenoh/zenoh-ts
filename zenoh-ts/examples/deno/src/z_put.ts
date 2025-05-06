@@ -20,7 +20,7 @@ export async function main() {
   console.warn('Running Zenoh Put !');
 
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  session.put(args.key, args.payload);
+  await session.put(args.key, args.payload);
 }
 
 class ParseArgs extends BaseParseArgs {

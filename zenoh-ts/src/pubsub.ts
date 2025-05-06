@@ -305,10 +305,10 @@ export class Publisher {
    *
    * @returns void
    */
-  put(
+  async put(
     payload: IntoZBytes,
     put_options?: PublisherPutOptions,
-  ): void {
+  ) {
     let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     let _timestamp = null;
@@ -328,7 +328,7 @@ export class Publisher {
       _attachment = Array.from(att_bytes.to_bytes());
     }
 
-    return this._remote_publisher.put(
+    return await this._remote_publisher.put(
       Array.from(zbytes.to_bytes()),
       _attachment,
       _encoding.toString(),
@@ -378,7 +378,7 @@ export class Publisher {
    * @param {PublisherDeleteOptions} delete_options:  Options associated with a publishers delete
    * @returns void
    */
-  delete(delete_options: PublisherDeleteOptions) {
+  async delete(delete_options: PublisherDeleteOptions) {
 
     let _attachment = null;
     if (delete_options.attachment != null) {
@@ -391,7 +391,7 @@ export class Publisher {
       _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
     }
 
-    return this._remote_publisher.delete(
+    return await this._remote_publisher.delete(
       _attachment,
       _timestamp
     );
@@ -402,8 +402,8 @@ export class Publisher {
    *   
    * @returns void
    */
-  undeclare() {
-    this._remote_publisher.undeclare();
+  async undeclare() {
+    await this._remote_publisher.undeclare();
     Publisher.registry.unregister(this);
   }
 

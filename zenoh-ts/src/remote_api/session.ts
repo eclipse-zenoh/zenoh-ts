@@ -18,6 +18,7 @@ import { Logger } from "tslog";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 const log = new Logger({ stylePrettyLogs: false });
+const max_ws_buffer_size = 10 * 1024 * 1024; // 10 MB buffer size for websocket
 
 // Import interface
 import { RemoteAPIMsg } from "./interface/RemoteAPIMsg.js";
@@ -113,6 +114,7 @@ export class RemoteSession {
         chan.send(event.data);
       };
 
+
       ws.onclose = function () {
         // `this` here is a websocket object
         console.warn("Websocket connection to remote-api-plugin has been disconnected")
@@ -152,7 +154,7 @@ export class RemoteSession {
   async info(): Promise<SessionInfoIface> {
     let ctrl_message: ControlMsg = "SessionInfo";
     this.session_info = null;
-    this.send_ctrl_message(ctrl_message);
+    await this.send_ctrl_message(ctrl_message);
 
     while (this.session_info === null) {
       await sleep(10);
@@ -161,7 +163,7 @@ export class RemoteSession {
   }
 
   // Put
-  put(key_expr: string,
+  async put(key_expr: string,
     payload: Array<number>,
     encoding?: string,
     congestion_control?: number,
@@ -169,7 +171,7 @@ export class RemoteSession {
     express?: boolean,
     attachment?: Array<number>,
     timestamp?:string,
-  ): void {
+  ) {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
 
     let opt_attachment = undefined;
@@ -189,11 +191,11 @@ export class RemoteSession {
         timestamp: timestamp
       },
     };
-    this.send_ctrl_message(ctrl_message);
+    await this.send_ctrl_message(ctrl_message);
   }
 
   // get
-  get(
+  async get(
     key_expr: string,
     parameters: string | null,
     handler: HandlerChannel,
@@ -206,7 +208,7 @@ export class RemoteSession {
     payload?: Array<number>,
     attachment?: Array<number>,
     timeout_ms?: number,
-  ): SimpleChannel<ReplyWS> {
+  ): Promise<SimpleChannel<ReplyWS>> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
@@ -237,19 +239,19 @@ export class RemoteSession {
         attachment: opt_attachment
       },
     };
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
     return channel;
   }
 
   // delete
-  delete(
+  async delete(
     key_expr: string,
     congestion_control?: number,
     priority?: number,
     express?: boolean,
     attachment?: Array<number>,
     timestamp?: string,
-  ): void {
+  ) {
     let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
     let opt_attachment = undefined;
     if (attachment != undefined) {
@@ -265,20 +267,20 @@ export class RemoteSession {
         timestamp: timestamp
       }
     };
-    this.send_ctrl_message(data_message);
+    await this.send_ctrl_message(data_message);
   }
 
-  close(): void {
+  async close() {
     let data_message: ControlMsg = "CloseSession";
-    this.send_ctrl_message(data_message);
+    await this.send_ctrl_message(data_message);
     this.ws.close();
   }
 
-  declare_remote_subscriber(
+  async declare_remote_subscriber(
     key_expr: string,
     handler: HandlerChannel,
     callback?: (sample: SampleWS) => void,
-  ): RemoteSubscriber {
+  ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -289,7 +291,7 @@ export class RemoteSession {
 
     this.subscribers.set(uuid, channel);
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
 
     let subscriber = RemoteSubscriber.new(
       key_expr,
@@ -302,13 +304,13 @@ export class RemoteSession {
   }
 
 
-  declare_remote_queryable(
+  async declare_remote_queryable(
     key_expr: string,
     complete: boolean,
     reply_tx: SimpleChannel<QueryReplyWS>,
     handler: HandlerChannel,
     callback?: (sample: QueryWS) => void,
-  ): RemoteQueryable {
+  ): Promise<RemoteQueryable> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -319,7 +321,7 @@ export class RemoteSession {
 
     this.queryables.set(uuid, query_rx);
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
 
     let queryable = RemoteQueryable.new(
       key_expr,
@@ -333,14 +335,14 @@ export class RemoteSession {
     return queryable;
   }
 
-  declare_remote_publisher(
+  async declare_remote_publisher(
     key_expr: string,
     encoding?: string,
     congestion_control?: number,
     priority?: number,
     express?: boolean,
     reliability?: number,
-  ): RemotePublisher {
+  ): Promise<RemotePublisher> {
     let uuid: string = uuidv4();
     let publisher = new RemotePublisher(key_expr, uuid, this);
     let control_message: ControlMsg = {
@@ -354,11 +356,11 @@ export class RemoteSession {
         id: uuid,
       },
     };
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
     return publisher;
   }
 
-  declare_remote_querier(
+  async declare_remote_querier(
     key_expr: string,
     consolidation?: number,
     congestion_control?: number,
@@ -368,7 +370,7 @@ export class RemoteSession {
     allowed_destination?: number,
     accept_replies?: number,
     timeout_milliseconds?: number,
-  ): RemoteQuerier {
+  ): Promise<RemoteQuerier> {
     let timeout = undefined;
     if (timeout_milliseconds !== undefined) {
       timeout = timeout_milliseconds;
@@ -392,31 +394,31 @@ export class RemoteSession {
       },
     };
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
     return querier;
   }
 
 
   // Liveliness 
-  declare_liveliness_token(
+  async declare_liveliness_token(
     key_expr: string,
-  ): UUIDv4 {
+  ): Promise<UUIDv4> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
       Liveliness: { DeclareToken: { key_expr: key_expr, id: uuid } }
     };
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
 
     return uuid;
   }
 
-  declare_liveliness_subscriber(
+  async declare_liveliness_subscriber(
     key_expr: string,
     history: boolean,
     callback?: (sample: SampleWS) => void,
-  ): RemoteSubscriber {
+  ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
@@ -427,7 +429,7 @@ export class RemoteSession {
 
     this.liveliness_subscribers.set(uuid, channel);
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
 
     let subscriber = RemoteSubscriber.new(
       key_expr,
@@ -440,10 +442,10 @@ export class RemoteSession {
     return subscriber;
   }
 
-  get_liveliness(
+  async get_liveliness(
     key_expr: string,
     timeout_milliseconds?: number
-  ): SimpleChannel<ReplyWS> {
+  ): Promise<SimpleChannel<ReplyWS>> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
     this.get_receiver.set(uuid, channel);
@@ -459,7 +461,7 @@ export class RemoteSession {
 
     this.liveliness_get_receiver.set(uuid, channel);
 
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
 
     return channel;
   }
@@ -470,7 +472,7 @@ export class RemoteSession {
     let uuid = uuidv4();
     let control_message: ControlMsg = { "NewTimestamp": uuid };
     this._new_timestamp = null;
-    this.send_ctrl_message(control_message);
+    await this.send_ctrl_message(control_message);
     while (this._new_timestamp === null) {
       await sleep(10);
     }
@@ -480,17 +482,20 @@ export class RemoteSession {
   //
   // Sending Messages
   //
-  send_data_message(data_message: DataMsg) {
+  async send_data_message(data_message: DataMsg) {
     let remote_api_message: RemoteAPIMsg = { Data: data_message };
-    this.send_remote_api_message(remote_api_message);
+    await this.send_remote_api_message(remote_api_message);
   }
 
-  send_ctrl_message(ctrl_message: ControlMsg) {
+  async send_ctrl_message(ctrl_message: ControlMsg) {
     let remote_api_message: RemoteAPIMsg = { Control: ctrl_message };
-    this.send_remote_api_message(remote_api_message);
+    await this.send_remote_api_message(remote_api_message);
   }
 
-  private send_remote_api_message(remote_api_message: RemoteAPIMsg) {
+  private async send_remote_api_message(remote_api_message: RemoteAPIMsg) {
+    while (this.ws.bufferedAmount > max_ws_buffer_size) {
+      await sleep(1)
+    }
     this.ws.send(JSON.stringify(remote_api_message));
   }
 

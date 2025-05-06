@@ -22,7 +22,7 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const querier = session.declare_querier(args.get_selector().key_expr(), {
+  const querier = await session.declare_querier(args.get_selector().key_expr(), {
     target: args.get_query_target(),
     timeout: args.get_timeout(),
   });
@@ -30,7 +30,7 @@ export async function main() {
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
     const payload = `[${i}] ${args.payload}`;
-    const receiver = querier.get(args.get_selector().parameters(), { payload: payload }) as Receiver;
+    const receiver = await querier.get(args.get_selector().parameters(), { payload: payload }) as Receiver;
 
     let reply = await receiver.receive();
 

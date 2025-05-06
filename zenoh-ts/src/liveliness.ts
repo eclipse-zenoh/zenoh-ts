@@ -42,14 +42,14 @@ export class Liveliness {
     this.remote_session = remote_session;
   }
 
-  declare_token(key_expr: IntoKeyExpr): LivelinessToken {
+  async declare_token(key_expr: IntoKeyExpr): Promise<LivelinessToken> {
     let _key_expr: KeyExpr = new KeyExpr(key_expr);
-    let uuid = this.remote_session.declare_liveliness_token(_key_expr.toString());
+    let uuid = await this.remote_session.declare_liveliness_token(_key_expr.toString());
 
     return new LivelinessToken(this.remote_session, uuid)
   }
 
-  declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Subscriber {
+  async declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
 
     let _key_expr = new KeyExpr(key_expr);
 
@@ -71,9 +71,9 @@ export class Liveliness {
         }
       };
 
-      remote_subscriber = this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_conversion);
+      remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_conversion);
     } else {
-      remote_subscriber = this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history);
+      remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history);
     }
 
     let subscriber = Subscriber[NewSubscriber](
@@ -85,7 +85,7 @@ export class Liveliness {
     return subscriber;
   }
 
-  get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Receiver | undefined {
+  async get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<Receiver| undefined> {
 
     let _key_expr = new KeyExpr(key_expr);
 
@@ -95,7 +95,7 @@ export class Liveliness {
       _timeout_millis = Duration.milliseconds.from(options?.timeout);
     }
 
-    let chan: SimpleChannel<ReplyWS> = this.remote_session.get_liveliness(
+    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get_liveliness(
       _key_expr.toString(),
       _timeout_millis
     );
@@ -136,11 +136,11 @@ export class LivelinessToken {
     this.uuid = uuid;
   }
 
-  undeclare() {
+  async undeclare() {
     let control_msg: ControlMsg = {
       Liveliness: { "UndeclareToken": this.uuid.toString() },
     };
 
-    this.remote_session.send_ctrl_message(control_msg);
+    await this.remote_session.send_ctrl_message(control_msg);
   }
 }
