@@ -366,78 +366,130 @@ export type IntoParameters = Parameters | string | String | Map<string, string>
  * `let p = Parameters.new(a)`
  */
 export class Parameters {
-
-  private _params: Map<string, string>;
-
-  // constructor(p: Map<string, string>) {
-  //   this._params = p;
-  // }
+  private _source: string;
 
   constructor(p: IntoParameters) {
     if (p instanceof Parameters) {
-      this._params = p._params
+      this._source = p._source;
     } else if (p instanceof Map) {
-      this._params = p;
+      // Convert Map to string format, handling empty values
+      this._source = Array.from(p.entries())
+        .map(([k, v]) => v ? `${k}=${v}` : k)
+        .join(';');
     } else {
-      const params = new Map<string, string>();
-      if (p.length != 0) {
-        for (const pair of p.split(";") || []) {
-          const [key, value] = pair.split("=");
-          if (key != undefined && value != undefined) {
-            params.set(key, value);
-          }
-        }
+      this._source = p.toString();
+    }
+  }
+
+  private *_iter(): Generator<[number, number, number, number]> {
+    if (this._source.length === 0) return;
+    
+    let pos = 0;
+    while (pos < this._source.length) {
+      // Skip leading semicolons
+      while (pos < this._source.length && this._source[pos] === ';') pos++;
+      if (pos >= this._source.length) break;
+      
+      const keyStart = pos;
+      // Find end of key (semicolon or equals sign)
+      while (pos < this._source.length && this._source[pos] !== ';' && this._source[pos] !== '=') pos++;
+      const keyLen = pos - keyStart;
+      if (keyLen === 0) continue; // Skip empty keys
+      
+      let valueStart = -1;
+      let valueLen = 0;
+      
+      // If we found an equals sign, look for the value
+      if (pos < this._source.length && this._source[pos] === '=') {
+        pos++; // Skip equals sign
+        valueStart = pos;
+        // Find end of value (semicolon or end of string)
+        while (pos < this._source.length && this._source[pos] !== ';') pos++;
+        valueLen = pos - valueStart;
       }
-      this._params = params;
+      
+      yield [keyStart, keyLen, valueStart, valueLen];
+      pos++; // Skip past semicolon or increment if at end
     }
   }
 
   /**
    * Creates empty Parameters Structs
-   * @returns void
+   * @returns Parameters
    */
-  static empty() {
-    return new Parameters("");
-  }
-
-  /**
-   * Creates empty Parameters Structs
-   * @returns void
-   */
-  static equals() {
+  static empty(): Parameters {
     return new Parameters("");
   }
 
   /**
    * removes a key from the parameters
-   * @returns void
+   * @returns boolean
    */
-  remove(key: string) {
-    return this._params.delete(key);
+  remove(key: string): boolean {
+    let found = false;
+    let newSource = '';
+    let lastPos = 0;
+
+    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
+      const currentKey = this._source.slice(keyStart, keyStart + keyLen);
+      if (currentKey == key) {
+        // Add the part between last position and current key
+        newSource += this._source.slice(lastPos, keyStart);
+        // Calculate where the next parameter starts
+        lastPos = valueStart >= 0 ? 
+          valueStart + valueLen + 1 : // +1 for semicolon
+          keyStart + keyLen + 1;
+        found = true;
+      }
+    }
+    
+    if (found) {
+      // Add remaining part of string
+      newSource += this._source.slice(lastPos);
+      // Clean up consecutive semicolons and trailing/leading semicolons
+      this._source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
+    }
+    
+    return found;
+  }
+  /**
+   * gets an generator over the pairs (key,value) of the Parameters
+   * @returns Generator<string>
+   */
+  *iter(): Generator<[string, string]> {
+    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
+      let key = this._source.slice(keyStart, keyStart + keyLen);
+      let value = valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+      yield [key, value];
+    }
   }
 
   /**
-   * gets an iterator over the keys of the Parameters
-   * @returns Iterator<string>
+   * gets an generator over the values separated by `|`  in multivalue parameters
+   * @returns Generator<string>
    */
-  keys(): Iterator<string> {
-    return this._params.values()
+  *values(key: string): Generator<string> {
+    let value = this.get(key);
+    if (value != undefined) {
+      let values = value.split('|');
+      for (const v of values) {
+        yield v;
+      }
+    }
   }
 
   /**
-   * gets an iterator over the values of the Parameters
-   * @returns Iterator<string>
+   * Returns true if properties does not contain anything.
+   * @returns boolean
    */
-  values(): Iterator<string> {
-    return this._params.values()
-  }
-
-  /**
-  * Returns true if properties does not contain anything.
-  * @returns void
-  */
   is_empty(): boolean {
-    return (this._params.size == 0);
+    // Quick check for empty string
+    if (!this._source) return true;
+    // Otherwise check if there are any valid entries
+    for (const _ of this._iter()) {
+      return false;
+    }
+    return true;
   }
 
   /**
@@ -445,50 +497,64 @@ export class Parameters {
    * @returns boolean
    */
   contains_key(key: string): boolean {
-    return this._params.has(key)
+    for (const [keyStart, keyLen] of this._iter()) {
+      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
-   * gets value with associated key, returning undefined if key does not exist
+   * gets first found value with associated key, returning undefined if key does not exist
    * @returns string | undefined
    */
   get(key: string): string | undefined {
-    return this._params.get(key)
+    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
+      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
+        return valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+      }
+    }
+    return undefined;
   }
 
   /**
    * Inserts new key,value pair into parameter
    * @returns void
    */
-  insert(key: string, value: string) {
-    return this._params.set(key, value);
+  insert(key: string, value: string): void {
+    // Remove any existing instances of the key
+    this.remove(key);
+    
+    // Add new key-value pair
+    if (this._source && !this._source.endsWith(';') && this._source.length > 0) {
+      this._source += ';';
+    }
+    this._source += `${key}=${value}`;
   }
 
   /**
    * extends this Parameters with the value of other parameters, overwriting `this` if keys match.  
    * @returns void
    */
-  extend(other: IntoParameters) {
-    let other_params = new Parameters(other);
-    for (let [key, value] of other_params._params) {
-      this._params.set(key, value)
+  extend(other: IntoParameters): void {
+    const otherParams = new Parameters(other);
+    for (const [keyStart, keyLen, valueStart, valueLen] of otherParams._iter()) {
+      const key = otherParams._source.slice(keyStart, keyStart + keyLen);
+      const value = valueStart >= 0 ? 
+        otherParams._source.slice(valueStart, valueStart + valueLen) : 
+        '';
+      this.insert(key, value);
     }
   }
 
   /**
-   * returns the string representation of the 
-   * @returns void
+   * returns the string representation of the parameters
+   * @returns string
    */
   toString(): string {
-    let output_string = "";
-    for (let [key, value] of this._params) {
-      output_string += key + "=" + value + ";"
-    }
-    output_string = output_string.substring(0, output_string.length - 1);
-
-    return output_string;
+    return this._source;
   }
-
 }
 
 
