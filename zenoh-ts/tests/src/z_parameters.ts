@@ -68,7 +68,7 @@ export async function testParametersIter() {
   map.set("p3", "v3");
   const mapParams = new Parameters(map);
   let count = 0;
-  for (const [key, value] of params.iter()) {
+  for (const [key, value] of mapParams.iter()) {
     count++;
     assert_eq(mapParams.get(key), value, `Iterated key ${key} does not match expected value ${value}`);
   }
@@ -185,6 +185,7 @@ export async function testParametersPerformance() {
 // Run all tests
 await run_test(testParametersBasic);
 await run_test(testParametersNonexistent);
+await run_test(testParametersIter);
 await run_test(testParametersMap);
 await run_test(testParametersInsert);
 await run_test(testParametersExtend);
