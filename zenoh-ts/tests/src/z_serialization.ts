@@ -70,6 +70,30 @@ export async function testSerializePrimitive() {
     deserialized_bigint = zdeserialize(ZD.bigint(BigIntFormat.Int64), bytes);
     assert_eq(deserialized_bigint, BigInt(500000000000), "int64 serialization failed");
 
+    // Test number larger than 32 bit but less than 53 bit
+    const large32BitNum = 0x1_0000_0001; // Just over 32 bits
+    bytes = zserialize(large32BitNum, ZS.number(NumberFormat.Int64));
+    deserialized_num = zdeserialize(ZD.number(NumberFormat.Int64), bytes);
+    assert_eq(deserialized_num, large32BitNum, "large number (>32bit) serialization failed");
+
+    // Test that deserializing number larger than 53 bit throws error
+    const tooLargeNum = 9876543210123456789n; // Larger than 53 bits and less than 64 bits
+    assert(tooLargeNum > BigInt(Number.MAX_SAFE_INTEGER), "number is not larger than 53 bits");
+    assert(tooLargeNum < BigInt(2) ** BigInt(64), "number is not less than 2^64");
+
+    let threw = false;
+    bytes = zserialize(tooLargeNum, ZS.bigint(BigIntFormat.Uint64));
+    try {
+        deserialized_bigint = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
+        assert_eq(deserialized_bigint, tooLargeNum, "large number (>53bit) serialization failed");
+        deserialized_num = zdeserialize(ZD.number(NumberFormat.Uint64), bytes);
+    } catch (e) {
+        threw = true;
+        assert(e instanceof Error && e.message.includes("exceeds the safe range"), 
+               "wrong error message for large number deserialization");
+    }
+    assert(threw, `deserialized value ${deserialized_num} instead of throwing exception on attempt to deserialize ${tooLargeNum} into number`);
+
     // Float tests
     bytes = zserialize(0.5, ZS.number(NumberFormat.Float32));
     deserialized_num = zdeserialize(ZD.number(NumberFormat.Float32), bytes);
