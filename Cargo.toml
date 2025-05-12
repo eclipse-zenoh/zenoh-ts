@@ -15,7 +15,7 @@ description = "Remote API Plugin for Zenoh using Websockets"
 
 [workspace.dependencies]
 tokio = { version = "1.39.2", features = ["full"] }
-tokio-tungstenite = "0.23.1"
+tokio-tungstenite = "0.26.2"
 tokio-rustls = { version = "0.26.0", default-features = false }
 futures-util = "0.3.26"
 rustls-pemfile = "2.1.2"

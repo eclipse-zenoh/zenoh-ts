@@ -13,14 +13,12 @@
 //
 // Remote API interface
 import {
-  RemoteRecvErr as GetChannelClose,
   RemoteSession,
   TimestampIface as TimestampIface,
 } from "./remote_api/session.js";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
 import { SampleWS } from "./remote_api/interface/SampleWS.js";
-import { RemoteQueryable } from "./remote_api/query.js";
 import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API interface
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
@@ -30,12 +28,13 @@ import {
   IntoSelector,
   Parameters,
   Query,
+  Query_from_QueryWS,
   Queryable,
-  QueryWS_to_Query,
   Reply,
+  Reply_from_ReplyWS,
   Selector,
 } from "./query.js";
-import { check_handler_or_callback, FifoChannel, Handler, NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
+import { NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -48,20 +47,14 @@ import {
   Reliability,
   reliability_to_int,
 } from "./sample.js";
-import { ChannelState } from "channel-ts";
 import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
-import { QueryReplyWS } from "./remote_api/interface/QueryReplyWS.js";
 import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
-import { SimpleChannel } from "channel-ts";
 import { locality_to_int, Querier, QuerierOptions, query_target_to_int, QueryTarget, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
 import { Timestamp } from "./timestamp.js";
-
-function executeAsync(func: any) {
-  setTimeout(func, 0);
-}
+import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
 
 /**
  * Options for a Put function 
@@ -108,7 +101,7 @@ export interface DeleteOptions {
  * @prop {IntoZBytes=} payload - Payload associated with getrequest
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
  * @prop {TimeDuration=} timeout - Timeout value for a get request
- * @prop {((sample: Reply) => Promise<void>) | Handler} handler - either a callback or a polling handler with an underlying handling mechanism
+ * @prop {Handler<Reply>} handler - A reply handler
 */
 export interface GetOptions {
   consolidation?: ConsolidationMode,
@@ -120,7 +113,7 @@ export interface GetOptions {
   attachment?: IntoZBytes
   timeout?: TimeDuration,
   target?: QueryTarget,
-  handler?: ((sample: Reply) => Promise<void>) | Handler,
+  handler?: Handler<Reply>,
 }
 
 /**
@@ -130,7 +123,7 @@ export interface GetOptions {
 */
 export interface QueryableOptions {
   complete?: boolean,
-  handler?: ((sample: Query) => Promise<void>) | Handler,
+  handler?: Handler<Query>
 }
 
 /**
@@ -152,10 +145,10 @@ export interface PublisherOptions {
 
 /**
  * Options for a Subscriber
- * @prop handler - Callback function for this subscriber
+ * @prop handler - Handler for this subscriber
  */
 export interface SubscriberOptions {
-  handler?: ((sample: Sample) => Promise<void>) | Handler,
+  handler?: Handler<Sample>,
 }
 
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -175,7 +168,7 @@ export class Session {
    */
   static registry: FinalizationRegistry<RemoteSession> = new FinalizationRegistry((r_session: RemoteSession) => r_session.close());
 
-  async asyncDispose() {
+  async [Symbol.asyncDispose]() {
     await this.close();
     Session.registry.unregister(this);
   }
@@ -334,7 +327,7 @@ export class Session {
   async get(
     into_selector: IntoSelector,
     get_options?: GetOptions
-  ): Promise<Receiver | undefined> {
+  ): Promise<ChannelReceiver<Reply> | undefined> {
 
     let selector: Selector;
     let key_expr: KeyExpr;
@@ -355,15 +348,13 @@ export class Session {
       selector = new Selector(into_selector);
     }
 
-    let handler;
-    if (get_options?.handler !== undefined) {
-      handler = get_options?.handler;
-    } else {
-      handler = new FifoChannel(256);
+    let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
+    let [calback, drop, receiver] = into_cb_drop_receiver(handler);
+    
+    let callback_ws = (reply_ws: ReplyWS): void => {
+      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      calback(reply);
     }
-
-    let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
-
     // Optional Parameters 
 
     let _consolidation = consolidation_mode_to_int(get_options?.consolidation)
@@ -386,10 +377,11 @@ export class Session {
       _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
 
-    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get(
+    await this.remote_session.get(
       selector.key_expr().toString(),
       selector.parameters().toString(),
-      handler_type,
+      callback_ws,
+      drop,
       _consolidation,
       _congestion_control,
       _priority,
@@ -401,26 +393,7 @@ export class Session {
       _timeout_millis
     );
 
-    let receiver = Receiver.new(chan);
-
-    if (callback != undefined) {
-      executeAsync(async () => {
-        for await (const message of chan) {
-          // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
-          if (message != undefined && (message as unknown as number) != 0) {
-            let reply = new Reply(message);
-            if (callback != undefined) {
-              callback(reply);
-            }
-          } else {
-            break
-          }
-        }
-      });
-      return undefined;
-    } else {
-      return receiver;
-    }
+    return receiver;
   }
 
   /**
@@ -442,39 +415,24 @@ export class Session {
     let _key_expr = new KeyExpr(key_expr);
     let remote_subscriber: RemoteSubscriber;
 
-    let callback_subscriber = false;
-    let handler;
-    if (subscriber_opts?.handler !== undefined) {
-      handler = subscriber_opts?.handler;
-    } else {
-      handler = new FifoChannel(256);
-    }
-    let [callback, handler_type] = check_handler_or_callback<Sample>(handler);
+    let handler = subscriber_opts?.handler ?? new FifoChannel<Sample>(256);
+    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
-    if (callback !== undefined) {
-      callback_subscriber = true;
-      const callback_conversion = async function (sample_ws: SampleWS,): Promise<void> {
-        let sample: Sample = Sample_from_SampleWS(sample_ws);
-        if (callback !== undefined) {
-          callback(sample);
-        }
-      };
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
-        _key_expr.toString(),
-        handler_type,
-        callback_conversion,
-      );
-    } else {
-      remote_subscriber = await this.remote_session.declare_remote_subscriber(
-        _key_expr.toString(),
-        handler_type,
-      );
+    let callback_ws = (sample_ws: SampleWS): void => {
+      let sample: Sample = Sample_from_SampleWS(sample_ws);
+      callback(sample);
     }
+
+    remote_subscriber = await this.remote_session.declare_remote_subscriber(
+      _key_expr.toString(),
+      callback_ws
+    );
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       _key_expr,
-      callback_subscriber,
+      drop,
+      receiver,
     );
 
     return subscriber;
@@ -503,12 +461,9 @@ export class Session {
 
   /**
   * Declares a new Queryable
-  *
-  * @remarks
-  *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
   * 
-  * @param {IntoKeyExpr} key_expr - string of key_expression
-  * @param {QueryableOptions=} queryable_opts - Optional additional settings for a Queryable [QueryableOptions]
+  * @param {IntoKeyExpr} key_expr - Queryable key expression
+  * @param {QueryableOptions} queryable_opts - Optional additional settings for a Queryable [QueryableOptions]
   *
   * @returns Queryable
   */
@@ -517,52 +472,27 @@ export class Session {
     queryable_opts?: QueryableOptions
   ): Promise<Queryable> {
     let _key_expr = new KeyExpr(key_expr);
-    let remote_queryable: RemoteQueryable;
-    let reply_tx: SimpleChannel<QueryReplyWS> =
-      new SimpleChannel<QueryReplyWS>();
 
     let _complete = false;
     if (queryable_opts?.complete != undefined) {
       _complete = queryable_opts?.complete;
     };
 
-    let handler;
-    if (queryable_opts?.handler !== undefined) {
-      handler = queryable_opts?.handler;
-    } else {
-      handler = new FifoChannel(256);
-    }
-    let [callback, handler_type] = check_handler_or_callback<Query>(handler);
-
-    let callback_queryable = false;
-    if (callback != undefined) {
-      callback_queryable = true;
-      // Typescript cant figure out that calback!=undefined here, so this needs to be explicit
-      let defined_callback = callback;
-      const callback_conversion = function (
-        query_ws: QueryWS,
-      ): void {
-        let query: Query = QueryWS_to_Query(query_ws, reply_tx);
-
-        defined_callback(query);
-      };
-      remote_queryable = await this.remote_session.declare_remote_queryable(
-        _key_expr.toString(),
-        _complete,
-        reply_tx,
-        handler_type,
-        callback_conversion,
-      );
-    } else {
-      remote_queryable = await this.remote_session.declare_remote_queryable(
-        _key_expr.toString(),
-        _complete,
-        reply_tx,
-        handler_type
-      );
+    let handler = queryable_opts?.handler ?? new FifoChannel<Query>(256);
+    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    
+    let callback_ws = (reply_ws: QueryWS): void => {
+      let query = Query_from_QueryWS(reply_ws, this.remote_session);
+      callback(query);
     }
 
-    let queryable = new Queryable(remote_queryable, callback_queryable);
+    let remote_queryable = await this.remote_session.declare_remote_queryable(
+      _key_expr.toString(),
+      _complete,
+      callback_ws
+    );
+
+    let queryable = new Queryable(remote_queryable, drop, receiver);
     return queryable;
   }
 
@@ -699,75 +629,9 @@ export class Session {
   }
 }
 
-
-function isGetChannelClose(msg: any): msg is GetChannelClose {
-  return msg === GetChannelClose.Disconnected;
-}
-
-// Type guard to check if channel_msg is of type ReplyWS
-function isReplyWS(msg: any): msg is ReplyWS {
-  return (
-    typeof msg === "object" &&
-    msg !== null &&
-    "query_uuid" in msg &&
-    "result" in msg
-  );
-}
-
 export enum RecvErr {
   Disconnected,
   MalformedReply,
-}
-
-/**
- * Receiver returned from `get` call on a session
- */
-export class Receiver {
-  /**
-   * @ignore
-   */
-  private receiver: SimpleChannel<ReplyWS | RecvErr>;
-  /**
-   * @ignore
-   */
-  constructor(receiver: SimpleChannel<ReplyWS | RecvErr>) {
-    this.receiver = receiver;
-  }
-
-  /**
-   *  Receives next Reply message from Zenoh `get`
-   * 
-   * @returns Reply
-   */
-  async receive(): Promise<Reply | RecvErr> {
-    if (this.receiver.state == ChannelState.close) {
-      return RecvErr.Disconnected;
-    } else {
-      let channel_msg: ReplyWS | RecvErr = await this.receiver.receive();
-
-      if (isGetChannelClose(channel_msg)) {
-        return RecvErr.Disconnected;
-      } else if (isReplyWS(channel_msg)) {
-        // Handle the ReplyWS case
-        let opt_reply = new Reply(channel_msg);
-        if (opt_reply == undefined) {
-          return RecvErr.MalformedReply;
-        } else {
-          return opt_reply;
-        }
-      }
-      return RecvErr.MalformedReply;
-    }
-  }
-
-  /**
-   *  Receiver gets created by `get` call
-   * 
-   * @ignore Reply
-   */
-  static new(reply_tx: SimpleChannel<ReplyWS>) {
-    return new Receiver(reply_tx);
-  }
 }
 
 /**

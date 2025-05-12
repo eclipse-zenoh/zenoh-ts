@@ -145,7 +145,6 @@ pub enum ControlMsg {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
         parameters: Option<String>,
-        handler: HandlerChannel,
         id: Uuid,
         // Parameters
         #[serde(
@@ -247,7 +246,6 @@ pub enum ControlMsg {
     DeclareSubscriber {
         #[ts(as = "OwnedKeyExprWrapper")]
         key_expr: OwnedKeyExpr,
-        handler: HandlerChannel,
         id: Uuid,
     },
     Subscriber(Uuid),
@@ -291,7 +289,6 @@ pub enum ControlMsg {
         key_expr: OwnedKeyExpr,
         id: Uuid,
         complete: bool,
-        handler: HandlerChannel,
     },
     UndeclareQueryable(Uuid),
     // Quierer
@@ -357,7 +354,6 @@ pub enum ControlMsg {
         payload: Option<B64String>,
         #[ts(type = "string | undefined")]
         attachment: Option<B64String>,
-        handler: HandlerChannel,
     },
 
     // Liveliness
@@ -388,12 +384,6 @@ pub enum LivelinessMsg {
         #[ts(type = "number | undefined")]
         timeout: Option<u64>,
     },
-}
-
-#[derive(Debug, Serialize, Deserialize, TS)]
-pub(crate) enum HandlerChannel {
-    Fifo(usize),
-    Ring(usize),
 }
 
 // ██     ██ ██████   █████  ██████  ██████  ███████ ██████  ███████

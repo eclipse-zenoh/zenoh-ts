@@ -635,7 +635,7 @@ async fn run_websocket_server(
 
             let state_map_cl_outer = state_map.clone();
 
-            //  Incomming message from Websocket
+            //  Incoming message from Websocket
             let incoming_ws = tokio::task::spawn(async move {
                 let mut non_close_messages = ws_rx.try_filter(|msg| future::ready(!msg.is_close()));
                 let state_map_cl = state_map_cl_outer.clone();

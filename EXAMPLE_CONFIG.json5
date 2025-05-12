@@ -2,7 +2,7 @@
   mode: 'router',
   plugins_loading: {
     enabled: true,
-    search_dirs: ['./target/debug', '~/.zenoh/lib', '/usr/lib']
+    search_dirs: ['./target/release', '~/.zenoh/lib', '/usr/lib']
   },
   plugins: {
     remote_api: {

@@ -5,7 +5,7 @@ import {
 } from "./remote_api/session.js";
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { Sample, Sample_from_SampleWS } from "./sample.js";
-import { Reply } from "./query.js";
+import { Reply, Reply_from_ReplyWS } from "./query.js";
 
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
@@ -13,24 +13,19 @@ import { SampleWS } from "./remote_api/interface/SampleWS.js";
 import { NewSubscriber, Subscriber } from "./pubsub.js";
 
 // Liveliness API
-import { Receiver } from "./session.js";
-import { SimpleChannel } from "channel-ts";
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 
 // External
 import { Duration, TimeDuration } from 'typed-duration'
-
-function executeAsync(func: any) {
-  setTimeout(func, 0);
-}
+import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
 
 interface LivelinessSubscriberOptions {
-  handler?: (sample: Sample) => Promise<void>, // TODO: add | Handler,
+  handler?: Handler<Sample>,
   history: boolean,
 }
 
 interface LivelinessGetOptions {
-  handler?: (reply: Reply) => Promise<void>, // TODO: add | Handler,
+  handler?: Handler<Reply>,
   timeout?: TimeDuration,
 }
 
@@ -58,34 +53,27 @@ export class Liveliness {
       _history = options?.history;
     };
 
-    let remote_subscriber;
-    let callback_subscriber = false;
+    let handler = options?.handler ?? new FifoChannel<Sample>(256);
+    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
-    if (options?.handler !== undefined) {
-      let callback = options?.handler;
-      callback_subscriber = true;
-      const callback_conversion = async function (sample_ws: SampleWS,): Promise<void> {
-        let sample: Sample = Sample_from_SampleWS(sample_ws);
-        if (callback !== undefined) {
-          callback(sample);
-        }
-      };
-
-      remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_conversion);
-    } else {
-      remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history);
+    let callback_ws = (sample_ws: SampleWS): void => {
+      let sample: Sample = Sample_from_SampleWS(sample_ws);
+      callback(sample);
     }
+
+    let remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_ws);
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       _key_expr,
-      callback_subscriber,
+      drop,
+      receiver
     );
 
     return subscriber;
   }
 
-  async get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<Receiver| undefined> {
+  async get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<ChannelReceiver<Reply>| undefined> {
 
     let _key_expr = new KeyExpr(key_expr);
 
@@ -95,32 +83,22 @@ export class Liveliness {
       _timeout_millis = Duration.milliseconds.from(options?.timeout);
     }
 
-    let chan: SimpleChannel<ReplyWS> = await this.remote_session.get_liveliness(
+    let handler = options?.handler ?? new FifoChannel<Reply>(256);
+    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+
+    let callback_ws = (reply_ws: ReplyWS): void => {
+      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      callback(reply);
+    }
+
+    await this.remote_session.get_liveliness(
       _key_expr.toString(),
-      _timeout_millis
+      callback_ws,
+      drop,
+      _timeout_millis,
     );
 
-    let receiver = Receiver.new(chan);
-
-    let callback = options?.handler;
-    if (callback !== undefined) {
-      executeAsync(async () => {
-        for await (const message of chan) {
-          // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
-          if (message != undefined && (message as unknown as number) != 0) {
-            let reply = new Reply(message);
-            if (callback != undefined) {
-              callback(reply);
-            }
-          } else {
-            break
-          }
-        }
-      });
-      return undefined;
-    } else {
-      return receiver;
-    }
+    return receiver;
   }
 }
 

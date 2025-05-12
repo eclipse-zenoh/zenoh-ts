@@ -23,11 +23,10 @@ import {
   Priority,
   Reliability,
   Sample,
-  Sample_from_SampleWS,
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
+import { ChannelReceiver, Drop } from "./remote_api/channels.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -55,7 +54,11 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  private callback_subscriber: boolean;
+  private _receiver: ChannelReceiver<Sample> | undefined;
+  /**
+   * @ignore 
+   */
+  private _drop: Drop;
   /** Finalization registry used for cleanup on drop
    * @ignore 
    */
@@ -63,7 +66,7 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  async asyncDispose() {
+  async [Symbol.asyncDispose]() {
     await this.undeclare();
     Subscriber.registry.unregister(this);
   }
@@ -73,11 +76,13 @@ export class Subscriber {
   private constructor(
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    callback_subscriber: boolean,
+    drop: Drop,
+    receiver?: ChannelReceiver<Sample>,
   ) {
     this.remote_subscriber = remote_subscriber;
-    this.callback_subscriber = callback_subscriber;
+    this._receiver = receiver;
     this._key_expr = key_expr;
+    this._drop = drop;
     Subscriber.registry.register(this, remote_subscriber, this)
   }
 
@@ -89,26 +94,12 @@ export class Subscriber {
     return this._key_expr
   }
   /**
-   * Receives a new message on the subscriber
-   *  note: If subscriber was created with a callback, this recieve will return undefined, 
-   *  as new samples are being sent to the callback.
+   * returns a sample receiver for non-callback subscriber, undefined otherwise.
    *
-   * @returns Promise<Sample | void>
+   * @returns ChannelReceiver<Sample> | undefined
    */
-  async receive(): Promise<Sample | void> {
-    if (this.callback_subscriber === true) {
-      console.warn("Cannot call `receive()` on Subscriber created with callback:");
-      return;
-    }
-
-    // from SampleWS -> Sample
-    let opt_sample_ws = await this.remote_subscriber.receive();
-    if (opt_sample_ws != undefined) {
-      return Sample_from_SampleWS(opt_sample_ws);
-    } else {
-      console.warn("Receieve returned unexpected void from RemoteSubscriber");
-      return;
-    }
+  receiver(): ChannelReceiver<Sample> | undefined {
+    return this._receiver;
   }
 
   /**
@@ -118,6 +109,7 @@ export class Subscriber {
   async undeclare() {
     await this.remote_subscriber.undeclare();
     Subscriber.registry.unregister(this);
+    this._drop;
   }
 
   /**
@@ -129,84 +121,12 @@ export class Subscriber {
   static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    callback_subscriber: boolean,
+    drop: Drop,
+    receiver?: ChannelReceiver<Sample>,
   ): Subscriber {
-    return new Subscriber(remote_subscriber, key_expr, callback_subscriber);
+    return new Subscriber(remote_subscriber, key_expr, drop, receiver);
   }
 }
-
-/**
- * Type of Channel that will be created, 
- * Fifo: will block incoming messages when full
- * Ring: will drop oldest data when full
- */
-export enum ChannelType {
-  Ring,
-  Fifo,
-}
-
-/**
- * General interface for a Handler, not to be exposed by the user
- * @ignore
- */
-export interface Handler {
-  capacity: number;
-  channel_type: ChannelType;
-}
-
-/**
-  * RingChannel handler: 
-  *   Semantic: will drop oldest data when full
- */
-export class RingChannel implements Handler {
-  capacity: number
-  channel_type: ChannelType = ChannelType.Ring;
-  constructor(size: number) {
-    this.capacity = size;
-  }
-}
-
-/**
-  * FifoChannel Handler: 
-  *   Semantic: will block incoming messages when full
- */
-export class FifoChannel implements Handler {
-  capacity: number
-  channel_type: ChannelType = ChannelType.Fifo;
-  constructor(size: number) {
-    this.capacity = size;
-  }
-}
-
-/** 
- * @ignore internal function for handlers
-*/
-export function check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
-  [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
-
-  let handler_type: HandlerChannel;
-  let callback = undefined;
-  if (handler instanceof FifoChannel || handler instanceof RingChannel) {
-    switch (handler.channel_type) {
-      case ChannelType.Ring: {
-        handler_type = { "Ring": handler.capacity };
-        break;
-      }
-      case ChannelType.Fifo: {
-        handler_type = { "Fifo": handler.capacity };
-        break;
-      }
-      default: {
-        throw "channel type undetermined"
-      }
-    }
-  } else {
-    handler_type = { "Fifo": 256 };
-    callback = handler;
-  }
-  return [callback, handler_type]
-}
-
 
 // ██████  ██    ██ ██████  ██      ██ ███████ ██   ██ ███████ ██████
 // ██   ██ ██    ██ ██   ██ ██      ██ ██      ██   ██ ██      ██   ██
@@ -251,7 +171,7 @@ export class Publisher {
   /** 
    * @ignore 
    */
-  async asyncDispose() {
+  async [Symbol.asyncDispose]() {
     await this.undeclare();
     Publisher.registry.unregister(this);
   }

@@ -55,7 +55,7 @@ class Stats {
 export async function main() {
   console.warn("Open Session");
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const stats = new Stats(1000);
+  const stats = new Stats(1000000);
   const subscriber_callback = async function (_sample: Sample): Promise<void> {
     stats.increment();
   };
@@ -69,7 +69,6 @@ export async function main() {
   while (true) {
     const seconds = 100;
     await sleep(1000 * seconds);
-    console.warn("Main Loop ? ", count);
     count = count + 1;
   }
 }

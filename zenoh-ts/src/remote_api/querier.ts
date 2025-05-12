@@ -15,10 +15,9 @@
 import { v4 as uuidv4 } from "uuid";
 import { RemoteSession, UUIDv4 } from "./session.js";
 import { ControlMsg } from "./interface/ControlMsg.js"
-import { SimpleChannel } from "channel-ts";
-import { ReplyWS } from "./interface/ReplyWS.js";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
-import { HandlerChannel } from "./interface/HandlerChannel.js";
+import { Drop } from "./channels.js";
+import { ReplyCallback } from "./interface/ReplyWS.js";
 
 export class RemoteQuerier {
     private querier_id: UUIDv4;
@@ -42,15 +41,15 @@ export class RemoteQuerier {
     }
 
     async get(
-        _handler_type: HandlerChannel,
+        callback: ReplyCallback,
+        drop: Drop,
         _encoding?: string,
         _parameters?: string,
         _attachment?: Array<number>,
         _payload?: Array<number>,
-    ): Promise<SimpleChannel<ReplyWS>> {
+    ) {
         let get_id = uuidv4();
-        let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
-        this.session_ref.get_receiver.set(get_id, channel);
+        this.session_ref.get_receiver.set(get_id, [callback, drop]);
 
         let payload = undefined;
         if (_payload != undefined) {
@@ -68,12 +67,10 @@ export class RemoteQuerier {
                 encoding: _encoding,
                 payload: payload,
                 attachment: attachment,
-                handler: _handler_type
             }
         };
 
         await this.session_ref.send_ctrl_message(control_msg);
-        return channel;
     }
 
 }

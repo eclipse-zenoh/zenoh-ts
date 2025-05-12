@@ -18,23 +18,24 @@ import { Logger } from "tslog";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
 
 const log = new Logger({ stylePrettyLogs: false });
-const max_ws_buffer_size = 10 * 1024 * 1024; // 10 MB buffer size for websocket
+const max_ws_buffer_size = 2 * 1024 * 1024; // 2 MB buffer size for websocket
 
 // Import interface
 import { RemoteAPIMsg } from "./interface/RemoteAPIMsg.js";
-import { SampleWS } from "./interface/SampleWS.js";
+import { SampleWS, SampleCallback } from "./interface/SampleWS.js";
 import { DataMsg } from "./interface/DataMsg.js";
 import { ControlMsg } from "./interface/ControlMsg.js";
 import { OwnedKeyExprWrapper } from "./interface/OwnedKeyExprWrapper.js";
-import { QueryWS } from "./interface/QueryWS.js";
+import { QueryCallback } from "./interface/QueryWS.js";
 import { RemotePublisher, RemoteSubscriber } from "./pubsub.js";
 import { RemoteQueryable } from "./query.js";
-import { ReplyWS } from "./interface/ReplyWS.js";
+import { ReplyCallback, ReplyWS } from "./interface/ReplyWS.js";
 import { QueryableMsg } from "./interface/QueryableMsg.js";
-import { QueryReplyWS } from "./interface/QueryReplyWS.js";
-import { HandlerChannel } from "./interface/HandlerChannel.js";
 import { SessionInfo as SessionInfoIface } from "./interface/SessionInfo.js";
 import { RemoteQuerier } from "./querier.js"
+import { Drop } from "./channels.js";
+import { B64String } from "./interface/B64String.js";
+import { QueryReplyVariant } from "./interface/QueryReplyVariant.js";
 
 
 // ██████  ███████ ███    ███  ██████  ████████ ███████     ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -62,25 +63,25 @@ export type UUIDv4 = String | string;
 
 export class RemoteSession {
   ws: WebSocket;
-  ws_channel: SimpleChannel<JSONMessage>;
   session: UUIDv4 | null;
-  subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
-  queryables: Map<UUIDv4, SimpleChannel<QueryWS>>;
-  get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS | RemoteRecvErr>>;
-  liveliness_subscribers: Map<UUIDv4, SimpleChannel<SampleWS>>;
-  liveliness_get_receiver: Map<UUIDv4, SimpleChannel<ReplyWS>>;
+  subscribers: Map<UUIDv4, SampleCallback>;
+  queryables: Map<UUIDv4, QueryCallback>;
+  get_receiver: Map<UUIDv4, [ReplyCallback, Drop]>;
+  liveliness_subscribers: Map<UUIDv4, SampleCallback>;
+  liveliness_get_receiver: Map<UUIDv4, [ReplyCallback, Drop]>;
+  pending_queries: Set<UUIDv4>;
   session_info: SessionInfoIface | null;
   _new_timestamp: TimestampIface | null;
 
-  private constructor(ws: WebSocket, ws_channel: SimpleChannel<JSONMessage>) {
+  private constructor(ws: WebSocket) {
     this.ws = ws;
-    this.ws_channel = ws_channel;
     this.session = null;
-    this.subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
-    this.queryables = new Map<UUIDv4, SimpleChannel<QueryWS>>();
-    this.get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
-    this.liveliness_subscribers = new Map<UUIDv4, SimpleChannel<SampleWS>>();
-    this.liveliness_get_receiver = new Map<UUIDv4, SimpleChannel<ReplyWS>>();
+    this.subscribers = new Map<UUIDv4, SampleCallback>();
+    this.queryables = new Map<UUIDv4, QueryCallback>();
+    this.get_receiver = new Map<UUIDv4, [ReplyCallback, Drop]>();
+    this.liveliness_subscribers = new Map<UUIDv4, SampleCallback>();
+    this.liveliness_get_receiver = new Map<UUIDv4, [ReplyCallback, Drop]>();
+    this.pending_queries = new Set<UUIDv4>;
     this.session_info = null;
     this._new_timestamp = null;
   }
@@ -98,8 +99,8 @@ export class RemoteSession {
     let retry_timeout_ms = 2000;
     let exponential_multiplier = 1;
 
-    const chan = new SimpleChannel<JSONMessage>(); // creates a new simple channel
     let ws = new WebSocket(websocket_endpoint);
+    let session = new RemoteSession(ws);
 
     while (websocket_connected == false) {
       ws.onopen = function (_event: any) {
@@ -111,13 +112,13 @@ export class RemoteSession {
 
       ws.onmessage = function (event: any) {
         // `this` here is a websocket object
-        chan.send(event.data);
+        session.on_message_received(event.data);
       };
 
 
-      ws.onclose = function () {
+      ws.onclose = function (event: any) {
         // `this` here is a websocket object
-        console.warn("Websocket connection to remote-api-plugin has been disconnected")
+        console.warn(`Websocket connection to remote-api-plugin has been disconnected: ${event.code}`)
       };
 
       let wait = 0;
@@ -142,8 +143,6 @@ export class RemoteSession {
       }
     }
 
-    let session = new RemoteSession(ws, chan);
-    session.channel_receive();
     return session;
   }
 
@@ -198,7 +197,8 @@ export class RemoteSession {
   async get(
     key_expr: string,
     parameters: string | null,
-    handler: HandlerChannel,
+    callback: ReplyCallback,
+    drop: Drop,
     consolidation?: number,
     congestion_control?: number,
     priority?: number,
@@ -211,7 +211,7 @@ export class RemoteSession {
   ): Promise<SimpleChannel<ReplyWS>> {
     let uuid = uuidv4();
     let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
-    this.get_receiver.set(uuid, channel);
+    this.get_receiver.set(uuid, [callback, drop]);
 
     let opt_payload = undefined;
     if (payload != undefined) {
@@ -227,7 +227,6 @@ export class RemoteSession {
         key_expr: key_expr,
         parameters: parameters,
         id: uuid,
-        handler: handler,
         consolidation: consolidation,
         congestion_control: congestion_control,
         priority: priority,
@@ -270,6 +269,102 @@ export class RemoteSession {
     await this.send_ctrl_message(data_message);
   }
 
+  async reply_final(query_uuid: UUIDv4): Promise<boolean> {
+    return this.pending_queries.delete(query_uuid);
+  }
+
+  async reply(uuid: UUIDv4, 
+      key_expr: string,
+      payload: Uint8Array,
+      encoding: string | null,
+      congestion_control: number,
+      priority: number,
+      express: boolean,
+      attachment: Uint8Array | null,
+      timestamp: string | null
+    ): Promise<boolean> {
+      if (this.pending_queries.has(uuid)) {
+        return false;
+      }
+
+      let opt_attachment = null;
+      if (attachment != undefined) {
+        opt_attachment = b64_str_from_bytes(attachment)
+      }
+      
+      let qr_variant: QueryReplyVariant = {
+        Reply: {
+          key_expr: key_expr.toString(),
+          payload: b64_str_from_bytes(payload),
+          encoding: encoding,
+          priority: priority,
+          congestion_control: congestion_control,
+          express: express,
+          timestamp: timestamp,
+          attachment: opt_attachment
+        },
+      };
+
+      let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
+      let data_msg: DataMsg = { Queryable: queryable_msg };
+      await this.send_data_message(data_msg);
+
+      return await this.reply_final(uuid);
+  }
+
+  async reply_err(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
+    if (this.pending_queries.has(uuid)) {
+      return false;
+    }
+    
+    let qr_variant: QueryReplyVariant = {
+      ReplyErr: {
+        payload: b64_str_from_bytes(payload),
+        encoding: encoding,
+      },
+    };
+
+    let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
+    let data_msg: DataMsg = { Queryable: queryable_msg };
+    await this.send_data_message(data_msg);
+
+    return await this.reply_final(uuid);
+  }
+
+  async reply_del(uuid: UUIDv4,
+      key_expr: string,
+      congestion_control: number,
+      priority: number,
+      express: boolean,
+      attachment: Uint8Array | null,
+      timestamp: string | null): Promise<boolean> {
+    if (this.pending_queries.has(uuid)) {
+      return false;
+    }
+    
+    let opt_attachment : B64String | null = null;
+    if (attachment != undefined) {
+      opt_attachment = b64_str_from_bytes(attachment);
+    }
+
+    let qr_variant: QueryReplyVariant = {
+      ReplyDelete: {
+        key_expr: key_expr,
+        priority: priority,
+        congestion_control: congestion_control,
+        express: express,
+        timestamp: timestamp,
+        attachment: opt_attachment
+      },
+    };
+
+    let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
+    let data_msg: DataMsg = { Queryable: queryable_msg };
+    await this.send_data_message(data_msg);
+
+    return await this.reply_final(uuid);
+}
+
   async close() {
     let data_message: ControlMsg = "CloseSession";
     await this.send_ctrl_message(data_message);
@@ -278,27 +373,22 @@ export class RemoteSession {
 
   async declare_remote_subscriber(
     key_expr: string,
-    handler: HandlerChannel,
-    callback?: (sample: SampleWS) => void,
+    callback: SampleCallback,
   ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      DeclareSubscriber: { key_expr: key_expr, id: uuid, handler: handler },
+      DeclareSubscriber: { key_expr: key_expr, id: uuid},
     };
 
-    let channel: SimpleChannel<SampleWS> = new SimpleChannel<SampleWS>();
-
-    this.subscribers.set(uuid, channel);
+    this.subscribers.set(uuid, callback);
 
     await this.send_ctrl_message(control_message);
 
     let subscriber = RemoteSubscriber.new(
       key_expr,
       uuid,
-      this,
-      channel,
-      callback,
+      this
     );
     return subscriber;
   }
@@ -307,19 +397,15 @@ export class RemoteSession {
   async declare_remote_queryable(
     key_expr: string,
     complete: boolean,
-    reply_tx: SimpleChannel<QueryReplyWS>,
-    handler: HandlerChannel,
-    callback?: (sample: QueryWS) => void,
+    callback: QueryCallback,
   ): Promise<RemoteQueryable> {
     let uuid = uuidv4();
 
     let control_message: ControlMsg = {
-      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid, handler: handler },
+      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid},
     };
 
-    let query_rx: SimpleChannel<QueryWS> = new SimpleChannel<QueryWS>();
-
-    this.queryables.set(uuid, query_rx);
+    this.queryables.set(uuid, callback);
 
     await this.send_ctrl_message(control_message);
 
@@ -327,9 +413,6 @@ export class RemoteSession {
       key_expr,
       uuid,
       this,
-      query_rx,
-      reply_tx,
-      callback,
     );
 
     return queryable;
@@ -417,7 +500,7 @@ export class RemoteSession {
   async declare_liveliness_subscriber(
     key_expr: string,
     history: boolean,
-    callback?: (sample: SampleWS) => void,
+    callback: SampleCallback,
   ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
@@ -425,9 +508,7 @@ export class RemoteSession {
       Liveliness: { DeclareSubscriber: { key_expr: key_expr, id: uuid, history: history } }
     };
 
-    let channel: SimpleChannel<SampleWS> = new SimpleChannel<SampleWS>();
-
-    this.liveliness_subscribers.set(uuid, channel);
+    this.liveliness_subscribers.set(uuid, callback);
 
     await this.send_ctrl_message(control_message);
 
@@ -435,8 +516,6 @@ export class RemoteSession {
       key_expr,
       uuid,
       this,
-      channel,
-      callback,
     );
 
     return subscriber;
@@ -444,11 +523,11 @@ export class RemoteSession {
 
   async get_liveliness(
     key_expr: string,
+    callback: ReplyCallback,
+    drop: Drop,
     timeout_milliseconds?: number
-  ): Promise<SimpleChannel<ReplyWS>> {
+  ) {
     let uuid = uuidv4();
-    let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
-    this.get_receiver.set(uuid, channel);
 
     let timeout = undefined;
     if (timeout_milliseconds !== undefined) {
@@ -459,11 +538,9 @@ export class RemoteSession {
       Liveliness: { Get: { key_expr: key_expr, id: uuid, timeout: timeout } }
     };
 
-    this.liveliness_get_receiver.set(uuid, channel);
+    this.liveliness_get_receiver.set(uuid, [callback, drop]);
 
     await this.send_ctrl_message(control_message);
-
-    return channel;
   }
 
   // Note: This method blocks until Timestamp has been created
@@ -493,8 +570,11 @@ export class RemoteSession {
   }
 
   private async send_remote_api_message(remote_api_message: RemoteAPIMsg) {
-    while (this.ws.bufferedAmount > max_ws_buffer_size) {
-      await sleep(1)
+    let i = 0;
+    while (this.ws.bufferedAmount > max_ws_buffer_size || this.ws.readyState != this.ws.OPEN) {
+      await sleep(10);
+      i += 1;
+      console.warn(`Waiting ${i}, ${this.ws.bufferedAmount}, ${this.ws.readyState}`);
     }
     this.ws.send(JSON.stringify(remote_api_message));
   }
@@ -502,29 +582,22 @@ export class RemoteSession {
   //
   // Manage Session and handle messages
   //
-  private async channel_receive() {
-    for await (const message of this.ws_channel) {
-      let remote_api_message: RemoteAPIMsg = JSON.parse(
-        message,
-      ) as RemoteAPIMsg;
-
-      if ("Session" in remote_api_message) {
-        console.warn("Continue Ignore Session Messages");
-        continue;
-      } else if ("Control" in remote_api_message) {
-        this.handle_control_message(remote_api_message["Control"]);
-        continue;
-      } else if ("Data" in remote_api_message) {
-        this.handle_data_message(remote_api_message["Data"]);
-        continue;
-      } else {
-        log.error(
-          `RemoteAPIMsg Does not contain known Members`,
-          remote_api_message,
-        );
-      }
+  private on_message_received(message: JSONMessage) {
+    let remote_api_message: RemoteAPIMsg = JSON.parse(
+      message,
+    ) as RemoteAPIMsg;
+    if ("Session" in remote_api_message) {
+      console.warn("Continue Ignore Session Messages");
+    } else if ("Control" in remote_api_message) {
+      this.handle_control_message(remote_api_message["Control"]);
+    } else if ("Data" in remote_api_message) {
+      this.handle_data_message(remote_api_message["Data"]);
+    } else {
+      log.error(
+        `RemoteAPIMsg Does not contain known Members`,
+        remote_api_message,
+      );
     }
-    console.warn("Closed");
   }
 
   private handle_control_message(control_msg: ControlMsg) {
@@ -534,9 +607,17 @@ export class RemoteSession {
       if ("Session" in control_msg) {
         this.session = control_msg["Session"];
       } else if ("GetFinished" in control_msg) {
-        let channel = this.get_receiver.get(control_msg["GetFinished"].id);
-        channel?.send(RemoteRecvErr.Disconnected);
-        this.get_receiver.delete(control_msg["GetFinished"].id);
+        let handler = this.get_receiver.get(control_msg["GetFinished"].id);
+        if (handler != undefined) {
+          handler[1]();
+          this.get_receiver.delete(control_msg["GetFinished"].id);
+        } else {
+          handler = this.liveliness_get_receiver.get(control_msg["GetFinished"].id);
+          if (handler != undefined) {
+            handler[1]();
+            this.liveliness_get_receiver.delete(control_msg["GetFinished"].id);
+          }
+        }
       }
     }
   }
@@ -545,43 +626,32 @@ export class RemoteSession {
     if ("Sample" in data_msg) {
       let subscription_uuid: UUIDv4 = data_msg["Sample"][1];
 
-      let opt_subscriber = this.subscribers.get(subscription_uuid);
-      let opt_livelinesss_subscriber = this.liveliness_subscribers.get(subscription_uuid);
+      let subscriber = this.subscribers.get(subscription_uuid) ?? this.liveliness_subscribers.get(subscription_uuid);
 
-      if (opt_subscriber != undefined) {
-        let channel: SimpleChannel<SampleWS> = opt_subscriber;
+      if (subscriber != undefined) {
         let sample: SampleWS = data_msg["Sample"][0];
-        channel.send(sample);
-      } else if (opt_livelinesss_subscriber != undefined) {
-        let channel: SimpleChannel<SampleWS> = opt_livelinesss_subscriber;
-        let sample: SampleWS = data_msg["Sample"][0];
-        channel.send(sample);
+        subscriber(sample);
       } else {
         console.warn("Subscrption UUID not in map", subscription_uuid);
       }
     } else if ("GetReply" in data_msg) {
       let get_reply: ReplyWS = data_msg["GetReply"];
 
-      let opt_receiver = this.get_receiver.get(get_reply.query_uuid);
-      let opt_liveliness_receiver = this.liveliness_get_receiver.get(get_reply.query_uuid);
+      let receiver = this.get_receiver.get(get_reply.query_uuid) ?? this.liveliness_get_receiver.get(get_reply.query_uuid);
 
-      if (opt_receiver != undefined) {
-        let channel: SimpleChannel<ReplyWS | RemoteRecvErr> = opt_receiver;
-        channel.send(get_reply);
-      } else if (opt_liveliness_receiver != undefined) {
-        let channel: SimpleChannel<ReplyWS | RemoteRecvErr> = opt_liveliness_receiver;
-        channel.send(get_reply);
+      if (receiver != undefined) {
+        receiver[0](get_reply);
+      } else {
+        console.warn("Get receiver UUID not in map", get_reply.query_uuid);
       }
     } else if ("Queryable" in data_msg) {
       let queryable_msg: QueryableMsg = data_msg["Queryable"];
       if ("Query" in queryable_msg) {
         let queryable_uuid: UUIDv4 = queryable_msg.Query.queryable_uuid;
-        let opt_queryable = this.queryables.get(queryable_uuid);
-
-        if (opt_queryable != undefined) {
-          let channel: SimpleChannel<QueryWS> = opt_queryable;
-          let query = queryable_msg.Query.query;
-          channel.send(query);
+        let queryable = this.queryables.get(queryable_uuid);
+        if (queryable != undefined) {
+          this.pending_queries.add(queryable_msg.Query.query.query_uuid);
+          queryable(queryable_msg.Query.query)
         } else {
           console.warn("Queryable Message UUID not in map", queryable_uuid);
         }

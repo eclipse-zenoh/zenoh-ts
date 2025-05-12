@@ -4,3 +4,4 @@ import type { OwnedKeyExprWrapper } from "./OwnedKeyExprWrapper.js";
 import type { SampleKindWS } from "./SampleKindWS.js";
 
 export type SampleWS = { key_expr: OwnedKeyExprWrapper, value: B64String, kind: SampleKindWS, encoding: string, timestamp: string | null, congestion_control: number, priority: number, express: boolean, attachement: B64String | null, };
+export type SampleCallback = (sample: SampleWS) => void;
