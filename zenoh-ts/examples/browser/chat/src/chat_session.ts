@@ -1,4 +1,5 @@
 import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
+import { BigIntFormat, NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, ZDeserializeable, ZS, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
 
 export function validate_username(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
@@ -39,10 +40,23 @@ export class ChatUser {
 	}
 }
 
-export interface ChatMessage {
-	t: string; // timestamp
-	u: string; // username
-	m: string; // message
+export class ChatMessage implements ZSerializeable, ZDeserializeable {
+	constructor(
+		public timestamp: Date,
+		public user: string,
+		public message: string
+	) {}
+	public serialize_with_zserializer(serializer: ZBytesSerializer): void {
+		serializer.serialize(this.timestamp.valueOf(), ZS.number(NumberFormat.Uint64));
+		serializer.serialize(this.user, ZS.string());
+		serializer.serialize(this.message, ZS.string());
+	}
+
+	public deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+		this.timestamp = new Date(deserializer.deserialize(ZD.number(NumberFormat.Uint64)));
+		this.user = deserializer.deserialize(ZD.string());
+		this.message = deserializer.deserialize(ZD.string());
+	}
 }
 
 export class ChatSession {
@@ -126,8 +140,9 @@ export class ChatSession {
 					log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
 					let user = ChatUser.fromKeyexpr(sample.keyexpr());
 					if (user) {
-						const timestamp = new Date().toISOString();
-						this.messages.push({ t: timestamp, u: user.username, m: message });
+						const timestamp = new Date();
+						let message_rec = new ChatMessage(timestamp, user.username, message);
+						this.messages.push(message_rec);
 						if (this.messageCallback) {
 							this.messageCallback(user, message);
 						}

@@ -40,7 +40,7 @@ function initialize() {
 		});
 		chatLog.innerHTML = '';
 		chatSession.getMessages().forEach(message => {
-			addMessageToChat(chatSession, new ChatUser(message.u), message.m);
+			addMessageToChat(chatSession, new ChatUser(message.user), message.message);
 		});
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 		connectButton.style.display = 'none';

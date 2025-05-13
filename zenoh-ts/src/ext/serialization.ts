@@ -15,7 +15,49 @@
 import * as leb from "@thi.ng/leb128";
 
 import { ZBytes } from '../z_bytes.js';
-import { isBigInt64Array, isBigUint64Array, isFloat32Array, isFloat64Array, isInt16Array, isInt32Array, isInt8Array, isUint16Array, isUint32Array, isUint8Array } from "util/types";
+
+/**
+ * Browser-compatible type checking functions
+ */
+function isUint8Array(arr: any): arr is Uint8Array {
+  return arr instanceof Uint8Array;
+}
+
+function isUint16Array(arr: any): arr is Uint16Array {
+  return arr instanceof Uint16Array;
+}
+
+function isUint32Array(arr: any): arr is Uint32Array {
+  return arr instanceof Uint32Array;
+}
+
+function isBigUint64Array(arr: any): arr is BigUint64Array {
+  return arr instanceof BigUint64Array;
+}
+
+function isInt8Array(arr: any): arr is Int8Array {
+  return arr instanceof Int8Array;
+}
+
+function isInt16Array(arr: any): arr is Int16Array {
+  return arr instanceof Int16Array;
+}
+
+function isInt32Array(arr: any): arr is Int32Array {
+  return arr instanceof Int32Array;
+}
+
+function isBigInt64Array(arr: any): arr is BigInt64Array {
+  return arr instanceof BigInt64Array;
+}
+
+function isFloat32Array(arr: any): arr is Float32Array {
+  return arr instanceof Float32Array;
+}
+
+function isFloat64Array(arr: any): arr is Float64Array {
+  return arr instanceof Float64Array;
+}
 
 /**
  * Interface for adding support for custom types serialization.
