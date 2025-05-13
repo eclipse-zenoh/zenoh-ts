@@ -3,8 +3,9 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable", "deno.ns"],
     "skipLibCheck": true,
+    "types": ["deno.ns", "deno.unstable"]
 
     /* Bundler mode */
     "moduleResolution": "bundler",
