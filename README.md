@@ -7,29 +7,35 @@
 
 The Eclipse Zenoh: Zero Overhead Pub/sub, Store/Query, and Compute.
 
-Zenoh (pronounced _/zeno/_) unifies data in motion, data at rest, and computations. It carefully blends traditional pub/sub with
-geo-distributed storage, queries, and computations, while retaining a level of time and space efficiency that is well beyond any
-of the mainstream stacks.
+Zenoh (pronounced _/zeno/_) unifies data in motion, data at rest, and
+computations. It carefully blends traditional pub/sub with geo-distributed
+storage, queries, and computations, while retaining a level of time and space
+efficiency that is well beyond any of the mainstream stacks.
 
-Check the website [zenoh.io](http://zenoh.io) and the [roadmap](https://github.com/eclipse-zenoh/roadmap) for more detailed information.
+Check the website [zenoh.io](http://zenoh.io) and the
+[roadmap](https://github.com/eclipse-zenoh/roadmap) for more detailed
+information.
 
 ---
 
 ## Typescript/Javascript API
 
-This repository provides a Typescript / Javascript binding through the use of the `zenoh-plugin-remote-api` in this repo.
-The long-term plan is to use zenoh [Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.
-In its current state, it is not possible to compile Zenoh (Rust) to target WASM, and it will need to undergo a fair
-amount of refactoring before that can happen.
+This repository provides a Typescript / Javascript binding through the use of
+the `zenoh-plugin-remote-api` in this repo. The long-term plan is to use zenoh
+[Zenoh written in Rust](https://github.com/eclipse-zenoh/zenoh) to target WASM.
+In its current state, it is not possible to compile Zenoh (Rust) to target WASM,
+and it will need to undergo a fair amount of refactoring before that can happen.
 
 The latest version of the zenoh-ts library can be installed from npm:
 
 ```sh
 npm install @eclipse-zenoh/zenoh-ts
 ```
+
 Docs can be accessed at [Docs Link](https://eclipse-zenoh.github.io/zenoh-ts/)
 
-The library requires a websocket connection to the `zenohd` daemon through the `zenohd-plugin-remote-api` in the daemon. See the corresponding section below.
+The library requires a websocket connection to the `zenohd` daemon through the
+`zenohd-plugin-remote-api` in the daemon. See the corresponding section below.
 
 ---
 
@@ -37,13 +43,19 @@ The library requires a websocket connection to the `zenohd` daemon through the `
 
 ### Executing the `zenohd` with `zenoh-plugin-remote-api` plugin
 
-The `zenohd` router and its plugins should be built with the same Zenoh sources, the same version of the Rust compiler, and with the
-same set of features. This requirement exists because the router and plugins share common Rust structures, and Rust doesn't guarantee
-ABI compatibility of the memory representation of these structures.
+The `zenohd` router and its plugins should be built with the same Zenoh sources,
+the same version of the Rust compiler, and with the same set of features. This
+requirement exists because the router and plugins share common Rust structures,
+and Rust doesn't guarantee ABI compatibility of the memory representation of
+these structures.
 
-Therefore, one of the methods below is recommended to ensure that the plugin and router are compatible.
+Therefore, one of the methods below is recommended to ensure that the plugin and
+router are compatible.
 
-The file `EXAMPLE_CONFIG.json5` references the `zenoh-plugin-remote-api\EXAMPLE_CONFIG.json5` with the minimal necessary set of options to run the plugin. See also the full set of available options, like SSL certificate settings in `zenoh-plugin-remote-api\config.json5`.
+The file `EXAMPLE_CONFIG.json5` references the
+`zenoh-plugin-remote-api\EXAMPLE_CONFIG.json5` with the minimal necessary set of
+options to run the plugin. See also the full set of available options, like SSL
+certificate settings in `zenoh-plugin-remote-api\config.json5`.
 
 1. Do nothing and just run examples and tests with `DAEMON` parameter as described in next session. The scripts will automatically build plugin
 and daemon from the sources and start it.
@@ -66,24 +78,23 @@ and daemon from the sources and start it.
    brew install zenoh
    brew install zenoh-plugin-remote-api
    ```
-   
+
    Run the installed zenoh router with the example config
 
    ```sh
    zenohd --config EXAMPLE_CONFIG.json5
    ```
-  
+
    The expected output should be something similar to:
 
-    ```txt
-    
+   ```txt
    zenohd: zenohd v1.0.3 built with rustc 1.75.0 (82e1608df 2023-12-21)
    zenoh::net::runtime: Using ZID: f7bc54e0941036422ec08ebac6fbdb40
-   zenoh::api::loader: Loading  plugin "remote_api"
-   zenoh::api::loader: Starting  plugin "remote_api"
-   zenoh::api::loader: Successfully started plugin remote_api from "/usr/lib/libzenoh_plugin_remote_api.so"
-   zenoh::api::loader: Finished loading plugins
-   zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/....
+   zenoh::api::loader: Loading plugin "remote_api" zenoh::api::loader: Starting
+   plugin "remote_api" zenoh::api::loader: Successfully started plugin remote_api
+   from "/usr/lib/libzenoh_plugin_remote_api.so" zenoh::api::loader: Finished
+   loading plugins zenoh::net::runtime::orchestrator: Zenoh can be reached at:
+   tcp/....
    ```
 
 3. Build both the plugin and the router from the sources manually:
@@ -91,24 +102,30 @@ and daemon from the sources and start it.
    Build the plugin `zenoh-plugin-remote-api`
 
    ```sh
-   cargo build 
+   cargo build
    ```
 
-   Optional note for developers: to regenerate typescript library <-> Rust plugin interface do this:
+   Optional note for developers: to regenerate typescript library <-> Rust
+   plugin interface do this:
 
    ```sh
-   cargo test export_bindings   
-   cp zenoh-plugin-remote-api/bindings/* zenoh-ts/src/remote_api/interface 
+   cargo test export_bindings
+   cp zenoh-plugin-remote-api/bindings/* zenoh-ts/src/remote_api/interface
    ```
 
-   Build and run `zenohd` from the same sources used for the plugin. The `zenohd` dependency is specified in the `[workspace.metadata.bin]` section in `Cargo.toml`, which is processed by the third-party tool [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
+   Build and run `zenohd` from the same sources used for the plugin. The
+   `zenohd` dependency is specified in the `[workspace.metadata.bin]` section in
+   `Cargo.toml`, which is processed by the third-party tool
+   [cargo-run-bin](https://crates.io/crates/cargo-run-bin).
 
-   The `zenohd` binary is built into the `.bin` directory local to the project. If necessary, remove the `.bin` directory with `rm -rf .bin` to rebuild it, as the `cargo-run-bin` tool does not handle this automatically.
+   The `zenohd` binary is built into the `.bin` directory local to the project.
+   If necessary, remove the `.bin` directory with `rm -rf .bin` to rebuild it,
+   as the `cargo-run-bin` tool does not handle this automatically.
 
    ```sh
    cargo install cargo-run-bin
    cargo bin zenohd --config EXAMPLE_CONFIG.json5
-   ```  
+   ```
 
    The expected output should be something similar to:
 
@@ -121,7 +138,7 @@ and daemon from the sources and start it.
    zenoh::api::loader: Finished loading plugins
    zenoh::net::runtime::orchestrator: Zenoh can be reached at: tcp/...
    ```
-   
+
 ### Building the library from sources
 
 1. Make sure that the following utilities are available on your platform.
@@ -143,12 +160,14 @@ and daemon from the sources and start it.
 
    The result is placed into the `zenoh-ts/dist` directory.
 
-   This library is currently compatible with browsers, but not with NodeJS due to websocket library limitations.
+   This library is currently compatible with browsers, but not with NodeJS due
+   to websocket library limitations.
 
 ### Build and run examples
 
-For simplicity, the examples can be executed from the `zenoh-ts` directory. You may also go directly to the `zenoh-ts/examples`
-directory and explore and run examples there.
+For simplicity, the examples can be executed from the `zenoh-ts` directory. You
+may also go directly to the `zenoh-ts/examples` directory and explore and run
+examples there.
 
 The examples can be run with or without a local zenohd daemon:
 
@@ -162,19 +181,19 @@ The following examples are available:
 - Command line examples
   - Publisher and subscriber
 
-      ```sh
-      yarn start DAEMON example deno z_pub
-      yarn start DAEMON example deno z_sub
-      ```
+    ```sh
+    yarn start DAEMON example deno z_pub
+    yarn start DAEMON example deno z_sub
+    ```
 
   - Queryable and get
 
-      ```sh
-      yarn start DAEMON example deno z_queryable
-      yarn start DAEMON example deno z_get
-      ```
+    ```sh
+    yarn start DAEMON example deno z_queryable
+    yarn start DAEMON example deno z_get
+    ```
 
-      and many more
+    and many more
 
 - Chat in browser example
 
@@ -182,7 +201,9 @@ The following examples are available:
   yarn start DAEMON example browser
   ```
 
-  The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with the chat interface should open. Open another one with the same address, press the "Connect" buttons in both and see how they interact.
+  The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with
+  the chat interface should open. Open another one with the same address, press
+  the "Connect" buttons in both and see how they interact.
 
 ### Generating Documentation
 
