@@ -1,5 +1,5 @@
 import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
-import { BigIntFormat, NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, ZDeserializeable, ZS, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
+import { BigIntFormat, NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, zdeserialize, ZDeserializeable, ZS, zserialize, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
 
 export function validate_username(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
@@ -23,9 +23,9 @@ export class ChatUser {
 
 export class ChatMessage implements ZSerializeable, ZDeserializeable {
 	constructor(
-		public timestamp: Date,
-		public user: string,
-		public message: string
+		public timestamp: Date = new Date(),
+		public user: string = "",
+		public message: string = ""
 	) {}
 	public serialize_with_zserializer(serializer: ZBytesSerializer): void {
 		serializer.serialize(this.timestamp.valueOf(), ZS.number(NumberFormat.Uint64));
@@ -81,7 +81,7 @@ export class ChatSession {
 	}
 
 	public getHistoryKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("messages");
+		return this.domain_keyexpr.join("history");
 	}
 
 	public userFromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
@@ -105,10 +105,17 @@ export class ChatSession {
 		if (reply instanceof Reply) {
 			let resp = reply.result();
 			if (resp instanceof Sample) {
-				let payload = resp.payload().to_string();
+				let payload = resp.payload();
 				let attachment = resp.attachment()?.to_string() ?? "";
-				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}, from user: ${attachment}`);
-				return JSON.parse(payload);
+				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, payload size: ${payload.len()}, from user: ${attachment}`);
+				let messages: ChatMessage[] = [];
+				try {
+					messages = zdeserialize(ZD.array(ZD.object(ChatMessage)), payload);
+					log(`[Session] Deserialized ${messages.length} messages`);
+				} catch (e) {
+					log(`[Session] Error deserializing messages: ${e}`);
+				}
+				return messages;
 			}
 		} else {
 			log(`[Session] GetError ${reply}`);
@@ -120,7 +127,7 @@ export class ChatSession {
 		const queryable = await session.declare_queryable(keyexpr, {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
-				const response = JSON.stringify(this.messages);
+				const response = zserialize(this.messages); //type parameter is ZS.array(ZS.object<ChatMessage>()) but this can be omitted
 				query.reply(keyexpr, response, {
 					attachment: this.user.username
 				});
