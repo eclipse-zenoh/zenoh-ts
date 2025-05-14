@@ -1,3 +1,4 @@
+import { KeyExpr } from '@eclipse-zenoh/zenoh-ts';
 import { ChatSession, ChatUser } from './chat_session';
 
 let globalChatSession: ChatSession | null = null;
@@ -98,7 +99,7 @@ function initialize() {
 				log(`Invalid username: ${usernameInput.value}`);
 				return;
 			}
-			let chatSession: ChatSession = new ChatSession(user);
+			let chatSession: ChatSession = new ChatSession(new KeyExpr("chat"), user);
 			chatSession.onChangeUsers(onChangeUsers);
 			chatSession.onNewMessage(onNewMessage);
 			chatSession.onConnect(onConnect);

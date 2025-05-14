@@ -32,7 +32,6 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 		serializer.serialize(this.user, ZS.string());
 		serializer.serialize(this.message, ZS.string());
 	}
-
 	public deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
 		this.timestamp = new Date(deserializer.deserialize(ZD.number(NumberFormat.Uint64)));
 		this.user = deserializer.deserialize(ZD.string());
@@ -99,13 +98,8 @@ export class ChatSession {
 		return new ChatUser(username);
 	}
 
-	async requestMessageHistory() {
-		if (!this.session) {
-			log(`[Session] Session is null in requestMessageHistory`);
-			return;
-		}
-		let keyexpr = this.getHistoryKeyexpr();
-		let receiver = await this.session.get(keyexpr) as Receiver;
+	async requestMessageHistory(session: Session, keyexpr: KeyExpr) {
+		let receiver = await session.get(keyexpr) as Receiver;
 		log(`[Session] Get from ${keyexpr}`);
 		let reply = await receiver.receive();
 		if (reply instanceof Reply) {
@@ -114,20 +108,16 @@ export class ChatSession {
 				let payload = resp.payload().to_string();
 				let attachment = resp.attachment()?.to_string() ?? "";
 				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, messages: ${payload}, from user: ${attachment}`);
-				this.messages = JSON.parse(payload);
+				return JSON.parse(payload);
 			}
 		} else {
 			log(`[Session] GetError ${reply}`);
 		}
+		return [];
 	}
 
-	async declareMessageHistoryQueryable() {
-		if (!this.session) {
-			log(`[Session] Session is null in declareMessageHistoryQueryable`);
-			return;
-		}
-		let keyexpr = this.getHistoryKeyexpr();
-		this.messages_queryable = await this.session.declare_queryable(keyexpr, {
+	async declareMessageHistoryQueryable(session: Session, keyexpr: KeyExpr): Promise<Queryable> {
+		const queryable = await session.declare_queryable(keyexpr, {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
@@ -138,25 +128,17 @@ export class ChatSession {
 			complete: true
 		});
 		log(`[Session] Declare queryable on ${keyexpr}`);
+		return queryable;
 	}
 
-	async declareMessagePublisher() {
-		if (!this.session) {
-			log(`[Session] Session is null in declareMessagePublisher`);
-			return;
-		}
-		let keyexpr = this.getUserKeyexpr();
-		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
+	async declareMessagePublisher(session: Session, keyexpr: KeyExpr): Promise<Publisher> {
+		const publisher = session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
+		return publisher;
 	}
 
-	async declareMessageSubscriber() {
-		if (!this.session) {
-			log(`[Session] Session is null in declareMessageSubscriber`);
-			return;
-		}
-		let keyexpr = this.getAllUsersKeyexpr();
-		this.message_subscriber = await this.session.declare_subscriber(keyexpr, {
+	async declareMessageSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
+		const subscriber = await session.declare_subscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let message = sample.payload().to_string();
 				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr()}`);
@@ -175,25 +157,17 @@ export class ChatSession {
 			}
 		});
 		log(`[Session] Declare Subscriber on ${keyexpr}`);
+		return subscriber;
 	}
 
-	async declareLivelinessToken() {
-		if (!this.session) {
-			log(`[Session] Session is null in declareLivelinessToken`);
-			return;
-		}
-		let keyexpr = this.getUserKeyexpr();
-		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
+	async declareLivelinessToken(session: Session, keyexpr: KeyExpr): Promise<LivelinessToken> {
+		const token = session.liveliness().declare_token(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
+		return token;
 	}
 
-	async declareLivelinessSubscriber() {
-		if (!this.session) {
-			log(`[Session] Session is null in declareLivelinessSubscriber`);
-			return;
-		}
-		let keyexpr = this.getAllUsersKeyexpr();
-		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(keyexpr, {
+	async declareLivelinessSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
+		const subscriber = session.liveliness().declare_subscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = this.userFromKeyexpr(keyexpr);
@@ -202,16 +176,12 @@ export class ChatSession {
 				} else {
 					switch (sample.kind()) {
 						case SampleKind.PUT: {
-							log(
-								`[LivelinessSubscriber] New alive token ${keyexpr}`
-							);
+							log(`[LivelinessSubscriber] New alive token ${keyexpr}`);
 							this.users.push(user);
 							break;
 						}
 						case SampleKind.DELETE: {
-							log(
-								`[LivelinessSubscriber] Dropped token ${keyexpr}`
-							);
+							log(`[LivelinessSubscriber] Dropped token ${keyexpr}`);
 							this.users = this.users.filter(u => u.username != user.username);
 							break;
 						}
@@ -225,19 +195,21 @@ export class ChatSession {
 			history: true
 		});
 		log(`[Session] Declare liveliness subscriber on ${keyexpr}`);
+		return subscriber;
 	}
 
 	public async connect(serverUrl: string): Promise<void> {
 		let config = new Config(serverUrl);
-		this.session = await Session.open(config);
+		const session = await Session.open(config);
 		log(`[Session] Open ${serverUrl}`);
 
-		this.requestMessageHistory();
-		this.declareMessageHistoryQueryable();
-		this.declareMessagePublisher();
-		this.declareMessageSubscriber();
-		this.declareLivelinessToken();
-		this.declareLivelinessSubscriber();
+		this.session = session;
+		this.messages = await this.requestMessageHistory(session, this.getHistoryKeyexpr());
+		this.messages_queryable = await this.declareMessageHistoryQueryable(session, this.getHistoryKeyexpr());
+		this.messages_publisher = await this.declareMessagePublisher(session, this.getUserKeyexpr());
+		this.message_subscriber = await this.declareMessageSubscriber(session, this.getAllUsersKeyexpr());
+		this.liveliness_token = await this.declareLivelinessToken(session, this.getUserKeyexpr());
+		this.liveliness_subscriber = await this.declareLivelinessSubscriber(session, this.getAllUsersKeyexpr());
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
