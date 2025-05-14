@@ -5,9 +5,6 @@ export function validate_username(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
 }
 
-const KEYEXPR_CHAT_USER = new KeyExpr("chat/user");
-const KEYEXPR_CHAT_MESSAGES = new KeyExpr("chat/messages");
-
 export class ChatUser {
 	username: string;
 	constructor(username: string) {
@@ -18,22 +15,6 @@ export class ChatUser {
 			return null;
 		}
 		return new ChatUser(username);
-	}
-	public static fromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
-		let keyexpr_str = keyexpr.toString();
-		let index = keyexpr_str.lastIndexOf("/");
-		if (index == -1) {
-			return null;
-		}
-		let prefix = keyexpr_str.substring(0, index);
-		let username = keyexpr_str.substring(index + 1);
-		if (prefix != KEYEXPR_CHAT_USER.toString() || !validate_username(username)) {
-			return null;
-		}
-		return new ChatUser(username);
-	}
-	public toKeyexpr(): KeyExpr {
-		return KEYEXPR_CHAT_USER.join(this.username);
 	}
 	public toString(): string {
 		return this.username;
@@ -60,12 +41,16 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 }
 
 export class ChatSession {
+	constructor(public readonly domain_keyexpr: KeyExpr, public readonly user: ChatUser) {}
+
 	session: Session | null = null;
 	liveliness_token: LivelinessToken | null = null;
 	liveliness_subscriber: Subscriber | null = null;
 	messages_queryable: Queryable | null = null;
 	messages_publisher: Publisher | null = null;
 	message_subscriber: Subscriber | null = null;
+	users: ChatUser[] = [];
+	messages: ChatMessage[] = [];
 
 	usersCallback: (() => void) | null = null;
 	messageCallback: ((user: ChatUser, message: string) => void) | null = null;
@@ -88,23 +73,40 @@ export class ChatSession {
 		this.messageCallback = (user, message) => callback(this, user, message);
 	}
 
-	user: ChatUser;
-	users: ChatUser[] = [];
-	messages: ChatMessage[] = [];
-
-	constructor(user: ChatUser) {
-		this.user = user;
+	public getUserKeyexpr(): KeyExpr {
+		return this.domain_keyexpr.join("user").join(this.user.username);
 	}
 
-	public async connect(serverUrl: string): Promise<void> {
-		let config = new Config(serverUrl);
-		this.session = await Session.open(config);
-		log(`[Session] Open ${serverUrl}`);
+	public getAllUsersKeyexpr(): KeyExpr {
+		return this.domain_keyexpr.join("user/*");
+	}
 
-		let keyexpr = this.user.toKeyexpr();
+	public getHistoryKeyexpr(): KeyExpr {
+		return this.domain_keyexpr.join("messages");
+	}
 
-		let receiver = await this.session.get(KEYEXPR_CHAT_MESSAGES) as Receiver;
-		log(`[Session] Get from ${KEYEXPR_CHAT_MESSAGES.toString()}`);
+	public userFromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
+		let keyexpr_str = keyexpr.toString();
+		// strip the prefix or return null if it doesn't match
+		let prefix = this.domain_keyexpr.join("user").toString() + "/";
+		if (!keyexpr_str.startsWith(prefix)) {
+			return null;
+		}
+		let username = keyexpr_str.substring(prefix.length);
+		if (!validate_username(username)) {
+			return null;
+		}
+		return new ChatUser(username);
+	}
+
+	async requestMessageHistory() {
+		if (!this.session) {
+			log(`[Session] Session is null in requestMessageHistory`);
+			return;
+		}
+		let keyexpr = this.getHistoryKeyexpr();
+		let receiver = await this.session.get(keyexpr) as Receiver;
+		log(`[Session] Get from ${keyexpr}`);
 		let reply = await receiver.receive();
 		if (reply instanceof Reply) {
 			let resp = reply.result();
@@ -117,52 +119,86 @@ export class ChatSession {
 		} else {
 			log(`[Session] GetError ${reply}`);
 		}
+	}
 
-		this.messages_queryable = await this.session.declare_queryable(KEYEXPR_CHAT_MESSAGES, {
+	async declareMessageHistoryQueryable() {
+		if (!this.session) {
+			log(`[Session] Session is null in declareMessageHistoryQueryable`);
+			return;
+		}
+		let keyexpr = this.getHistoryKeyexpr();
+		this.messages_queryable = await this.session.declare_queryable(keyexpr, {
 			handler: async (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = JSON.stringify(this.messages);
-				query.reply(KEYEXPR_CHAT_MESSAGES, response, {
+				query.reply(keyexpr, response, {
 					attachment: this.user.username
 				});
 			},
 			complete: true
 		});
 		log(`[Session] Declare queryable on ${keyexpr}`);
+	}
 
+	async declareMessagePublisher() {
+		if (!this.session) {
+			log(`[Session] Session is null in declareMessagePublisher`);
+			return;
+		}
+		let keyexpr = this.getUserKeyexpr();
 		this.messages_publisher = this.session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
+	}
 
-		this.message_subscriber = await this.session.declare_subscriber(KEYEXPR_CHAT_USER.join("*"),
-			{ 
-				handler: (sample: Sample) => {
-					let message = sample.payload().to_string();
-					log(`[Subscriber] Received message: ${message} from ${sample.keyexpr().toString()}`);
-					let user = ChatUser.fromKeyexpr(sample.keyexpr());
-					if (user) {
-						const timestamp = new Date();
-						let message_rec = new ChatMessage(timestamp, user.username, message);
-						this.messages.push(message_rec);
-						if (this.messageCallback) {
-							this.messageCallback(user, message);
-						}
+	async declareMessageSubscriber() {
+		if (!this.session) {
+			log(`[Session] Session is null in declareMessageSubscriber`);
+			return;
+		}
+		let keyexpr = this.getAllUsersKeyexpr();
+		this.message_subscriber = await this.session.declare_subscriber(keyexpr, {
+			handler: (sample: Sample) => {
+				let message = sample.payload().to_string();
+				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr()}`);
+				let user = this.userFromKeyexpr(sample.keyexpr());
+				if (user) {
+					const timestamp = new Date();
+					let message_rec = new ChatMessage(timestamp, user.username, message);
+					this.messages.push(message_rec);
+					if (this.messageCallback) {
+						this.messageCallback(user, message);
 					}
-					return Promise.resolve();
+				} else {
+					log(`[Subscriber] Invalid user keyexpr: ${sample.keyexpr()}`);
 				}
+				return Promise.resolve();
 			}
-		);
-		log(`[Session] Declare Subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
+		});
+		log(`[Session] Declare Subscriber on ${keyexpr}`);
+	}
 
+	async declareLivelinessToken() {
+		if (!this.session) {
+			log(`[Session] Session is null in declareLivelinessToken`);
+			return;
+		}
+		let keyexpr = this.getUserKeyexpr();
 		this.liveliness_token = this.session.liveliness().declare_token(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
+	}
 
-		// Subscribe to changes of users presence
-		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(KEYEXPR_CHAT_USER.join("*"), {
+	async declareLivelinessSubscriber() {
+		if (!this.session) {
+			log(`[Session] Session is null in declareLivelinessSubscriber`);
+			return;
+		}
+		let keyexpr = this.getAllUsersKeyexpr();
+		this.liveliness_subscriber = this.session.liveliness().declare_subscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
-				let user = ChatUser.fromKeyexpr(keyexpr);
+				let user = this.userFromKeyexpr(keyexpr);
 				if (!user) {
-					log(`Invalid user keyexpr: ${keyexpr.toString()}`);
+					log(`[LivelinessSubscriber] Invalid user keyexpr: ${keyexpr}`);
 				} else {
 					switch (sample.kind()) {
 						case SampleKind.PUT: {
@@ -188,7 +224,20 @@ export class ChatSession {
 			},
 			history: true
 		});
-		log(`[Session] Declare liveliness subscriber on ${KEYEXPR_CHAT_USER.join("*").toString()}`);
+		log(`[Session] Declare liveliness subscriber on ${keyexpr}`);
+	}
+
+	public async connect(serverUrl: string): Promise<void> {
+		let config = new Config(serverUrl);
+		this.session = await Session.open(config);
+		log(`[Session] Open ${serverUrl}`);
+
+		this.requestMessageHistory();
+		this.declareMessageHistoryQueryable();
+		this.declareMessagePublisher();
+		this.declareMessageSubscriber();
+		this.declareLivelinessToken();
+		this.declareLivelinessSubscriber();
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
