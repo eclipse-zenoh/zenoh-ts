@@ -27,7 +27,7 @@ async function queryableSessionGetCallbackTest() {
     const queryable = session1.declare_queryable(ke_queryable, {
         handler: async (query: Query) => {
             queries.push(query);
-            if (query.parameters().toString() === "p=ok") {
+            if (query.parameters().toString() === "ok") {
                 let payload = query.payload() || "";
                 query.reply(query.key_expr(), payload);
             } else {
@@ -39,12 +39,9 @@ async function queryableSessionGetCallbackTest() {
     // sleep for 1 seconds to ensure the queryable is ready
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    // Similar test in C++ passes just "ok" in parameters, but this doesn't work in
-    // zenoh-ts due to https://github.com/eclipse-zenoh/zenoh-ts/issues/191
-    // TODO: restore just "ok" in parameters after fixing the issue
     const handler = async (reply: Reply) => { replies.push(reply); };
 
-    session2.get(new Selector(ke_get, "p=ok"), {
+    session2.get(new Selector(ke_get, "ok"), {
         payload: "1",
         handler: handler,
     });
@@ -52,7 +49,7 @@ async function queryableSessionGetCallbackTest() {
     // sleep to ensure the request is handled
     await new Promise((resolve) => setTimeout(resolve, 100));
 
-    session2.get(new Selector(ke_get, "p=err"), {
+    session2.get(new Selector(ke_get, "err"), {
         payload: "2",
         handler: handler,
     });
@@ -66,10 +63,10 @@ async function queryableSessionGetCallbackTest() {
     assert_eq(replies.length, 2, "Replies received");
 
     assert_eq(queries[0].key_expr().toString(), ke_get.toString(), "Query 0 key mismatch");
-    assert_eq(queries[0].parameters().toString(), "p=ok", "Query 0 parameters mismatch");
+    assert_eq(queries[0].parameters().toString(), "ok", "Query 0 parameters mismatch");
     assert_eq(queries[0].payload()?.to_string(), "1", "Query 0 payload mismatch");
     assert_eq(queries[1].key_expr().toString(), ke_get.toString(), "Query 1 key mismatch");
-    assert_eq(queries[1].parameters().toString(), "p=err", "Query 1 parameters mismatch");
+    assert_eq(queries[1].parameters().toString(), "err", "Query 1 parameters mismatch");
     assert_eq(queries[1].payload()?.to_string(), "2", "Query 1 payload mismatch");
     assert_eq(replies[0].result() instanceof Sample, true, "Reply 0 should be Sample");
     assert_eq(replies[1].result() instanceof ReplyError, true, "Reply 1 should be ReplyError");
@@ -93,15 +90,12 @@ async function queryableSessionGetChannelTest() {
 
     const queryable = await session1.declare_queryable(ke, { complete: true });
 
-    // Similar test in C++ passes just "ok" in parameters, but this doesn't work in
-    // zenoh-ts due to https://github.com/eclipse-zenoh/zenoh-ts/issues/191
-    // TODO: restore just "ok" in parameters after fixing the issue
-    const receiver1 = await session2.get(new Selector(selector, "p=ok"), { payload: "1" });
+    const receiver1 = await session2.get(new Selector(selector, "ok"), { payload: "1" });
     let query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=ok", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "ok", "Parameters mismatch");
         let decoder = new TextDecoder();
         assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
         query.reply(query.key_expr(), "1");
@@ -119,12 +113,12 @@ async function queryableSessionGetChannelTest() {
         }
     }
 
-    const receiver2 = await session2.get(new Selector(selector, "p=err"), { payload: "3" });
+    const receiver2 = await session2.get(new Selector(selector, "err"), { payload: "3" });
     query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=err", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "err", "Parameters mismatch");
         assert_eq(query.payload()?.to_string(), "3", "Payload mismatch");
         query.reply_err("err");
     }
@@ -164,12 +158,12 @@ async function queriableQuerierGetChannelTest() {
     });
 
     // First query with ok parameters
-    const receiver1 = await querier.get(new Parameters("p=ok"), { payload: "1" });
+    const receiver1 = await querier.get(new Parameters("ok"), { payload: "1" });
     let query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=ok", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "ok", "Parameters mismatch");
         assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
         query.reply(query.key_expr(), "1");
     }
@@ -190,12 +184,12 @@ async function queriableQuerierGetChannelTest() {
     }
 
     // Second query using the same querier with error parameters
-    const receiver2 = await querier.get(new Parameters("p=err"), { payload: "2" });
+    const receiver2 = await querier.get(new Parameters("err"), { payload: "2" });
     query = await queryable.receive();
     assert_eq(query instanceof Query, true, "Expected query to be an instance of Query");
     if (query instanceof Query) {
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=err", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "err", "Parameters mismatch");
         assert_eq(query.payload()?.to_string(), "2", "Payload mismatch");
         query.reply_err("err");
     }
@@ -242,7 +236,7 @@ async function queriableQuerierGetCallbackTest() {
     const handler = async (reply: Reply) => { replies.push(reply); };
 
     // First query with ok parameters
-    querier.get(new Parameters("p=ok"), {
+    querier.get(new Parameters("ok"), {
         payload: "1",
         handler: handler
     });
@@ -255,13 +249,13 @@ async function queriableQuerierGetCallbackTest() {
     if (query instanceof Query) {
         queries.push(query);
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=ok", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "ok", "Parameters mismatch");
         assert_eq(query.payload()?.to_string(), "1", "Payload mismatch");
         query.reply(query.key_expr(), "1");
     }
 
     // Second query using the same querier with error parameters
-    querier.get(new Parameters("p=err"), {
+    querier.get(new Parameters("err"), {
         payload: "2",
         handler: handler
     });
@@ -274,7 +268,7 @@ async function queriableQuerierGetCallbackTest() {
     if (query instanceof Query) {
         queries.push(query);
         assert_eq(query.key_expr().toString(), selector.toString(), "Key mismatch");
-        assert_eq(query.parameters().toString(), "p=err", "Parameters mismatch");
+        assert_eq(query.parameters().toString(), "err", "Parameters mismatch");
         assert_eq(query.payload()?.to_string(), "2", "Payload mismatch");
         query.reply_err("err");
     }
