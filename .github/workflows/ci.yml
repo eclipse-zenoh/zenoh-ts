@@ -57,9 +57,9 @@ jobs:
         with:
           cache-bin: false
 
-      - name: Install rustfmt
+      - name: Install rustfmt and clippy if not installed
         run: |
-          rustup component add rustfmt || true
+          rustup component add rustfmt clippy || true
           rustup component list --installed
 
       - name: Code format check
