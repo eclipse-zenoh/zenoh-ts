@@ -1242,7 +1242,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_number_uint64(): number {
     let bigint = this.deserialize_bigint_uint64();
-    if (bigint > Number.MAX_SAFE_INTEGER || bigint < Number.MIN_SAFE_INTEGER) {
+    if (bigint > Number.MAX_SAFE_INTEGER) {
       throw new Error(`Integer value ${bigint} exceeds the safe range for JavaScript numbers`);
     }
     return Number(bigint);
