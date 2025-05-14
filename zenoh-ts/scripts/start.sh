@@ -21,7 +21,12 @@ start_daemon() {
 
   ZPID=$!
   echo "zenohd started with PID $ZPID"
-  sleep 1
+  sleep 5
+
+  if ! ps -p $ZPID > /dev/null; then
+    echo "Error: zenohd process not found"
+    exit 1
+  fi
 
   # Trap SIGINT to ensure zenohd is killed on ^C
   trap "echo 'Stopping zenohd with PID $ZPID'; kill $ZPID; exit 1" SIGINT
