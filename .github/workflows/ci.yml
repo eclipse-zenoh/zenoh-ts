@@ -57,6 +57,11 @@ jobs:
         with:
           cache-bin: false
 
+      - name: Install rustfmt
+        run: |
+          rustup component add rustfmt || true
+          rustup component list --installed
+
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
 
