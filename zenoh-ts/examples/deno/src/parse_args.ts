@@ -71,9 +71,9 @@ export abstract class BaseParseArgs {
       }
       for (let i = 0; i < positional_args.length; i++) {
         if (typeof this.positional[i] === 'number') {
-          this.positional[i] = parseFloat(args._[i]);
+          this.positional[i] = Number(args._[i]).valueOf();
         } else if (typeof this.positional[i] === 'string') {
-          this.positional[i] = args._[i];
+          this.positional[i] = String(args._[i]).valueOf();
         } else {
           throw new Error("Unsupported argument type");
         }
