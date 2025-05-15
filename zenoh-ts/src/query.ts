@@ -278,7 +278,6 @@ export class Query {
   * @returns void
   */
   async reply_err(payload: IntoZBytes, options?: ReplyErrOptions) {
-
     await this._session_ref.reply_err(
       this._query_id, 
       new ZBytes(payload).to_bytes(),

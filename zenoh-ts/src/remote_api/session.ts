@@ -269,7 +269,7 @@ export class RemoteSession {
   }
 
   async reply_err(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
-    if (this.pending_queries.has(uuid)) {
+    if (!this.pending_queries.has(uuid)) {
       return false;
     }
     
@@ -294,7 +294,7 @@ export class RemoteSession {
       express: boolean,
       attachment: Uint8Array | null,
       timestamp: string | null): Promise<boolean> {
-    if (this.pending_queries.has(uuid)) {
+    if (!this.pending_queries.has(uuid)) {
       return false;
     }
     
