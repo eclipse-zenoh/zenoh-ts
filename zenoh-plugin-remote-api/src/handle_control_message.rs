@@ -14,15 +14,14 @@
 
 use std::{error::Error, net::SocketAddr, time::Duration};
 
-use base64::{prelude::BASE64_STANDARD, Engine};
 use tracing::{error, warn};
 use uuid::Uuid;
-use zenoh::{bytes::ZBytes, key_expr::KeyExpr, query::Selector};
+use zenoh::{key_expr::KeyExpr, query::Selector};
 
 use crate::{
     interface::{
-        B64String, ControlMsg, DataMsg, LivelinessMsg, QueryWS, QueryableMsg, RemoteAPIMsg,
-        ReplyWS, SampleWS, SessionInfo,
+        ControlMsg, DataMsg, LivelinessMsg, QueryWS, QueryableMsg, RemoteAPIMsg, ReplyWS, SampleWS,
+        SessionInfo,
     },
     spawn_future, RemoteState, StateMap,
 };
@@ -64,7 +63,12 @@ pub(crate) async fn handle_control_message(
     // Handle Control Message
     match ctrl_msg {
         ControlMsg::OpenSession => {
-            return Ok(());
+            let remote_api_message =
+                RemoteAPIMsg::Control(ControlMsg::Session(state_map.session_id));
+
+            if let Err(e) = state_map.websocket_tx.send(remote_api_message) {
+                error!("Forward Sample Channel error: {e}");
+            };
         }
         ControlMsg::SessionInfo => {
             let session_info = state_map.session.info();
@@ -393,29 +397,19 @@ pub(crate) async fn handle_control_message(
         } => {
             if let Some(querier) = state_map.queriers.get(&querier_id) {
                 let mut get_builder = querier.get();
-
-                let payload = payload
-                    .map(|B64String(x)| BASE64_STANDARD.decode(x))
-                    .and_then(|res_vec_bytes| {
-                        if let Ok(vec_bytes) = res_vec_bytes {
-                            Some(ZBytes::from(vec_bytes))
-                        } else {
-                            None
-                        }
-                    });
-
-                let attachment: Option<ZBytes> = attachment
-                    .map(|B64String(x)| BASE64_STANDARD.decode(x))
-                    .and_then(|res_vec_bytes| {
-                        if let Ok(vec_bytes) = res_vec_bytes {
-                            Some(ZBytes::from(vec_bytes))
-                        } else {
-                            None
-                        }
-                    });
+                if let Some(payload_b64) = payload {
+                    match payload_b64.b64_to_bytes() {
+                        Ok(payload) => get_builder = get_builder.payload(payload),
+                        Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                    }
+                }
+                if let Some(attachment_b64) = attachment {
+                    match attachment_b64.b64_to_bytes() {
+                        Ok(attachment) => get_builder = get_builder.attachment(attachment),
+                        Err(err) => warn!("Could not decode B64 encoded bytes {err}"),
+                    }
+                }
                 add_if_some!(encoding, get_builder);
-                add_if_some!(payload, get_builder);
-                add_if_some!(attachment, get_builder);
 
                 let ws_tx = state_map.websocket_tx.clone();
                 let finish_msg = RemoteAPIMsg::Control(ControlMsg::GetFinished { id: get_id });

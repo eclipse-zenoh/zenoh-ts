@@ -160,8 +160,6 @@ export class Querier {
     this._priority = priority;
     this._accept_replies = accept_replies;
     this.undeclared = false;
-    // TODO: Look at finalization registry
-    // Queryable.registry.register(this, remote_queryable, this)
   }
 
   /**
@@ -170,8 +168,6 @@ export class Querier {
    */
   async undeclare() {
     this.undeclared = true;
-    // Finalization registry
-    // Queryable.registry.unregister(this);
     await this._remote_querier.undeclare()
   }
 

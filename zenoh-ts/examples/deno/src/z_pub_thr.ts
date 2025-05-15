@@ -13,7 +13,7 @@
 //
 
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
-import { BaseParseArgs } from "./parse_args.ts";
+import { BaseParseArgs, priority_from_int } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
@@ -23,24 +23,29 @@ export async function main() {
 
   const publisher: Publisher = await session.declare_publisher(
     "test/thr",
-    {
+    { 
+      express: args.express,
+      priority: args.get_priority(),
     }
   );
   
-  let payload_size = args.sz;
-  let payload = new Uint8Array(args.sz);
+  let payload_size = args.positional[0];
+  let payload = new Uint8Array(payload_size);
   console.warn(`Will publish ${payload_size} B payload.`);
-  for (let i = 0; i < args.sz; i++) {
+  for (let i = 0; i < payload_size; i++) {
     payload[i] = i;
   }
 
   while (true) {
     await publisher.put(payload);
   }
+  await session.close();
 }
 
 class ParseArgs extends BaseParseArgs {
-  public sz: number = 8;
+  public positional: [number] = [0];
+  public express: boolean = false;
+  public priority: number = 5;
 
   constructor() {
     super();
@@ -51,15 +56,21 @@ class ParseArgs extends BaseParseArgs {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
-      sz: "Payload size for the publication",
+      express: "Express for sending data",
+      priority: "Priority for sending data [1-7]",
+      number: "Number of messages in each throughput measurement"
     };
   }
-}
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  public get_positional_args_help(): [string, string][] {
+    return [["PAYLOAD_SIZE", "payload size"] ];
+  };
+
+  public get_priority(): Priority {
+    return priority_from_int(this.priority);
+  }
 }
 
 main();

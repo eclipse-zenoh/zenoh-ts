@@ -61,12 +61,11 @@ export class Liveliness {
       callback(sample);
     }
 
-    let remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_ws);
+    let remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_ws, drop);
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       _key_expr,
-      drop,
       receiver
     );
 

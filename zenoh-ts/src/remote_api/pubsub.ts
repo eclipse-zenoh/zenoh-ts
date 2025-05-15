@@ -131,8 +131,6 @@ export class RemoteSubscriber {
   private subscriber_id: UUIDv4;
   private session_ref: RemoteSession;
 
-  private undeclared: boolean;
-
   private constructor(
     key_expr: String,
     subscriber_id: UUIDv4,
@@ -141,7 +139,6 @@ export class RemoteSubscriber {
     this.key_expr = key_expr;
     this.subscriber_id = subscriber_id;
     this.session_ref = session_ref;
-    this.undeclared = false;
   }
 
   static new(
@@ -158,7 +155,7 @@ export class RemoteSubscriber {
   }
 
   async undeclare() {
-    if (this.undeclared == true) {
+    if (!this.session_ref.undeclare_subscriber(this.subscriber_id)) {
       console.warn("Subscriber keyexpr:`" +
         this.key_expr +
         "` id:`" +
@@ -167,7 +164,6 @@ export class RemoteSubscriber {
       return;
     }
 
-    this.undeclared = true;
     let ctrl_message: ControlMsg = {
       UndeclareSubscriber: this.subscriber_id.toString(),
     };

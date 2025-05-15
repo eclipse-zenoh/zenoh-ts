@@ -57,12 +57,16 @@ class ParseArgs extends BaseParseArgs {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       payload: "Payload for the publication",
       key: "Key expression for the publication",
       attach: "Attachment for the publication"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

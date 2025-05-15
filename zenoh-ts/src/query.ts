@@ -25,7 +25,7 @@ import { IntoZBytes, ZBytes } from "./z_bytes.js";
 import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, Sample_from_SampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver, Drop } from "./remote_api/channels.js";
+import { ChannelReceiver } from "./remote_api/channels.js";
 
 
 
@@ -43,30 +43,21 @@ import { ChannelReceiver, Drop } from "./remote_api/channels.js";
  */
 export class Queryable {
   private _remote_queryable: RemoteQueryable;
-  private _drop: Drop;
   private _receiver: ChannelReceiver<Query> | undefined;
-
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemoteQueryable> = new FinalizationRegistry((r_queryable: RemoteQueryable) => r_queryable.undeclare());
 
   /** 
    * @ignore
    */
   async [Symbol.asyncDispose]() {
     await this.undeclare();
-    Queryable.registry.unregister(this);
   }
   /** 
    * Returns a Queryable 
    * Note! : user must use declare_queryable on a session
    */
-  constructor(remote_queryable: RemoteQueryable, drop: Drop, receiver?: ChannelReceiver<Query>) {
+  constructor(remote_queryable: RemoteQueryable, receiver?: ChannelReceiver<Query>) {
     this._remote_queryable = remote_queryable;
-    this._drop = drop;
     this._receiver = receiver;
-    Queryable.registry.register(this, remote_queryable, this)
   }
 
   /**
@@ -84,8 +75,6 @@ export class Queryable {
    */
   async undeclare() {
     this._remote_queryable.undeclare();
-    this._drop();
-    Queryable.registry.unregister(this);
   }
 
 }
@@ -105,10 +94,10 @@ export function Query_from_QueryWS(
   let encoding: Encoding | undefined = undefined;
 
   if (query_ws.payload != null) {
-    payload = new ZBytes(query_ws.payload);
+    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.payload)));
   }
   if (query_ws.attachment != null) {
-    attachment = new ZBytes(query_ws.attachment);
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.attachment)));
   }
   if (query_ws.encoding != null) {
     encoding = Encoding.from_string(query_ws.encoding);

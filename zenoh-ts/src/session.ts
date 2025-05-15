@@ -163,19 +163,13 @@ export interface SubscriberOptions {
 export class Session {
   // WebSocket Backend
   private remote_session: RemoteSession;
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemoteSession> = new FinalizationRegistry((r_session: RemoteSession) => r_session.close());
 
   async [Symbol.asyncDispose]() {
     await this.close();
-    Session.registry.unregister(this);
   }
 
   private constructor(remote_session: RemoteSession) {
     this.remote_session = remote_session;
-    Session.registry.register(this, remote_session, this)
   }
 
   /**
@@ -201,11 +195,10 @@ export class Session {
    */
   async close() {
     this.remote_session.close();
-    Session.registry.unregister(this);
   }
 
   is_closed() {
-    return this.remote_session.ws.readyState == WebSocket.CLOSED;
+    return this.remote_session.is_closed();
   }
   /**
    * Puts a value on the session, on a specific key expression KeyExpr
@@ -425,13 +418,13 @@ export class Session {
 
     remote_subscriber = await this.remote_session.declare_remote_subscriber(
       _key_expr.toString(),
-      callback_ws
+      callback_ws,
+      drop
     );
 
     let subscriber = Subscriber[NewSubscriber](
       remote_subscriber,
       _key_expr,
-      drop,
       receiver,
     );
 
@@ -481,18 +474,19 @@ export class Session {
     let handler = queryable_opts?.handler ?? new FifoChannel<Query>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
-    let callback_ws = (reply_ws: QueryWS): void => {
-      let query = Query_from_QueryWS(reply_ws, this.remote_session);
+    let callback_ws = (query_ws: QueryWS): void => {
+      let query = Query_from_QueryWS(query_ws, this.remote_session);
       callback(query);
     }
 
     let remote_queryable = await this.remote_session.declare_remote_queryable(
       _key_expr.toString(),
       _complete,
-      callback_ws
+      callback_ws,
+      drop
     );
 
-    let queryable = new Queryable(remote_queryable, drop, receiver);
+    let queryable = new Queryable(remote_queryable, receiver);
     return queryable;
   }
 
@@ -503,12 +497,12 @@ export class Session {
   *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
   * 
   * @param {IntoKeyExpr} keyexpr - string of key_expression
-  * @param {PublisherOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
+  * @param {PublisherOptions=} publisher_opts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
   async declare_publisher(
     keyexpr: IntoKeyExpr,
-    publisher_opts: PublisherOptions
+    publisher_opts?: PublisherOptions
   ): Promise<Publisher> {
     let _key_expr: KeyExpr = new KeyExpr(keyexpr);
 

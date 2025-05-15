@@ -26,7 +26,7 @@ import {
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver, Drop } from "./remote_api/channels.js";
+import { ChannelReceiver } from "./remote_api/channels.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -58,17 +58,8 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  private _drop: Drop;
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemoteSubscriber> = new FinalizationRegistry((r_subscriber: RemoteSubscriber) => r_subscriber.undeclare());
-  /**
-   * @ignore 
-   */
   async [Symbol.asyncDispose]() {
     await this.undeclare();
-    Subscriber.registry.unregister(this);
   }
   /**
    * @ignore 
@@ -76,14 +67,11 @@ export class Subscriber {
   private constructor(
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    drop: Drop,
     receiver?: ChannelReceiver<Sample>,
   ) {
     this.remote_subscriber = remote_subscriber;
     this._receiver = receiver;
     this._key_expr = key_expr;
-    this._drop = drop;
-    Subscriber.registry.register(this, remote_subscriber, this)
   }
 
   /**
@@ -108,8 +96,6 @@ export class Subscriber {
    */
   async undeclare() {
     await this.remote_subscriber.undeclare();
-    Subscriber.registry.unregister(this);
-    this._drop;
   }
 
   /**
@@ -121,10 +107,9 @@ export class Subscriber {
   static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    drop: Drop,
     receiver?: ChannelReceiver<Sample>,
   ): Subscriber {
-    return new Subscriber(remote_subscriber, key_expr, drop, receiver);
+    return new Subscriber(remote_subscriber, key_expr, receiver);
   }
 }
 
@@ -163,17 +148,11 @@ export class Publisher {
   private _priority: Priority;
   private _reliability: Reliability;
   private _encoding: Encoding;
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemotePublisher> = new FinalizationRegistry((r_publisher: RemotePublisher) => r_publisher.undeclare());
-
   /** 
    * @ignore 
    */
   async [Symbol.asyncDispose]() {
     await this.undeclare();
-    Publisher.registry.unregister(this);
   }
 
   /**
@@ -204,8 +183,6 @@ export class Publisher {
     this._priority = priority;
     this._reliability = reliability;
     this._encoding = encoding;
-
-    Publisher.registry.register(this, remote_publisher, this)
   }
 
   /**
@@ -324,7 +301,6 @@ export class Publisher {
    */
   async undeclare() {
     await this._remote_publisher.undeclare();
-    Publisher.registry.unregister(this);
   }
 
 }

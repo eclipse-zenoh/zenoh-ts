@@ -14,7 +14,9 @@
 
 import {
   Config, Subscriber, Session, KeyExpr,
-  SampleKind
+  SampleKind,
+  ChannelReceiver,
+  Sample
 } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -23,12 +25,11 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const key_expr = new KeyExpr(args.key);
-  console.log("Declaring Liveliness Subscriber on ", key_expr.toString());
+  console.log(`Declaring Liveliness Subscriber on '${args.key}'`);
 
   const liveliness_subscriber: Subscriber = await session.liveliness().declare_subscriber(key_expr, { history: args.history });
 
-  let sample = await liveliness_subscriber.receive();
-  while (sample != undefined) {
+  for await (const sample of liveliness_subscriber.receiver() as ChannelReceiver<Sample>) {
     switch (sample.kind()) {
       case SampleKind.PUT: {
         console.log!(
@@ -45,9 +46,9 @@ export async function main() {
         break;
       }
     }
-    sample = await liveliness_subscriber.receive();
   }
   await liveliness_subscriber.undeclare();
+  await session.close();
 }
 
 class ParseArgs extends BaseParseArgs {
@@ -59,11 +60,15 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       key: "Key expression for the liveliness subscriber",
       history: "History flag for the liveliness subscriber"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

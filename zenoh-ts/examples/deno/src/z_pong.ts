@@ -13,34 +13,54 @@
 //
 
 import { Encoding, CongestionControl, Sample, Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
+  const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   const pub = await session.declare_publisher(
-    "test/ping",
+    "test/pong",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK
+      congestion_control: CongestionControl.BLOCK,
+      express: !args.no_express,
     },
   );
 
-  const subscriber_callback = async function (sample: Sample): Promise<void> {
+  const subscriber_callback = function (sample: Sample) {
     pub.put(sample.payload());
   };
 
-  await session.declare_subscriber("test/pong", { handler: subscriber_callback } );
+  await session.declare_subscriber("test/ping", { handler: subscriber_callback } );
 
-  let count = 0;
   while (true) {
     const seconds = 100;
     await sleep(1000 * seconds);
-    count = count + 1;
   }
 }
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+class ParseArgs extends BaseParseArgs {
+  public no_express: boolean = false;
+
+  constructor() {
+    super();
+    this.parse();
+  }
+
+  public get_named_args_help(): Record<string, string> {
+    return {
+      no_express: "Express for sending data",
+    };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
+  }
 }
 
 main()

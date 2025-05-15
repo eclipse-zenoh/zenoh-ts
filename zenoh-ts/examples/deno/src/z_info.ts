@@ -18,7 +18,7 @@ import {
 
 export async function main() {
   console.log!("Opening session...");
-  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  await using session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   console.log!("Get Info...");
   const info: SessionInfo = await session.info();

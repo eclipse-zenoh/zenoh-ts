@@ -12,10 +12,12 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
+import { ChannelReceiver, FifoChannel, Sample } from "@eclipse-zenoh/zenoh-ts";
 import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
+  const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   const sub = await session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
@@ -23,34 +25,40 @@ export async function main() {
     "test/ping",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK
+      congestion_control: CongestionControl.BLOCK,
+      express: !args.no_express
     },
   );
 
-  // Warm up
-  console.warn("Warming up for 5 seconds...");
-
-  const startTime = new Date();
-  const data = new Uint8Array([122, 101, 110, 111, 104]);
-
-  while (elapsed(startTime) < 5) {
-    await pub.put(data);
-    await sub.receive();
+  let payload_size = args.positional[0];
+  let payload = new Uint8Array(payload_size);
+  console.warn(`Will publish ${payload_size} B payload.`);
+  for (let i = 0; i < payload_size; i++) {
+    payload[i] = i;
   }
 
-  const samples = 600;
+  const startTime = performance.now();
+
+  // Warm up
+  console.warn(`Warming up for ${args.warmup} seconds...`);
+  while (elapsed_ms(startTime) < args.warmup * 1000) {
+    await pub.put(payload);
+    await (sub.receiver() as ChannelReceiver<Sample>).receive();
+  }
+
+  const samples = args.samples;
   const samples_out = [];
   for (let i = 0; i < samples; i++) {
-    const write_time = new Date();
-    await pub.put(data);
-    await sub.receive();
+    const write_time = performance.now();
+    await pub.put(payload);
+    await (sub.receiver() as ChannelReceiver<Sample>).receive();
     samples_out.push(elapsed_ms(write_time));
   }
 
   for (let i = 0; i < samples_out.length; i++) {
     const rtt = samples_out[i];
     console.warn(
-      data.length +
+      payload.length +
       "bytes: seq=" +
       i +
       " rtt=" +
@@ -60,22 +68,37 @@ export async function main() {
       "ms",
     );
   }
+  await session.close();
 }
 
-function elapsed(startTime: Date) {
-  const endTime = new Date();
-
-  const timeDiff =
-    (endTime.getMilliseconds() - startTime.getMilliseconds()) / 1000; //in s
-  const seconds = Math.round(timeDiff);
-  return seconds;
+function elapsed_ms(startTime: number) {
+  const endTime = performance.now();
+  return endTime - startTime;
 }
 
-function elapsed_ms(startTime: Date) {
-  const endTime = new Date();
-  const timeDiff: number =
-    endTime.getMilliseconds() - startTime.getMilliseconds(); //in ms
-  return timeDiff;
+
+class ParseArgs extends BaseParseArgs {
+  public no_express: boolean = false;
+  public warmup: number = 1;
+  public samples: number = 100;
+  public positional: [number] = [0];
+
+  constructor() {
+    super();
+    this.parse();
+  }
+
+  public get_named_args_help(): Record<string, string> {
+    return {
+      no_express: "Express for sending data",
+      warmup: "Number of seconds to warm up",
+      samples: "Number of round-trips to measure"
+    };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [["PAYLOAD_SIZE", "Size of the payload to publish"]];
+  }
 }
 
 main()

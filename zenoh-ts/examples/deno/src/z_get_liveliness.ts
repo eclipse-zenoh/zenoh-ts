@@ -14,9 +14,10 @@
 
 import {
   Sample, Config, Session, KeyExpr,
-  Receiver,
   RecvErr,
-  ReplyError
+  ReplyError,
+  ChannelReceiver,
+  Reply
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 import { BaseParseArgs } from "./parse_args.ts";
@@ -29,28 +30,22 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const key_expr = new KeyExpr(args.key);
-  console.log("Sending Liveliness Query '", key_expr.toString(), "'");
+  console.log(`Sending Liveliness Query '${args.key}'...`);
 
-  const receiver: Receiver = await session.liveliness().get(key_expr, { timeout: args.get_timeout() }) as Receiver;
+  const receiver = await session.liveliness().get(key_expr, { timeout: args.get_timeout() });
 
-  let reply = await receiver.receive();
-
-  while (reply != RecvErr.Disconnected) {
-    if (reply == RecvErr.MalformedReply) {
-      console.warn("MalformedReply");
-    } else {
+  for await (const reply of receiver as ChannelReceiver<Reply>) {
       const resp = reply.result();
       if (resp instanceof Sample) {
         const sample: Sample = resp;
-        console.warn(">> Alive token ('", sample.keyexpr(), ")");
+        console.warn(">> Alive token ('", sample.keyexpr().toString(), ")");
       } else {
         const reply_error: ReplyError = resp;
         console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
       }
-    }
-    reply = await receiver.receive();
   }
-  console.warn("End Liveliness query");
+  console.warn("Liveliness query finished");
+  await session.close();
 }
 
 class ParseArgs extends BaseParseArgs {
@@ -66,11 +61,15 @@ class ParseArgs extends BaseParseArgs {
     return milliseconds.of(this.timeout);
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       key: "Key expression for the liveliness query",
       timeout: "Timeout for the liveliness query"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

@@ -22,16 +22,15 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const key_expr = new KeyExpr(args.key);
-  console.log("Declaring Liveliness token on ", key_expr.toString());
+  console.log(`Declaring Liveliness token on '${args.key}'...`);
 
   const token: LivelinessToken = await session.liveliness().declare_token(key_expr);
   // LivelinessTokens are NOT automatically closed when dropped
   // please call token.undeclare();
 
+  console.log("Press CTRL-C to undeclare LivelinessToken and quit...");
   while (true) {
     await sleep(10000);
-    token;
-    console.log("Tick");
   }
 }
 
@@ -43,10 +42,14 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       key: "Key expression for the liveliness token"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

@@ -17,9 +17,11 @@ import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
-  console.warn('Running Zenoh Put !');
+  console.warn('Opening session...');
+  console.warn(args.size);
 
-  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  await using session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  console.warn(`Putting Data ('${args.key}: '${args.payload}')...`);
   await session.put(args.key, args.payload);
 }
 
@@ -32,11 +34,15 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       payload: "Payload for the put operation",
       key: "Key expression for the put operation"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

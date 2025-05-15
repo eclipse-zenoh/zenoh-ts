@@ -30,8 +30,6 @@ export class RemoteQueryable {
   private queryable_id: UUIDv4;
   private session_ref: RemoteSession;
 
-  private undeclared: boolean;
-
   private constructor(
     key_expr: String,
     queryable_id: UUIDv4,
@@ -40,7 +38,6 @@ export class RemoteQueryable {
     this.key_expr = key_expr;
     this.queryable_id = queryable_id;
     this.session_ref = session_ref;
-    this.undeclared = false;
   }
 
   static new(
@@ -56,7 +53,7 @@ export class RemoteQueryable {
   }
 
   async undeclare() {
-    if (this.undeclared == true) {
+    if (!this.session_ref.undeclare_queryable(this.queryable_id.toString())) {
       console.warn("Queryable keyexpr:`" +
         this.key_expr +
         "` id:`" +
@@ -65,7 +62,6 @@ export class RemoteQueryable {
       return;
     }
 
-    this.undeclared = true;
     let ctrl_message: ControlMsg = {
       UndeclareQueryable: this.queryable_id.toString(),
     };

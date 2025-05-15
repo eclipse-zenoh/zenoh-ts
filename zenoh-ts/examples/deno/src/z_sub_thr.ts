@@ -13,6 +13,7 @@
 //
 
 import { Config, Session, Sample, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
+import { BaseParseArgs } from "./parse_args.ts";
 // Throughput test
 class Stats {
   round_count: number;
@@ -53,9 +54,11 @@ class Stats {
 }
 
 export async function main() {
-  console.warn("Open Session");
+  const args = new ParseArgs();
+
+  console.warn('Opening session...');
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const stats = new Stats(1000000);
+  const stats = new Stats(args.number);
   const subscriber_callback = async function (_sample: Sample): Promise<void> {
     stats.increment();
   };
@@ -66,15 +69,42 @@ export async function main() {
   );
 
   let count = 0;
-  while (true) {
-    const seconds = 100;
-    await sleep(1000 * seconds);
-    count = count + 1;
+  while (stats.finished_rounds < args.samples) {
+    await sleep(500);
   }
+  
+  await session.close();
 }
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+
+class ParseArgs extends BaseParseArgs {
+  public samples: number = 10;
+  public number: number = 100000;
+
+  constructor() {
+    super();
+    this.parse();
+  }
+
+  public get_keyexpr(): KeyExpr {
+    return KeyExpr.autocanonize(this.key);
+  }
+
+  public get_named_args_help(): Record<string, string> {
+    return {
+      samples: "Number of throughput measurements",
+      number: "Number of messages in each throughput measurements",
+    };
+  }
+
+  public get_positional_args_help(): [string, string][] {
+    return [];
+  };
+
 }
 
 main()
