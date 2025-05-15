@@ -19,4 +19,22 @@ cd "$SCRIPTDIR/.."
 npx tsc || exit 1
 cp ./src/key_expr/*wasm* ./dist/key_expr/
 
+# build tests
+cd tests
+yarn install || exit 1
+yarn verify || exit 1
+cd "$SCRIPTDIR/.."
+
+# build examples/deno
+cd examples/deno
+yarn install || exit 1
+yarn verify || exit 1
+cd "$SCRIPTDIR/.."
+
+# build examples/browser
+cd examples/browser/chat
+yarn install || exit 1
+yarn build || exit 1
+cd "$SCRIPTDIR/.."
+
 cd "$ORIGINAL_DIR"
