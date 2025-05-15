@@ -57,7 +57,10 @@ The file `EXAMPLE_CONFIG.json5` references the
 options to run the plugin. See also the full set of available options, like SSL
 certificate settings in `zenoh-plugin-remote-api\config.json5`.
 
-1. Install the latest release of `zenohd` and `zenoh-plugin-remote-api`
+1. Do nothing and just run examples and tests with `DAEMON` parameter as described in next session. The scripts will automatically build plugin
+and daemon from the sources and start it.
+
+2. Install the latest release of `zenohd` and `zenoh-plugin-remote-api`
 
    Ubuntu:
 
@@ -94,7 +97,7 @@ certificate settings in `zenoh-plugin-remote-api\config.json5`.
    tcp/....
    ```
 
-2. Build both the plugin and the router from the sources:
+3. Build both the plugin and the router from the sources manually:
 
    Build the plugin `zenoh-plugin-remote-api`
 
@@ -166,11 +169,12 @@ For simplicity, the examples can be executed from the `zenoh-ts` directory. You
 may also go directly to the `zenoh-ts/examples` directory and explore and run
 examples there.
 
-Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on
-localhost and the websocket port is 10000.
+The examples can be run with or without a local zenohd daemon:
 
-To run an example, execute the command `yarn start example deno [example_name]`
-or `yarn start example browser`
+- To run with an external zenohd instance: Make sure that the `zenohd` router with `zenoh-plugin-remote-api` works on localhost and the websocket port is 10000.
+- To automatically start/stop a local zenohd instance: Use the `DAEMON` parameter as the first argument to the start command.
+
+To run an example, execute the command `yarn start [DAEMON] example deno [example_name]` or `yarn start [DAEMON] example browser`
 
 The following examples are available:
 
@@ -178,15 +182,15 @@ The following examples are available:
   - Publisher and subscriber
 
     ```sh
-    yarn start example deno z_pub
-    yarn start example deno z_sub
+    yarn start DAEMON example deno z_pub
+    yarn start DAEMON example deno z_sub
     ```
 
   - Queryable and get
 
     ```sh
-    yarn start example deno z_queryable
-    yarn start example deno z_get
+    yarn start DAEMON example deno z_queryable
+    yarn start DAEMON example deno z_get
     ```
 
     and many more
@@ -194,7 +198,7 @@ The following examples are available:
 - Chat in browser example
 
   ```sh
-  yarn start example browser
+  yarn start DAEMON example browser
   ```
 
   The browser window on [localhost:8080](http://127.0.0.1:8080/index.html) with

@@ -1,3 +1,4 @@
+import { KeyExpr } from '@eclipse-zenoh/zenoh-ts';
 import { ChatSession, ChatUser } from './chat_session';
 
 let globalChatSession: ChatSession | null = null;
@@ -40,7 +41,7 @@ function initialize() {
 		});
 		chatLog.innerHTML = '';
 		chatSession.getMessages().forEach(message => {
-			addMessageToChat(chatSession, new ChatUser(message.u), message.m);
+			addMessageToChat(chatSession, new ChatUser(message.user), message.message);
 		});
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 		connectButton.style.display = 'none';
@@ -98,7 +99,7 @@ function initialize() {
 				log(`Invalid username: ${usernameInput.value}`);
 				return;
 			}
-			let chatSession: ChatSession = new ChatSession(user);
+			let chatSession: ChatSession = new ChatSession(new KeyExpr("chat"), user);
 			chatSession.onChangeUsers(onChangeUsers);
 			chatSession.onNewMessage(onNewMessage);
 			chatSession.onConnect(onConnect);

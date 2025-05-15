@@ -57,6 +57,11 @@ jobs:
         with:
           cache-bin: false
 
+      - name: Install rustfmt and clippy if not installed
+        run: |
+          rustup component add rustfmt clippy || true
+          rustup component list --installed
+
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
 
@@ -101,7 +106,7 @@ jobs:
       - name: Run tests
         uses: borales/actions-yarn@v4
         with:
-          cmd: start test ALL DAEMON
+          cmd: start DAEMON test ALL
           dir: "zenoh-ts"
       
       # zenoh-ts is already built by test script, so we need only to install
