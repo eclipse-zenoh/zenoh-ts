@@ -71,7 +71,7 @@ export abstract class BaseParseArgs {
       }
       for (let i = 0; i < positional_args.length; i++) {
         if (typeof this.positional[i] === 'number') {
-          this.positional[i] = 0 + args._[i];
+          this.positional[i] = parseFloat(args._[i]);
         } else if (typeof this.positional[i] === 'string') {
           this.positional[i] = args._[i];
         } else {

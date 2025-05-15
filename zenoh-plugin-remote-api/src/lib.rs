@@ -627,7 +627,7 @@ async fn run_websocket_server(
                 .into_stream()
                 .map(|remote_api_msg| {
                     let val = serde_json::to_string(&remote_api_msg).unwrap(); // This unwrap should be alright
-                    Ok(Message::Text(val.into()))
+                    Ok(Message::Text(val))
                 })
                 .forward(ws_tx);
 
