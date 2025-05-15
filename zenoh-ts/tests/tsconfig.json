@@ -3,9 +3,8 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "module": "ESNext",
-    "lib": ["ES2020", "DOM", "DOM.Iterable", "deno.ns"],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
-    "types": ["deno.ns", "deno.unstable"],
 
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -13,9 +12,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
+    "baseUrl": ".",
     "paths": {
-      "@eclipse-zenoh/zenoh-ts": ["../../src/index.ts"],
-      "@eclipse-zenoh/zenoh-ts/*": ["../../src/*"]
+      "@eclipse-zenoh/zenoh-ts": ["../src/index.ts"],
+      "@eclipse-zenoh/zenoh-ts/*": ["../src/*"]
     },
 
     /* Linting */

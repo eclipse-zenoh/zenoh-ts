@@ -1,3 +1,4 @@
+import { KeyExpr } from '@eclipse-zenoh/zenoh-ts';
 import { ChatSession, ChatUser } from './chat_session';
 
 let globalChatSession: ChatSession | null = null;
@@ -8,8 +9,7 @@ function initialize() {
 	const connectButton = document.getElementById('connect-button') as HTMLButtonElement;
 	const disconnectButton = document.getElementById('disconnect-button') as HTMLButtonElement;
 	const sendButton = document.getElementById('send-button') as HTMLButtonElement;
-	const serverNameInput = document.getElementById('server-name') as HTMLInputElement;
-	const serverPortInput = document.getElementById('server-port') as HTMLInputElement;
+	const serverUrlInput = document.getElementById('server-url') as HTMLInputElement;
 	const usernameInput = document.getElementById('username') as HTMLInputElement;
 	const messageInput = document.getElementById('message-input') as HTMLInputElement;
 	const usersList = document.getElementById('users') as HTMLUListElement;
@@ -41,7 +41,7 @@ function initialize() {
 		});
 		chatLog.innerHTML = '';
 		chatSession.getMessages().forEach(message => {
-			addMessageToChat(chatSession, new ChatUser(message.u), message.m);
+			addMessageToChat(chatSession, new ChatUser(message.user), message.message);
 		});
 		chatLog.scrollTop = chatLog.scrollHeight; // Scroll to the latest message
 		connectButton.style.display = 'none';
@@ -99,7 +99,7 @@ function initialize() {
 				log(`Invalid username: ${usernameInput.value}`);
 				return;
 			}
-			let chatSession: ChatSession = new ChatSession(user);
+			let chatSession: ChatSession = new ChatSession(new KeyExpr("chat"), user);
 			chatSession.onChangeUsers(onChangeUsers);
 			chatSession.onNewMessage(onNewMessage);
 			chatSession.onConnect(onConnect);
@@ -108,7 +108,7 @@ function initialize() {
 				await globalChatSession.disconnect();
 			}
 			globalChatSession = chatSession;
-			await chatSession.connect(serverNameInput.value, serverPortInput.value);
+			await chatSession.connect(serverUrlInput.value);
 		});
 	});
 

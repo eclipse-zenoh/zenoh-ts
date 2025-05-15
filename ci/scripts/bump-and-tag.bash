@@ -35,6 +35,8 @@ plugin_toml_path="./zenoh-plugin-remote-api/Cargo.toml"
 # Bump Cargo version of library and top level toml
 toml_set_in_place ${plugin_toml_path} "package.version" "$version"
 toml_set_in_place Cargo.toml "workspace.package.version" "$version"
+# Bump workspace.metadata.bin version
+toml_set_in_place Cargo.toml "workspace.metadata.bin.zenohd.version" "$version"
 
 # Bump package.json version
 JQ=".version=\"$version\""

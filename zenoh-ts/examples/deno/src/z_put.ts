@@ -18,7 +18,6 @@ import { BaseParseArgs } from "./parse_args.ts";
 export async function main() {
   const args = new ParseArgs();
   console.warn('Opening session...');
-  console.warn(args.size);
 
   await using session = await Session.open(new Config("ws/127.0.0.1:10000"));
   console.warn(`Putting Data ('${args.key}: '${args.payload}')...`);

@@ -15,7 +15,49 @@
 import * as leb from "@thi.ng/leb128";
 
 import { ZBytes } from '../z_bytes.js';
-import { isBigInt64Array, isBigUint64Array, isFloat32Array, isFloat64Array, isInt16Array, isInt32Array, isInt8Array, isUint16Array, isUint32Array, isUint8Array } from "util/types";
+
+/**
+ * Browser-compatible type checking functions
+ */
+function isUint8Array(arr: any): arr is Uint8Array {
+  return arr instanceof Uint8Array;
+}
+
+function isUint16Array(arr: any): arr is Uint16Array {
+  return arr instanceof Uint16Array;
+}
+
+function isUint32Array(arr: any): arr is Uint32Array {
+  return arr instanceof Uint32Array;
+}
+
+function isBigUint64Array(arr: any): arr is BigUint64Array {
+  return arr instanceof BigUint64Array;
+}
+
+function isInt8Array(arr: any): arr is Int8Array {
+  return arr instanceof Int8Array;
+}
+
+function isInt16Array(arr: any): arr is Int16Array {
+  return arr instanceof Int16Array;
+}
+
+function isInt32Array(arr: any): arr is Int32Array {
+  return arr instanceof Int32Array;
+}
+
+function isBigInt64Array(arr: any): arr is BigInt64Array {
+  return arr instanceof BigInt64Array;
+}
+
+function isFloat32Array(arr: any): arr is Float32Array {
+  return arr instanceof Float32Array;
+}
+
+function isFloat64Array(arr: any): arr is Float64Array {
+  return arr instanceof Float64Array;
+}
 
 /**
  * Interface for adding support for custom types serialization.
@@ -262,6 +304,22 @@ export class ZBytesSerializer {
     }
 
     /**
+     * Serializes number as 64 bit integer.
+     */
+    public serialize_number_int64(val: number) {
+      let bigint_val = BigInt(val);
+      this.serialize_bigint_int64(bigint_val)
+    }
+
+    /**
+     * Serializes number as 64 bit unsigned integer.
+     */
+    public serialize_number_uint64(val: number) {
+      let bigint_val = BigInt(val);
+      this.serialize_bigint_uint64(bigint_val)
+    }
+
+    /**
      * Serializes number as 32 bit integer.
      */
     public serialize_number_int32(val: number) {
@@ -453,6 +511,8 @@ export class ZBytesSerializer {
 export enum NumberFormat {
   Float64 = 1,
   Float32,
+  Int64,
+  Uint64,
   Int32,
   Uint32,
   Int16,
@@ -511,7 +571,15 @@ export namespace ZD{
         return new ZDTypeInfo(
           (z: ZBytesDeserializer) => { return z.deserialize_number_float32() }
         );
-      case NumberFormat.Int32:
+      case NumberFormat.Int64:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_int64() }
+        );
+      case NumberFormat.Uint64:
+        return new ZDTypeInfo(
+          (z: ZBytesDeserializer) => { return z.deserialize_number_uint64() }
+        );
+       case NumberFormat.Int32:
         return new ZDTypeInfo(
           (z: ZBytesDeserializer) => { return z.deserialize_number_int32() }
         );
@@ -724,7 +792,15 @@ export namespace ZS{
         return new ZSTypeInfo(
           (z: ZBytesSerializer, val: number) => {z.serialize_number_float32(val);}
         );
-      case NumberFormat.Int32:
+      case NumberFormat.Int64:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_int64(val);}
+        );
+      case NumberFormat.Uint64:
+        return new ZSTypeInfo(
+          (z: ZBytesSerializer, val: number) => {z.serialize_number_uint64(val);}
+        );
+       case NumberFormat.Int32:
         return new ZSTypeInfo(
           (z: ZBytesSerializer, val: number) => {z.serialize_number_int32(val);}
         );
@@ -1149,6 +1225,30 @@ export class ZBytesDeserializer {
   }
 
   /**
+   * Deserializes next portion of data (serialized as 64 bit signed integer) as number and advances the reading position.
+   * Throws an error if the value exceeds the safe integer range (-2^53 to 2^53).
+   */
+  public deserialize_number_int64(): number {
+    let bigint = this.deserialize_bigint_int64();
+    if (bigint > Number.MAX_SAFE_INTEGER || bigint < Number.MIN_SAFE_INTEGER) {
+      throw new Error(`Integer value ${bigint} exceeds the safe range for JavaScript numbers`);
+    }
+    return Number(bigint);
+  }
+
+  /**
+   * Deserializes next portion of data (serialized as 64 bit unsigned integer) as number and advances the reading position.
+   * Throws an error if the value exceeds the safe integer range (-2^53 to 2^53).
+   */
+  public deserialize_number_uint64(): number {
+    let bigint = this.deserialize_bigint_uint64();
+    if (bigint > Number.MAX_SAFE_INTEGER) {
+      throw new Error(`Integer value ${bigint} exceeds the safe range for JavaScript numbers`);
+    }
+    return Number(bigint);
+  }
+
+  /**
    * Deserializes next portion of data (serialized as 32 bit signed integer) as number and advances the reading position.
    */
   public deserialize_number_int32(): number {
@@ -1263,6 +1363,7 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data into any supported type and advances the reading position.
    * Supported types are:
    *   - built-in types: number, bigint, string, boolean,
+   *   - types that implement ZDeserializeable interface,
    *   - TypedArrays, 
    *   - arrays and maps of supported types.
    * @param p Deserialization tag.

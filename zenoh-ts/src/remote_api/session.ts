@@ -88,8 +88,8 @@ export class RemoteSession {
   //
   // Initialize Class
   //
-  static async new(url: string): Promise<RemoteSession> {
-    let link = await RemoteLink.new(url);
+  static async new(locator: string): Promise<RemoteSession> {
+    let link = await RemoteLink.new(locator);
     let session =  new RemoteSession(link);
     session.link.onmessage((msg: any) => { session.on_message_received(msg); });
 
@@ -637,6 +637,12 @@ export class RemoteSession {
       } else if ("GetFinished" in control_msg) {
         let id = control_msg["GetFinished"].id;
         this.remove_get_receiver(id) || this.remove_liveliness_get_receiver(id);
+      } else if ("UndeclareSubscriber" in control_msg) {
+        let subscriber_uuid = control_msg["UndeclareSubscriber"];
+        this.undeclare_subscriber(subscriber_uuid);
+      } else if ("UndeclareQueryable" in control_msg) {
+        let queryable_uuid = control_msg["UndeclareQueryable"];
+        this.undeclare_queryable(queryable_uuid);
       }
     }
   }

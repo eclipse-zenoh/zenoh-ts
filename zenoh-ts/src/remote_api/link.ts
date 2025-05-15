@@ -17,6 +17,7 @@ const MAX_WS_BUFFER_SIZE = 2 * 1024 * 1024; // 2 MB buffer size for websocket
 const RETRY_TIMEOUT_MS = 2000;
 const MAX_RETRIES: number = 10;
 
+
 export class RemoteLink {
   ws: WebSocket;
 
@@ -24,9 +25,8 @@ export class RemoteLink {
     this.ws = ws;
   }
 
-  static async new(url: string): Promise<RemoteLink> {
-    let split = url.split("/");
-    let websocket_endpoint = split[0] + "://" + split[1];
+  static async new(locator: string): Promise<RemoteLink> {
+    let websocket_endpoint = this.parse_zenoh_locator(locator);
 
     let retries = 0;
     let retry_timeout_ms = RETRY_TIMEOUT_MS;
@@ -62,7 +62,7 @@ export class RemoteLink {
       }
     }
 
-    throw new Error(`Failed to connect to locator endpoint: ${url} after ${MAX_RETRIES}`);
+    throw new Error(`Failed to connect to locator endpoint: ${locator} after ${MAX_RETRIES}`);
   }
 
   onmessage(onmessage: (msg: any) => void) {
@@ -86,7 +86,22 @@ export class RemoteLink {
   }
 
   close() {
+    this.ws.onmessage = null;
     this.ws.close();
+  }
+
+
+  private static parse_zenoh_locator(locator: string): string {
+    let parts = locator.split("/", 2);
+    if (parts.length != 2) {
+      return locator;
+    }
+    let protocol = parts[0];
+    let address = parts[1];
+    if (protocol != "ws" && protocol != "wss") {
+      return locator;
+    }
+    return `${protocol}://${address}`;
   }
 }
 

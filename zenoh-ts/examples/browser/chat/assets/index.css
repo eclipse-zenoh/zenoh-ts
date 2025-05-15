@@ -148,14 +148,8 @@ body {
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }
 
-.input-server-name {
-    width: 150px;
-    margin-right: 20px; /* Add margin inside input group */
-    box-sizing: border-box; /* Include padding and border in element's total width and height */
-}
-
-.input-server-port {
-    width: 50px;
+.input-server-url {
+    width: 200px;
     margin-right: 20px; /* Add margin inside input group */
     box-sizing: border-box; /* Include padding and border in element's total width and height */
 }

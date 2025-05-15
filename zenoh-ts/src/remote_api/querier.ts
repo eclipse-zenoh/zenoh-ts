@@ -43,8 +43,8 @@ export class RemoteQuerier {
   async get(
     callback: ReplyCallback,
     drop: Drop,
-    _encoding?: string,
-    _parameters?: string,
+    encoding?: string,
+    parameters?: string,
     _attachment?: Array<number>,
     _payload?: Array<number>,
   ) {
@@ -60,15 +60,16 @@ export class RemoteQuerier {
       attachment = b64_str_from_bytes(new Uint8Array(_attachment))
     }
 
-    let control_msg: ControlMsg = {
-      QuerierGet: {
-        querier_id: this.querier_id as string,
-        get_id: get_id,
-        encoding: _encoding,
-        payload: payload,
-        attachment: attachment,
-      }
-    };
+        let control_msg: ControlMsg = {
+            QuerierGet: {
+                querier_id: this.querier_id as string,
+                get_id: get_id,
+                parameters: parameters,
+                encoding: encoding,
+                payload: payload,
+                attachment: attachment,
+            }
+        };
 
     await this.session_ref.send_ctrl_message(control_msg);
   }

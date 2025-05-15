@@ -58,7 +58,7 @@ where
 
 struct WebsocketVisitor;
 
-impl<'de> Visitor<'de> for WebsocketVisitor {
+impl Visitor<'_> for WebsocketVisitor {
     type Value = String;
 
     fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
