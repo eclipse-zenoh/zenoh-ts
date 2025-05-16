@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Subscriber, Sample, Receiver, KeyExpr, SampleKind, Reply, RecvErr } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, Subscriber, Sample, KeyExpr, SampleKind, Reply } from "@eclipse-zenoh/zenoh-ts";
 import { assert, assert_eq, run_test } from "./common/assertions.ts";
 import { ChannelReceiver } from "../../dist/index";
 
