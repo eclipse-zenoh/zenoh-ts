@@ -20,9 +20,9 @@ import { CongestionControl, ConsolidationMode, Priority, } from "./sample.js";
 import { TimeDuration } from "typed-duration";
 import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
-import { Encoding } from "crypto";
 import { Parameters, Reply, Reply_from_ReplyWS } from "./query.js";
 import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { Encoding } from "./encoding.js";
 
 /**
  * Target For Get queries
