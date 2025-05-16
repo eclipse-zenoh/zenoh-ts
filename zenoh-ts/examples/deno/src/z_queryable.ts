@@ -102,4 +102,4 @@ class ParseArgs extends BaseParseArgs {
 }
 
 
-main()
+main();
