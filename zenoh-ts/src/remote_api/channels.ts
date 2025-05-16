@@ -15,6 +15,9 @@
 import { SimpleChannel, TryReceived, TryReceivedKind, ChannelState } from "channel-ts";
 import { Callback, Drop } from "./closure";
 
+/**
+ * A receiver interface for channel.
+ */
 export interface ChannelReceiver<T> {
   state: () => ChannelState;
   receive: () => Promise<T>;
@@ -22,6 +25,9 @@ export interface ChannelReceiver<T> {
   [Symbol.asyncIterator]: () => AsyncIterableIterator<T>;
 }
 
+/**
+ * A sender interface for channel.
+ */
 export interface ChannelSender<T> {
   send: (data: T) => void;
   close: () => void;
@@ -57,7 +63,9 @@ export function into_cb_drop_receiver<T>(handler: Handler<T>): [Callback<T>, Dro
   }
 }
 
-
+/**
+ * A FIFO channel. When maximum capacity is reached all new values will be ignored.
+ */
 export class FifoChannel<T> {
   protected chan: SimpleChannel<T>;
   protected capacity: number;
@@ -69,6 +77,9 @@ export class FifoChannel<T> {
     this.chan = new SimpleChannel<T>();
   }
 
+  /**
+   * Send new data onto channel. When maximum capacity is reached all new values will be ignored.
+   */
   send(data: T) {
     if (this.size != this.capacity) {
       this.chan.send(data);
@@ -76,10 +87,16 @@ export class FifoChannel<T> {
     }
   }
 
+  /**
+   * Get state of the channel.
+   */
   state(): ChannelState {
     return this.chan.state;
   }
 
+  /**
+   * Attempt to receive the data in a non-blocking way. 
+   */
   tryReceive(): TryReceived<T> {
     let res = this.chan.tryReceive();
     if (res.kind == TryReceivedKind.value) {
@@ -88,12 +105,18 @@ export class FifoChannel<T> {
     return res;
   }
 
+  /**
+   * Receive data in a blocking way. If channel is empty, this call will block until new data arrives or the channel is closed.
+   */
   async receive(): Promise<T> {
     let res = await this.chan.receive();
     this.size--;
     return res;
   }
 
+  /**
+   * Close the channel. This`will unblock all currently pending @see receive calls.
+   */
   close(): void {
     this.chan.close();
   }
@@ -108,28 +131,34 @@ export class FifoChannel<T> {
     }
   }
 
+  /**
+   * Split Channel into @interface ChannelSender and @interface ChannelReceiver pair.
+   */
   into_sender_receiver_pair(): [ChannelSender<T>, ChannelReceiver<T>] {
     return [this, this];
   }
 }
 
+/**
+ * A circular buffer channel. When maximum capacity is reached the older values will be removed to provide space for new ones.
+ */
 export class RingChannel<T> extends FifoChannel<T> {
   constructor(capacity: number) {
     super(capacity)
   }
 
+  /**
+   * Send new data onto channel. When maximum capacity is reached the older values will be removed to provide space for new ones.
+   */
   override send(data: T) {
     if (this.capacity == 0) return;
     if (this.size == this.capacity) {
       this.chan.tryReceive();
     }
     this.chan.send(data);
-    return true;
-  }
-
-  override into_sender_receiver_pair(): [ChannelSender<T>, ChannelReceiver<T>] {
-    return [this, this];
+    this.size++;
   }
 }
 
+export {TryReceivedKind, ChannelState, TryReceived}
 

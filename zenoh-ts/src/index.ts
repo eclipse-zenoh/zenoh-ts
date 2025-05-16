@@ -23,7 +23,7 @@ import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
 import { Querier, QueryTarget, Locality, ReplyKeyExpr, QuerierOptions, QuerierGetOptions } from './querier.js'
-import { FifoChannel, RingChannel, ChannelReceiver } from "./remote_api/channels.js";
+import { FifoChannel, RingChannel, ChannelReceiver, ChannelSender, TryReceived, TryReceivedKind, ChannelState } from "./remote_api/channels.js";
 
 // Re-export duration external library
 import { Duration } from 'typed-duration'
@@ -41,4 +41,4 @@ export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
 export { Duration };
 export { Querier, QueryTarget, Locality, ReplyKeyExpr, QuerierOptions, QuerierGetOptions }
-export { FifoChannel, RingChannel, ChannelReceiver}
+export { FifoChannel, RingChannel, ChannelReceiver, ChannelSender, TryReceived, TryReceivedKind, ChannelState}
