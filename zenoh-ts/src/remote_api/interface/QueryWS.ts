@@ -2,3 +2,4 @@
 import type { OwnedKeyExprWrapper } from "./OwnedKeyExprWrapper.js";
 
 export type QueryWS = { query_uuid: string, key_expr: OwnedKeyExprWrapper, parameters: string, encoding: string | null, attachment: string | undefined, payload: string | undefined, };
+export type QueryCallback = (query: QueryWS) => void;

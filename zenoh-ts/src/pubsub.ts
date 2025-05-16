@@ -23,11 +23,10 @@ import {
   Priority,
   Reliability,
   Sample,
-  Sample_from_SampleWS,
 } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { HandlerChannel } from "./remote_api/interface/HandlerChannel.js";
+import { ChannelReceiver } from "./remote_api/channels.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -55,17 +54,12 @@ export class Subscriber {
   /**
    * @ignore 
    */
-  private callback_subscriber: boolean;
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemoteSubscriber> = new FinalizationRegistry((r_subscriber: RemoteSubscriber) => r_subscriber.undeclare());
+  private _receiver: ChannelReceiver<Sample> | undefined;
   /**
    * @ignore 
    */
-  dispose() {
-    this.undeclare();
-    Subscriber.registry.unregister(this);
+  async [Symbol.asyncDispose]() {
+    await this.undeclare();
   }
   /**
    * @ignore 
@@ -73,12 +67,11 @@ export class Subscriber {
   private constructor(
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    callback_subscriber: boolean,
+    receiver?: ChannelReceiver<Sample>,
   ) {
     this.remote_subscriber = remote_subscriber;
-    this.callback_subscriber = callback_subscriber;
+    this._receiver = receiver;
     this._key_expr = key_expr;
-    Subscriber.registry.register(this, remote_subscriber, this)
   }
 
   /**
@@ -89,35 +82,20 @@ export class Subscriber {
     return this._key_expr
   }
   /**
-   * Receives a new message on the subscriber
-   *  note: If subscriber was created with a callback, this recieve will return undefined, 
-   *  as new samples are being sent to the callback.
+   * returns a sample receiver for non-callback subscriber, undefined otherwise.
    *
-   * @returns Promise<Sample | void>
+   * @returns ChannelReceiver<Sample> | undefined
    */
-  async receive(): Promise<Sample | void> {
-    if (this.callback_subscriber === true) {
-      console.warn("Cannot call `receive()` on Subscriber created with callback:");
-      return;
-    }
-
-    // from SampleWS -> Sample
-    let opt_sample_ws = await this.remote_subscriber.receive();
-    if (opt_sample_ws != undefined) {
-      return Sample_from_SampleWS(opt_sample_ws);
-    } else {
-      console.warn("Receieve returned unexpected void from RemoteSubscriber");
-      return;
-    }
+  receiver(): ChannelReceiver<Sample> | undefined {
+    return this._receiver;
   }
 
   /**
    * Undeclares a subscriber on the session
    *
    */
-  undeclare() {
-    this.remote_subscriber.undeclare();
-    Subscriber.registry.unregister(this);
+  async undeclare() {
+    await this.remote_subscriber.undeclare();
   }
 
   /**
@@ -129,84 +107,11 @@ export class Subscriber {
   static [NewSubscriber](
     remote_subscriber: RemoteSubscriber,
     key_expr: KeyExpr,
-    callback_subscriber: boolean,
+    receiver?: ChannelReceiver<Sample>,
   ): Subscriber {
-    return new Subscriber(remote_subscriber, key_expr, callback_subscriber);
+    return new Subscriber(remote_subscriber, key_expr, receiver);
   }
 }
-
-/**
- * Type of Channel that will be created, 
- * Fifo: will block incoming messages when full
- * Ring: will drop oldest data when full
- */
-export enum ChannelType {
-  Ring,
-  Fifo,
-}
-
-/**
- * General interface for a Handler, not to be exposed by the user
- * @ignore
- */
-export interface Handler {
-  capacity: number;
-  channel_type: ChannelType;
-}
-
-/**
-  * RingChannel handler: 
-  *   Semantic: will drop oldest data when full
- */
-export class RingChannel implements Handler {
-  capacity: number
-  channel_type: ChannelType = ChannelType.Ring;
-  constructor(size: number) {
-    this.capacity = size;
-  }
-}
-
-/**
-  * FifoChannel Handler: 
-  *   Semantic: will block incoming messages when full
- */
-export class FifoChannel implements Handler {
-  capacity: number
-  channel_type: ChannelType = ChannelType.Fifo;
-  constructor(size: number) {
-    this.capacity = size;
-  }
-}
-
-/** 
- * @ignore internal function for handlers
-*/
-export function check_handler_or_callback<T>(handler?: FifoChannel | RingChannel | ((sample: T) => Promise<void>)):
-  [undefined | ((callback: T) => Promise<void>), HandlerChannel] {
-
-  let handler_type: HandlerChannel;
-  let callback = undefined;
-  if (handler instanceof FifoChannel || handler instanceof RingChannel) {
-    switch (handler.channel_type) {
-      case ChannelType.Ring: {
-        handler_type = { "Ring": handler.capacity };
-        break;
-      }
-      case ChannelType.Fifo: {
-        handler_type = { "Fifo": handler.capacity };
-        break;
-      }
-      default: {
-        throw "channel type undetermined"
-      }
-    }
-  } else {
-    handler_type = { "Fifo": 256 };
-    callback = handler;
-  }
-  return [callback, handler_type]
-}
-
 
 // ██████  ██    ██ ██████  ██      ██ ███████ ██   ██ ███████ ██████
 // ██   ██ ██    ██ ██   ██ ██      ██ ██      ██   ██ ██      ██   ██
@@ -243,17 +148,11 @@ export class Publisher {
   private _priority: Priority;
   private _reliability: Reliability;
   private _encoding: Encoding;
-  /** Finalization registry used for cleanup on drop
-   * @ignore 
-   */
-  static registry: FinalizationRegistry<RemotePublisher> = new FinalizationRegistry((r_publisher: RemotePublisher) => r_publisher.undeclare());
-
   /** 
    * @ignore 
    */
-  dispose() {
-    this.undeclare();
-    Publisher.registry.unregister(this);
+  async [Symbol.asyncDispose]() {
+    await this.undeclare();
   }
 
   /**
@@ -284,8 +183,6 @@ export class Publisher {
     this._priority = priority;
     this._reliability = reliability;
     this._encoding = encoding;
-
-    Publisher.registry.register(this, remote_publisher, this)
   }
 
   /**
@@ -305,10 +202,10 @@ export class Publisher {
    *
    * @returns void
    */
-  put(
+  async put(
     payload: IntoZBytes,
     put_options?: PublisherPutOptions,
-  ): void {
+  ) {
     let zbytes: ZBytes = new ZBytes(payload);
     let _encoding;
     let _timestamp = null;
@@ -328,7 +225,7 @@ export class Publisher {
       _attachment = Array.from(att_bytes.to_bytes());
     }
 
-    return this._remote_publisher.put(
+    return await this._remote_publisher.put(
       Array.from(zbytes.to_bytes()),
       _attachment,
       _encoding.toString(),
@@ -378,7 +275,7 @@ export class Publisher {
    * @param {PublisherDeleteOptions} delete_options:  Options associated with a publishers delete
    * @returns void
    */
-  delete(delete_options: PublisherDeleteOptions) {
+  async delete(delete_options: PublisherDeleteOptions) {
 
     let _attachment = null;
     if (delete_options.attachment != null) {
@@ -391,7 +288,7 @@ export class Publisher {
       _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
     }
 
-    return this._remote_publisher.delete(
+    return await this._remote_publisher.delete(
       _attachment,
       _timestamp
     );
@@ -402,9 +299,8 @@ export class Publisher {
    *   
    * @returns void
    */
-  undeclare() {
-    this._remote_publisher.undeclare();
-    Publisher.registry.unregister(this);
+  async undeclare() {
+    await this._remote_publisher.undeclare();
   }
 
 }

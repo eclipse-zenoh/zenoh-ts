@@ -26,8 +26,8 @@ async function putSubTest() {
   const receivedMessages: Array<{ key: string; payload: string }> = [];
 
   // Declare a subscriber on session2
-  const subscriber: Subscriber = session2.declare_subscriber("zenoh/test", {
-    handler: async (sample: Sample) => {
+  const subscriber: Subscriber = await session2.declare_subscriber("zenoh/test", {
+    handler: (sample: Sample) => {
       receivedMessages.push({
         key: sample.keyexpr().toString(),
         payload: sample.payload().to_string(),
@@ -52,7 +52,7 @@ async function putSubTest() {
   assert_eq(receivedMessages[1].payload, "second", "Payload mismatch for second message");
 
   // Cleanup
-  subscriber.undeclare();
+  await subscriber.undeclare();
   await session1.close();
   await session2.close();
 }

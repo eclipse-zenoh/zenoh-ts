@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError, Config, Receiver, RecvErr, Sample, Session, QueryTarget, Selector, } from "@eclipse-zenoh/zenoh-ts";
+import { ReplyError, Config, RecvErr, Sample, Session, QueryTarget, Selector, ChannelReceiver, Reply, } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -22,7 +22,7 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const querier = session.declare_querier(args.get_selector().key_expr(), {
+  const querier = await session.declare_querier(args.get_selector().key_expr(), {
     target: args.get_query_target(),
     timeout: args.get_timeout(),
   });
@@ -30,14 +30,9 @@ export async function main() {
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
     const payload = `[${i}] ${args.payload}`;
-    const receiver = querier.get(args.get_selector().parameters(), { payload: payload }) as Receiver;
+    const receiver = await querier.get(args.get_selector().parameters(), { payload: payload }) as ChannelReceiver<Reply>;
 
-    let reply = await receiver.receive();
-
-    while (reply != RecvErr.Disconnected) {
-      if (reply == RecvErr.MalformedReply) {
-        console.warn("MalformedReply");
-      } else {
+    for await (const reply of receiver) {
         const resp = reply.result();
         if (resp instanceof Sample) {
           const sample: Sample = resp;
@@ -46,8 +41,6 @@ export async function main() {
           const reply_error: ReplyError = resp;
           console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
         }
-      }
-      reply = await receiver.receive();
     }
     console.warn("Get Finished");
   }
@@ -64,7 +57,7 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       selector: "Selector for the query",
       payload: "Payload for the query",
@@ -72,6 +65,10 @@ class ParseArgs extends BaseParseArgs {
       timeout: "Timeout for the query in milliseconds"
     };
   }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
+   }
 
   public get_selector(): Selector {
     const [key_expr, parameters] = this.selector.split("?");
@@ -101,4 +98,4 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-main()
+main();

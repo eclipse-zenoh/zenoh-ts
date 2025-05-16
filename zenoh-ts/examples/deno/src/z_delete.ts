@@ -21,8 +21,8 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  console.log("Deleting resources matching '", args.key, "'...");
-  session.delete(args.key);
+  console.log(`Deleting resources matching '${args.key}...`);
+  await session.delete(args.key);
 
   await session.close();
 }
@@ -35,10 +35,14 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       key: "Key expression for the deletion"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

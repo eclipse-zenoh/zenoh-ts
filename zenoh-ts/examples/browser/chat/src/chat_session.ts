@@ -1,5 +1,5 @@
-import { Config, Session, Queryable, Query, Liveliness, LivelinessToken, Reply, Sample, Receiver, KeyExpr, Subscriber, SampleKind, Publisher } from '@eclipse-zenoh/zenoh-ts';
-import { BigIntFormat, NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, zdeserialize, ZDeserializeable, ZS, zserialize, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
+import { Config, Session, Queryable, Query, LivelinessToken, Reply, Sample, KeyExpr, Subscriber, SampleKind, Publisher, ChannelReceiver } from '@eclipse-zenoh/zenoh-ts';
+import { NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, zdeserialize, ZDeserializeable, ZS, zserialize, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
 
 export function validate_username(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
@@ -99,33 +99,34 @@ export class ChatSession {
 	}
 
 	async requestMessageHistory(session: Session, keyexpr: KeyExpr) {
-		let receiver = await session.get(keyexpr) as Receiver;
+		let receiver = await session.get(keyexpr) as ChannelReceiver<Reply>;
 		log(`[Session] Get from ${keyexpr}`);
-		let reply = await receiver.receive();
-		if (reply instanceof Reply) {
-			let resp = reply.result();
-			if (resp instanceof Sample) {
-				let payload = resp.payload();
-				let attachment = resp.attachment()?.to_string() ?? "";
-				log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, payload size: ${payload.len()}, from user: ${attachment}`);
-				let messages: ChatMessage[] = [];
-				try {
-					messages = zdeserialize(ZD.array(ZD.object(ChatMessage)), payload);
-					log(`[Session] Deserialized ${messages.length} messages`);
-				} catch (e) {
-					log(`[Session] Error deserializing messages: ${e}`);
-				}
-				return messages;
+		let reply = await receiver.receive().catch(reason => {
+			log(`[Session] GetError ${reason}`) 
+			return undefined;
+		});
+
+		let resp = reply?.result();
+		if (resp instanceof Sample) {
+			let payload = resp.payload();
+			let attachment = resp.attachment()?.to_string() ?? "";
+			log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, payload size: ${payload.len()}, from user: ${attachment}`);
+			let messages: ChatMessage[] = [];
+			try {
+				messages = zdeserialize(ZD.array(ZD.object(ChatMessage)), payload);
+				log(`[Session] Deserialized ${messages.length} messages`);
+			} catch (e) {
+				log(`[Session] Error deserializing messages: ${e}`);
 			}
+			return messages;
 		} else {
-			log(`[Session] GetError ${reply}`);
+			return [];
 		}
-		return [];
 	}
 
 	async declareMessageHistoryQueryable(session: Session, keyexpr: KeyExpr): Promise<Queryable> {
 		const queryable = await session.declare_queryable(keyexpr, {
-			handler: async (query: Query) => {
+			handler: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = zserialize(this.messages); //type parameter is ZS.array(ZS.object<ChatMessage>()) but this can be omitted
 				query.reply(keyexpr, response, {
@@ -139,7 +140,7 @@ export class ChatSession {
 	}
 
 	async declareMessagePublisher(session: Session, keyexpr: KeyExpr): Promise<Publisher> {
-		const publisher = session.declare_publisher(keyexpr, {});
+		const publisher = await session.declare_publisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 		return publisher;
 	}
@@ -160,7 +161,6 @@ export class ChatSession {
 				} else {
 					log(`[Subscriber] Invalid user keyexpr: ${sample.keyexpr()}`);
 				}
-				return Promise.resolve();
 			}
 		});
 		log(`[Session] Declare Subscriber on ${keyexpr}`);
@@ -168,13 +168,13 @@ export class ChatSession {
 	}
 
 	async declareLivelinessToken(session: Session, keyexpr: KeyExpr): Promise<LivelinessToken> {
-		const token = session.liveliness().declare_token(keyexpr);
+		const token = await session.liveliness().declare_token(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
 		return token;
 	}
 
 	async declareLivelinessSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
-		const subscriber = session.liveliness().declare_subscriber(keyexpr, {
+		const subscriber = await session.liveliness().declare_subscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = this.userFromKeyexpr(keyexpr);
@@ -197,7 +197,6 @@ export class ChatSession {
 				if (this.usersCallback) {
 					this.usersCallback();
 				}
-				return Promise.resolve();
 			},
 			history: true
 		});

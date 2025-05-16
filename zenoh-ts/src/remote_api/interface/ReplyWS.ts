@@ -3,3 +3,4 @@ import type { ReplyErrorWS } from "./ReplyErrorWS.js";
 import type { SampleWS } from "./SampleWS.js";
 
 export type ReplyWS = { query_uuid: string, result: { Ok : SampleWS } | { Err : ReplyErrorWS }, };
+export type ReplyCallback = (reply: ReplyWS) => void;

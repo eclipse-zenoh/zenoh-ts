@@ -15,51 +15,50 @@
 import { v4 as uuidv4 } from "uuid";
 import { RemoteSession, UUIDv4 } from "./session.js";
 import { ControlMsg } from "./interface/ControlMsg.js"
-import { SimpleChannel } from "channel-ts";
-import { ReplyWS } from "./interface/ReplyWS.js";
 import { encode as b64_str_from_bytes } from "base64-arraybuffer";
-import { HandlerChannel } from "./interface/HandlerChannel.js";
+import { ReplyCallback } from "./interface/ReplyWS.js";
+import { Drop } from "./closure.js";
 
 export class RemoteQuerier {
-    private querier_id: UUIDv4;
-    private session_ref: RemoteSession;
+  private querier_id: UUIDv4;
+  private session_ref: RemoteSession;
 
-    constructor(
-        querier_id: UUIDv4,
-        session_ref: RemoteSession,
-    ) {
-        this.querier_id = querier_id;
-        this.session_ref = session_ref;
+  constructor(
+    querier_id: UUIDv4,
+    session_ref: RemoteSession,
+  ) {
+    this.querier_id = querier_id;
+    this.session_ref = session_ref;
+  }
+
+  async undeclare() {
+
+    let control_msg: ControlMsg = {
+      UndeclareQuerier: this.querier_id as string
+    };
+
+    await this.session_ref.send_ctrl_message(control_msg);
+  }
+
+  async get(
+    callback: ReplyCallback,
+    drop: Drop,
+    encoding?: string,
+    parameters?: string,
+    _attachment?: Array<number>,
+    _payload?: Array<number>,
+  ) {
+    let get_id = uuidv4();
+    this.session_ref.get_receivers.set(get_id, { callback, drop });
+
+    let payload = undefined;
+    if (_payload != undefined) {
+      payload = b64_str_from_bytes(new Uint8Array(_payload))
     }
-
-    undeclare() {
-
-        let control_msg: ControlMsg = {
-            UndeclareQuerier: this.querier_id as string
-        };
-
-        this.session_ref.send_ctrl_message(control_msg);
+    let attachment = undefined;
+    if (_attachment != undefined) {
+      attachment = b64_str_from_bytes(new Uint8Array(_attachment))
     }
-
-    get(
-        handler_type: HandlerChannel,
-        encoding?: string,
-        parameters?: string,
-        attachment?: Array<number>,
-        payload?: Array<number>,
-    ): SimpleChannel<ReplyWS> {
-        let get_id = uuidv4();
-        let channel: SimpleChannel<ReplyWS> = new SimpleChannel<ReplyWS>();
-        this.session_ref.get_receiver.set(get_id, channel);
-
-        let payload_str = undefined;
-        if (payload != undefined) {
-            payload_str = b64_str_from_bytes(new Uint8Array(payload))
-        }
-        let attachment_str = undefined;
-        if (attachment != undefined) {
-            attachment_str = b64_str_from_bytes(new Uint8Array(attachment))
-        }
 
         let control_msg: ControlMsg = {
             QuerierGet: {
@@ -67,15 +66,13 @@ export class RemoteQuerier {
                 get_id: get_id,
                 parameters: parameters,
                 encoding: encoding,
-                payload: payload_str,
-                attachment: attachment_str,
-                handler: handler_type
+                payload: payload,
+                attachment: attachment,
             }
         };
 
-        this.session_ref.send_ctrl_message(control_msg);
-        return channel;
-    }
+    await this.session_ref.send_ctrl_message(control_msg);
+  }
 
 }
 

@@ -128,10 +128,13 @@ pub async fn handle_data_message(
                             attachment,
                         } => match payload.b64_to_bytes() {
                             Ok(payload) => {
-                                let priority = priority.try_into().unwrap_or({
-                                    warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {priority} to Priority:");
-                                    Priority::default()
-                                });
+                                let priority = match priority.try_into() {
+                                    Ok(p) => p,
+                                    Err(e) => {
+                                        warn!("DataMsg::QueryReplyVariant::Reply : Could not convert value {priority} to Priority: {}", e);
+                                        Priority::default()
+                                    }
+                                };
                                 let congestion_control = if congestion_control == 0 {
                                     CongestionControl::Drop
                                 } else if congestion_control == 1 {

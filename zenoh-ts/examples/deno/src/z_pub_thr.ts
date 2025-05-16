@@ -13,7 +13,7 @@
 //
 
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
-import { BaseParseArgs } from "./parse_args.ts";
+import { BaseParseArgs, priority_from_int } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
@@ -21,32 +21,31 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = args.get_keyexpr();
   const publisher: Publisher = await session.declare_publisher(
-    key_expr,
-    {
-      encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
-      priority: Priority.DATA,
-      express: true,
-      reliability: Reliability.RELIABLE
+    "test/thr",
+    { 
+      express: args.express,
+      priority: args.get_priority(),
     }
   );
-
-  for (let idx = 0; idx < Number.MAX_VALUE; idx++) {
-    const buf = `[${idx}] ${args.payload}`;
-
-    console.warn("Block statement execution no : " + idx);
-    console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
-    await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
-    await sleep(1000);
+  
+  let payload_size = args.positional[0];
+  let payload = new Uint8Array(payload_size);
+  console.warn(`Will publish ${payload_size} B payload.`);
+  for (let i = 0; i < payload_size; i++) {
+    payload[i] = i;
   }
+
+  while (true) {
+    await publisher.put(payload);
+  }
+  await session.close();
 }
 
 class ParseArgs extends BaseParseArgs {
-  public payload: string = "Pub from Typescript!";
-  public key: string = "demo/example/zenoh-ts-pub";
-  public attach: string = "";
+  public positional: [number] = [0];
+  public express: boolean = false;
+  public priority: number = 5;
 
   constructor() {
     super();
@@ -59,19 +58,19 @@ class ParseArgs extends BaseParseArgs {
 
   public get_named_args_help(): Record<string, string> {
     return {
-      payload: "Payload for the publication",
-      key: "Key expression for the publication",
-      attach: "Attachment for the publication"
+      express: "Express for sending data",
+      priority: "Priority for sending data [1-7]",
+      number: "Number of messages in each throughput measurement"
     };
   }
 
-  get_positional_args_help(): [string, string][] {
-    return [];
-  }
-}
+  public get_positional_args_help(): [string, string][] {
+    return [["PAYLOAD_SIZE", "payload size"] ];
+  };
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  public get_priority(): Priority {
+    return priority_from_int(this.priority);
+  }
 }
 
 main();

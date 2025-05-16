@@ -13,32 +13,30 @@
 //
 
 import {
-  RingChannel, Config, Subscriber, Session, KeyExpr
+  Config, Subscriber, Session, KeyExpr, RingChannel, ChannelReceiver, Sample
 } from "@eclipse-zenoh/zenoh-ts";
-import { parseArgs } from "@std/cli/parse-args";
 import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
-  console.log("Starting zenoh Subscriber!");
+  console.warn('Opening session...');
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const key_expr = new KeyExpr(args.key);
 
-  const poll_subscriber: Subscriber = session.declare_subscriber(key_expr, { handler: new RingChannel(10) });
-
-  let sample = await poll_subscriber.receive();
-
-  while (sample != undefined) {
+  console.warn(`Declaring Subscriber on '${args.key}'...`);
+  const poll_subscriber: Subscriber = await session.declare_subscriber(key_expr, { handler: new RingChannel(10) });
+  console.warn("Press CTRL-C to quit...");
+  
+  for await (const sample of poll_subscriber.receiver() as ChannelReceiver<Sample>) {
     console.warn!(
       ">> [Subscriber] Received " +
       sample.kind() + " ('" +
       sample.keyexpr() + "': '" +
       sample.payload().to_string() + "')",
     );
-    sample = await poll_subscriber.receive();
   }
 
-  poll_subscriber.undeclare();
+  await poll_subscriber.undeclare();
 }
 
 class ParseArgs extends BaseParseArgs {
@@ -49,10 +47,14 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_help(): Record<string, string> {
+  public get_named_args_help(): Record<string, string> {
     return {
       key: "Key expression for the subscriber"
     };
+  }
+
+  get_positional_args_help(): [string, string][] {
+    return [];
   }
 }
 

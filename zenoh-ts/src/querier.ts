@@ -12,8 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-// External
-import { SimpleChannel } from "channel-ts";
 // Remote API
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 // API
@@ -22,10 +20,9 @@ import { CongestionControl, ConsolidationMode, Priority, } from "./sample.js";
 import { TimeDuration } from "typed-duration";
 import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
-import { Encoding } from "crypto";
-import { Receiver } from "./session.js";
-import { Parameters, Reply } from "./query.js";
-import { check_handler_or_callback, FifoChannel, Handler } from "./pubsub.js";
+import { Parameters, Reply, Reply_from_ReplyWS } from "./query.js";
+import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { Encoding } from "./encoding.js";
 
 /**
  * Target For Get queries
@@ -125,7 +122,7 @@ export interface QuerierGetOptions {
   encoding?: Encoding,
   payload?: IntoZBytes,
   attachment?: IntoZBytes,
-  handler?: ((sample: Reply) => Promise<void>) | Handler
+  handler?: Handler<Reply>
 }
 
 /**
@@ -142,13 +139,13 @@ export class Querier {
   /** 
    * @ignore
    */
-  dispose() {
-    this.undeclare();
+  async [Symbol.asyncDispose]() {
+    await this.undeclare();
   }
 
   /** 
-   * Returns a Queryable 
-   * Note! : user must use declare_queryable on a session
+   * Returns a Querier 
+   * Note! : user must use declare_querier on a session
    */
   constructor(
     remote_querier: RemoteQuerier,
@@ -163,19 +160,15 @@ export class Querier {
     this._priority = priority;
     this._accept_replies = accept_replies;
     this.undeclared = false;
-    // TODO: Look at finalization registry
-    // Queryable.registry.register(this, remote_queryable, this)
   }
 
   /**
    * Undeclares Queryable
    * @returns void
    */
-  undeclare() {
+  async undeclare() {
     this.undeclared = true;
-    // Finalization registry
-    // Queryable.registry.unregister(this);
-    this._remote_querier.undeclare()
+    await this._remote_querier.undeclare()
   }
 
   /**
@@ -214,9 +207,9 @@ export class Querier {
    * Issue a Get request on this querier
    * @returns Promise <Receiever | void>
    */
-  get(
+  async get(
     parameters?: Parameters,
-    get_options?: QuerierGetOptions): Receiver | undefined {
+    get_options?: QuerierGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
     if (this.undeclared == true) {
       return undefined;
     }
@@ -235,46 +228,23 @@ export class Querier {
       _parameters = parameters.toString();
     }
 
-    let handler;
-    if (get_options?.handler !== undefined) {
-      handler = get_options?.handler;
-    } else {
-      handler = new FifoChannel(256);
+    let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
+    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    
+    let callback_ws = (reply_ws: ReplyWS): void => {
+      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      callback(reply);
     }
-    let [callback, handler_type] = check_handler_or_callback<Reply>(handler);
 
-    let chan: SimpleChannel<ReplyWS> = this._remote_querier.get(
-      handler_type,
+    await this._remote_querier.get(
+      callback_ws,
+      drop,
       _encoding,
       _parameters,
       _attachment,
       _payload,
     );
 
-
-    if (callback != undefined) {
-      executeAsync(async () => {
-        for await (const message of chan) {
-          // This horribleness comes from SimpleChannel sending a 0 when the channel is closed
-          if (message != undefined && (message as unknown as number) != 0) {
-            let reply = new Reply(message);
-            if (callback != undefined) {
-              callback(reply);
-            }
-          } else {
-            break
-          }
-        }
-      });
-      return undefined;
-    } else {
-      let receiver = new Receiver(chan);
-      return receiver;
-    }
-
+    return receiver;
   }
-}
-
-function executeAsync(func: any) {
-  setTimeout(func, 0);
 }
