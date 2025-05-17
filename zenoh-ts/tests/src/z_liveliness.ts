@@ -12,15 +12,14 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Subscriber, Sample, KeyExpr, SampleKind, Reply } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq, run_test } from "./common/assertions.ts";
-import { ChannelReceiver } from "../../dist/index";
+import { Config, Session, Sample, KeyExpr, SampleKind } from "@eclipse-zenoh/zenoh-ts";
+import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function testLivelinessGet() {
+Deno.test("Liveliness - Token Get", async () => {
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -38,13 +37,17 @@ async function testLivelinessGet() {
   await sleep(500);
   
   // Get liveliness on session2
-  let receiver = await session2.liveliness().get(ke) as ChannelReceiver<Reply>;
+  const receiver = await session2.liveliness().get(ke);
+  if (!receiver) {
+    assert(false, "Failed to get liveliness receiver");
+    return;
+  }
   let reply = await receiver.receive();
   
   const result = reply.result();
   // Check that the result is a Sample and not a ReplyError
   if (result instanceof Sample) {
-    assert_eq(result.keyexpr().toString(), "zenoh/liveliness/test/1", "Key mismatch for liveliness token");
+    assertEquals(result.keyexpr().toString(), "zenoh/liveliness/test/1", "Key mismatch for liveliness token");
   } else {
     assert(false, "Expected result to be a Sample, got ReplyError");
   }
@@ -53,9 +56,13 @@ async function testLivelinessGet() {
   await token.undeclare();
   await sleep(100);
 
-  receiver = await session2.liveliness().get(ke) as ChannelReceiver<Reply>;
+  const receiver2 = await session2.liveliness().get(ke);
+  if (!receiver2) {
+    assert(false, "Failed to get liveliness receiver");
+    return;
+  }
   try {
-    reply = await receiver.receive();
+    reply = await receiver2.receive();
     assert(false, "Received reply on undeclared token");
   } catch {
     // we should correctly fail to recieve reply on undeclared token
@@ -63,9 +70,9 @@ async function testLivelinessGet() {
 
   await session1.close();
   await session2.close();
-}
+});
 
-async function testLivelinessSubscriber() {
+Deno.test("Liveliness - Subscriber", async () => {
   // Open two sessions
   const session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
   const session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
@@ -102,7 +109,7 @@ async function testLivelinessSubscriber() {
   // Delay to ensure tokens are declared
   await sleep(1000);
 
-  assert_eq(putTokens.size, 2, "Expected 2 PUT tokens");
+  assertEquals(putTokens.size, 2, "Expected 2 PUT tokens");
   assert(putTokens.has("zenoh/liveliness/test/1"), "Expected token 1 in PUT set");
   assert(putTokens.has("zenoh/liveliness/test/2"), "Expected token 2 in PUT set");
 
@@ -112,7 +119,7 @@ async function testLivelinessSubscriber() {
   // Delay to ensure token is undeclared
   await sleep(1000);
 
-  assert_eq(deleteTokens.size, 1, "Expected 1 DELETE token");
+  assertEquals(deleteTokens.size, 1, "Expected 1 DELETE token");
   assert(deleteTokens.has("zenoh/liveliness/test/1"), "Expected token 1 in DELETE set");
 
   // Undeclare second token
@@ -121,15 +128,11 @@ async function testLivelinessSubscriber() {
   // Delay to ensure token is undeclared
   await sleep(1000);
 
-  assert_eq(deleteTokens.size, 2, "Expected 2 DELETE tokens");
+  assertEquals(deleteTokens.size, 2, "Expected 2 DELETE tokens");
   assert(deleteTokens.has("zenoh/liveliness/test/2"), "Expected token 2 in DELETE set");
 
   // Cleanup
   await subscriber.undeclare();
   await session1.close();
   await session2.close();
-}
-
-// Run the tests
-await run_test(testLivelinessGet);
-await run_test(testLivelinessSubscriber);
+});
