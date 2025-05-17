@@ -15,6 +15,10 @@
 import { Config, Session, Subscriber, Sample } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
+function sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 Deno.test("API - Put/Subscribe", async () => {
   let session1: Session | undefined;
   let session2: Session | undefined;
@@ -26,7 +30,7 @@ Deno.test("API - Put/Subscribe", async () => {
     session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
 
     // Delay to ensure sessions are ready
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await sleep(100);
 
     const receivedMessages: Array<{ key: string; payload: string }> = [];
 
@@ -41,14 +45,14 @@ Deno.test("API - Put/Subscribe", async () => {
     });
 
     // Delay to ensure subscriber is ready
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await sleep(100);
 
     // Publish messages using session1
     await session1.put("zenoh/test", "first");
     await session1.put("zenoh/test", "second");
 
     // Delay to ensure messages are received
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await sleep(100);
 
     assertEquals(receivedMessages.length, 2, "Expected 2 messages");
     assertEquals(receivedMessages[0].key, "zenoh/test", "Key mismatch for first message");
@@ -66,5 +70,6 @@ Deno.test("API - Put/Subscribe", async () => {
     if (session1) {
       await session1.close();
     }
+    await sleep(100);
   }
 });

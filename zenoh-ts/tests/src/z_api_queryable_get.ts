@@ -94,6 +94,7 @@ Deno.test("API - Session Get with Callback", async () => {
         if (session1) {
             await session1.close();
         }
+        await sleep(100);
     }
 });
 
@@ -166,6 +167,7 @@ Deno.test("API - Session Get with Channel", async () => {
         if (session1) {
             await session1.close();
         }
+        await sleep(100);
     }
 });
 
@@ -258,6 +260,7 @@ Deno.test("API - Querier Get with Channel", async () => {
         if (session1) {
             await session1.close();
         }
+        await sleep(100);
     }
 });
 
@@ -350,5 +353,6 @@ Deno.test("API - Querier Get with Callback", async () => {
         if (session1) {
             await session1.close();
         }
+        await sleep(100);
     }
 });
