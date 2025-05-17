@@ -16,18 +16,11 @@ else
   EXIT_CODE=0
 
   if [ "$1" = "ALL" ]; then
-    for test in src/*.ts; do
-      echo "Test: $test"
-      deno run -A --no-prompt "$test"
-      if [ $? -ne 0 ]; then
-        EXIT_CODE=1
-      fi
-    done
+    deno test -A src/*.ts
+    EXIT_CODE=$?
   else
-    deno run -A --no-prompt "src/$1.ts"
-    if [ $? -ne 0 ]; then
-      EXIT_CODE=1
-    fi
+    deno test -A "src/$1.ts"
+    EXIT_CODE=$?
   fi
 fi
 
