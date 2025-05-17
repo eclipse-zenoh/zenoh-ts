@@ -15,12 +15,12 @@
 import { Config, Session, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
-Deno.test("KeyExpr - Basic", async () => {
+Deno.test("KeyExpr - Basic", () => {
   const foo = new KeyExpr("FOO");
   assert(foo.toString() === "FOO", "KeyExpr string representation mismatch");
 });
 
-Deno.test("KeyExpr - Canonize", async () => {
+Deno.test("KeyExpr - Canonize", () => {
   const non_canon = "a/**/**/c";
   const canon = "a/**/c";
 
@@ -33,20 +33,20 @@ Deno.test("KeyExpr - Canonize", async () => {
   assertEquals(k_ok2.toString(), canon, "Re-canonization changed canonical form");
 });
 
-Deno.test("KeyExpr - Concat", async () => {
+Deno.test("KeyExpr - Concat", () => {
   const foo = new KeyExpr("FOO");
   const foobar = foo.concat("BAR");
   assertEquals(foobar.toString(), "FOOBAR", "Concatenation failed");
 });
 
-Deno.test("KeyExpr - Join", async () => {
+Deno.test("KeyExpr - Join", () => {
   const foo = new KeyExpr("FOO");
   const bar = new KeyExpr("BAR");
   const foobar = foo.join(bar);
   assertEquals(foobar.toString(), "FOO/BAR", "Join failed");
 });
 
-Deno.test("KeyExpr - Equals", async () => {
+Deno.test("KeyExpr - Equals", () => {
   const foo = new KeyExpr("FOO");
   const foo2 = new KeyExpr("FOO");
   const bar = new KeyExpr("BAR");
@@ -58,14 +58,14 @@ Deno.test("KeyExpr - Equals", async () => {
   assert(foo.toString() !== "BAR", "Expected foo != 'BAR'");
 });
 
-Deno.test("KeyExpr - Includes", async () => {
+Deno.test("KeyExpr - Includes", () => {
   const foostar = new KeyExpr("FOO/*");
   const foobar = new KeyExpr("FOO/BAR");
   assert(foostar.includes(foobar), "Expected FOO/* to include FOO/BAR");
   assert(!foobar.includes(foostar), "Expected FOO/BAR to not include FOO/*");
 });
 
-Deno.test("KeyExpr - Intersects", async () => {
+Deno.test("KeyExpr - Intersects", () => {
   const foostar = new KeyExpr("FOO/*");
   const foobar = new KeyExpr("FOO/BAR");
   const starbuz = new KeyExpr("*/BUZ");

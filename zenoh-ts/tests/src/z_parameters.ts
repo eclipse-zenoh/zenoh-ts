@@ -15,7 +15,7 @@
 import { Parameters } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
-Deno.test("Parameters - Basic", async () => {
+Deno.test("Parameters - Basic", () => {
   // Test empty string initialization
   const emptyParams = new Parameters("");
   assert(emptyParams.is_empty(), "Empty string should create empty parameters");
@@ -56,12 +56,12 @@ Deno.test("Parameters - Basic", async () => {
   assertEquals([...mulitivalueParams.values("p2")], ["v5", "v6", "v7", "v8"], "values() function not returning expected values");
 });
 
-Deno.test("Parameters - Nonexistent", async () => {
+Deno.test("Parameters - Nonexistent", () => {
   const params = new Parameters("key1=value1");
   assertEquals(params.get("nonexistent"), undefined, "Nonexistent parameter should return undefined");
 });
 
-Deno.test("Parameters - Iterator", async () => {
+Deno.test("Parameters - Iterator", () => {
   const map = new Map<string, string>();
   map.set("p1", "v1");
   map.set("p2", "v2");
@@ -83,7 +83,7 @@ Deno.test("Parameters - Iterator", async () => {
   assertEquals(count0, 0, "Iterating over empty parameters should yield no results");
 });
 
-Deno.test("Parameters - Map", async () => {
+Deno.test("Parameters - Map", () => {
   // Test Map initialization
   const map = new Map<string, string>();
   map.set("p1", "v1");
@@ -100,13 +100,13 @@ Deno.test("Parameters - Map", async () => {
     "Parameter without value should be equivalent to empty value");
 });
 
-Deno.test("Parameters - Insert", async () => {
+Deno.test("Parameters - Insert", () => {
   const params = Parameters.empty();
   params.insert("key1", "value1");
   assertEquals(params.get("key1"), "value1", "Parameter insert failed");
 });
 
-Deno.test("Parameters - Extend", async () => {
+Deno.test("Parameters - Extend", () => {
   const params1 = new Parameters("key1=value1");
   const params2 = new Parameters("key2=value2;key1=updated");
   
@@ -115,21 +115,21 @@ Deno.test("Parameters - Extend", async () => {
   assertEquals(params1.get("key2"), "value2", "Parameter extend should add new key");
 });
 
-Deno.test("Parameters - Empty", async () => {
+Deno.test("Parameters - Empty", () => {
   const params = Parameters.empty();
   assert(params.is_empty(), "Empty parameters should be empty");
   params.insert("key1", "value1");
   assert(!params.is_empty(), "Parameters with values should not be empty");
 });
 
-Deno.test("Parameters - Delete", async () => {
+Deno.test("Parameters - Delete", () => {
   const params = Parameters.empty();
   params.insert("key1", "value1");
   params.remove("key1");
   assertEquals(params.get("key1"), undefined, "Parameter removal failed");
 });
 
-Deno.test("Parameters - Duplicates", async () => {
+Deno.test("Parameters - Duplicates", () => {
   // Test duplicate handling in insert
   const params = new Parameters("key1=value1;key2=value2;key1=duplicate");
   assertEquals(params.get("key1"), "value1", "Should return first occurrence of key1");
@@ -149,7 +149,7 @@ Deno.test("Parameters - Duplicates", async () => {
 });
 
 // Only run this test when performance testing is needed
-Deno.test("Parameters - Performance", { ignore: true }, async () => {
+Deno.test("Parameters - Performance", { ignore: true }, () => {
   const numOperations = 10000;
   const params = Parameters.empty();
   
