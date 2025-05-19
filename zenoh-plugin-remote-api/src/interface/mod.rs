@@ -13,6 +13,7 @@
 //
 
 use std::sync::Arc;
+pub(crate) mod remote_message;
 
 // mod interface::ser_de;
 pub(crate) mod ser_de;
