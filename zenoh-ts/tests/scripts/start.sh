@@ -6,8 +6,9 @@ cd "$SCRIPTDIR/.."
 
 if [ "$1" = "" ]; then
   echo
-  echo "Arguments: test_name|ALL"
+  echo "Arguments: test_name|ALL [COVERAGE]"
   echo "  test_name: name of the test to run or ALL to run all tests"
+  echo "  COVERAGE: generate coverage report"
   echo
   echo "Available tests:"
   ls src/*.ts | sed -e "s/src\///" -e "s/\.ts//"
@@ -15,19 +16,17 @@ if [ "$1" = "" ]; then
 else
   EXIT_CODE=0
 
+  COVERAGE_OPTS=""
+  if [ "$2" = "COVERAGE" ]; then
+    COVERAGE_OPTS="--coverage=coverage_profile"
+  fi
+
   if [ "$1" = "ALL" ]; then
-    for test in src/*.ts; do
-      echo "Test: $test"
-      deno run -A --no-prompt "$test"
-      if [ $? -ne 0 ]; then
-        EXIT_CODE=1
-      fi
-    done
+    deno test -A $COVERAGE_OPTS src/*.ts
+    EXIT_CODE=$?
   else
-    deno run -A --no-prompt "src/$1.ts"
-    if [ $? -ne 0 ]; then
-      EXIT_CODE=1
-    fi
+    deno test -A $COVERAGE_OPTS "src/$1.ts"
+    EXIT_CODE=$?
   fi
 fi
 

@@ -55,7 +55,7 @@ fi
 
 if [ "$1" = "test" ]; then
   cd tests
-  yarn install || exit 1
+  deno install || exit 1
   if [ $USE_DAEMON -eq 1 ]; then
     start_daemon
   fi
@@ -63,7 +63,7 @@ if [ "$1" = "test" ]; then
   EXIT_CODE=$?
 elif [ "$1" = "example" ] && [ "$2" = "deno" ]; then
   cd examples/deno
-  yarn install || exit 1
+  deno install || exit 1
   if [ $USE_DAEMON -eq 1 ]; then
     start_daemon
   fi
@@ -82,7 +82,7 @@ else
   echo
   echo "Available options:"
   echo
-  echo "yarn start [DAEMON] test [test-name|ALL]"
+  echo "yarn start [DAEMON] test [test-name|ALL] [COVERAGE]"
   echo "yarn start [DAEMON] example deno [example-name]"
   echo "yarn start [DAEMON] example browser"
   echo

@@ -21,13 +21,14 @@ cp ./src/key_expr/*wasm* ./dist/key_expr/
 
 # build tests
 cd tests
-yarn install || exit 1
+# yarn install works too but test coverage works only with deno install
+deno install || exit 1
 yarn verify || exit 1
 cd "$SCRIPTDIR/.."
 
 # build examples/deno
 cd examples/deno
-yarn install || exit 1
+deno install || exit 1
 yarn verify || exit 1
 cd "$SCRIPTDIR/.."
 
