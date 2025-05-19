@@ -15,6 +15,10 @@
 import { Config, Session, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 Deno.test("KeyExpr - Basic", () => {
   const foo = new KeyExpr("FOO");
   assert(foo.toString() === "FOO", "KeyExpr string representation mismatch");
@@ -90,5 +94,6 @@ Deno.test("KeyExpr - Declare", async () => {
     assert(declared.intersects(foobar), "Expected declared to intersect with FOO/BAR");
   } finally {
     await session.close();
+    await sleep(100);
   }
 });
