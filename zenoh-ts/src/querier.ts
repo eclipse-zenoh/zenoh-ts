@@ -143,7 +143,7 @@ export class Querier {
    * Returns a Querier 
    * Note! : user must use declare_querier on a session
    */
-  private constructor(
+  constructor(
     private remoteQuerier: RemoteQuerier,
     private keyExpr: KeyExpr,
     private congestionControl: CongestionControl,

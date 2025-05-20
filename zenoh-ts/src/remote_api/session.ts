@@ -496,7 +496,7 @@ export class RemoteSession {
 
     await this.send_ctrl_message(controlMessage);
 
-    let subscriber = RemoteSubscriber.new(
+    let subscriber = new RemoteSubscriber(
       keyExpr,
       uuid,
       this,

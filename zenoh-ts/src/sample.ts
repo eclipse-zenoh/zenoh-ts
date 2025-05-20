@@ -209,16 +209,44 @@ export function reliability_to_int(reliability: Reliability) {
  */
 export class Sample {
   constructor(
-    public readonly keyexpr: KeyExpr,
-    public readonly payload: ZBytes,
-    public readonly kind: SampleKind,
-    public readonly encoding: Encoding,
-    public readonly priority: Priority,
-    public readonly timestamp: string | undefined,
-    public readonly congestionControl: CongestionControl,
-    public readonly express: boolean,
-    public readonly attachment: ZBytes | undefined,
+    public readonly keyexpr_: KeyExpr,
+    public readonly payload_: ZBytes,
+    public readonly kind_: SampleKind,
+    public readonly encoding_: Encoding,
+    public readonly priority_: Priority,
+    public readonly timestamp_: string | undefined,
+    public readonly congestionControl_: CongestionControl,
+    public readonly express_: boolean,
+    public readonly attachment_: ZBytes | undefined,
   ) {}
+
+  keyexpr(): KeyExpr {
+    return this.keyexpr_;
+  }
+  payload(): ZBytes {
+    return this.payload_;
+  }
+  kind(): SampleKind {
+    return this.kind_;
+  }
+  encoding(): Encoding {
+    return this.encoding_;
+  }
+  timestamp(): string | undefined {
+    return this.timestamp_;
+  }
+  congestion_control(): CongestionControl {
+    return this.congestionControl_;
+  }
+  priority(): Priority {
+    return this.priority_;
+  }
+  express(): boolean {
+    return this.express_;
+  }
+  attachment(): ZBytes | undefined {
+    return this.attachment_;
+  }
 }
 
 /**

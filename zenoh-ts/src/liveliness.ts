@@ -10,7 +10,7 @@ import { Reply, ReplyFromReplyWS } from "./query.js";
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
 import { SampleWS } from "./remote_api/interface/SampleWS.js";
-import { NewSubscriber, Subscriber } from "./pubsub.js";
+import { Subscriber } from "./pubsub.js";
 
 // Liveliness API
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
@@ -59,7 +59,7 @@ export class Liveliness {
 
     let remoteSubscriber = await this.remoteSession.declare_liveliness_subscriber(keyExpr.toString(), history, callbackWS, drop);
 
-    let subscriber = Subscriber[NewSubscriber](
+    let subscriber = new Subscriber(
       remoteSubscriber,
       keyExpr,
       receiver

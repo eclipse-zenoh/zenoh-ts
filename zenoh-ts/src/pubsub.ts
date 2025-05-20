@@ -135,7 +135,7 @@ export class Publisher {
    * @returns {Publisher} a new  instance of a publisher 
    * 
    */
-  private constructor(
+  constructor(
     private remotePublisher: RemotePublisher,
     private keyExpr: KeyExpr,
     private congestionControl: CongestionControl,
