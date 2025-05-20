@@ -42,7 +42,8 @@
     "clean": "./scripts/clean.sh",
     "build": "./scripts/build.sh",
     "start": "./scripts/start.sh",
-    "release": "npx release-it"
+    "release": "npx release-it",
+    "lint": "npx eslint ."
   },
   "publishConfig": {
     "access": "public",

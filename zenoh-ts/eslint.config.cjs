@@ -31,18 +31,12 @@ module.exports = tseslint.config(
         'varsIgnorePattern': '^_'
       }],
       // Allow use before define, common in TypeScript for hoisted classes/functions
-      '@typescript-eslint/no-use-before-define': ['warn', {
-        'functions': false,
-        'classes': false,
-        'variables': false,
-        'typedefs': false
-      }]
+      '@typescript-eslint/no-use-before-define': 'off'
     }
   },
   // Config for examples, tests, and dist with no type checking
   {
     files: [
-      'dist/**/*.ts', 'dist/**/*.tsx', 
       'examples/**/*.ts', 'examples/**/*.tsx',
       'tests/**/*.ts', 'tests/**/*.tsx'
     ],
