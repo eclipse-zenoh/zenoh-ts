@@ -4,8 +4,8 @@ import {
   UUIDv4
 } from "./remote_api/session.js";
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
-import { Sample, Sample_from_SampleWS } from "./sample.js";
-import { Reply, Reply_from_ReplyWS } from "./query.js";
+import { Sample, SampleFromSampleWS } from "./sample.js";
+import { Reply, ReplyFromReplyWS } from "./query.js";
 
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
@@ -57,7 +57,7 @@ export class Liveliness {
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
     let callback_ws = (sample_ws: SampleWS): void => {
-      let sample: Sample = Sample_from_SampleWS(sample_ws);
+      let sample: Sample = SampleFromSampleWS(sample_ws);
       callback(sample);
     }
 
@@ -86,7 +86,7 @@ export class Liveliness {
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
     let callback_ws = (reply_ws: ReplyWS): void => {
-      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      let reply: Reply = ReplyFromReplyWS(reply_ws);
       callback(reply);
     }
 

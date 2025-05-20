@@ -20,7 +20,7 @@ import { CongestionControl, ConsolidationMode, Priority, } from "./sample.js";
 import { TimeDuration } from "typed-duration";
 import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
-import { Parameters, Reply, Reply_from_ReplyWS } from "./query.js";
+import { Parameters, Reply, ReplyFromReplyWS } from "./query.js";
 import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
 import { Encoding } from "./encoding.js";
 
@@ -232,7 +232,7 @@ export class Querier {
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
     let callback_ws = (reply_ws: ReplyWS): void => {
-      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      let reply: Reply = ReplyFromReplyWS(reply_ws);
       callback(reply);
     }
 

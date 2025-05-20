@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-enum encoding {
+enum EncodingPredefined {
   ZENOH_BYTES = "zenoh/bytes",
   ZENOH_STRING = "zenoh/string",
   ZENOH_SERIALIZED = "zenoh/serialized",
@@ -85,7 +85,7 @@ export class Encoding {
   }
 
   static default(): Encoding {
-    return new Encoding(encoding.ZENOH_BYTES);
+    return new Encoding(EncodingPredefined.ZENOH_BYTES);
   }
 
   toString(): string {
@@ -99,259 +99,259 @@ export class Encoding {
   /**
    * Constant alias for string "zenoh/bytes"
    */
-  static readonly ZENOH_BYTES = new Encoding(encoding.ZENOH_BYTES);
+  static readonly ZENOH_BYTES = new Encoding(EncodingPredefined.ZENOH_BYTES);
   /**
    * Constant alias for string "zenoh/string"
    */
-  static readonly ZENOH_STRING: Encoding = new Encoding(encoding.ZENOH_STRING);
+  static readonly ZENOH_STRING: Encoding = new Encoding(EncodingPredefined.ZENOH_STRING);
   /**
    * Constant alias for string "zenoh/serialized"
    */
   static readonly ZENOH_SERIALIZED: Encoding = new Encoding(
-    encoding.ZENOH_SERIALIZED
+    EncodingPredefined.ZENOH_SERIALIZED
   );
   /**
    * Constant alias for string "application/octet-stream"
    */
   static readonly APPLICATION_OCTET_STREAM: Encoding = new Encoding(
-    encoding.APPLICATION_OCTET_STREAM
+    EncodingPredefined.APPLICATION_OCTET_STREAM
   );
   /**
    * Constant alias for string "text/plain"
    */
-  static readonly TEXT_PLAIN: Encoding = new Encoding(encoding.TEXT_PLAIN);
+  static readonly TEXT_PLAIN: Encoding = new Encoding(EncodingPredefined.TEXT_PLAIN);
   /**
    * Constant alias for string "application/json"
    */
   static readonly APPLICATION_JSON: Encoding = new Encoding(
-    encoding.APPLICATION_JSON
+    EncodingPredefined.APPLICATION_JSON
   );
   /**
    * Constant alias for string "text/json"
    */
-  static readonly TEXT_JSON: Encoding = new Encoding(encoding.TEXT_JSON);
+  static readonly TEXT_JSON: Encoding = new Encoding(EncodingPredefined.TEXT_JSON);
   /**
    * Constant alias for string "application/cdr"
    */
   static readonly APPLICATION_CDR: Encoding = new Encoding(
-    encoding.APPLICATION_CDR
+    EncodingPredefined.APPLICATION_CDR
   );
   /**
    * Constant alias for string "application/cbor"
    */
   static readonly APPLICATION_CBOR: Encoding = new Encoding(
-    encoding.APPLICATION_CBOR
+    EncodingPredefined.APPLICATION_CBOR
   );
   /**
    * Constant alias for string "application/yaml"
    */
   static readonly APPLICATION_YAML: Encoding = new Encoding(
-    encoding.APPLICATION_YAML
+    EncodingPredefined.APPLICATION_YAML
   );
   /**
    * Constant alias for string "text/yaml"
    */
-  static readonly TEXT_YAML: Encoding = new Encoding(encoding.TEXT_YAML);
+  static readonly TEXT_YAML: Encoding = new Encoding(EncodingPredefined.TEXT_YAML);
   /**
    * Constant alias for string "text/json5"
    */
-  static readonly TEXT_JSON5: Encoding = new Encoding(encoding.TEXT_JSON5);
+  static readonly TEXT_JSON5: Encoding = new Encoding(EncodingPredefined.TEXT_JSON5);
   /**
    * Constant alias for string "application/protobuf"
    */
   static readonly APPLICATION_PROTOBUF: Encoding = new Encoding(
-    encoding.APPLICATION_PROTOBUF
+    EncodingPredefined.APPLICATION_PROTOBUF
   );
   /**
    * Constant alias for string "application/python-serialized-object"
    */
   static readonly APPLICATION_PYTHON_SERIALIZED_OBJECT: Encoding = new Encoding(
-    encoding.APPLICATION_PYTHON_SERIALIZED_OBJECT
+    EncodingPredefined.APPLICATION_PYTHON_SERIALIZED_OBJECT
   );
   /**
    * Constant alias for string "application/java-serialized-object"
    */
   static readonly APPLICATION_JAVA_SERIALIZED_OBJECT: Encoding = new Encoding(
-    encoding.APPLICATION_JAVA_SERIALIZED_OBJECT
+    EncodingPredefined.APPLICATION_JAVA_SERIALIZED_OBJECT
   );
   /**
    * Constant alias for string "application/openmetrics-text"
    */
   static readonly APPLICATION_OPENMETRICS_TEXT: Encoding = new Encoding(
-    encoding.APPLICATION_OPENMETRICS_TEXT
+    EncodingPredefined.APPLICATION_OPENMETRICS_TEXT
   );
   /**
    * Constant alias for string "image/png"
    */
-  static readonly IMAGE_PNG: Encoding = new Encoding(encoding.IMAGE_PNG);
+  static readonly IMAGE_PNG: Encoding = new Encoding(EncodingPredefined.IMAGE_PNG);
   /**
    * Constant alias for string "image/jpeg"
    */
-  static readonly IMAGE_JPEG: Encoding = new Encoding(encoding.IMAGE_JPEG);
+  static readonly IMAGE_JPEG: Encoding = new Encoding(EncodingPredefined.IMAGE_JPEG);
   /**
    * Constant alias for string "image/gif"
    */
-  static readonly IMAGE_GIF: Encoding = new Encoding(encoding.IMAGE_GIF);
+  static readonly IMAGE_GIF: Encoding = new Encoding(EncodingPredefined.IMAGE_GIF);
   /**
    * Constant alias for string "image/bmp"
    */
-  static readonly IMAGE_BMP: Encoding = new Encoding(encoding.IMAGE_BMP);
+  static readonly IMAGE_BMP: Encoding = new Encoding(EncodingPredefined.IMAGE_BMP);
   /**
    * Constant alias for string "image/webp"
    */
-  static readonly IMAGE_WEBP: Encoding = new Encoding(encoding.IMAGE_WEBP);
+  static readonly IMAGE_WEBP: Encoding = new Encoding(EncodingPredefined.IMAGE_WEBP);
   /**
    * Constant alias for string "application/xml"
    */
   static readonly APPLICATION_XML: Encoding = new Encoding(
-    encoding.APPLICATION_XML
+    EncodingPredefined.APPLICATION_XML
   );
   /**
    * Constant alias for string "application/x-www-form-urlencoded"
    */
   static readonly APPLICATION_X_WWW_FORM_URLENCODED: Encoding = new Encoding(
-    encoding.APPLICATION_X_WWW_FORM_URLENCODED
+    EncodingPredefined.APPLICATION_X_WWW_FORM_URLENCODED
   );
   /**
    * Constant alias for string "text/html"
    */
-  static readonly TEXT_HTML: Encoding = new Encoding(encoding.TEXT_HTML);
+  static readonly TEXT_HTML: Encoding = new Encoding(EncodingPredefined.TEXT_HTML);
   /**
    * Constant alias for string "text/xml"
    */
-  static readonly TEXT_XML: Encoding = new Encoding(encoding.TEXT_XML);
+  static readonly TEXT_XML: Encoding = new Encoding(EncodingPredefined.TEXT_XML);
   /**
    * Constant alias for string "text/css"
    */
-  static readonly TEXT_CSS: Encoding = new Encoding(encoding.TEXT_CSS);
+  static readonly TEXT_CSS: Encoding = new Encoding(EncodingPredefined.TEXT_CSS);
   /**
    * Constant alias for string "text/javascript"
    */
   static readonly TEXT_JAVASCRIPT: Encoding = new Encoding(
-    encoding.TEXT_JAVASCRIPT
+    EncodingPredefined.TEXT_JAVASCRIPT
   );
   /**
    * Constant alias for string "text/markdown"
    */
   static readonly TEXT_MARKDOWN: Encoding = new Encoding(
-    encoding.TEXT_MARKDOWN
+    EncodingPredefined.TEXT_MARKDOWN
   );
   /**
    * Constant alias for string "text/csv"
    */
-  static readonly TEXT_CSV: Encoding = new Encoding(encoding.TEXT_CSV);
+  static readonly TEXT_CSV: Encoding = new Encoding(EncodingPredefined.TEXT_CSV);
   /**
    * Constant alias for string "application/sql"
    */
   static readonly APPLICATION_SQL: Encoding = new Encoding(
-    encoding.APPLICATION_SQL
+    EncodingPredefined.APPLICATION_SQL
   );
   /**
    * Constant alias for string "application/coap-payload"
    */
   static readonly APPLICATION_COAP_PAYLOAD: Encoding = new Encoding(
-    encoding.APPLICATION_COAP_PAYLOAD
+    EncodingPredefined.APPLICATION_COAP_PAYLOAD
   );
   /**
    * Constant alias for string "application/json-patch+json"
    */
   static readonly APPLICATION_JSON_PATCH_JSON: Encoding = new Encoding(
-    encoding.APPLICATION_JSON_PATCH_JSON
+    EncodingPredefined.APPLICATION_JSON_PATCH_JSON
   );
   /**
    * Constant alias for string "application/json-seq"
    */
   static readonly APPLICATION_JSON_SEQ: Encoding = new Encoding(
-    encoding.APPLICATION_JSON_SEQ
+    EncodingPredefined.APPLICATION_JSON_SEQ
   );
   /**
    * Constant alias for string "application/jsonpath"
    */
   static readonly APPLICATION_JSONPATH: Encoding = new Encoding(
-    encoding.APPLICATION_JSONPATH
+    EncodingPredefined.APPLICATION_JSONPATH
   );
   /**
    * Constant alias for string "application/jwt"
    */
   static readonly APPLICATION_JWT: Encoding = new Encoding(
-    encoding.APPLICATION_JWT
+    EncodingPredefined.APPLICATION_JWT
   );
   /**
    * Constant alias for string "application/mp4"
    */
   static readonly APPLICATION_MP4: Encoding = new Encoding(
-    encoding.APPLICATION_MP4
+    EncodingPredefined.APPLICATION_MP4
   );
   /**
    * Constant alias for string "application/soap+xml"
    */
   static readonly APPLICATION_SOAP_XML: Encoding = new Encoding(
-    encoding.APPLICATION_SOAP_XML
+    EncodingPredefined.APPLICATION_SOAP_XML
   );
   /**
    * Constant alias for string "application/yang"
    */
   static readonly APPLICATION_YANG: Encoding = new Encoding(
-    encoding.APPLICATION_YANG
+    EncodingPredefined.APPLICATION_YANG
   );
   /**
    * Constant alias for string "audio/aac"
    */
-  static readonly AUDIO_AAC: Encoding = new Encoding(encoding.AUDIO_AAC);
+  static readonly AUDIO_AAC: Encoding = new Encoding(EncodingPredefined.AUDIO_AAC);
   /**
    * Constant alias for string "audio/flac"
    */
-  static readonly AUDIO_FLAC: Encoding = new Encoding(encoding.AUDIO_FLAC);
+  static readonly AUDIO_FLAC: Encoding = new Encoding(EncodingPredefined.AUDIO_FLAC);
   /**
    * Constant alias for string "audio/mp4"
    */
-  static readonly AUDIO_MP4: Encoding = new Encoding(encoding.AUDIO_MP4);
+  static readonly AUDIO_MP4: Encoding = new Encoding(EncodingPredefined.AUDIO_MP4);
   /**
    * Constant alias for string "audio/ogg"
    */
-  static readonly AUDIO_OGG: Encoding = new Encoding(encoding.AUDIO_OGG);
+  static readonly AUDIO_OGG: Encoding = new Encoding(EncodingPredefined.AUDIO_OGG);
   /**
    * Constant alias for string "audio/vorbis"
    */
-  static readonly AUDIO_VORBIS: Encoding = new Encoding(encoding.AUDIO_VORBIS);
+  static readonly AUDIO_VORBIS: Encoding = new Encoding(EncodingPredefined.AUDIO_VORBIS);
   /**
    * Constant alias for string "video/h261"
    */
-  static readonly VIDEO_H261: Encoding = new Encoding(encoding.VIDEO_H261);
+  static readonly VIDEO_H261: Encoding = new Encoding(EncodingPredefined.VIDEO_H261);
   /**
    * Constant alias for string "video/h263"
    */
-  static readonly VIDEO_H263: Encoding = new Encoding(encoding.VIDEO_H263);
+  static readonly VIDEO_H263: Encoding = new Encoding(EncodingPredefined.VIDEO_H263);
   /**
    * Constant alias for string "video/h264"
    */
-  static readonly VIDEO_H264: Encoding = new Encoding(encoding.VIDEO_H264);
+  static readonly VIDEO_H264: Encoding = new Encoding(EncodingPredefined.VIDEO_H264);
   /**
    * Constant alias for string "video/h265"
    */
-  static readonly VIDEO_H265: Encoding = new Encoding(encoding.VIDEO_H265);
+  static readonly VIDEO_H265: Encoding = new Encoding(EncodingPredefined.VIDEO_H265);
   /**
    * Constant alias for string "video/h266"
    */
-  static readonly VIDEO_H266: Encoding = new Encoding(encoding.VIDEO_H266);
+  static readonly VIDEO_H266: Encoding = new Encoding(EncodingPredefined.VIDEO_H266);
   /**
    * Constant alias for string "video/mp4"
    */
-  static readonly VIDEO_MP4: Encoding = new Encoding(encoding.VIDEO_MP4);
+  static readonly VIDEO_MP4: Encoding = new Encoding(EncodingPredefined.VIDEO_MP4);
   /**
    * Constant alias for string "video/ogg"
    */
-  static readonly VIDEO_OGG: Encoding = new Encoding(encoding.VIDEO_OGG);
+  static readonly VIDEO_OGG: Encoding = new Encoding(EncodingPredefined.VIDEO_OGG);
   /**
    * Constant alias for string "video/raw"
    */
-  static readonly VIDEO_RAW: Encoding = new Encoding(encoding.VIDEO_RAW);
+  static readonly VIDEO_RAW: Encoding = new Encoding(EncodingPredefined.VIDEO_RAW);
   /**
    * Constant alias for string "video/vp8"
    */
-  static readonly VIDEO_VP8: Encoding = new Encoding(encoding.VIDEO_VP8);
+  static readonly VIDEO_VP8: Encoding = new Encoding(EncodingPredefined.VIDEO_VP8);
   /**
    * Constant alias for string "video/vp9"
    */
-  static readonly VIDEO_VP9: Encoding = new Encoding(encoding.VIDEO_VP9);
+  static readonly VIDEO_VP9: Encoding = new Encoding(EncodingPredefined.VIDEO_VP9);
 }

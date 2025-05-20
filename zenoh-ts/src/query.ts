@@ -22,7 +22,7 @@ import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, Sample_from_SampleWS } from "./sample.js";
+import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, SampleFromSampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./remote_api/channels.js";
@@ -83,7 +83,7 @@ export class Queryable {
  * Convenience function to convert between QueryWS and Query 
  * @ignore
  */
-export function Query_from_QueryWS(
+export function QueryFromQueryWS(
   query_ws: QueryWS,
   session_ref: RemoteSession
 ): Query {
@@ -581,10 +581,10 @@ export class Reply {
 /**
  * Convenience function to convert between Reply and ReplyWS
  */
-export function Reply_from_ReplyWS(reply_ws: ReplyWS) {
+export function ReplyFromReplyWS(reply_ws: ReplyWS) {
   if ("Ok" in reply_ws.result) {
     let sample_ws = reply_ws.result["Ok"];
-    let sample = Sample_from_SampleWS(sample_ws);
+    let sample = SampleFromSampleWS(sample_ws);
     return new Reply(sample);
   } else {
     let sample_ws_err: ReplyErrorWS = reply_ws.result["Err"];

@@ -28,10 +28,10 @@ import {
   IntoSelector,
   Parameters,
   Query,
-  Query_from_QueryWS,
+  QueryFromQueryWS,
   Queryable,
   Reply,
-  Reply_from_ReplyWS,
+  ReplyFromReplyWS,
   Selector,
 } from "./query.js";
 import { NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
@@ -41,7 +41,7 @@ import {
   CongestionControl,
   Priority,
   Sample,
-  Sample_from_SampleWS,
+  SampleFromSampleWS,
   consolidation_mode_to_int,
   ConsolidationMode,
   Reliability,
@@ -345,7 +345,7 @@ export class Session {
     let [calback, drop, receiver] = into_cb_drop_receiver(handler);
     
     let callback_ws = (reply_ws: ReplyWS): void => {
-      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+      let reply: Reply = ReplyFromReplyWS(reply_ws);
       calback(reply);
     }
     // Optional Parameters 
@@ -412,7 +412,7 @@ export class Session {
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
     let callback_ws = (sample_ws: SampleWS): void => {
-      let sample: Sample = Sample_from_SampleWS(sample_ws);
+      let sample: Sample = SampleFromSampleWS(sample_ws);
       callback(sample);
     }
 
@@ -475,7 +475,7 @@ export class Session {
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
     let callback_ws = (query_ws: QueryWS): void => {
-      let query = Query_from_QueryWS(query_ws, this.remote_session);
+      let query = QueryFromQueryWS(query_ws, this.remote_session);
       callback(query);
     }
 

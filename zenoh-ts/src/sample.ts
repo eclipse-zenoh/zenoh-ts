@@ -274,7 +274,7 @@ export class Sample {
 /**
  * Convenience function to convert between Sample and SampleWS
  */
-export function Sample_from_SampleWS(sample_ws: SampleWS) {
+export function SampleFromSampleWS(sample_ws: SampleWS) {
   let sample_kind: SampleKind;
   if (sample_ws.kind == "Delete") {
     sample_kind = SampleKind.DELETE;
@@ -319,7 +319,7 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 /**
  * Convenience function to convert between SampleWS and Sample 
  */
-export function SampleWS_from_Sample(
+export function SampleWSFromSample(
   sample: Sample,
   encoding: Encoding,
   priority: Priority,
