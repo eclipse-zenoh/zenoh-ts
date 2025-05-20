@@ -108,7 +108,7 @@ type IsSerializeableInner<T, X = T> =
 
 export type EnsureSerializeable<T, X = T> = Select<IsSerializeableInner<T>, IsNotUnion<T>, X>
 
-function is_serializeable(s: any): s is ZSerializeable {
+function isSerializeable(s: any): s is ZSerializeable {
   return (<ZSerializeable>s).serializeWithZSerializer !== undefined;
 }
 
@@ -422,7 +422,7 @@ export class ZBytesSerializer {
     }
     
     private getDefaultSerializationTag<T>(data: EnsureSerializeable<T>): ZSTypeInfo<EnsureSerializeable<T>> {
-      if (is_serializeable(data)) {
+      if (isSerializeable(data)) {
         type R = typeof data
         return ZS.object<R>() as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (typeof data == "number") {

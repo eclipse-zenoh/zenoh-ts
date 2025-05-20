@@ -45,7 +45,7 @@ export function isIntoSenderReceiverPair<T>(object: any): object is IntoSenderRe
 export type Handler<T> = Callback<T> | [Callback<T>, Drop] | IntoSenderReceiverPair<T>;
 
 
-export function into_cb_drop_receiver<T>(handler: Handler<T>): [Callback<T>, Drop, ChannelReceiver<T>?] {
+export function intoCbDropReceiver<T>(handler: Handler<T>): [Callback<T>, Drop, ChannelReceiver<T>?] {
   if (isIntoSenderReceiverPair<T>(handler)) {
     let [sender, receiver] = handler.intoSenderReceiverPair();
     let cb = (data: T): void => {

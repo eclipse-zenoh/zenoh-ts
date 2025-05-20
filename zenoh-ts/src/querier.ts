@@ -20,8 +20,8 @@ import { CongestionControl, ConsolidationMode, Priority, } from "./sample.js";
 import { TimeDuration } from "typed-duration";
 import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
-import { Parameters, Reply, ReplyFromReplyWS } from "./query.js";
-import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { Parameters, Reply, replyFromReplyWS } from "./query.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
 import { Encoding } from "./encoding.js";
 
 /**
@@ -41,7 +41,7 @@ export enum QueryTarget {
  * Convenience function to convert between QueryTarget and int
  * @internal
  */
-export function query_target_to_int(queryTarget?: QueryTarget): number {
+export function queryTargetToInt(queryTarget?: QueryTarget): number {
   switch (queryTarget) {
     case QueryTarget.BestMatching:
       return 0;
@@ -65,7 +65,7 @@ export enum Locality {
  * Convenience function to convert between Locality and int
  * @internal
  */
-export function locality_to_int(queryTarget?: Locality): number {
+export function localityToInt(queryTarget?: Locality): number {
   switch (queryTarget) {
     case Locality.SessionLocal:
       return 0;
@@ -90,7 +90,7 @@ export enum ReplyKeyExpr {
  * Convenience function to convert between QueryTarget function and int
  * @internal
  */
-export function reply_key_expr_to_int(queryTarget?: ReplyKeyExpr): number {
+export function replyKeyExprToInt(queryTarget?: ReplyKeyExpr): number {
   switch (queryTarget) {
     case ReplyKeyExpr.Any:
       return 0;
@@ -217,10 +217,10 @@ export class Querier {
     }
 
     let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
     
     let callbackWS = (replyWS: ReplyWS): void => {
-      let reply: Reply = ReplyFromReplyWS(replyWS);
+      let reply: Reply = replyFromReplyWS(replyWS);
       callback(reply);
     }
 

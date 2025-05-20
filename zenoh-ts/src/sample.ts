@@ -62,7 +62,7 @@ export enum ConsolidationMode {
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function consolidation_mode_to_int(
+export function consolidationModeToInt(
   congestionControl?: ConsolidationMode,
 ): number {
   switch (congestionControl) {
@@ -83,7 +83,7 @@ export function consolidation_mode_to_int(
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function congestion_control_from_int(
+export function congestionControlFromInt(
   prioU8?: number,
 ): CongestionControl {
   switch (prioU8) {
@@ -100,7 +100,7 @@ export function congestion_control_from_int(
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function congestion_control_to_int(
+export function congestionControlToInt(
   congestionControl?: CongestionControl,
 ): number {
   switch (congestionControl) {
@@ -132,7 +132,7 @@ export enum Priority {
  * Convenience function to convert between Priority function and int
  * @internal
  */
-export function priority_from_int(prioU8: number): Priority {
+export function priorityFromInt(prioU8: number): Priority {
   switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;
@@ -158,7 +158,7 @@ export function priority_from_int(prioU8: number): Priority {
  * Convenience function to convert between Priority function and int
  * @internal
  */
-export function priority_to_int(prio?: Priority): number {
+export function priorityToInt(prio?: Priority): number {
   switch (prio) {
     case Priority.REAL_TIME:
       return 1;
@@ -192,7 +192,7 @@ export enum Reliability {
 /**
  * @internal
  */
-export function reliability_to_int(reliability: Reliability) {
+export function reliabilityToInt(reliability: Reliability) {
   switch (reliability) {
     case Reliability.RELIABLE:
       return 0
@@ -252,7 +252,7 @@ export class Sample {
 /**
  * Convenience function to convert between Sample and SampleWS
  */
-export function SampleFromSampleWS(sampleWS: SampleWS) {
+export function sampleFromSampleWS(sampleWS: SampleWS) {
   let sampleKind: SampleKind;
   if (sampleWS.kind == "Delete") {
     sampleKind = SampleKind.DELETE;
@@ -266,9 +266,9 @@ export function SampleFromSampleWS(sampleWS: SampleWS) {
 
   let encoding = Encoding.fromString(sampleWS.encoding);
 
-  let priority = priority_from_int(sampleWS.priority);
+  let priority = priorityFromInt(sampleWS.priority);
 
-  let congestionControl = congestion_control_from_int(
+  let congestionControl = congestionControlFromInt(
     sampleWS.congestion_control,
   );
 
@@ -297,7 +297,7 @@ export function SampleFromSampleWS(sampleWS: SampleWS) {
 /**
  * Convenience function to convert between SampleWS and Sample 
  */
-export function SampleWSFromSample(
+export function sampleWSFromSample(
   sample: Sample,
   encoding: Encoding,
   priority: Priority,
@@ -332,8 +332,8 @@ export function SampleWSFromSample(
     kind: sampleKind,
     encoding: encoding.toString(),
     timestamp: null,
-    priority: priority_to_int(priority),
-    congestion_control: congestion_control_to_int(congestionControl),
+    priority: priorityToInt(priority),
+    congestion_control: congestionControlToInt(congestionControl),
     express: express,
     attachement: attach,
   };

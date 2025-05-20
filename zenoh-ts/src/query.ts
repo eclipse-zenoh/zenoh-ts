@@ -22,7 +22,7 @@ import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, SampleFromSampleWS } from "./sample.js";
+import { congestionControlToInt, CongestionControl, Priority, priorityToInt, Sample, sampleFromSampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./remote_api/channels.js";
@@ -78,7 +78,7 @@ export class Queryable {
  * Convenience function to convert between QueryWS and Query 
  * @ignore
  */
-export function QueryFromQueryWS(
+export function queryFromQueryWS(
   queryWS: QueryWS,
   sessionRef: RemoteSession
 ): Query {
@@ -244,8 +244,8 @@ export class Query {
       keyExpr.toString(),
       new ZBytes(payload).toBytes(),
       options?.encoding?.toString() ?? null,
-      congestion_control_to_int(options?.congestionControl),
-      priority_to_int(options?.priority),
+      congestionControlToInt(options?.congestionControl),
+      priorityToInt(options?.priority),
       options?.express ?? false,
       optAttachment,
       options?.timestamp?.toString() ?? null,
@@ -282,8 +282,8 @@ export class Query {
     await this.sessionRef.replyDel(
       this.queryId, 
       keyExpr.toString(),
-      congestion_control_to_int(options?.congestionControl),
-      priority_to_int(options?.priority),
+      congestionControlToInt(options?.congestionControl),
+      priorityToInt(options?.priority),
       options?.express ?? false,
       optAttachment,
       options?.timestamp?.toString() ?? null,
@@ -557,10 +557,10 @@ export class Reply {
 /**
  * Convenience function to convert between Reply and ReplyWS
  */
-export function ReplyFromReplyWS(replyWS: ReplyWS) {
+export function replyFromReplyWS(replyWS: ReplyWS) {
   if ("Ok" in replyWS.result) {
     let sampleWS = replyWS.result["Ok"];
-    let sample = SampleFromSampleWS(sampleWS);
+    let sample = sampleFromSampleWS(sampleWS);
     return new Reply(sample);
   } else {
     let sampleWSEerr: ReplyErrorWS = replyWS.result["Err"];

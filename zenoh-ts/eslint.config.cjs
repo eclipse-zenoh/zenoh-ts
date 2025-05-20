@@ -102,11 +102,13 @@ module.exports = tseslint.config(
         {
           'selector': 'method',
           'format': ['camelCase'],
+          'trailingUnderscore': 'allow',
           'leadingUnderscore': 'allow'
         },
         {
           'selector': 'function',
-          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'format': ['camelCase'],
+          'trailingUnderscore': 'allow',
           'leadingUnderscore': 'allow'
         },
         {

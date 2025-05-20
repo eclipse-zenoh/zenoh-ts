@@ -4,8 +4,8 @@ import {
   UUIDv4
 } from "./remote_api/session.js";
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
-import { Sample, SampleFromSampleWS } from "./sample.js";
-import { Reply, ReplyFromReplyWS } from "./query.js";
+import { Sample, sampleFromSampleWS } from "./sample.js";
+import { Reply, replyFromReplyWS } from "./query.js";
 
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
@@ -17,7 +17,7 @@ import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 
 // External
 import { Duration, TimeDuration } from 'typed-duration'
-import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
 
 interface LivelinessSubscriberOptions {
   handler?: Handler<Sample>,
@@ -50,10 +50,10 @@ export class Liveliness {
     };
 
     let handler = options?.handler ?? new FifoChannel<Sample>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
 
     let callbackWS = (sampleWS: SampleWS): void => {
-      let sample: Sample = SampleFromSampleWS(sampleWS);
+      let sample: Sample = sampleFromSampleWS(sampleWS);
       callback(sample);
     }
 
@@ -79,10 +79,10 @@ export class Liveliness {
     }
 
     let handler = options?.handler ?? new FifoChannel<Reply>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
 
     let callbackWS = (replyWS: ReplyWS): void => {
-      let reply: Reply = ReplyFromReplyWS(replyWS);
+      let reply: Reply = replyFromReplyWS(replyWS);
       callback(reply);
     }
 

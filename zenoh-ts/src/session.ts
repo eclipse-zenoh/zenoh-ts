@@ -28,33 +28,33 @@ import {
   IntoSelector,
   Parameters,
   Query,
-  QueryFromQueryWS,
+  queryFromQueryWS,
   Queryable,
   Reply,
-  ReplyFromReplyWS,
+  replyFromReplyWS,
   Selector,
 } from "./query.js";
 import { Publisher, Subscriber } from "./pubsub.js";
 import {
-  priority_to_int,
-  congestion_control_to_int,
+  priorityToInt,
+  congestionControlToInt,
   CongestionControl,
   Priority,
   Sample,
-  SampleFromSampleWS,
-  consolidation_mode_to_int,
+  sampleFromSampleWS,
+  consolidationModeToInt,
   ConsolidationMode,
   Reliability,
-  reliability_to_int,
+  reliabilityToInt,
 } from "./sample.js";
 import { Config } from "./config.js";
 import { Encoding } from "./encoding.js";
 import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
-import { locality_to_int, Querier, QuerierOptions, query_target_to_int, QueryTarget, reply_key_expr_to_int, ReplyKeyExpr } from "./querier.js";
+import { localityToInt, Querier, QuerierOptions, queryTargetToInt, QueryTarget, replyKeyExprToInt, ReplyKeyExpr } from "./querier.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
 
 /**
  * Options for a Put function 
@@ -218,14 +218,14 @@ export class Session {
     let express;
     let attachment;
     let encoding = putOpts?.encoding?.toString()
-    let congestionControl = congestion_control_to_int(putOpts?.congestionControl);
+    let congestionControl = congestionControlToInt(putOpts?.congestionControl);
     let timestamp;
 
     if (putOpts?.timestamp != undefined) {
       timestamp = putOpts?.timestamp.getResourceUuid() as string;
     }
     if (putOpts?.priority != undefined) {
-      priority = priority_to_int(putOpts?.priority);
+      priority = priorityToInt(putOpts?.priority);
     }
     express = putOpts?.express?.valueOf();
 
@@ -284,8 +284,8 @@ export class Session {
     deleteOpts?: DeleteOptions
   ): void {
     let keyExpr = new KeyExpr(intoKeyExpr);
-    let congestionControl = congestion_control_to_int(deleteOpts?.congestionControl);
-    let priority = priority_to_int(deleteOpts?.priority);
+    let congestionControl = congestionControlToInt(deleteOpts?.congestionControl);
+    let priority = priorityToInt(deleteOpts?.priority);
     let express = deleteOpts?.express;
     let attachment;
     let timestamp;
@@ -340,20 +340,20 @@ export class Session {
     }
 
     let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
-    let [calback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [calback, drop, receiver] = intoCbDropReceiver(handler);
     
     let callbackWS = (replyWS: ReplyWS): void => {
-      let reply: Reply = ReplyFromReplyWS(replyWS);
+      let reply: Reply = replyFromReplyWS(replyWS);
       calback(reply);
     }
     // Optional Parameters 
 
-    let consolidation = consolidation_mode_to_int(getOptions?.consolidation)
+    let consolidation = consolidationModeToInt(getOptions?.consolidation)
     let encoding = getOptions?.encoding?.toString();
-    let congestionControl = congestion_control_to_int(getOptions?.congestionControl);
-    let priority = priority_to_int(getOptions?.priority);
+    let congestionControl = congestionControlToInt(getOptions?.congestionControl);
+    let priority = priorityToInt(getOptions?.priority);
     let express = getOptions?.express;
-    let target = query_target_to_int(getOptions?.target);
+    let target = queryTargetToInt(getOptions?.target);
     let attachment;
     let payload;
     let timeoutMillis: number | undefined = undefined;
@@ -407,10 +407,10 @@ export class Session {
     let remoteSubscriber: RemoteSubscriber;
 
     let handler = subscriberOpts?.handler ?? new FifoChannel<Sample>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
 
     let callbackWS = (sampleWS: SampleWS): void => {
-      let sample: Sample = SampleFromSampleWS(sampleWS);
+      let sample: Sample = sampleFromSampleWS(sampleWS);
       callback(sample);
     }
 
@@ -470,10 +470,10 @@ export class Session {
     };
 
     let handler = queryableOpts?.handler ?? new FifoChannel<Query>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
     
     let callbackWS = (queryWS: QueryWS): void => {
-      let query = QueryFromQueryWS(queryWS, this.remoteSession);
+      let query = queryFromQueryWS(queryWS, this.remoteSession);
       callback(query);
     }
 
@@ -509,21 +509,21 @@ export class Session {
     let priorityRemote;
     let priority = Priority.DATA;
     if (publisherOpts?.priority != null) {
-      priorityRemote = priority_to_int(publisherOpts?.priority);
+      priorityRemote = priorityToInt(publisherOpts?.priority);
       priority = publisherOpts?.priority;
     }
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
     if (publisherOpts?.congestionControl != null) {
-      congestionControlRemote = congestion_control_to_int(publisherOpts?.congestionControl);
+      congestionControlRemote = congestionControlToInt(publisherOpts?.congestionControl);
       congestionControl = publisherOpts?.congestionControl;
     }
 
     let reliabilityRemote = 0; // Default Reliable
     let reliability = Reliability.RELIABLE;
     if (publisherOpts?.reliability != null) {
-      reliabilityRemote = reliability_to_int(publisherOpts?.reliability);
+      reliabilityRemote = reliabilityToInt(publisherOpts?.reliability);
     }
 
     let encodingRemote = "";
@@ -571,27 +571,27 @@ export class Session {
     let priorityRemote;
     let priority = Priority.DATA;
     if (querierOpts?.priority != null) {
-      priorityRemote = priority_to_int(querierOpts?.priority);
+      priorityRemote = priorityToInt(querierOpts?.priority);
       priority = querierOpts?.priority;
     }
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
     if (querierOpts?.congestionControl != null) {
-      congestionControlRemote = congestion_control_to_int(querierOpts?.congestionControl);
+      congestionControlRemote = congestionControlToInt(querierOpts?.congestionControl);
       congestionControl = querierOpts?.congestionControl;
     }
 
     let acceptRepliesRemote;
     let acceptReplies = ReplyKeyExpr.Any;
     if (querierOpts?.acceptReplies != null) {
-      acceptRepliesRemote = reply_key_expr_to_int(querierOpts?.acceptReplies);
+      acceptRepliesRemote = replyKeyExprToInt(querierOpts?.acceptReplies);
       acceptReplies = querierOpts?.acceptReplies;
     }
 
-    let consolidation = consolidation_mode_to_int(querierOpts?.consolidation);
-    let target = query_target_to_int(querierOpts?.target);
-    let allowedDestination = locality_to_int(querierOpts?.allowedDestination);
+    let consolidation = consolidationModeToInt(querierOpts?.consolidation);
+    let target = queryTargetToInt(querierOpts?.target);
+    let allowedDestination = localityToInt(querierOpts?.allowedDestination);
     let express = querierOpts?.express;
     let timeoutMillis: number | undefined = undefined;
 
