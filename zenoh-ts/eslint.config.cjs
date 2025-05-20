@@ -6,7 +6,8 @@ module.exports = tseslint.config(
       '**/node_modules/**', 
       '**/dist/*.js', 
       '**/examples/**/dist/*.js',
-      '**/*.d.ts'  // Ignore all declaration files which are often generated
+      '**/*.d.ts',  // Ignore all declaration files which are often generated
+      'src/remote_api/interface/**/*.ts'  // Ignore auto-generated TypeScript interface files
     ],
   },
   // Main config for src files with TypeScript type checking
@@ -68,7 +69,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'memberLike',
-          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow'
         },
         {
@@ -81,6 +82,19 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          'trailingUnderscore': 'allow',
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'classProperty',
+          'format': ['camelCase', 'UPPER_CASE'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow',
+          'modifiers': ['static', 'readonly']
+        },
+        {
+          'selector': 'objectLiteralProperty',
           'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
           'leadingUnderscore': 'allow'
         },
@@ -166,6 +180,17 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'classProperty',
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'leadingUnderscore': 'allow',
+          'modifiers': ['static', 'readonly']
+        },
+        {
+          'selector': 'objectLiteralProperty',
           'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
           'leadingUnderscore': 'allow'
         },

@@ -107,15 +107,14 @@ export function reply_key_expr_to_int(queryTarget?: ReplyKeyExpr): number {
  * 
  */
 export interface QuerierOptions {
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   consolidation?: ConsolidationMode,
   priority?: Priority,
   express?: boolean,
   target: QueryTarget
   timeout?: TimeDuration,
-  allowed_destination?: Locality
-  // 
-  accept_replies?: ReplyKeyExpr
+  allowedDestination?: Locality
+  acceptReplies?: ReplyKeyExpr
 }
 
 export interface QuerierGetOptions {

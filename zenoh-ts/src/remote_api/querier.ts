@@ -43,7 +43,7 @@ export class RemoteQuerier {
     _payload?: Array<number>,
   ) {
     let getId = uuidv4();
-    this.sessionRef.get_receivers.set(getId, { callback, drop });
+    this.sessionRef.getReceivers.set(getId, { callback, drop });
 
     let payload = undefined;
     if (_payload != undefined) {

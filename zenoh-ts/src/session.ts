@@ -68,7 +68,7 @@ import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./
 
 export interface PutOptions {
   encoding?: Encoding,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
@@ -84,7 +84,7 @@ export interface PutOptions {
  * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 export interface DeleteOptions {
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   priority?: Priority,
   express?: boolean,
   attachment?: IntoZBytes
@@ -105,7 +105,7 @@ export interface DeleteOptions {
 */
 export interface GetOptions {
   consolidation?: ConsolidationMode,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   priority?: Priority,
   express?: boolean,
   encoding?: Encoding,
@@ -136,7 +136,7 @@ export interface QueryableOptions {
  */
 export interface PublisherOptions {
   encoding?: Encoding,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   priority?: Priority,
   express?: boolean,
   // Note realiability is unstable in Zenoh
@@ -218,7 +218,7 @@ export class Session {
     let express;
     let attachment;
     let encoding = putOpts?.encoding?.toString()
-    let congestionControl = congestion_control_to_int(putOpts?.congestion_control);
+    let congestionControl = congestion_control_to_int(putOpts?.congestionControl);
     let timestamp;
 
     if (putOpts?.timestamp != undefined) {
@@ -284,7 +284,7 @@ export class Session {
     deleteOpts?: DeleteOptions
   ): void {
     let keyExpr = new KeyExpr(intoKeyExpr);
-    let congestionControl = congestion_control_to_int(deleteOpts?.congestion_control);
+    let congestionControl = congestion_control_to_int(deleteOpts?.congestionControl);
     let priority = priority_to_int(deleteOpts?.priority);
     let express = deleteOpts?.express;
     let attachment;
@@ -350,7 +350,7 @@ export class Session {
 
     let consolidation = consolidation_mode_to_int(getOptions?.consolidation)
     let encoding = getOptions?.encoding?.toString();
-    let congestionControl = congestion_control_to_int(getOptions?.congestion_control);
+    let congestionControl = congestion_control_to_int(getOptions?.congestionControl);
     let priority = priority_to_int(getOptions?.priority);
     let express = getOptions?.express;
     let target = query_target_to_int(getOptions?.target);
@@ -447,7 +447,7 @@ export class Session {
 
     let tsIface: TimestampIface = await this.remoteSession.new_timestamp();
 
-    return new Timestamp(tsIface.id, tsIface.string_rep, tsIface.millis_since_epoch);
+    return new Timestamp(tsIface.id, tsIface.stringRep, tsIface.millisSinceEpoch);
   }
 
   /**
@@ -515,9 +515,9 @@ export class Session {
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
-    if (publisherOpts?.congestion_control != null) {
-      congestionControlRemote = congestion_control_to_int(publisherOpts?.congestion_control);
-      congestionControl = publisherOpts?.congestion_control;
+    if (publisherOpts?.congestionControl != null) {
+      congestionControlRemote = congestion_control_to_int(publisherOpts?.congestionControl);
+      congestionControl = publisherOpts?.congestionControl;
     }
 
     let reliabilityRemote = 0; // Default Reliable
@@ -577,21 +577,21 @@ export class Session {
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
-    if (querierOpts?.congestion_control != null) {
-      congestionControlRemote = congestion_control_to_int(querierOpts?.congestion_control);
-      congestionControl = querierOpts?.congestion_control;
+    if (querierOpts?.congestionControl != null) {
+      congestionControlRemote = congestion_control_to_int(querierOpts?.congestionControl);
+      congestionControl = querierOpts?.congestionControl;
     }
 
     let acceptRepliesRemote;
     let acceptReplies = ReplyKeyExpr.Any;
-    if (querierOpts?.accept_replies != null) {
-      acceptRepliesRemote = reply_key_expr_to_int(querierOpts?.accept_replies);
-      acceptReplies = querierOpts?.accept_replies;
+    if (querierOpts?.acceptReplies != null) {
+      acceptRepliesRemote = reply_key_expr_to_int(querierOpts?.acceptReplies);
+      acceptReplies = querierOpts?.acceptReplies;
     }
 
     let consolidation = consolidation_mode_to_int(querierOpts?.consolidation);
     let target = query_target_to_int(querierOpts?.target);
-    let allowedDestination = locality_to_int(querierOpts?.allowed_destination);
+    let allowedDestination = locality_to_int(querierOpts?.allowedDestination);
     let express = querierOpts?.express;
     let timeoutMillis: number | undefined = undefined;
 

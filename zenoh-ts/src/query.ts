@@ -129,7 +129,7 @@ export function QueryFromQueryWS(
 export interface ReplyOptions {
   encoding?: Encoding,
   priority?: Priority,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   express?: boolean,
   timestamp?: Timestamp;
   attachment?: IntoZBytes
@@ -155,7 +155,7 @@ export interface ReplyErrOptions {
  */
 export interface ReplyDelOptions {
   priority?: Priority,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   express?: boolean,
   timestamp?: Timestamp;
   attachment?: IntoZBytes
@@ -244,7 +244,7 @@ export class Query {
       keyExpr.toString(),
       new ZBytes(payload).to_bytes(),
       options?.encoding?.toString() ?? null,
-      congestion_control_to_int(options?.congestion_control),
+      congestion_control_to_int(options?.congestionControl),
       priority_to_int(options?.priority),
       options?.express ?? false,
       optAttachment,
@@ -282,7 +282,7 @@ export class Query {
     await this.sessionRef.reply_del(
       this.queryId, 
       keyExpr.toString(),
-      congestion_control_to_int(options?.congestion_control),
+      congestion_control_to_int(options?.congestionControl),
       priority_to_int(options?.priority),
       options?.express ?? false,
       optAttachment,
@@ -585,17 +585,17 @@ export type IntoSelector = Selector | IntoKeyExpr | String | string;
  */
 export class Selector {
   // KeyExpr object
-  private _key_expr: KeyExpr;
+  private keyExpr_: KeyExpr;
 
   // Optional : parameter field
-  private _parameters?: Parameters;
+  private parameters_?: Parameters;
 
   /**
    * gets Key Expression part of Selector 
    * @returns KeyExpr
    */
   key_expr(): KeyExpr {
-    return this._key_expr;
+    return this.keyExpr_;
   }
 
   /**
@@ -603,18 +603,18 @@ export class Selector {
    * @returns Parameters
    */
   parameters(): Parameters {
-    if (this._parameters == undefined) {
+    if (this.parameters_ == undefined) {
       return new Parameters("");
     } else {
-      return this._parameters;
+      return this.parameters_;
     }
   }
 
   toString(): string {
-    if (this._parameters != undefined) {
-      return this._key_expr.toString() + "?" + this._parameters?.toString()
+    if (this.parameters_ != undefined) {
+      return this.keyExpr_.toString() + "?" + this.parameters_?.toString()
     } else {
-      return this._key_expr.toString()
+      return this.keyExpr_.toString()
     }
   }
 
@@ -625,20 +625,20 @@ export class Selector {
   constructor(selector: IntoSelector, parameters?: IntoParameters) {
     let keyExpr: KeyExpr;
     if (selector instanceof Selector) {
-      this._key_expr = selector._key_expr;
-      this._parameters = selector._parameters;
+      this.keyExpr_ = selector.keyExpr_;
+      this.parameters_ = selector.parameters_;
       return;
     } else if (selector instanceof KeyExpr) {
       keyExpr = selector;
     } else {
       keyExpr = new KeyExpr(selector);
     }
-    this._key_expr = keyExpr;
+    this.keyExpr_ = keyExpr;
 
     if (parameters == undefined) {
-      this._parameters = new Parameters("")
+      this.parameters_ = new Parameters("")
     } else {
-      this._parameters = new Parameters(parameters);
+      this.parameters_ = new Parameters(parameters);
     }
   }
 

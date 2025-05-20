@@ -46,8 +46,8 @@ import { Closure, Drop } from "./closure.js";
 
 export interface TimestampIface {
   id: string,
-  string_rep: string,
-  millis_since_epoch: bigint
+  stringRep: string,
+  millisSinceEpoch: bigint
 }
 
 export enum RemoteRecvErr {
@@ -65,24 +65,24 @@ export class RemoteSession {
   session: UUIDv4 | null;
   subscribers: Map<UUIDv4, Closure<SampleWS>>;
   queryables: Map<UUIDv4, Closure<QueryWS>>;
-  get_receivers: Map<UUIDv4, Closure<ReplyWS>>;
-  liveliness_subscribers: Map<UUIDv4, Closure<SampleWS>>;
-  liveliness_get_receivers: Map<UUIDv4, Closure<ReplyWS>>;
-  pending_queries: Set<UUIDv4>;
-  session_info: SessionInfoIface | null;
-  _new_timestamp: TimestampIface | null;
+  getReceivers: Map<UUIDv4, Closure<ReplyWS>>;
+  livelinessSubscribers: Map<UUIDv4, Closure<SampleWS>>;
+  livelinessGetReceivers: Map<UUIDv4, Closure<ReplyWS>>;
+  pendingQueries: Set<UUIDv4>;
+  sessionInfo: SessionInfoIface | null;
+  newTimestamp_: TimestampIface | null;
 
   private constructor(link: RemoteLink) {
     this.link = link;
     this.session = null;
     this.subscribers = new Map<UUIDv4, Closure<SampleWS>>();
     this.queryables = new Map<UUIDv4, Closure<QueryWS>>();
-    this.get_receivers = new Map<UUIDv4, Closure<ReplyWS>>();
-    this.liveliness_subscribers = new Map<UUIDv4, Closure<SampleWS>>();
-    this.liveliness_get_receivers = new Map<UUIDv4, Closure<ReplyWS>>();
-    this.pending_queries = new Set<UUIDv4>;
-    this.session_info = null;
-    this._new_timestamp = null;
+    this.getReceivers = new Map<UUIDv4, Closure<ReplyWS>>();
+    this.livelinessSubscribers = new Map<UUIDv4, Closure<SampleWS>>();
+    this.livelinessGetReceivers = new Map<UUIDv4, Closure<ReplyWS>>();
+    this.pendingQueries = new Set<UUIDv4>;
+    this.sessionInfo = null;
+    this.newTimestamp_ = null;
   }
 
   //
@@ -109,13 +109,13 @@ export class RemoteSession {
   // Info
   async info(): Promise<SessionInfoIface> {
     let ctrlMessage: ControlMsg = "SessionInfo";
-    this.session_info = null;
+    this.sessionInfo = null;
     await this.send_ctrl_message(ctrlMessage);
 
-    while (this.session_info === null) {
+    while (this.sessionInfo === null) {
       await sleep(10);
     }
-    return this.session_info;
+    return this.sessionInfo;
   }
 
   // Put
@@ -167,7 +167,7 @@ export class RemoteSession {
     timeoutMs?: number,
   ) {
     let uuid = uuidv4();
-    this.get_receivers.set(uuid, {callback, drop});
+    this.getReceivers.set(uuid, {callback, drop});
 
     let optPayload = undefined;
     if (payload != undefined) {
@@ -225,7 +225,7 @@ export class RemoteSession {
   }
 
   async reply_final(queryUuid: UUIDv4): Promise<boolean> {
-    return this.pending_queries.delete(queryUuid);
+    return this.pendingQueries.delete(queryUuid);
   }
 
   async reply(uuid: UUIDv4, 
@@ -238,7 +238,7 @@ export class RemoteSession {
       attachment: Uint8Array | null,
       timestamp: string | null
     ): Promise<boolean> {
-      if (!this.pending_queries.has(uuid)) {
+      if (!this.pendingQueries.has(uuid)) {
         console.warn("Attempt to reply to unknown query:", uuid);
         return false;
       }
@@ -269,7 +269,7 @@ export class RemoteSession {
   }
 
   async reply_err(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
-    if (!this.pending_queries.has(uuid)) {
+    if (!this.pendingQueries.has(uuid)) {
       return false;
     }
     
@@ -294,7 +294,7 @@ export class RemoteSession {
       express: boolean,
       attachment: Uint8Array | null,
       timestamp: string | null): Promise<boolean> {
-    if (!this.pending_queries.has(uuid)) {
+    if (!this.pendingQueries.has(uuid)) {
       return false;
     }
     
@@ -326,23 +326,23 @@ export class RemoteSession {
     await this.send_ctrl_message(dataMessage);
     this.link.close();
 
-    this.pending_queries.clear();
+    this.pendingQueries.clear();
     for (let v of this.subscribers.values()) {
       v.drop();
     }
     this.subscribers.clear();
 
-    for (let v of this.liveliness_subscribers.values()) {
+    for (let v of this.livelinessSubscribers.values()) {
       v.drop();
     }
-    this.liveliness_subscribers.clear();
+    this.livelinessSubscribers.clear();
 
-    for (let v of this.get_receivers.values()) {
+    for (let v of this.getReceivers.values()) {
       v.drop();
     }
-    this.get_receivers.clear();
+    this.getReceivers.clear();
 
-    for (let v of this.liveliness_get_receivers.values()) {
+    for (let v of this.livelinessGetReceivers.values()) {
       v.drop();
     }
 
@@ -492,7 +492,7 @@ export class RemoteSession {
       Liveliness: { DeclareSubscriber: { key_expr: keyExpr, id: uuid, history: history } }
     };
 
-    this.liveliness_subscribers.set(uuid, {callback, drop});
+    this.livelinessSubscribers.set(uuid, {callback, drop});
 
     await this.send_ctrl_message(controlMessage);
 
@@ -522,7 +522,7 @@ export class RemoteSession {
       Liveliness: { Get: { key_expr: keyExpr, id: uuid, timeout: timeout } }
     };
 
-    this.liveliness_get_receivers.set(uuid, {callback, drop});
+    this.livelinessGetReceivers.set(uuid, {callback, drop});
 
     await this.send_ctrl_message(controlMessage);
   }
@@ -532,12 +532,12 @@ export class RemoteSession {
   async new_timestamp(): Promise<TimestampIface> {
     let uuid = uuidv4();
     let controlMessage: ControlMsg = { "NewTimestamp": uuid };
-    this._new_timestamp = null;
+    this.newTimestamp_ = null;
     await this.send_ctrl_message(controlMessage);
-    while (this._new_timestamp === null) {
+    while (this.newTimestamp_ === null) {
       await sleep(10);
     }
-    return this._new_timestamp;
+    return this.newTimestamp_;
   }
 
   //
@@ -599,30 +599,30 @@ export class RemoteSession {
   }
 
   undeclare_liveliness_subscriber(id: UUIDv4): boolean{
-    let handler = this.liveliness_subscribers.get(id);
+    let handler = this.livelinessSubscribers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.liveliness_subscribers.delete(id);
+      this.livelinessSubscribers.delete(id);
       return true;
     }
     return false;
   }
 
   private remove_get_receiver(id: UUIDv4): boolean{
-    let handler = this.get_receivers.get(id);
+    let handler = this.getReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.get_receivers.delete(id);
+      this.getReceivers.delete(id);
       return true;
     }
     return false;
   }
 
   private remove_liveliness_get_receiver(id: UUIDv4): boolean{
-    let handler = this.liveliness_get_receivers.get(id);
+    let handler = this.livelinessGetReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.liveliness_get_receivers.delete(id);
+      this.livelinessGetReceivers.delete(id);
       return true;
     }
     return false;
@@ -651,7 +651,7 @@ export class RemoteSession {
     if ("Sample" in dataMsg) {
       let subscriptionUuid: UUIDv4 = dataMsg["Sample"][1];
 
-      let subscriber = this.subscribers.get(subscriptionUuid) ?? this.liveliness_subscribers.get(subscriptionUuid);
+      let subscriber = this.subscribers.get(subscriptionUuid) ?? this.livelinessSubscribers.get(subscriptionUuid);
 
       if (subscriber != undefined) {
         let sample: SampleWS = dataMsg["Sample"][0];
@@ -662,7 +662,7 @@ export class RemoteSession {
     } else if ("GetReply" in dataMsg) {
       let getReply: ReplyWS = dataMsg["GetReply"];
 
-      let receiver = this.get_receivers.get(getReply.query_uuid) ?? this.liveliness_get_receivers.get(getReply.query_uuid);
+      let receiver = this.getReceivers.get(getReply.query_uuid) ?? this.livelinessGetReceivers.get(getReply.query_uuid);
 
       if (receiver != undefined) {
         receiver.callback(getReply);
@@ -675,7 +675,7 @@ export class RemoteSession {
         let queryableUuid: UUIDv4 = queryableMsg.Query.queryable_uuid;
         let queryable = this.queryables.get(queryableUuid);
         if (queryable != undefined) {
-          this.pending_queries.add(queryableMsg.Query.query.query_uuid);
+          this.pendingQueries.add(queryableMsg.Query.query.query_uuid);
           queryable.callback(queryableMsg.Query.query)
         } else {
           console.warn("Queryable Message UUID not in map", queryableUuid);
@@ -689,10 +689,10 @@ export class RemoteSession {
       }
     } else if ("SessionInfo" in dataMsg) {
       let sessionInfo: SessionInfoIface = dataMsg["SessionInfo"];
-      this.session_info = sessionInfo;
+      this.sessionInfo = sessionInfo;
     } else if ("NewTimestamp" in dataMsg) {
       let newTimestamp: TimestampIface = dataMsg["NewTimestamp"];
-      this._new_timestamp = newTimestamp;
+      this.newTimestamp_ = newTimestamp;
     } else {
       console.warn("Data Message not recognized Expected Variant", dataMsg);
     }
