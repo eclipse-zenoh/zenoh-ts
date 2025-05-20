@@ -31,7 +31,50 @@ module.exports = tseslint.config(
         'varsIgnorePattern': '^_'
       }],
       // Allow use before define, common in TypeScript for hoisted classes/functions
-      '@typescript-eslint/no-use-before-define': 'off'
+      '@typescript-eslint/no-use-before-define': 'off',
+      // Enforce consistent naming convention (allowing both camelCase and snake_case)
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        {
+          'selector': 'default',
+          'format': ['camelCase', 'snake_case']
+        },
+        {
+          'selector': 'variable',
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case']
+        },
+        {
+          'selector': 'parameter',
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'memberLike',
+          'modifiers': ['private'],
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'typeLike',
+          'format': ['PascalCase']
+        },
+        {
+          'selector': 'interface',
+          'format': ['PascalCase']
+        },
+        {
+          'selector': 'property',
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case']
+        },
+        {
+          'selector': 'method',
+          'format': ['camelCase', 'snake_case']
+        },
+        {
+          'selector': 'enumMember',
+          'format': ['PascalCase', 'UPPER_CASE', 'snake_case']
+        }
+      ]
     }
   },
   // Config for examples, tests, and dist with no type checking
@@ -52,7 +95,50 @@ module.exports = tseslint.config(
     },
     rules: {
       // Disable the problematic rule for examples and tests
-      '@typescript-eslint/no-use-before-define': 'off'
+      '@typescript-eslint/no-use-before-define': 'off',
+      // Enforce consistent naming convention (allowing both camelCase and snake_case)
+      '@typescript-eslint/naming-convention': [
+        'warn',
+        {
+          'selector': 'default',
+          'format': ['camelCase', 'snake_case']
+        },
+        {
+          'selector': 'variable',
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case']
+        },
+        {
+          'selector': 'parameter',
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'memberLike',
+          'modifiers': ['private'],
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'typeLike',
+          'format': ['PascalCase']
+        },
+        {
+          'selector': 'interface',
+          'format': ['PascalCase']
+        },
+        {
+          'selector': 'property',
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case']
+        },
+        {
+          'selector': 'method',
+          'format': ['camelCase', 'snake_case']
+        },
+        {
+          'selector': 'enumMember',
+          'format': ['PascalCase', 'UPPER_CASE', 'snake_case']
+        }
+      ]
     }
   }
 );
