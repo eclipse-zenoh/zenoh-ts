@@ -33,14 +33,14 @@ export class Liveliness {
 
   constructor(private remoteSession: RemoteSession) {}
 
-  async declare_token(intoKeyExpr: IntoKeyExpr): Promise<LivelinessToken> {
+  async declareToken(intoKeyExpr: IntoKeyExpr): Promise<LivelinessToken> {
     let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
-    let uuid = await this.remoteSession.declare_liveliness_token(keyExpr.toString());
+    let uuid = await this.remoteSession.declareLivelinessToken(keyExpr.toString());
 
     return new LivelinessToken(this.remoteSession, uuid)
   }
 
-  async declare_subscriber(intoKeyExpr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
+  async declareSubscriber(intoKeyExpr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
 
     let keyExpr = new KeyExpr(intoKeyExpr);
 
@@ -57,7 +57,7 @@ export class Liveliness {
       callback(sample);
     }
 
-    let remoteSubscriber = await this.remoteSession.declare_liveliness_subscriber(keyExpr.toString(), history, callbackWS, drop);
+    let remoteSubscriber = await this.remoteSession.declareLivelinessSubscriber(keyExpr.toString(), history, callbackWS, drop);
 
     let subscriber = new Subscriber(
       remoteSubscriber,
@@ -86,7 +86,7 @@ export class Liveliness {
       callback(reply);
     }
 
-    await this.remoteSession.get_liveliness(
+    await this.remoteSession.getLiveliness(
       keyExpr.toString(),
       callbackWS,
       drop,
@@ -114,6 +114,6 @@ export class LivelinessToken {
       Liveliness: { "UndeclareToken": this.uuid.toString() },
     };
 
-    await this.remoteSession.send_ctrl_message(controlMsg);
+    await this.remoteSession.sendCtrlMessage(controlMsg);
   }
 }

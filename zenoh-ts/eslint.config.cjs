@@ -82,7 +82,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase'],
+          'format': ['camelCase'],
           'trailingUnderscore': 'allow',
           'leadingUnderscore': 'allow'
         },
@@ -96,11 +96,12 @@ module.exports = tseslint.config(
         {
           'selector': 'objectLiteralProperty',
           'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'trailingUnderscore': 'allow',
           'leadingUnderscore': 'allow'
         },
         {
           'selector': 'method',
-          'format': ['camelCase', 'snake_case'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow'
         },
         {

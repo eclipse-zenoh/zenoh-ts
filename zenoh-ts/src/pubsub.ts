@@ -53,7 +53,7 @@ export class Subscriber {
    */
   constructor(
     private remoteSubscriber: RemoteSubscriber,
-    private keyExpr: KeyExpr,
+    private keyExpr_: KeyExpr,
     private receiver_?: ChannelReceiver<Sample>,
   ) {}
 
@@ -61,8 +61,8 @@ export class Subscriber {
    * returns the key expression of an object
    * @returns KeyExpr
    */
-  key_expr(): KeyExpr {
-    return this.keyExpr
+  keyExpr(): KeyExpr {
+    return this.keyExpr_
   }
   /**
    * returns a sample receiver for non-callback subscriber, undefined otherwise.
@@ -126,9 +126,9 @@ export class Publisher {
    *  Note: this should never be called directly by the user. 
    *  please use `declare_publisher` on a session.
    * 
-   * @param {KeyExpr} keyExpr -  A Key Expression
+   * @param {KeyExpr} keyExpr_ -  A Key Expression
    * @param {RemotePublisher} remotePublisher -  A Session to create the publisher on
-   * @param {CongestionControl} congestionControl -  Congestion control 
+   * @param {CongestionControl} congestionControl_ -  Congestion control 
    * @param {Priority} priority_ -  Priority for Zenoh Data
    * @param {Reliability} reliability_ - Reliability for publishing data
    * 
@@ -137,8 +137,8 @@ export class Publisher {
    */
   constructor(
     private remotePublisher: RemotePublisher,
-    private keyExpr: KeyExpr,
-    private congestionControl: CongestionControl,
+    private keyExpr_: KeyExpr,
+    private congestionControl_: CongestionControl,
     private priority_: Priority,
     private reliability_: Reliability,
     private encoding_: Encoding,
@@ -149,8 +149,8 @@ export class Publisher {
    *
    * @returns {KeyExpr} instance
    */
-  key_expr(): KeyExpr {
-    return this.keyExpr;
+  keyExpr(): KeyExpr {
+    return this.keyExpr_;
   }
 
   /**
@@ -169,11 +169,11 @@ export class Publisher {
     let encoding;
     let timestamp = null;
     if (putOptions?.timestamp != null) {
-      timestamp = putOptions.timestamp.get_resource_uuid() as unknown as string;
+      timestamp = putOptions.timestamp.getResourceUuid() as unknown as string;
     }
 
     if (putOptions?.encoding != null) {
-      encoding = Encoding.from_string(putOptions.encoding.toString());
+      encoding = Encoding.fromString(putOptions.encoding.toString());
     } else {
       encoding = Encoding.default();
     }
@@ -181,11 +181,11 @@ export class Publisher {
     let attachment = null;
     if (putOptions?.attachment != null) {
       let attBytes = new ZBytes(putOptions.attachment);
-      attachment = Array.from(attBytes.to_bytes());
+      attachment = Array.from(attBytes.toBytes());
     }
 
     return await this.remotePublisher.put(
-      Array.from(zbytes.to_bytes()),
+      Array.from(zbytes.toBytes()),
       attachment,
       encoding.toString(),
       timestamp,
@@ -224,8 +224,8 @@ export class Publisher {
    *   
    * @returns {CongestionControl}
    */
-  congestion_control(): CongestionControl {
-    return this.congestionControl;
+  congestionControl(): CongestionControl {
+    return this.congestionControl_;
   }
 
   /**
@@ -239,12 +239,12 @@ export class Publisher {
     let attachment = null;
     if (deleteOptions.attachment != null) {
       let attBytes = new ZBytes(deleteOptions.attachment);
-      attachment = Array.from(attBytes.to_bytes());
+      attachment = Array.from(attBytes.toBytes());
     }
 
     let timestamp = null;
     if (deleteOptions.timestamp != null) {
-      timestamp = deleteOptions.timestamp.get_resource_uuid() as unknown as string;
+      timestamp = deleteOptions.timestamp.getResourceUuid() as unknown as string;
     }
 
     return await this.remotePublisher.delete(

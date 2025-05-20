@@ -56,7 +56,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   join(other: IntoKeyExpr): KeyExpr {
-    const keyExpr = join(this._inner, KeyExpr.into_string(other));
+    const keyExpr = join(this._inner, KeyExpr.intoString(other));
     return new KeyExpr(keyExpr)
   }
 
@@ -65,7 +65,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   concat(other: IntoKeyExpr): KeyExpr {
-    const keyExpr = concat(this._inner, KeyExpr.into_string(other));
+    const keyExpr = concat(this._inner, KeyExpr.intoString(other));
     return new KeyExpr(keyExpr)
   }
 
@@ -74,7 +74,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   includes(other: IntoKeyExpr): boolean {
-    return includes(this._inner, KeyExpr.into_string(other))
+    return includes(this._inner, KeyExpr.intoString(other))
   }
 
   /**
@@ -82,7 +82,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   intersects(other: IntoKeyExpr): boolean {
-    return intersects(this._inner, KeyExpr.into_string(other))
+    return intersects(this._inner, KeyExpr.intoString(other))
   }
 
   /**
@@ -90,11 +90,11 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   static autocanonize(other: IntoKeyExpr): KeyExpr {
-    const keyExpr = autocanonize(KeyExpr.into_string(other));
+    const keyExpr = autocanonize(KeyExpr.intoString(other));
     return new KeyExpr(keyExpr)
   }
 
-  private static into_string(other: IntoKeyExpr): string {
+  private static intoString(other: IntoKeyExpr): string {
     if (other instanceof KeyExpr) {
       return other._inner;
     } else if (other instanceof String) {

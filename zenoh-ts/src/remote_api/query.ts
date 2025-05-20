@@ -33,7 +33,7 @@ export class RemoteQueryable {
   ) {}
 
   async undeclare() {
-    if (!this.sessionRef.undeclare_queryable(this.queryableId.toString())) {
+    if (!this.sessionRef.undeclareQueryable(this.queryableId.toString())) {
       console.warn("Queryable keyexpr:`" +
         this.keyExpr +
         "` id:`" +
@@ -45,6 +45,6 @@ export class RemoteQueryable {
     let ctrlMessage: ControlMsg = {
       UndeclareQueryable: this.queryableId.toString(),
     };
-    await this.sessionRef.send_ctrl_message(ctrlMessage);
+    await this.sessionRef.sendCtrlMessage(ctrlMessage);
   }
 }

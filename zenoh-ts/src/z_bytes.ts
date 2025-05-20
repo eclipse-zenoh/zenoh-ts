@@ -58,7 +58,7 @@ export class ZBytes {
   * 
   * @returns boolean
   */
-  public is_empty(): boolean {
+  public isEmpty(): boolean {
     return this._buffer.length == 0;
   }
 
@@ -76,7 +76,7 @@ export class ZBytes {
    * 
    * @returns Uint8Array
    */
-  public to_bytes(): Uint8Array {
+  public toBytes(): Uint8Array {
     return this._buffer
   }
 
@@ -85,7 +85,7 @@ export class ZBytes {
    * 
    * @returns string
    */
-  public to_string(): string {
+  public toString(): string {
     let decoder = new TextDecoder();
     return decoder.decode(this._buffer)
   }

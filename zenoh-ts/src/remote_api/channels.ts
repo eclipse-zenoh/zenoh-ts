@@ -34,12 +34,12 @@ export interface ChannelSender<T> {
 }
 
 export interface IntoSenderReceiverPair<T> {
-  into_sender_receiver_pair: () => [ChannelSender<T>, ChannelReceiver<T>]
+  intoSenderReceiverPair: () => [ChannelSender<T>, ChannelReceiver<T>]
 }
 
 
 export function isIntoSenderReceiverPair<T>(object: any): object is IntoSenderReceiverPair<T> {
-  return (<IntoSenderReceiverPair<T>>(object)).into_sender_receiver_pair != undefined;
+  return (<IntoSenderReceiverPair<T>>(object)).intoSenderReceiverPair != undefined;
 }
 
 export type Handler<T> = Callback<T> | [Callback<T>, Drop] | IntoSenderReceiverPair<T>;
@@ -47,7 +47,7 @@ export type Handler<T> = Callback<T> | [Callback<T>, Drop] | IntoSenderReceiverP
 
 export function into_cb_drop_receiver<T>(handler: Handler<T>): [Callback<T>, Drop, ChannelReceiver<T>?] {
   if (isIntoSenderReceiverPair<T>(handler)) {
-    let [sender, receiver] = handler.into_sender_receiver_pair();
+    let [sender, receiver] = handler.intoSenderReceiverPair();
     let cb = (data: T): void => {
       sender.send(data);
     };
@@ -134,7 +134,7 @@ export class FifoChannel<T> {
   /**
    * Split Channel into @interface ChannelSender and @interface ChannelReceiver pair.
    */
-  into_sender_receiver_pair(): [ChannelSender<T>, ChannelReceiver<T>] {
+  intoSenderReceiverPair(): [ChannelSender<T>, ChannelReceiver<T>] {
     return [this, this];
   }
 }

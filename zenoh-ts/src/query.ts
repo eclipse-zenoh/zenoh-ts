@@ -95,7 +95,7 @@ export function QueryFromQueryWS(
     attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(queryWS.attachment)));
   }
   if (queryWS.encoding != null) {
-    encoding = Encoding.from_string(queryWS.encoding);
+    encoding = Encoding.fromString(queryWS.encoding);
   }
 
   return new Query(
@@ -173,7 +173,7 @@ export class Query {
     */
   constructor(
     private queryId: UUIDv4,
-    private keyExpr: KeyExpr,
+    private keyExpr_: KeyExpr,
     private parameters_: Parameters,
     private payload_: ZBytes | undefined,
     private attachment_: ZBytes | undefined,
@@ -186,14 +186,14 @@ export class Query {
    * @returns Selector
    */
   selector() {
-    return new Selector(this.keyExpr, this.parameters_)
+    return new Selector(this.keyExpr_, this.parameters_)
   }
   /**
    * gets the KeyExpr of Query
    * @returns KeyExpr
    */
-  key_expr(): KeyExpr {
-    return this.keyExpr;
+  keyExpr(): KeyExpr {
+    return this.keyExpr_;
   }
   /**
    * gets the Parameters of Query
@@ -236,13 +236,13 @@ export class Query {
 
     let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      optAttachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).toBytes();
     }
 
     await this.sessionRef.reply(
       this.queryId, 
       keyExpr.toString(),
-      new ZBytes(payload).to_bytes(),
+      new ZBytes(payload).toBytes(),
       options?.encoding?.toString() ?? null,
       congestion_control_to_int(options?.congestionControl),
       priority_to_int(options?.priority),
@@ -257,10 +257,10 @@ export class Query {
   * @param {ReplyErrOptions=} options
   * @returns void
   */
-  async reply_err(payload: IntoZBytes, options?: ReplyErrOptions) {
-    await this.sessionRef.reply_err(
+  async replyErr(payload: IntoZBytes, options?: ReplyErrOptions) {
+    await this.sessionRef.replyErr(
       this.queryId, 
-      new ZBytes(payload).to_bytes(),
+      new ZBytes(payload).toBytes(),
       options?.encoding?.toString() ?? null,
     );
   }
@@ -271,15 +271,15 @@ export class Query {
     * @param {ReplyDelOptions=} options
     * @returns void
     */
-  async reply_del(intoKeyExpr: IntoKeyExpr, options?: ReplyDelOptions) {
+  async replyDel(intoKeyExpr: IntoKeyExpr, options?: ReplyDelOptions) {
     let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
     let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      optAttachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).toBytes();
     }
 
-    await this.sessionRef.reply_del(
+    await this.sessionRef.replyDel(
       this.queryId, 
       keyExpr.toString(),
       congestion_control_to_int(options?.congestionControl),
@@ -291,7 +291,7 @@ export class Query {
   }
 
   toString(): string {
-    return this.key_expr.toString() + "?" + this.parameters.toString()
+    return this.keyExpr.toString() + "?" + this.parameters.toString()
   }
 }
 
@@ -423,7 +423,7 @@ export class Parameters {
    * Returns true if properties does not contain anything.
    * @returns boolean
    */
-  is_empty(): boolean {
+  isEmpty(): boolean {
     // Quick check for empty string
     if (!this._source) return true;
     // Otherwise check if there are any valid entries
@@ -437,7 +437,7 @@ export class Parameters {
    * checks if parameters contains key
    * @returns boolean
    */
-  contains_key(key: string): boolean {
+  containsKey(key: string): boolean {
     for (const [keyStart, keyLen] of this._iter()) {
       if (this._source.slice(keyStart, keyStart + keyLen) === key) {
         return true;
@@ -529,7 +529,7 @@ export class ReplyError {
     */
   constructor(replyErrWS: ReplyErrorWS) {
     let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(replyErrWS.payload)));
-    let encoding = Encoding.from_string(replyErrWS.encoding);
+    let encoding = Encoding.fromString(replyErrWS.encoding);
     this._encoding = encoding;
     this._payload = payload;
   }
@@ -594,7 +594,7 @@ export class Selector {
    * gets Key Expression part of Selector 
    * @returns KeyExpr
    */
-  key_expr(): KeyExpr {
+  keyExpr(): KeyExpr {
     return this.keyExpr_;
   }
 

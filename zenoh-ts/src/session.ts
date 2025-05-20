@@ -195,8 +195,8 @@ export class Session {
     this.remoteSession.close();
   }
 
-  is_closed() {
-    return this.remoteSession.is_closed();
+  isClosed() {
+    return this.remoteSession.isClosed();
   }
   /**
    * Puts a value on the session, on a specific key expression KeyExpr
@@ -222,7 +222,7 @@ export class Session {
     let timestamp;
 
     if (putOpts?.timestamp != undefined) {
-      timestamp = putOpts?.timestamp.get_resource_uuid() as string;
+      timestamp = putOpts?.timestamp.getResourceUuid() as string;
     }
     if (putOpts?.priority != undefined) {
       priority = priority_to_int(putOpts?.priority);
@@ -230,12 +230,12 @@ export class Session {
     express = putOpts?.express?.valueOf();
 
     if (putOpts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(putOpts?.attachment).to_bytes())
+      attachment = Array.from(new ZBytes(putOpts?.attachment).toBytes())
     }
 
     this.remoteSession.put(
       keyExpr.toString(),
-      Array.from(zBytes.to_bytes()),
+      Array.from(zBytes.toBytes()),
       encoding,
       congestionControl,
       priority,
@@ -250,7 +250,7 @@ export class Session {
    *
    * @returns KeyExpr
    */
-  declare_keyexpr(intoKeyExpr: IntoKeyExpr): KeyExpr {
+  declareKeyexpr(intoKeyExpr: IntoKeyExpr): KeyExpr {
     return new KeyExpr(intoKeyExpr)
   }
 
@@ -291,11 +291,11 @@ export class Session {
     let timestamp;
 
     if (deleteOpts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(deleteOpts?.attachment).to_bytes())
+      attachment = Array.from(new ZBytes(deleteOpts?.attachment).toBytes())
     }
 
     if (deleteOpts?.timestamp != undefined) {
-      timestamp = deleteOpts?.timestamp.get_resource_uuid() as string;
+      timestamp = deleteOpts?.timestamp.getResourceUuid() as string;
     }
 
     this.remoteSession.delete(
@@ -362,14 +362,14 @@ export class Session {
       timeoutMillis = Duration.milliseconds.from(getOptions?.timeout);
     }
     if (getOptions?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(getOptions?.attachment).to_bytes())
+      attachment = Array.from(new ZBytes(getOptions?.attachment).toBytes())
     }
     if (getOptions?.payload != undefined) {
-      payload = Array.from(new ZBytes(getOptions?.payload).to_bytes())
+      payload = Array.from(new ZBytes(getOptions?.payload).toBytes())
     }
 
     await this.remoteSession.get(
-      selector.key_expr().toString(),
+      selector.keyExpr().toString(),
       selector.parameters().toString(),
       callbackWS,
       drop,
@@ -399,7 +399,7 @@ export class Session {
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
-  async declare_subscriber(
+  async declareSubscriber(
     intoKeyExpr: IntoKeyExpr,
     subscriberOpts?: SubscriberOptions
   ): Promise<Subscriber> {
@@ -414,7 +414,7 @@ export class Session {
       callback(sample);
     }
 
-    remoteSubscriber = await this.remoteSession.declare_remote_subscriber(
+    remoteSubscriber = await this.remoteSession.declareRemoteSubscriber(
       intoKeyExpr.toString(),
       callbackWS,
       drop
@@ -443,9 +443,9 @@ export class Session {
    * 
    * @returns Timestamp
    */
-  async new_timestamp(): Promise<Timestamp> {
+  async newTimestamp(): Promise<Timestamp> {
 
-    let tsIface: TimestampIface = await this.remoteSession.new_timestamp();
+    let tsIface: TimestampIface = await this.remoteSession.newTimestamp();
 
     return new Timestamp(tsIface.id, tsIface.stringRep, tsIface.millisSinceEpoch);
   }
@@ -458,7 +458,7 @@ export class Session {
   *
   * @returns Queryable
   */
-  async declare_queryable(
+  async declareQueryable(
     intoKeyExpr: IntoKeyExpr,
     queryableOpts?: QueryableOptions
   ): Promise<Queryable> {
@@ -477,7 +477,7 @@ export class Session {
       callback(query);
     }
 
-    let remoteQueryable = await this.remoteSession.declare_remote_queryable(
+    let remoteQueryable = await this.remoteSession.declareRemoteQueryable(
       keyExpr.toString(),
       complete,
       callbackWS,
@@ -498,7 +498,7 @@ export class Session {
   * @param {PublisherOptions=} publisherOpts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
-  async declare_publisher(
+  async declarePublisher(
     intoKeyExpr: IntoKeyExpr,
     publisherOpts?: PublisherOptions
   ): Promise<Publisher> {
@@ -534,7 +534,7 @@ export class Session {
     }
 
     let remotePublisher: RemotePublisher =
-      await this.remoteSession.declare_remote_publisher(
+      await this.remoteSession.declareRemotePublisher(
         keyExpr.toString(),
         encodingRemote,
         congestionControlRemote,
@@ -561,7 +561,7 @@ export class Session {
   * @param {QuerierOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
-  async declare_querier(
+  async declareQuerier(
     intoKeyexpr: IntoKeyExpr,
     querierOpts: QuerierOptions,
   ): Promise<Querier> {
@@ -599,7 +599,7 @@ export class Session {
       timeoutMillis = Duration.milliseconds.from(querierOpts?.timeout);
     }
 
-    let remoteQuerier = await this.remoteSession.declare_remote_querier(
+    let remoteQuerier = await this.remoteSession.declareRemoteQuerier(
       keyExpr.toString(),
       consolidation,
       congestionControlRemote,
@@ -637,37 +637,25 @@ export function open(config: Config): Promise<Session> {
  *  Struct to expose Info for your Zenoh Session
  */
 export class SessionInfo {
-  private _zid: ZenohId
-  private _routers: ZenohId[]
-  private _peers: ZenohId[]
-
   constructor(
-    zid: ZenohId,
-    peers: ZenohId[],
-    routers: ZenohId[],
-  ) {
-    this._zid = zid;
-    this._routers = routers;
-    this._peers = peers;
-  }
+    private zid_: ZenohId,
+    private peers_: ZenohId[],
+    private routers_: ZenohId[],
+  ) {}
 
   zid(): ZenohId {
-    return this._zid;
+    return this.zid_;
   }
-  routers_zid(): ZenohId[] {
-    return this._routers;
+  routersZid(): ZenohId[] {
+    return this.routers_;
   }
-  peers_zid(): ZenohId[] {
-    return this._peers;
+  peersZid(): ZenohId[] {
+    return this.peers_;
   }
 }
 
 export class ZenohId {
-  private zid: string
-
-  constructor(zid: string) {
-    this.zid = zid;
-  }
+  constructor(private zid: string) {}
 
   toString(): string {
     return this.zid;

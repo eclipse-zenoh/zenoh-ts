@@ -235,7 +235,7 @@ export class Sample {
   timestamp(): string | undefined {
     return this.timestamp_;
   }
-  congestion_control(): CongestionControl {
+  congestionControl(): CongestionControl {
     return this.congestionControl_;
   }
   priority(): Priority {
@@ -264,7 +264,7 @@ export function SampleFromSampleWS(sampleWS: SampleWS) {
 
   let keyExr = new KeyExpr(sampleWS.key_expr);
 
-  let encoding = Encoding.from_string(sampleWS.encoding);
+  let encoding = Encoding.fromString(sampleWS.encoding);
 
   let priority = priority_from_int(sampleWS.priority);
 
@@ -306,7 +306,7 @@ export function SampleWSFromSample(
   attachement: ZBytes | undefined,
 ): SampleWS {
   let keyExpr: OwnedKeyExprWrapper = sample.keyexpr().toString();
-  let value: Array<number> = Array.from(sample.payload().to_bytes());
+  let value: Array<number> = Array.from(sample.payload().toBytes());
 
   let sampleKind: SampleKindWS;
   if (sample.kind() == SampleKind.DELETE) {
@@ -323,7 +323,7 @@ export function SampleWSFromSample(
 
   let attach = null;
   if (attachement != null) {
-    attach = b64_str_from_bytes(new Uint8Array(attachement.to_bytes()));
+    attach = b64_str_from_bytes(new Uint8Array(attachement.toBytes()));
   }
 
   let sampleWS: SampleWS = {

@@ -26,7 +26,7 @@ export class RemoteLink {
   }
 
   static async new(locator: string): Promise<RemoteLink> {
-    let websocketEndpoint = this.parse_zenoh_locator(locator);
+    let websocketEndpoint = this.parseZenohLocator(locator);
 
     let retries = 0;
     let retryTimeoutMs = RETRY_TIMEOUT_MS;
@@ -72,7 +72,7 @@ export class RemoteLink {
   }
 
   async send(msg: string | ArrayBufferLike | Blob | ArrayBufferView) {
-    if (!this.is_ok) {
+    if (!this.isOk) {
       throw new Error("WebSocket is closed");
     }
     while (this.ws.bufferedAmount > MAX_WS_BUFFER_SIZE) {
@@ -81,7 +81,7 @@ export class RemoteLink {
     this.ws.send(msg);
   }
 
-  is_ok(): boolean {
+  isOk(): boolean {
     return this.ws.readyState == WebSocket.OPEN;
   }
 
@@ -91,7 +91,7 @@ export class RemoteLink {
   }
 
 
-  private static parse_zenoh_locator(locator: string): string {
+  private static parseZenohLocator(locator: string): string {
     let parts = locator.split("/", 2);
     if (parts.length != 2) {
       return locator;

@@ -31,7 +31,7 @@ export class RemoteQuerier {
       UndeclareQuerier: this.querierId as string
     };
 
-    await this.sessionRef.send_ctrl_message(controlMsg);
+    await this.sessionRef.sendCtrlMessage(controlMsg);
   }
 
   async get(
@@ -65,7 +65,7 @@ export class RemoteQuerier {
             }
         };
 
-    await this.sessionRef.send_ctrl_message(controlMsg);
+    await this.sessionRef.sendCtrlMessage(controlMsg);
   }
 
 }

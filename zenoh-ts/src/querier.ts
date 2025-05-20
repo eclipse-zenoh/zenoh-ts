@@ -144,10 +144,10 @@ export class Querier {
    */
   constructor(
     private remoteQuerier: RemoteQuerier,
-    private keyExpr: KeyExpr,
-    private congestionControl: CongestionControl,
+    private keyExpr_: KeyExpr,
+    private congestionControl_: CongestionControl,
     private priority_: Priority,
-    private acceptReplies: ReplyKeyExpr,
+    private acceptReplies_: ReplyKeyExpr,
   ) {}
 
   /**
@@ -163,16 +163,16 @@ export class Querier {
    * returns key expression for this Querier
    * @returns KeyExpr
    */
-  key_expr() {
-    return this.keyExpr;
+  keyExpr() {
+    return this.keyExpr_;
   }
 
   /**
    * returns Congestion Control for this Querier
    * @returns CongestionControl
    */
-  congestion_control() {
-    return this.congestionControl;
+  congestionControl() {
+    return this.congestionControl_;
   }
 
   /**
@@ -187,8 +187,8 @@ export class Querier {
    * returns ReplyKeyExpr for this Querier
    * @returns ReplyKeyExpr
    */
-  accept_replies() {
-    return this.acceptReplies;
+  acceptReplies() {
+    return this.acceptReplies_;
   }
 
   /**
@@ -207,10 +207,10 @@ export class Querier {
     let encoding = getOptions?.encoding?.toString()
 
     if (getOptions?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(getOptions?.attachment).to_bytes())
+      attachment = Array.from(new ZBytes(getOptions?.attachment).toBytes())
     }
     if (getOptions?.payload != undefined) {
-      payload = Array.from(new ZBytes(getOptions?.payload).to_bytes())
+      payload = Array.from(new ZBytes(getOptions?.payload).toBytes())
     }
     if (parameters != undefined) {
       parametersStr = parameters.toString();

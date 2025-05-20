@@ -91,10 +91,10 @@ export class RemoteSession {
   static async new(locator: string): Promise<RemoteSession> {
     let link = await RemoteLink.new(locator);
     let session =  new RemoteSession(link);
-    session.link.onmessage((msg: any) => { session.on_message_received(msg); });
+    session.link.onmessage((msg: any) => { session.onMessageReceived(msg); });
 
     let open: ControlMsg = "OpenSession";
-    await session.send_ctrl_message(open);
+    await session.sendCtrlMessage(open);
     while (session.session == null) {
       await sleep(10);
     }
@@ -110,7 +110,7 @@ export class RemoteSession {
   async info(): Promise<SessionInfoIface> {
     let ctrlMessage: ControlMsg = "SessionInfo";
     this.sessionInfo = null;
-    await this.send_ctrl_message(ctrlMessage);
+    await this.sendCtrlMessage(ctrlMessage);
 
     while (this.sessionInfo === null) {
       await sleep(10);
@@ -147,7 +147,7 @@ export class RemoteSession {
         timestamp: timestamp
       },
     };
-    await this.send_ctrl_message(ctrlMessage);
+    await this.sendCtrlMessage(ctrlMessage);
   }
 
   // get
@@ -194,7 +194,7 @@ export class RemoteSession {
         attachment: optAttachment
       },
     };
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
   }
 
   // delete
@@ -221,10 +221,10 @@ export class RemoteSession {
         timestamp: timestamp
       }
     };
-    await this.send_ctrl_message(dataMessage);
+    await this.sendCtrlMessage(dataMessage);
   }
 
-  async reply_final(queryUuid: UUIDv4): Promise<boolean> {
+  async replyFinal(queryUuid: UUIDv4): Promise<boolean> {
     return this.pendingQueries.delete(queryUuid);
   }
 
@@ -263,12 +263,12 @@ export class RemoteSession {
 
       let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
       let dataMsg: DataMsg = { Queryable: queryableMsg };
-      await this.send_data_message(dataMsg);
+      await this.sendDataMessage(dataMsg);
 
-      return await this.reply_final(uuid);
+      return await this.replyFinal(uuid);
   }
 
-  async reply_err(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
+  async replyErr(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
     if (!this.pendingQueries.has(uuid)) {
       return false;
     }
@@ -282,12 +282,12 @@ export class RemoteSession {
 
     let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
     let dataMsg: DataMsg = { Queryable: queryableMsg };
-    await this.send_data_message(dataMsg);
+    await this.sendDataMessage(dataMsg);
 
-    return await this.reply_final(uuid);
+    return await this.replyFinal(uuid);
   }
 
-  async reply_del(uuid: UUIDv4,
+  async replyDel(uuid: UUIDv4,
       keyExpr: string,
       congestionControl: number,
       priority: number,
@@ -316,14 +316,14 @@ export class RemoteSession {
 
     let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
     let dataMsg: DataMsg = { Queryable: queryableMsg };
-    await this.send_data_message(dataMsg);
+    await this.sendDataMessage(dataMsg);
 
-    return await this.reply_final(uuid);
+    return await this.replyFinal(uuid);
 }
 
   async close() {
     let dataMessage: ControlMsg = "CloseSession";
-    await this.send_ctrl_message(dataMessage);
+    await this.sendCtrlMessage(dataMessage);
     this.link.close();
 
     this.pendingQueries.clear();
@@ -352,7 +352,7 @@ export class RemoteSession {
     this.queryables.clear();
   }
 
-  async declare_remote_subscriber(
+  async declareRemoteSubscriber(
     keyExpr: string,
     callback: SampleCallback,
     drop: Drop,
@@ -365,7 +365,7 @@ export class RemoteSession {
 
     this.subscribers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
 
     let subscriber = new RemoteSubscriber(
       keyExpr,
@@ -376,7 +376,7 @@ export class RemoteSession {
   }
 
 
-  async declare_remote_queryable(
+  async declareRemoteQueryable(
     keyExpr: string,
     complete: boolean,
     callback: QueryCallback,
@@ -390,7 +390,7 @@ export class RemoteSession {
 
     this.queryables.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
 
     let queryable = new RemoteQueryable(
       keyExpr,
@@ -401,7 +401,7 @@ export class RemoteSession {
     return queryable;
   }
 
-  async declare_remote_publisher(
+  async declareRemotePublisher(
     keyExpr: string,
     encoding?: string,
     congestionControl?: number,
@@ -422,11 +422,11 @@ export class RemoteSession {
         id: uuid,
       },
     };
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
     return publisher;
   }
 
-  async declare_remote_querier(
+  async declareRemoteQuerier(
     keyExpr: string,
     consolidation?: number,
     congestionControl?: number,
@@ -460,13 +460,13 @@ export class RemoteSession {
       },
     };
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
     return querier;
   }
 
 
   // Liveliness 
-  async declare_liveliness_token(
+  async declareLivelinessToken(
     keyExpr: string,
   ): Promise<UUIDv4> {
     let uuid = uuidv4();
@@ -475,12 +475,12 @@ export class RemoteSession {
       Liveliness: { DeclareToken: { key_expr: keyExpr, id: uuid } }
     };
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
 
     return uuid;
   }
 
-  async declare_liveliness_subscriber(
+  async declareLivelinessSubscriber(
     keyExpr: string,
     history: boolean,
     callback: SampleCallback,
@@ -494,7 +494,7 @@ export class RemoteSession {
 
     this.livelinessSubscribers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
 
     let subscriber = new RemoteSubscriber(
       keyExpr,
@@ -505,7 +505,7 @@ export class RemoteSession {
     return subscriber;
   }
 
-  async get_liveliness(
+  async getLiveliness(
     keyExpr: string,
     callback: ReplyCallback,
     drop: Drop,
@@ -524,16 +524,16 @@ export class RemoteSession {
 
     this.livelinessGetReceivers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
   }
 
   // Note: This method blocks until Timestamp has been created
   // The correct way to do this would be with a request / response
-  async new_timestamp(): Promise<TimestampIface> {
+  async newTimestamp(): Promise<TimestampIface> {
     let uuid = uuidv4();
     let controlMessage: ControlMsg = { "NewTimestamp": uuid };
     this.newTimestamp_ = null;
-    await this.send_ctrl_message(controlMessage);
+    await this.sendCtrlMessage(controlMessage);
     while (this.newTimestamp_ === null) {
       await sleep(10);
     }
@@ -543,33 +543,33 @@ export class RemoteSession {
   //
   // Sending Messages
   //
-  async send_data_message(dataMessage: DataMsg) {
+  async sendDataMessage(dataMessage: DataMsg) {
     let remoteApiMmessage: RemoteAPIMsg = { Data: dataMessage };
-    await this.send_remote_api_message(remoteApiMmessage);
+    await this.sendRemoteApiMessage(remoteApiMmessage);
   }
 
-  async send_ctrl_message(ctrlMessage: ControlMsg) {
+  async sendCtrlMessage(ctrlMessage: ControlMsg) {
     let remoteApiMessage: RemoteAPIMsg = { Control: ctrlMessage };
-    await this.send_remote_api_message(remoteApiMessage);
+    await this.sendRemoteApiMessage(remoteApiMessage);
   }
 
-  private async send_remote_api_message(remoteApiMessage: RemoteAPIMsg) {
+  private async sendRemoteApiMessage(remoteApiMessage: RemoteAPIMsg) {
     await this.link.send(JSON.stringify(remoteApiMessage));
   }
 
   //
   // Manage Session and handle messages
   //
-  private on_message_received(message: JSONMessage) {
+  private onMessageReceived(message: JSONMessage) {
     let remoteApiMessage: RemoteAPIMsg = JSON.parse(
       message,
     ) as RemoteAPIMsg;
     if ("Session" in remoteApiMessage) {
       console.warn("Continue Ignore Session Messages");
     } else if ("Control" in remoteApiMessage) {
-      this.handle_control_message(remoteApiMessage["Control"]);
+      this.handleControlMessage(remoteApiMessage["Control"]);
     } else if ("Data" in remoteApiMessage) {
-      this.handle_data_message(remoteApiMessage["Data"]);
+      this.handleDataMessage(remoteApiMessage["Data"]);
     } else {
       log.error(
         `RemoteAPIMsg Does not contain known Members`,
@@ -578,7 +578,7 @@ export class RemoteSession {
     }
   }
 
-  undeclare_queryable(id: UUIDv4): boolean{
+  undeclareQueryable(id: UUIDv4): boolean{
     let handler = this.queryables.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -588,7 +588,7 @@ export class RemoteSession {
     return false;
   }
 
-  undeclare_subscriber(id: UUIDv4): boolean{
+  undeclareSubscriber(id: UUIDv4): boolean{
     let handler = this.subscribers.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -598,7 +598,7 @@ export class RemoteSession {
     return false;
   }
 
-  undeclare_liveliness_subscriber(id: UUIDv4): boolean{
+  undeclareLivelinessSubscriber(id: UUIDv4): boolean{
     let handler = this.livelinessSubscribers.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -608,7 +608,7 @@ export class RemoteSession {
     return false;
   }
 
-  private remove_get_receiver(id: UUIDv4): boolean{
+  private removeGetReceiver(id: UUIDv4): boolean{
     let handler = this.getReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -618,7 +618,7 @@ export class RemoteSession {
     return false;
   }
 
-  private remove_liveliness_get_receiver(id: UUIDv4): boolean{
+  private removeLivelinessGetReceiver(id: UUIDv4): boolean{
     let handler = this.livelinessGetReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -628,7 +628,7 @@ export class RemoteSession {
     return false;
   }
 
-  private handle_control_message(controlMsg: ControlMsg) {
+  private handleControlMessage(controlMsg: ControlMsg) {
     if (typeof controlMsg === "string") {
       console.warn("unhandled Control Message:", controlMsg);
     } else if (typeof controlMsg === "object") {
@@ -636,18 +636,18 @@ export class RemoteSession {
         this.session = controlMsg["Session"];
       } else if ("GetFinished" in controlMsg) {
         let id = controlMsg["GetFinished"].id;
-        this.remove_get_receiver(id) || this.remove_liveliness_get_receiver(id);
+        this.removeGetReceiver(id) || this.removeLivelinessGetReceiver(id);
       } else if ("UndeclareSubscriber" in controlMsg) {
         let subscriberUuid = controlMsg["UndeclareSubscriber"];
-        this.undeclare_subscriber(subscriberUuid);
+        this.undeclareSubscriber(subscriberUuid);
       } else if ("UndeclareQueryable" in controlMsg) {
         let queryableUuid = controlMsg["UndeclareQueryable"];
-        this.undeclare_queryable(queryableUuid);
+        this.undeclareQueryable(queryableUuid);
       }
     }
   }
 
-  private handle_data_message(dataMsg: DataMsg) {
+  private handleDataMessage(dataMsg: DataMsg) {
     if ("Sample" in dataMsg) {
       let subscriptionUuid: UUIDv4 = dataMsg["Sample"][1];
 
@@ -698,13 +698,10 @@ export class RemoteSession {
     }
   }
 
-  is_closed(): boolean {
-    return !this.link.is_ok();
+  isClosed(): boolean {
+    return !this.link.isOk();
   }
 }
-
-
-
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
