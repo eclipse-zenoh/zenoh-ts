@@ -39,19 +39,19 @@ export class RemoteQuerier {
     drop: Drop,
     encoding?: string,
     parameters?: string,
-    _attachment?: Array<number>,
-    _payload?: Array<number>,
+    attachment?: Array<number>,
+    payload?: Array<number>,
   ) {
     let getId = uuidv4();
     this.sessionRef.getReceivers.set(getId, { callback, drop });
 
-    let payload = undefined;
-    if (_payload != undefined) {
-      payload = b64_str_from_bytes(new Uint8Array(_payload))
+    let payloadStr = undefined;
+    if (payload != undefined) {
+      payloadStr = b64_str_from_bytes(new Uint8Array(payload))
     }
-    let attachment = undefined;
-    if (_attachment != undefined) {
-      attachment = b64_str_from_bytes(new Uint8Array(_attachment))
+    let attachmentStr = undefined;
+    if (attachment != undefined) {
+      attachmentStr = b64_str_from_bytes(new Uint8Array(attachment))
     }
 
         let controlMsg: ControlMsg = {
@@ -60,8 +60,8 @@ export class RemoteQuerier {
                 get_id: getId,
                 parameters: parameters,
                 encoding: encoding,
-                payload: payload,
-                attachment: attachment,
+                payload: payloadStr,
+                attachment: attachmentStr,
             }
         };
 

@@ -307,33 +307,33 @@ export type IntoParameters = Parameters | string | String | Map<string, string>
  * `let p = Parameters.new(a)`
  */
 export class Parameters {
-  private _source: string;
+  private source: string;
 
-  constructor(p: IntoParameters) {
-    if (p instanceof Parameters) {
-      this._source = p._source;
-    } else if (p instanceof Map) {
+  constructor(intoParameters: IntoParameters) {
+    if (intoParameters instanceof Parameters) {
+      this.source = intoParameters.source;
+    } else if (intoParameters instanceof Map) {
       // Convert Map to string format, handling empty values
-      this._source = Array.from(p.entries())
+      this.source = Array.from(intoParameters.entries())
         .map(([k, v]) => v ? `${k}=${v}` : k)
         .join(';');
     } else {
-      this._source = p.toString();
+      this.source = intoParameters.toString();
     }
   }
 
-  private *_iter(): Generator<[number, number, number, number]> {
-    if (this._source.length === 0) return;
+  private *iterByKeyValuePos(): Generator<[number, number, number, number]> {
+    if (this.source.length === 0) return;
     
     let pos = 0;
-    while (pos < this._source.length) {
+    while (pos < this.source.length) {
       // Skip leading semicolons
-      while (pos < this._source.length && this._source[pos] === ';') pos++;
-      if (pos >= this._source.length) break;
+      while (pos < this.source.length && this.source[pos] === ';') pos++;
+      if (pos >= this.source.length) break;
       
       const keyStart = pos;
       // Find end of key (semicolon or equals sign)
-      while (pos < this._source.length && this._source[pos] !== ';' && this._source[pos] !== '=') pos++;
+      while (pos < this.source.length && this.source[pos] !== ';' && this.source[pos] !== '=') pos++;
       const keyLen = pos - keyStart;
       if (keyLen === 0) continue; // Skip empty keys
       
@@ -341,11 +341,11 @@ export class Parameters {
       let valueLen = 0;
       
       // If we found an equals sign, look for the value
-      if (pos < this._source.length && this._source[pos] === '=') {
+      if (pos < this.source.length && this.source[pos] === '=') {
         pos++; // Skip equals sign
         valueStart = pos;
         // Find end of value (semicolon or end of string)
-        while (pos < this._source.length && this._source[pos] !== ';') pos++;
+        while (pos < this.source.length && this.source[pos] !== ';') pos++;
         valueLen = pos - valueStart;
       }
       
@@ -371,11 +371,11 @@ export class Parameters {
     let newSource = '';
     let lastPos = 0;
 
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      const currentKey = this._source.slice(keyStart, keyStart + keyLen);
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      const currentKey = this.source.slice(keyStart, keyStart + keyLen);
       if (currentKey == key) {
         // Add the part between last position and current key
-        newSource += this._source.slice(lastPos, keyStart);
+        newSource += this.source.slice(lastPos, keyStart);
         // Calculate where the next parameter starts
         lastPos = valueStart >= 0 ? 
           valueStart + valueLen + 1 : // +1 for semicolon
@@ -386,9 +386,9 @@ export class Parameters {
     
     if (found) {
       // Add remaining part of string
-      newSource += this._source.slice(lastPos);
+      newSource += this.source.slice(lastPos);
       // Clean up consecutive semicolons and trailing/leading semicolons
-      this._source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
+      this.source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
     }
     
     return found;
@@ -398,9 +398,9 @@ export class Parameters {
    * @returns Generator<string>
    */
   *iter(): Generator<[string, string]> {
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      let key = this._source.slice(keyStart, keyStart + keyLen);
-      let value = valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      let key = this.source.slice(keyStart, keyStart + keyLen);
+      let value = valueStart >= 0 ? this.source.slice(valueStart, valueStart + valueLen) : '';
       yield [key, value];
     }
   }
@@ -425,9 +425,9 @@ export class Parameters {
    */
   isEmpty(): boolean {
     // Quick check for empty string
-    if (!this._source) return true;
+    if (!this.source) return true;
     // Otherwise check if there are any valid entries
-    for (const _ of this._iter()) {
+    for (const _ of this.iterByKeyValuePos()) {
       return false;
     }
     return true;
@@ -438,8 +438,8 @@ export class Parameters {
    * @returns boolean
    */
   containsKey(key: string): boolean {
-    for (const [keyStart, keyLen] of this._iter()) {
-      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
+    for (const [keyStart, keyLen] of this.iterByKeyValuePos()) {
+      if (this.source.slice(keyStart, keyStart + keyLen) === key) {
         return true;
       }
     }
@@ -451,9 +451,9 @@ export class Parameters {
    * @returns string | undefined
    */
   get(key: string): string | undefined {
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
-        return valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      if (this.source.slice(keyStart, keyStart + keyLen) === key) {
+        return valueStart >= 0 ? this.source.slice(valueStart, valueStart + valueLen) : '';
       }
     }
     return undefined;
@@ -468,10 +468,10 @@ export class Parameters {
     this.remove(key);
     
     // Add new key-value pair
-    if (this._source && !this._source.endsWith(';') && this._source.length > 0) {
-      this._source += ';';
+    if (this.source && !this.source.endsWith(';') && this.source.length > 0) {
+      this.source += ';';
     }
-    this._source += `${key}=${value}`;
+    this.source += `${key}=${value}`;
   }
 
   /**
@@ -480,10 +480,10 @@ export class Parameters {
    */
   extend(other: IntoParameters): void {
     const otherParams = new Parameters(other);
-    for (const [keyStart, keyLen, valueStart, valueLen] of otherParams._iter()) {
-      const key = otherParams._source.slice(keyStart, keyStart + keyLen);
+    for (const [keyStart, keyLen, valueStart, valueLen] of otherParams.iterByKeyValuePos()) {
+      const key = otherParams.source.slice(keyStart, keyStart + keyLen);
       const value = valueStart >= 0 ? 
-        otherParams._source.slice(valueStart, valueStart + valueLen) : 
+        otherParams.source.slice(valueStart, valueStart + valueLen) : 
         '';
       this.insert(key, value);
     }
@@ -494,7 +494,7 @@ export class Parameters {
    * @returns string
    */
   toString(): string {
-    return this._source;
+    return this.source;
   }
 }
 
@@ -504,15 +504,15 @@ export class Parameters {
  * 
  */
 export class ReplyError {
-  private _payload: ZBytes;
-  private _encoding: Encoding;
+  private payload_: ZBytes;
+  private encoding_: Encoding;
 
   /**
    * Payload of Error Reply
    * @returns ZBytes
    */
   payload(): ZBytes {
-    return this._payload;
+    return this.payload_;
   }
 
   /**
@@ -520,7 +520,7 @@ export class ReplyError {
    * @returns ZBytes
    */
   encoding(): Encoding {
-    return this._encoding;
+    return this.encoding_;
   }
 
   /**
@@ -530,8 +530,8 @@ export class ReplyError {
   constructor(replyErrWS: ReplyErrorWS) {
     let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(replyErrWS.payload)));
     let encoding = Encoding.fromString(replyErrWS.encoding);
-    this._encoding = encoding;
-    this._payload = payload;
+    this.encoding_ = encoding;
+    this.payload_ = payload;
   }
 
 }

@@ -39,38 +39,32 @@ module.exports = tseslint.config(
         {
           'selector': 'default',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
           'format': ['camelCase', 'UPPER_CASE'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow',
           'modifiers': ['const']
         },
         {
           'selector': 'parameter',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },
         {
           'selector': 'parameterProperty',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },
         {
           'selector': 'memberLike',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'typeLike',
@@ -84,12 +78,10 @@ module.exports = tseslint.config(
           'selector': 'property',
           'format': ['camelCase'],
           'trailingUnderscore': 'allow',
-          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'classProperty',
           'format': ['camelCase', 'UPPER_CASE'],
-          'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow',
           'modifiers': ['static', 'readonly']
         },
@@ -97,19 +89,16 @@ module.exports = tseslint.config(
           'selector': 'objectLiteralProperty',
           'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
           'trailingUnderscore': 'allow',
-          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'method',
           'format': ['camelCase'],
           'trailingUnderscore': 'allow',
-          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'function',
           'format': ['camelCase'],
           'trailingUnderscore': 'allow',
-          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'enumMember',

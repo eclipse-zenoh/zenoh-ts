@@ -27,12 +27,12 @@ export class KeyExpr {
    */
 
   // not to be used directly 
-  private _inner: string;
+  private inner_: string;
 
   constructor(keyexpr: IntoKeyExpr) {
     let ke;
     if (keyexpr instanceof KeyExpr) {
-      this._inner = keyexpr._inner;
+      this.inner_ = keyexpr.inner_;
       return
     } else if (keyexpr instanceof String) {
       ke = keyexpr.toString();
@@ -43,11 +43,11 @@ export class KeyExpr {
     // if this function fails, the keyexpr is invalid, and an exception is thrown in Wasm and propagated here
     // else the Key Expression is valid and we can store the string it represents in the class
     new_key_expr(ke);
-    this._inner = ke;
+    this.inner_ = ke;
   }
 
   toString(): string {
-    return this._inner;
+    return this.inner_;
   }
 
   /**
@@ -56,7 +56,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   join(other: IntoKeyExpr): KeyExpr {
-    const keyExpr = join(this._inner, KeyExpr.intoString(other));
+    const keyExpr = join(this.inner_, KeyExpr.intoString(other));
     return new KeyExpr(keyExpr)
   }
 
@@ -65,7 +65,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   concat(other: IntoKeyExpr): KeyExpr {
-    const keyExpr = concat(this._inner, KeyExpr.intoString(other));
+    const keyExpr = concat(this.inner_, KeyExpr.intoString(other));
     return new KeyExpr(keyExpr)
   }
 
@@ -74,7 +74,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   includes(other: IntoKeyExpr): boolean {
-    return includes(this._inner, KeyExpr.intoString(other))
+    return includes(this.inner_, KeyExpr.intoString(other))
   }
 
   /**
@@ -82,7 +82,7 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   intersects(other: IntoKeyExpr): boolean {
-    return intersects(this._inner, KeyExpr.intoString(other))
+    return intersects(this.inner_, KeyExpr.intoString(other))
   }
 
   /**
@@ -96,7 +96,7 @@ export class KeyExpr {
 
   private static intoString(other: IntoKeyExpr): string {
     if (other instanceof KeyExpr) {
-      return other._inner;
+      return other.inner_;
     } else if (other instanceof String) {
       return other.toString();
     } else {

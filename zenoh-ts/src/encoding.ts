@@ -74,14 +74,10 @@ export type IntoEncoding = Encoding | String | string;
  * Zenoh Encoding Class
  */
 export class Encoding {
-  private _schema: string;
-
-  private constructor(strRep: string) {
-    this._schema = strRep;
-  }
+  private constructor(private strRep: string) {}
 
   withSchema(input: string){
-    this._schema = input;
+    this.strRep = input;
   }
 
   static default(): Encoding {
@@ -89,7 +85,7 @@ export class Encoding {
   }
 
   toString(): string {
-    return this._schema;
+    return this.strRep;
   }
   static fromString(input: string): Encoding {
     return new Encoding(input);

@@ -117,21 +117,21 @@ function isSerializeable(s: any): s is ZSerializeable {
  * Provides functionality for tuple-like serialization.
  */
 export class ZBytesSerializer {
-    private _buffer: Uint8Array
+    private buffer_: Uint8Array
     /**
      * new function to create a ZBytesSerializer.
      * 
      * @returns ZBytesSerializer
      */
     constructor() {
-      this._buffer = new Uint8Array();
+      this.buffer_ = new Uint8Array();
     }
 
     private append(buf: Uint8Array) {
-      let b = new Uint8Array(this._buffer.length + buf.length)
-      b.set(this._buffer)
-      b.set(buf, this._buffer.length)
-      this._buffer = b
+      let b = new Uint8Array(this.buffer_.length + buf.length)
+      b.set(this.buffer_)
+      b.set(buf, this.buffer_.length)
+      this.buffer_ = b
     }
 
     /**
@@ -499,8 +499,8 @@ export class ZBytesSerializer {
      * @returns ZBytes
      */
     public finish(): ZBytes {
-      let out = new ZBytes(this._buffer);
-      this._buffer = new Uint8Array()
+      let out = new ZBytes(this.buffer_);
+      this.buffer_ = new Uint8Array()
       return out
     }
 }
@@ -531,28 +531,20 @@ export enum BigIntFormat {
 
 
 class ZDTypeInfo<T> {
-  private _deserialize: (deserializer: ZBytesDeserializer) => T
-
-  constructor(deserialize: (deserializer: ZBytesDeserializer) => T ) {
-    this._deserialize = deserialize
-  }
+  constructor(private deserialize_: (deserializer: ZBytesDeserializer) => T ) {}
 
   /** @internal */
   deserialize(deserializer: ZBytesDeserializer): T {
-    return this._deserialize(deserializer)
+    return this.deserialize_(deserializer)
   }
 }
 
 class ZSTypeInfo<T> {
-  private _serialize: (serializer: ZBytesSerializer, val: T) => void
-
-  constructor(serialize: (serializer: ZBytesSerializer, val: T) => void) {
-    this._serialize = serialize
-  }
+  constructor(private serialize_: (serializer: ZBytesSerializer, val: T) => void) {}
 
   /** @internal */
   serialize(serializer: ZBytesSerializer, val: T): void {
-    this._serialize(serializer, val)
+    this.serialize_(serializer, val)
   }
 }
 
@@ -999,24 +991,24 @@ export namespace ZS{
 }
 
 export class ZBytesDeserializer {
-  private _buffer: Uint8Array;
-  private _idx: number
+  private buffer_: Uint8Array;
+  private idx_: number
   /**
    * new function to create a ZBytesDeserializer
    * @param p payload to deserialize.
    * @returns ZBytesSerializer
    */
   constructor(zbytes: ZBytes) {
-    this._buffer = zbytes.toBytes()
-    this._idx = 0
+    this.buffer_ = zbytes.toBytes()
+    this.idx_ = 0
   }
 
   private readSlice(len: number): Uint8Array {
-    const s = this._buffer.subarray(this._idx, this._idx + len)
+    const s = this.buffer_.subarray(this.idx_, this.idx_ + len)
     if (s.length < len) {
-      throw new Error(`Array index is out of bounds: ${this._idx + len} / ${this._buffer.length}`); 
+      throw new Error(`Array index is out of bounds: ${this.idx_ + len} / ${this.buffer_.length}`); 
     }
-    this._idx += len
+    this.idx_ += len
     return s
   }
 
@@ -1025,8 +1017,8 @@ export class ZBytesDeserializer {
    * @returns Number of sequence elements.
    */
   public readSequenceLength(): number {
-    let [res, bytesRead] = leb.decodeULEB128(this._buffer, this._idx)
-    this._idx += bytesRead
+    let [res, bytesRead] = leb.decodeULEB128(this.buffer_, this.idx_)
+    this.idx_ += bytesRead
     if (res > Number.MAX_SAFE_INTEGER) {
       throw new Error(`Array length overflow: ${res}`); 
     }
@@ -1306,11 +1298,11 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data as a boolean and advances the reading position.
    */
   public deserializeBoolean(): boolean {
-    if (this._idx  >= this._buffer.length) {
-      throw new Error(`Array index is out of bounds: ${this._idx} / ${this._buffer.length}`); 
+    if (this.idx_  >= this.buffer_.length) {
+      throw new Error(`Array index is out of bounds: ${this.idx_} / ${this.buffer_.length}`); 
     }
-    const res = this._buffer[this._idx]
-    this._idx += 1
+    const res = this.buffer_[this.idx_]
+    this.idx_ += 1
     if (res == 1) {
       return true;
     } else if (res == 0) {
@@ -1377,7 +1369,7 @@ export class ZBytesDeserializer {
    * @returns True if all payload bytes were used, false otherwise.
    */
   public isDone() : boolean {
-    return this._buffer.length == this._idx
+    return this.buffer_.length == this.idx_
   }
 }
 
