@@ -508,41 +508,41 @@ export class Session {
 
     let express = publisher_opts?.express;
 
-    let _priority;
+    let priorityRemote;
     let priority = Priority.DATA;
     if (publisher_opts?.priority != null) {
-      _priority = priority_to_int(publisher_opts?.priority);
+      priorityRemote = priority_to_int(publisher_opts?.priority);
       priority = publisher_opts?.priority;
     }
 
-    let _congestionControl;
+    let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
     if (publisher_opts?.congestion_control != null) {
-      _congestionControl = congestion_control_to_int(publisher_opts?.congestion_control);
+      congestionControlRemote = congestion_control_to_int(publisher_opts?.congestion_control);
       congestionControl = publisher_opts?.congestion_control;
     }
 
-    let _reliability = 0; // Default Reliable
+    let reliabilityRemote = 0; // Default Reliable
     let reliability = Reliability.RELIABLE;
     if (publisher_opts?.reliability != null) {
-      _reliability = reliability_to_int(publisher_opts?.reliability);
+      reliabilityRemote = reliability_to_int(publisher_opts?.reliability);
     }
 
-    let _encoding = "";
+    let encodingRemote = "";
     let encoding = Encoding.default();
     if (publisher_opts?.encoding != null) {
-      _encoding = publisher_opts?.encoding.toString();
+      encodingRemote = publisher_opts?.encoding.toString();
       encoding = publisher_opts?.encoding;
     }
 
     let remotePublisher: RemotePublisher =
       await this.remote_session.declare_remote_publisher(
         keyExpr.toString(),
-        _encoding,
-        _congestionControl,
-        _priority,
+        encodingRemote,
+        congestionControlRemote,
+        priorityRemote,
         express,
-        _reliability
+        reliabilityRemote
       );
 
     let publisher: Publisher = new Publisher(
