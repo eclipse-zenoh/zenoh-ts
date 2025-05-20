@@ -1,3 +1,4 @@
+// filepath: /Users/milyin/ZS1/zenoh-ts/zenoh-ts/eslint.config.cjs
 const tseslint = require('typescript-eslint');
 
 module.exports = tseslint.config(
@@ -37,11 +38,13 @@ module.exports = tseslint.config(
         'warn',
         {
           'selector': 'default',
-          'format': ['camelCase', 'snake_case']
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case']
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'parameter',
@@ -50,8 +53,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'memberLike',
-          'modifiers': ['private'],
-          'format': ['camelCase', 'snake_case'],
+          'format': ['camelCase', 'snake_case', 'PascalCase'],
           'leadingUnderscore': 'allow'
         },
         {
@@ -64,11 +66,18 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
-          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case']
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'method',
-          'format': ['camelCase', 'snake_case']
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'function',
+          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'enumMember',
@@ -101,11 +110,13 @@ module.exports = tseslint.config(
         'warn',
         {
           'selector': 'default',
-          'format': ['camelCase', 'snake_case']
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case']
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'parameter',
@@ -114,8 +125,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'memberLike',
-          'modifiers': ['private'],
-          'format': ['camelCase', 'snake_case'],
+          'format': ['camelCase', 'snake_case', 'PascalCase'],
           'leadingUnderscore': 'allow'
         },
         {
@@ -128,11 +138,18 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
-          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case']
+          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'method',
-          'format': ['camelCase', 'snake_case']
+          'format': ['camelCase', 'snake_case'],
+          'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'function',
+          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'leadingUnderscore': 'allow'
         },
         {
           'selector': 'enumMember',
