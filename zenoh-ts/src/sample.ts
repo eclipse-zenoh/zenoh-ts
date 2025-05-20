@@ -63,9 +63,9 @@ export enum ConsolidationMode {
  * @internal
  */
 export function consolidation_mode_to_int(
-  congestion_control?: ConsolidationMode,
+  congestionControl?: ConsolidationMode,
 ): number {
-  switch (congestion_control) {
+  switch (congestionControl) {
     case ConsolidationMode.Auto:
       return 0
     case ConsolidationMode.None:
@@ -84,9 +84,9 @@ export function consolidation_mode_to_int(
  * @internal
  */
 export function congestion_control_from_int(
-  prio_u8?: number,
+  prioU8?: number,
 ): CongestionControl {
-  switch (prio_u8) {
+  switch (prioU8) {
     case 0:
       return CongestionControl.DROP;
     case 1:
@@ -101,9 +101,9 @@ export function congestion_control_from_int(
  * @internal
  */
 export function congestion_control_to_int(
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
 ): number {
-  switch (congestion_control) {
+  switch (congestionControl) {
     case CongestionControl.DROP:
       return 0;
     case CongestionControl.BLOCK:
@@ -132,8 +132,8 @@ export enum Priority {
  * Convenience function to convert between Priority function and int
  * @internal
  */
-export function priority_from_int(prio_u8: number): Priority {
-  switch (prio_u8) {
+export function priority_from_int(prioU8: number): Priority {
+  switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;
     case 2:
@@ -208,99 +208,49 @@ export function reliability_to_int(reliability: Reliability) {
  * 
  */
 export class Sample {
-  private _keyexpr: KeyExpr;
-  private _payload: ZBytes;
-  private _kind: SampleKind;
-  private _encoding: Encoding;
-  private _priority: Priority;
-  private _timestamp: string | undefined;
-  private _congestion_control: CongestionControl;
-  private _express: boolean;
-  private _attachment: ZBytes | undefined;
-
-  keyexpr(): KeyExpr {
-    return this._keyexpr;
-  }
-  payload(): ZBytes {
-    return this._payload;
-  }
-  kind(): SampleKind {
-    return this._kind;
-  }
-  encoding(): Encoding {
-    return this._encoding;
-  }
-  timestamp(): string | undefined {
-    return this._timestamp;
-  }
-  congestion_control(): CongestionControl {
-    return this._congestion_control;
-  }
-  priority(): Priority {
-    return this._priority;
-  }
-  express(): boolean {
-    return this._express;
-  }
-  attachment(): ZBytes | undefined {
-    return this._attachment;
-  }
-
   constructor(
-    keyexpr: KeyExpr,
-    payload: ZBytes,
-    kind: SampleKind,
-    encoding: Encoding,
-    priority: Priority,
-    timestamp: string | undefined,
-    congestion_control: CongestionControl,
-    express: boolean,
-    attachment: ZBytes | undefined,
-  ) {
-    this._keyexpr = keyexpr;
-    this._payload = payload;
-    this._kind = kind;
-    this._encoding = encoding;
-    this._priority = priority;
-    this._timestamp = timestamp;
-    this._congestion_control = congestion_control;
-    this._express = express;
-    this._attachment = attachment;
-  }
-
+    public readonly keyexpr: KeyExpr,
+    public readonly payload: ZBytes,
+    public readonly kind: SampleKind,
+    public readonly encoding: Encoding,
+    public readonly priority: Priority,
+    public readonly timestamp: string | undefined,
+    public readonly congestionControl: CongestionControl,
+    public readonly express: boolean,
+    public readonly attachment: ZBytes | undefined,
+  ) {}
 }
-
 
 /**
  * Convenience function to convert between Sample and SampleWS
  */
-export function SampleFromSampleWS(sample_ws: SampleWS) {
+export function SampleFromSampleWS(sampleWS: SampleWS) {
   let sampleKind: SampleKind;
-  if (sample_ws.kind == "Delete") {
+  if (sampleWS.kind == "Delete") {
     sampleKind = SampleKind.DELETE;
   } else {
     sampleKind = SampleKind.PUT;
   }
 
-  let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
+  let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sampleWS.value)));
 
-  let keyExr = new KeyExpr(sample_ws.key_expr);
+  let keyExr = new KeyExpr(sampleWS.key_expr);
 
-  let encoding = Encoding.from_string(sample_ws.encoding);
+  let encoding = Encoding.from_string(sampleWS.encoding);
 
-  let priority = priority_from_int(sample_ws.priority);
+  let priority = priority_from_int(sampleWS.priority);
 
   let congestionControl = congestion_control_from_int(
-    sample_ws.congestion_control,
+    sampleWS.congestion_control,
   );
 
-  let timestamp: string | undefined = sample_ws.timestamp as string | undefined;
+  let timestamp: string | undefined = sampleWS.timestamp as string | undefined;
 
-  let express: boolean = sample_ws.express;
+  let express: boolean = sampleWS.express;
 
   let attachment = undefined;
-  if (sample_ws.attachement != undefined) {
-    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.attachement)));
+  if (sampleWS.attachement != undefined) {
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(sampleWS.attachement)));
   }
 
   return new Sample(
@@ -323,7 +273,7 @@ export function SampleWSFromSample(
   sample: Sample,
   encoding: Encoding,
   priority: Priority,
-  congestion_control: CongestionControl,
+  congestionControl: CongestionControl,
   express: boolean,
   attachement: ZBytes | undefined,
 ): SampleWS {
@@ -355,7 +305,7 @@ export function SampleWSFromSample(
     encoding: encoding.toString(),
     timestamp: null,
     priority: priority_to_int(priority),
-    congestion_control: congestion_control_to_int(congestion_control),
+    congestion_control: congestion_control_to_int(congestionControl),
     express: express,
     attachement: attach,
   };

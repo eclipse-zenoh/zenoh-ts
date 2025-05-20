@@ -28,21 +28,12 @@ import { RemoteSession, UUIDv4 } from "./session.js";
 // ██   ██ ███████ ██      ██  ██████     ██    ███████   ██       ██████  ██████  ███████ ██ ███████ ██   ██ ███████ ██   ██
 
 export class RemotePublisher {
-  private key_expr: String;
-  private publisher_id: UUIDv4;
-  private session_ref: RemoteSession;
-  private undeclared: boolean;
-
+  private undeclared: boolean = false;
   constructor(
-    key_expr: String,
-    publisher_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    this.key_expr = key_expr;
-    this.publisher_id = publisher_id;
-    this.session_ref = session_ref;
-    this.undeclared = false;
-  }
+    private keyExpr: String,
+    private publisherId: UUIDv4,
+    private sessionRef: RemoteSession,
+  ) {}
 
   async put(
     payload: Array<number>,
@@ -53,9 +44,9 @@ export class RemotePublisher {
     if (this.undeclared == true) {
       let message =
         "Publisher keyexpr:`" +
-        this.key_expr +
+        this.keyExpr +
         "` id:`" +
-        this.publisher_id +
+        this.publisherId +
         "` already undeclared";
       console.warn(message);
       return;
@@ -68,14 +59,14 @@ export class RemotePublisher {
 
     let dataMsg: DataMsg = {
       PublisherPut: {
-        id: this.publisher_id.toString(),
+        id: this.publisherId.toString(),
         payload: b64_str_from_bytes(new Uint8Array(payload)),
         attachment: optionalAttachment,
         encoding: encoding,
         timestamp: timestamp
       },
     };
-    await this.session_ref.send_data_message(dataMsg);
+    await this.sessionRef.send_data_message(dataMsg);
   }
 
   // Delete 
@@ -91,30 +82,30 @@ export class RemotePublisher {
 
     let dataMsg: DataMsg = {
       PublisherDelete: {
-        id: this.publisher_id.toString(),
+        id: this.publisherId.toString(),
         attachment: optionalAttachment,
         timestamp: timestamp,
       },
     };
-    await this.session_ref.send_data_message(dataMsg);
+    await this.sessionRef.send_data_message(dataMsg);
   }
 
   async undeclare() {
     if (this.undeclared == true) {
       let message =
         "Publisher keyexpr:`" +
-        this.key_expr +
+        this.keyExpr +
         "` id:`" +
-        this.publisher_id +
+        this.publisherId +
         "` already undeclared";
       console.warn(message);
       return;
     }
     this.undeclared = true;
     let ctrlMessage: ControlMsg = {
-      UndeclarePublisher: this.publisher_id.toString(),
+      UndeclarePublisher: this.publisherId.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrlMessage);
+    await this.sessionRef.send_ctrl_message(ctrlMessage);
   }
 }
 
@@ -127,46 +118,25 @@ export class RemotePublisher {
 // If defined with a Callback, All samples passed to the Callback,
 // else, must call receive on the 
 export class RemoteSubscriber {
-  private key_expr: String;
-  private subscriber_id: UUIDv4;
-  private session_ref: RemoteSession;
-
-  private constructor(
-    key_expr: String,
-    subscriber_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    this.key_expr = key_expr;
-    this.subscriber_id = subscriber_id;
-    this.session_ref = session_ref;
-  }
-
-  static new(
-    key_expr: String,
-    subscriber_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-
-    return new RemoteSubscriber(
-      key_expr,
-      subscriber_id,
-      session_ref,
-    );
-  }
+  constructor(
+    private keyExpr: String,
+    private subscriberId: UUIDv4,
+    private sessionRef: RemoteSession,
+  ) {}
 
   async undeclare() {
-    if (!this.session_ref.undeclare_subscriber(this.subscriber_id)) {
+    if (!this.sessionRef.undeclare_subscriber(this.subscriberId)) {
       console.warn("Subscriber keyexpr:`" +
-        this.key_expr +
+        this.keyExpr +
         "` id:`" +
-        this.subscriber_id +
+        this.subscriberId +
         "` already closed");
       return;
     }
 
     let ctrlMessage: ControlMsg = {
-      UndeclareSubscriber: this.subscriber_id.toString(),
+      UndeclareSubscriber: this.subscriberId.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrlMessage);
+    await this.sessionRef.send_ctrl_message(ctrlMessage);
   }
 }

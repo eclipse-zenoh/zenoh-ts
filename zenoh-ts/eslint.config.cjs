@@ -1,4 +1,3 @@
-// filepath: /Users/milyin/ZS1/zenoh-ts/zenoh-ts/eslint.config.cjs
 const tseslint = require('typescript-eslint');
 
 module.exports = tseslint.config(
@@ -48,8 +47,15 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'parameter',
-          'format': ['camelCase', 'snake_case'],
-          'leadingUnderscore': 'allow'
+          'format': ['camelCase'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
+        },
+        {
+          'selector': 'parameterProperty',
+          'format': ['camelCase'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
         },
         {
           'selector': 'memberLike',
@@ -121,7 +127,14 @@ module.exports = tseslint.config(
         {
           'selector': 'parameter',
           'format': ['camelCase', 'snake_case'],
-          'leadingUnderscore': 'allow'
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
+        },
+        {
+          'selector': 'parameterProperty',
+          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
         },
         {
           'selector': 'memberLike',

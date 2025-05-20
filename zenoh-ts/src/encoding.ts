@@ -76,8 +76,8 @@ export type IntoEncoding = Encoding | String | string;
 export class Encoding {
   private _schema: string;
 
-  private constructor(str_rep: string) {
-    this._schema = str_rep;
+  private constructor(strRep: string) {
+    this._schema = strRep;
   }
 
   with_schema(input: string){

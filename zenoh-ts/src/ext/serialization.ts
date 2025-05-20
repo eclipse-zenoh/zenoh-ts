@@ -402,21 +402,21 @@ export class ZBytesSerializer {
     /**
      * Serializes a map.
      */
-    public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>, t_key?:ZSTypeInfo<EnsureSerializeable<K>>, t_value?: ZSTypeInfo<EnsureSerializeable<V>>) {
+    public serialize_map<K, V>(m: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>, tKey?:ZSTypeInfo<EnsureSerializeable<K>>, tValue?: ZSTypeInfo<EnsureSerializeable<V>>) {
       this.write_sequence_length(m.size)
       if (m.size > 0) {
         let val = m.entries().next()
         if (val !== undefined ) {
           let value = val.value
           if (value !== undefined) {
-            t_key ??= this._get_default_serialization_tag(value[0] as any) as ZSTypeInfo<EnsureSerializeable<K>>
-            t_value ??= this._get_default_serialization_tag(value[1] as any) as ZSTypeInfo<EnsureSerializeable<V>>
+            tKey ??= this._get_default_serialization_tag(value[0] as any) as ZSTypeInfo<EnsureSerializeable<K>>
+            tValue ??= this._get_default_serialization_tag(value[1] as any) as ZSTypeInfo<EnsureSerializeable<V>>
           }
         }
       }
       m.forEach( (v, k) => { 
-        (t_key as ZSTypeInfo<EnsureSerializeable<K>>).serialize(this, k);
-        (t_value as ZSTypeInfo<EnsureSerializeable<V>>).serialize(this, v);
+        (tKey as ZSTypeInfo<EnsureSerializeable<K>>).serialize(this, k);
+        (tValue as ZSTypeInfo<EnsureSerializeable<V>>).serialize(this, v);
       }
     );
     }
@@ -766,13 +766,13 @@ export namespace ZD{
 
   /**
    * Indicates that data should be deserialized as a map.
-   * @param t_key A key type deserialization tag.
-   * @param t_value A value type deserialization tag.
+   * @param tKey A key type deserialization tag.
+   * @param tValue A value type deserialization tag.
    * @returns Array deserialization tag.
    */
-  export function map<K, V>(t_key: ZDTypeInfo<K>, t_value: ZDTypeInfo<V>): ZDTypeInfo<Map<K, V>> {
+  export function map<K, V>(tKey: ZDTypeInfo<K>, tValue: ZDTypeInfo<V>): ZDTypeInfo<Map<K, V>> {
     return new ZDTypeInfo(
-      (z: ZBytesDeserializer) => { return z.deserialize_map(t_key, t_value) }
+      (z: ZBytesDeserializer) => { return z.deserialize_map(tKey, tValue) }
     );
   }
 }
@@ -987,13 +987,13 @@ export namespace ZS{
 
   /**
    * Indicates that data should be serialized as a map.
-   * @param t_key An optional key type serialization tag (if omitted the default one will be used).
-   * @param t_value An optional value type serialization tag (if omitted the default one will be used).
+   * @param tKey An optional key type serialization tag (if omitted the default one will be used).
+   * @param tValue An optional value type serialization tag (if omitted the default one will be used).
    * @returns Array serialization tag.
    */
-  export function map<K, V>(t_key?: ZSTypeInfo<EnsureSerializeable<K>>, t_value?: ZSTypeInfo<EnsureSerializeable<V>>): ZSTypeInfo<Map<EnsureSerializeable<K>, EnsureSerializeable<V>>> {
+  export function map<K, V>(tKey?: ZSTypeInfo<EnsureSerializeable<K>>, tValue?: ZSTypeInfo<EnsureSerializeable<V>>): ZSTypeInfo<Map<EnsureSerializeable<K>, EnsureSerializeable<V>>> {
     return new ZSTypeInfo(
-      (z: ZBytesSerializer, val: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) => {z.serialize_map(val, t_key, t_value)},
+      (z: ZBytesSerializer, val: Map<EnsureSerializeable<K>, EnsureSerializeable<V>>) => {z.serialize_map(val, tKey, tValue)},
     );
   }
 }
@@ -1335,15 +1335,15 @@ export class ZBytesDeserializer {
 
   /**
    * Deserializes next portion of data as a map of specified key and value types and advances the reading position.
-   * @param p_key Deserialization tag for map key.
-   * @param p_value Deserialization tag for map value.
+   * @param pKey Deserialization tag for map key.
+   * @param pValue Deserialization tag for map value.
    */
-  public deserialize_map<K, V>(p_key: ZDTypeInfo<K>, p_value: ZDTypeInfo<V>): Map<K, V> {
+  public deserialize_map<K, V>(pKey: ZDTypeInfo<K>, pValue: ZDTypeInfo<V>): Map<K, V> {
     const len = this.read_sequence_length()
     let out = new Map<K, V>()
     for (let i = 0; i < len; i++) {
-      const key = p_key.deserialize(this)
-      const value = p_value.deserialize(this)
+      const key = pKey.deserialize(this)
+      const value = pValue.deserialize(this)
       out.set(key, value)
     }
     return out

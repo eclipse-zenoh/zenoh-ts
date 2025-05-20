@@ -20,24 +20,18 @@ import { ReplyCallback } from "./interface/ReplyWS.js";
 import { Drop } from "./closure.js";
 
 export class RemoteQuerier {
-  private querier_id: UUIDv4;
-  private session_ref: RemoteSession;
-
   constructor(
-    querier_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    this.querier_id = querier_id;
-    this.session_ref = session_ref;
-  }
+    private querierId: UUIDv4,
+    private sessionRef: RemoteSession,
+  ) {}
 
   async undeclare() {
 
     let controlMsg: ControlMsg = {
-      UndeclareQuerier: this.querier_id as string
+      UndeclareQuerier: this.querierId as string
     };
 
-    await this.session_ref.send_ctrl_message(controlMsg);
+    await this.sessionRef.send_ctrl_message(controlMsg);
   }
 
   async get(
@@ -49,7 +43,7 @@ export class RemoteQuerier {
     _payload?: Array<number>,
   ) {
     let getId = uuidv4();
-    this.session_ref.get_receivers.set(getId, { callback, drop });
+    this.sessionRef.get_receivers.set(getId, { callback, drop });
 
     let payload = undefined;
     if (_payload != undefined) {
@@ -62,7 +56,7 @@ export class RemoteQuerier {
 
         let controlMsg: ControlMsg = {
             QuerierGet: {
-                querier_id: this.querier_id as string,
+                querier_id: this.querierId as string,
                 get_id: getId,
                 parameters: parameters,
                 encoding: encoding,
@@ -71,7 +65,7 @@ export class RemoteQuerier {
             }
         };
 
-    await this.session_ref.send_ctrl_message(controlMsg);
+    await this.sessionRef.send_ctrl_message(controlMsg);
   }
 
 }

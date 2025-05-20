@@ -41,8 +41,8 @@ export enum QueryTarget {
  * Convenience function to convert between QueryTarget and int
  * @internal
  */
-export function query_target_to_int(query_target?: QueryTarget): number {
-  switch (query_target) {
+export function query_target_to_int(queryTarget?: QueryTarget): number {
+  switch (queryTarget) {
     case QueryTarget.BestMatching:
       return 0;
     case QueryTarget.All:
@@ -65,8 +65,8 @@ export enum Locality {
  * Convenience function to convert between Locality and int
  * @internal
  */
-export function locality_to_int(query_target?: Locality): number {
-  switch (query_target) {
+export function locality_to_int(queryTarget?: Locality): number {
+  switch (queryTarget) {
     case Locality.SessionLocal:
       return 0;
     case Locality.Remote:
@@ -90,8 +90,8 @@ export enum ReplyKeyExpr {
  * Convenience function to convert between QueryTarget function and int
  * @internal
  */
-export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
-  switch (query_target) {
+export function reply_key_expr_to_int(queryTarget?: ReplyKeyExpr): number {
+  switch (queryTarget) {
     case ReplyKeyExpr.Any:
       return 0;
     case ReplyKeyExpr.MatchingQuery:
@@ -130,12 +130,7 @@ export interface QuerierGetOptions {
  * created by Session.declare_queryable
  */
 export class Querier {
-  private _remote_querier: RemoteQuerier;
-  private _key_expr: KeyExpr;
-  private _congestion_control: CongestionControl;
-  private _priority: Priority;
-  private _accept_replies: ReplyKeyExpr;
-  private undeclared: boolean;
+  private undeclared: boolean = false;
   /** 
    * @ignore
    */
@@ -144,23 +139,17 @@ export class Querier {
   }
 
   /** 
+   * @ignore
    * Returns a Querier 
    * Note! : user must use declare_querier on a session
    */
-  constructor(
-    remote_querier: RemoteQuerier,
-    key_expr: KeyExpr,
-    congestion_control: CongestionControl,
-    priority: Priority,
-    accept_replies: ReplyKeyExpr,
-  ) {
-    this._remote_querier = remote_querier;
-    this._key_expr = key_expr;
-    this._congestion_control = congestion_control;
-    this._priority = priority;
-    this._accept_replies = accept_replies;
-    this.undeclared = false;
-  }
+  private constructor(
+    private remoteQuerier: RemoteQuerier,
+    private keyExpr: KeyExpr,
+    private congestionControl: CongestionControl,
+    private priority_: Priority,
+    private acceptReplies: ReplyKeyExpr,
+  ) {}
 
   /**
    * Undeclares Queryable
@@ -168,7 +157,7 @@ export class Querier {
    */
   async undeclare() {
     this.undeclared = true;
-    await this._remote_querier.undeclare()
+    await this.remoteQuerier.undeclare()
   }
 
   /**
@@ -176,7 +165,7 @@ export class Querier {
    * @returns KeyExpr
    */
   key_expr() {
-    return this._key_expr;
+    return this.keyExpr;
   }
 
   /**
@@ -184,7 +173,7 @@ export class Querier {
    * @returns CongestionControl
    */
   congestion_control() {
-    return this._congestion_control;
+    return this.congestionControl;
   }
 
   /**
@@ -192,7 +181,7 @@ export class Querier {
    * @returns Priority
    */
   priority() {
-    return this._priority;
+    return this.priority_;
   }
 
   /**
@@ -200,7 +189,7 @@ export class Querier {
    * @returns ReplyKeyExpr
    */
   accept_replies() {
-    return this._accept_replies;
+    return this.acceptReplies;
   }
 
   /**
@@ -209,34 +198,34 @@ export class Querier {
    */
   async get(
     parameters?: Parameters,
-    get_options?: QuerierGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
+    getOptions?: QuerierGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
     if (this.undeclared == true) {
       return undefined;
     }
     let payload;
     let attachment;
     let parametersStr;
-    let encoding = get_options?.encoding?.toString()
+    let encoding = getOptions?.encoding?.toString()
 
-    if (get_options?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
+    if (getOptions?.attachment != undefined) {
+      attachment = Array.from(new ZBytes(getOptions?.attachment).to_bytes())
     }
-    if (get_options?.payload != undefined) {
-      payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
+    if (getOptions?.payload != undefined) {
+      payload = Array.from(new ZBytes(getOptions?.payload).to_bytes())
     }
     if (parameters != undefined) {
       parametersStr = parameters.toString();
     }
 
-    let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
+    let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
-    let callbackWS = (reply_ws: ReplyWS): void => {
-      let reply: Reply = ReplyFromReplyWS(reply_ws);
+    let callbackWS = (replyWS: ReplyWS): void => {
+      let reply: Reply = ReplyFromReplyWS(replyWS);
       callback(reply);
     }
 
-    await this._remote_querier.get(
+    await this.remoteQuerier.get(
       callbackWS,
       drop,
       encoding,

@@ -42,9 +42,6 @@ import { ChannelReceiver } from "./remote_api/channels.js";
  * created by Session.declare_queryable
  */
 export class Queryable {
-  private _remote_queryable: RemoteQueryable;
-  private _receiver: ChannelReceiver<Query> | undefined;
-
   /** 
    * @ignore
    */
@@ -52,13 +49,11 @@ export class Queryable {
     await this.undeclare();
   }
   /** 
+   * @ignore
    * Returns a Queryable 
    * Note! : user must use declare_queryable on a session
    */
-  constructor(remote_queryable: RemoteQueryable, receiver?: ChannelReceiver<Query>) {
-    this._remote_queryable = remote_queryable;
-    this._receiver = receiver;
-  }
+  constructor(private remoteQueryable: RemoteQueryable, private receiver_?: ChannelReceiver<Query>) {}
 
   /**
    * returns a sample receiver for non-callback subscriber, undefined otherwise.
@@ -66,7 +61,7 @@ export class Queryable {
    * @returns ChannelReceiver<Sample> | undefined
    */
   receiver(): ChannelReceiver<Query> | undefined {
-    return this._receiver;
+    return this.receiver_;
   }
 
   /**
@@ -74,7 +69,7 @@ export class Queryable {
    * @returns void
    */
   async undeclare() {
-    this._remote_queryable.undeclare();
+    this.remoteQueryable.undeclare();
   }
 
 }
@@ -84,33 +79,33 @@ export class Queryable {
  * @ignore
  */
 export function QueryFromQueryWS(
-  query_ws: QueryWS,
-  session_ref: RemoteSession
+  queryWS: QueryWS,
+  sessionRef: RemoteSession
 ): Query {
-  let keyExpr: KeyExpr = new KeyExpr(query_ws.key_expr);
+  let keyExpr: KeyExpr = new KeyExpr(queryWS.key_expr);
   let payload: ZBytes | undefined = undefined;
   let attachment: ZBytes | undefined = undefined;
-  let parameters: Parameters = new Parameters(query_ws.parameters);
+  let parameters: Parameters = new Parameters(queryWS.parameters);
   let encoding: Encoding | undefined = undefined;
 
-  if (query_ws.payload != null) {
-    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.payload)));
+  if (queryWS.payload != null) {
+    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(queryWS.payload)));
   }
-  if (query_ws.attachment != null) {
-    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.attachment)));
+  if (queryWS.attachment != null) {
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(queryWS.attachment)));
   }
-  if (query_ws.encoding != null) {
-    encoding = Encoding.from_string(query_ws.encoding);
+  if (queryWS.encoding != null) {
+    encoding = Encoding.from_string(queryWS.encoding);
   }
 
   return new Query(
-    query_ws.query_uuid,
+    queryWS.query_uuid,
     keyExpr,
     parameters,
     payload,
     attachment,
     encoding,
-    session_ref,
+    sessionRef,
   );
 }
 
@@ -170,97 +165,82 @@ export interface ReplyDelOptions {
  * Query Class to handle  
  */
 export class Query {
-  private _query_id: UUIDv4;
-  private _key_expr: KeyExpr;
-  private _parameters: Parameters;
-  private _payload: ZBytes | undefined;
-  private _attachment: ZBytes | undefined;
-  private _encoding: Encoding | undefined;
-  private _session_ref: RemoteSession;
-
   /**
+    * @ignore  
     * New Function Used to Construct Query, 
     * Note: Users should not need to call this function
     * But will receieve 'Query's from Queryables 
     */
   constructor(
-    query_id: UUIDv4,
-    key_expr: KeyExpr,
-    parameters: Parameters,
-    payload: ZBytes | undefined,
-    attachment: ZBytes | undefined,
-    encoding: Encoding | undefined,
-    session: RemoteSession,
-  ) {
-    this._query_id = query_id;
-    this._key_expr = key_expr;
-    this._parameters = parameters;
-    this._payload = payload;
-    this._attachment = attachment;
-    this._encoding = encoding;
-    this._session_ref = session;
-  }
+    private queryId: UUIDv4,
+    private keyExpr: KeyExpr,
+    private parameters_: Parameters,
+    private payload_: ZBytes | undefined,
+    private attachment_: ZBytes | undefined,
+    private encoding_: Encoding | undefined,
+    private sessionRef: RemoteSession,
+  ) {}
 
   /**
    * gets an selector of Query
    * @returns Selector
    */
   selector() {
-    return new Selector(this._key_expr, this._parameters)
+    return new Selector(this.keyExpr, this.parameters_)
   }
   /**
    * gets the KeyExpr of Query
    * @returns KeyExpr
    */
   key_expr(): KeyExpr {
-    return this._key_expr;
+    return this.keyExpr;
   }
   /**
    * gets the Parameters of Query
    * @returns Parameters
    */
   parameters(): Parameters {
-    return this._parameters;
+    return this.parameters_;
   }
   /**
     * gets the Optioanl payload of Query
     * @returns ZBytes | undefined
     */
   payload(): ZBytes | undefined {
-    return this._payload;
+    return this.payload_;
   }
   /**
     * gets the Optional Encoding of a Query
     * @returns Encoding | undefined
     */
   encoding(): Encoding | undefined {
-    return this._encoding;
+    return this.encoding_;
   }
   /**
     * gets the Optional Attachment of a Query
     * @returns ZBytes | undefined
     */
   attachment(): ZBytes | undefined {
-    return this._attachment;
+    return this.attachment_;
   }
 
   /**
     * Sends a Reply to for Query
-    * @param {IntoKeyExpr} key_expr 
+    * @param {IntoKeyExpr} intoKeyExpr 
     * @param {IntoZBytes} payload
     * @param {ReplyOptions=} options
     * @returns void
     */
-  async reply(key_expr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions) {
-    let keyExpr: KeyExpr = new KeyExpr(key_expr);
+  async reply(intoKeyExpr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions) {
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
     let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
       optAttachment = new ZBytes(options?.attachment).to_bytes();
     }
 
-    await this._session_ref.reply(
-      this._query_id, 
+    await this.sessionRef.reply(
+      this.queryId, 
       keyExpr.toString(),
       new ZBytes(payload).to_bytes(),
       options?.encoding?.toString() ?? null,
@@ -278,8 +258,8 @@ export class Query {
   * @returns void
   */
   async reply_err(payload: IntoZBytes, options?: ReplyErrOptions) {
-    await this._session_ref.reply_err(
-      this._query_id, 
+    await this.sessionRef.reply_err(
+      this.queryId, 
       new ZBytes(payload).to_bytes(),
       options?.encoding?.toString() ?? null,
     );
@@ -287,20 +267,20 @@ export class Query {
 
   /**
     * Sends an Error Reply to a query
-    * @param key_expr IntoKeyExpr
+    * @param intoKeyExpr IntoKeyExpr
     * @param {ReplyDelOptions=} options
     * @returns void
     */
-  async reply_del(key_expr: IntoKeyExpr, options?: ReplyDelOptions) {
-    let keyExpr: KeyExpr = new KeyExpr(key_expr);
+  async reply_del(intoKeyExpr: IntoKeyExpr, options?: ReplyDelOptions) {
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
     let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
       optAttachment = new ZBytes(options?.attachment).to_bytes();
     }
 
-    await this._session_ref.reply_del(
-      this._query_id, 
+    await this.sessionRef.reply_del(
+      this.queryId, 
       keyExpr.toString(),
       congestion_control_to_int(options?.congestion_control),
       priority_to_int(options?.priority),
@@ -547,9 +527,9 @@ export class ReplyError {
     * ReplyError gets created by the reply of a `get` on a session
     * 
     */
-  constructor(reply_err_ws: ReplyErrorWS) {
-    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(reply_err_ws.payload)));
-    let encoding = Encoding.from_string(reply_err_ws.encoding);
+  constructor(replyErrWS: ReplyErrorWS) {
+    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(replyErrWS.payload)));
+    let encoding = Encoding.from_string(replyErrWS.encoding);
     this._encoding = encoding;
     this._payload = payload;
   }
@@ -560,34 +540,30 @@ export class ReplyError {
  * Reply object from a zenoh `get`
  */
 export class Reply {
-  private _result: Sample | ReplyError;
-
   /**
    * Payload of Error Reply
    * @returns Sample or ReplyError 
    */
   result(): Sample | ReplyError {
-    return this._result;
+    return this.result_;
   }
 
   /**
    * @ignore
    */
-  constructor(reply: Sample | ReplyError) {
-    this._result = reply;
-  }
+  constructor(private result_: Sample | ReplyError) {}
 }
 
 /**
  * Convenience function to convert between Reply and ReplyWS
  */
-export function ReplyFromReplyWS(reply_ws: ReplyWS) {
-  if ("Ok" in reply_ws.result) {
-    let sampleWS = reply_ws.result["Ok"];
+export function ReplyFromReplyWS(replyWS: ReplyWS) {
+  if ("Ok" in replyWS.result) {
+    let sampleWS = replyWS.result["Ok"];
     let sample = SampleFromSampleWS(sampleWS);
     return new Reply(sample);
   } else {
-    let sampleWSEerr: ReplyErrorWS = reply_ws.result["Err"];
+    let sampleWSEerr: ReplyErrorWS = replyWS.result["Err"];
     let replyError = new ReplyError(sampleWSEerr);
     return new Reply(replyError);
   }

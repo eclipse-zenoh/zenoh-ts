@@ -34,7 +34,7 @@ import {
   ReplyFromReplyWS,
   Selector,
 } from "./query.js";
-import { NewSubscriber, Publisher, Subscriber } from "./pubsub.js";
+import { Publisher, Subscriber } from "./pubsub.js";
 import {
   priority_to_int,
   congestion_control_to_int,
@@ -161,16 +161,14 @@ export interface SubscriberOptions {
  * Zenoh Session
  */
 export class Session {
-  // WebSocket Backend
-  private remote_session: RemoteSession;
-
   async [Symbol.asyncDispose]() {
     await this.close();
   }
 
-  private constructor(remote_session: RemoteSession) {
-    this.remote_session = remote_session;
-  }
+  private constructor(
+    // WebSocket Backend
+    private remoteSession: RemoteSession
+  ) {}
 
   /**
    * Creates a new Session instance
@@ -194,48 +192,48 @@ export class Session {
    * @returns Nothing
    */
   async close() {
-    this.remote_session.close();
+    this.remoteSession.close();
   }
 
   is_closed() {
-    return this.remote_session.is_closed();
+    return this.remoteSession.is_closed();
   }
   /**
    * Puts a value on the session, on a specific key expression KeyExpr
    *
-   * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
-   * @param {IntoZBytes} into_zbytes - something that implements intoValue
-   * @param {PutOptions=} put_opts - an interface for the options settings on puts 
+   * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
+   * @param {IntoZBytes} intoZBytes - something that implements intoValue
+   * @param {PutOptions=} putOpts - an interface for the options settings on puts 
    * @returns void
    */
   put(
-    into_key_expr: IntoKeyExpr,
-    into_zbytes: IntoZBytes,
-    put_opts?: PutOptions,
+    intoKeyExpr: IntoKeyExpr,
+    intoZBytes: IntoZBytes,
+    putOpts?: PutOptions,
   ): void {
-    let keyExpr = new KeyExpr(into_key_expr);
-    let zBytes = new ZBytes(into_zbytes);
+    let keyExpr = new KeyExpr(intoKeyExpr);
+    let zBytes = new ZBytes(intoZBytes);
 
     let priority;
     let express;
     let attachment;
-    let encoding = put_opts?.encoding?.toString()
-    let congestionControl = congestion_control_to_int(put_opts?.congestion_control);
+    let encoding = putOpts?.encoding?.toString()
+    let congestionControl = congestion_control_to_int(putOpts?.congestion_control);
     let timestamp;
 
-    if (put_opts?.timestamp != undefined) {
-      timestamp = put_opts?.timestamp.get_resource_uuid() as string;
+    if (putOpts?.timestamp != undefined) {
+      timestamp = putOpts?.timestamp.get_resource_uuid() as string;
     }
-    if (put_opts?.priority != undefined) {
-      priority = priority_to_int(put_opts?.priority);
+    if (putOpts?.priority != undefined) {
+      priority = priority_to_int(putOpts?.priority);
     }
-    express = put_opts?.express?.valueOf();
+    express = putOpts?.express?.valueOf();
 
-    if (put_opts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(put_opts?.attachment).to_bytes())
+    if (putOpts?.attachment != undefined) {
+      attachment = Array.from(new ZBytes(putOpts?.attachment).to_bytes())
     }
 
-    this.remote_session.put(
+    this.remoteSession.put(
       keyExpr.toString(),
       Array.from(zBytes.to_bytes()),
       encoding,
@@ -252,8 +250,8 @@ export class Session {
    *
    * @returns KeyExpr
    */
-  declare_keyexpr(key_expr: IntoKeyExpr): KeyExpr {
-    return new KeyExpr(key_expr)
+  declare_keyexpr(intoKeyExpr: IntoKeyExpr): KeyExpr {
+    return new KeyExpr(intoKeyExpr)
   }
 
   /**
@@ -262,7 +260,7 @@ export class Session {
    * @returns SessionInfo
    */
   async info(): Promise<SessionInfo> {
-    let sessionInfoIface: SessionInfoIface = await this.remote_session.info();
+    let sessionInfoIface: SessionInfoIface = await this.remoteSession.info();
 
     let zid = new ZenohId(sessionInfoIface.zid);
     let zPeers = sessionInfoIface.z_peers.map(x => new ZenohId(x));
@@ -276,31 +274,31 @@ export class Session {
   /**
    * Executes a Delete on a session, for a specific key expression KeyExpr
    *
-   * @param {IntoKeyExpr} into_key_expr - something that implements intoKeyExpr
-   * @param {DeleteOptions} delete_opts - optional additional parameters to go with a delete function
+   * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
+   * @param {DeleteOptions} deleteOpts - optional additional parameters to go with a delete function
    *
    * @returns void
    */
   delete(
-    into_key_expr: IntoKeyExpr,
-    delete_opts?: DeleteOptions
+    intoKeyExpr: IntoKeyExpr,
+    deleteOpts?: DeleteOptions
   ): void {
-    let keyExpr = new KeyExpr(into_key_expr);
-    let congestionControl = congestion_control_to_int(delete_opts?.congestion_control);
-    let priority = priority_to_int(delete_opts?.priority);
-    let express = delete_opts?.express;
+    let keyExpr = new KeyExpr(intoKeyExpr);
+    let congestionControl = congestion_control_to_int(deleteOpts?.congestion_control);
+    let priority = priority_to_int(deleteOpts?.priority);
+    let express = deleteOpts?.express;
     let attachment;
     let timestamp;
 
-    if (delete_opts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(delete_opts?.attachment).to_bytes())
+    if (deleteOpts?.attachment != undefined) {
+      attachment = Array.from(new ZBytes(deleteOpts?.attachment).to_bytes())
     }
 
-    if (delete_opts?.timestamp != undefined) {
-      timestamp = delete_opts?.timestamp.get_resource_uuid() as string;
+    if (deleteOpts?.timestamp != undefined) {
+      timestamp = deleteOpts?.timestamp.get_resource_uuid() as string;
     }
 
-    this.remote_session.delete(
+    this.remoteSession.delete(
       keyExpr.toString(),
       congestionControl,
       priority,
@@ -313,22 +311,22 @@ export class Session {
   /**
    * Issues a get query on a Zenoh session
    *
-   * @param into_selector - representing a KeyExpr and Parameters
+   * @param intoSelector - representing a KeyExpr and Parameters
    *
    * @returns Receiver
    */
   async get(
-    into_selector: IntoSelector,
-    get_options?: GetOptions
+    intoSelector: IntoSelector,
+    getOptions?: GetOptions
   ): Promise<ChannelReceiver<Reply> | undefined> {
 
     let selector: Selector;
     let keyExpr: KeyExpr;
 
-    if (typeof into_selector === "string" || into_selector instanceof String) {
-      let splitString = into_selector.split("?")
+    if (typeof intoSelector === "string" || intoSelector instanceof String) {
+      let splitString = intoSelector.split("?")
       if (splitString.length == 1) {
-        keyExpr = new KeyExpr(into_selector);
+        keyExpr = new KeyExpr(intoSelector);
         selector = new Selector(keyExpr);
       } else if (splitString.length == 2 && splitString[0] != undefined && splitString[1] != undefined) {
         keyExpr = new KeyExpr(splitString[0]);
@@ -338,39 +336,39 @@ export class Session {
         throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
       }
     } else {
-      selector = new Selector(into_selector);
+      selector = new Selector(intoSelector);
     }
 
-    let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
+    let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
     let [calback, drop, receiver] = into_cb_drop_receiver(handler);
     
-    let callbackWS = (reply_ws: ReplyWS): void => {
-      let reply: Reply = ReplyFromReplyWS(reply_ws);
+    let callbackWS = (replyWS: ReplyWS): void => {
+      let reply: Reply = ReplyFromReplyWS(replyWS);
       calback(reply);
     }
     // Optional Parameters 
 
-    let consolidation = consolidation_mode_to_int(get_options?.consolidation)
-    let encoding = get_options?.encoding?.toString();
-    let congestionControl = congestion_control_to_int(get_options?.congestion_control);
-    let priority = priority_to_int(get_options?.priority);
-    let express = get_options?.express;
-    let target = query_target_to_int(get_options?.target);
+    let consolidation = consolidation_mode_to_int(getOptions?.consolidation)
+    let encoding = getOptions?.encoding?.toString();
+    let congestionControl = congestion_control_to_int(getOptions?.congestion_control);
+    let priority = priority_to_int(getOptions?.priority);
+    let express = getOptions?.express;
+    let target = query_target_to_int(getOptions?.target);
     let attachment;
     let payload;
     let timeoutMillis: number | undefined = undefined;
 
-    if (get_options?.timeout !== undefined) {
-      timeoutMillis = Duration.milliseconds.from(get_options?.timeout);
+    if (getOptions?.timeout !== undefined) {
+      timeoutMillis = Duration.milliseconds.from(getOptions?.timeout);
     }
-    if (get_options?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
+    if (getOptions?.attachment != undefined) {
+      attachment = Array.from(new ZBytes(getOptions?.attachment).to_bytes())
     }
-    if (get_options?.payload != undefined) {
-      payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
+    if (getOptions?.payload != undefined) {
+      payload = Array.from(new ZBytes(getOptions?.payload).to_bytes())
     }
 
-    await this.remote_session.get(
+    await this.remoteSession.get(
       selector.key_expr().toString(),
       selector.parameters().toString(),
       callbackWS,
@@ -395,34 +393,34 @@ export class Session {
    * @remarks
    *  If a Subscriber is created with a callback, it cannot be simultaneously polled for new values
    * 
-   * @param {IntoKeyExpr} key_expr - string of key_expression
-   * @param {SubscriberOptions} subscriber_opts - Options for the subscriber, including a handler
+   * @param {IntoKeyExpr} intoKeyExpr - key expression as a string or KeyExpr instance
+   * @param {SubscriberOptions} subscriberOpts - Options for the subscriber, including a handler
    *
    * @returns Subscriber
    */
   // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
   async declare_subscriber(
-    key_expr: IntoKeyExpr,
-    subscriber_opts?: SubscriberOptions
+    intoKeyExpr: IntoKeyExpr,
+    subscriberOpts?: SubscriberOptions
   ): Promise<Subscriber> {
-    let keyExpr = new KeyExpr(key_expr);
+    let keyExpr = new KeyExpr(intoKeyExpr);
     let remoteSubscriber: RemoteSubscriber;
 
-    let handler = subscriber_opts?.handler ?? new FifoChannel<Sample>(256);
+    let handler = subscriberOpts?.handler ?? new FifoChannel<Sample>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
-    let callbackWS = (sample_ws: SampleWS): void => {
-      let sample: Sample = SampleFromSampleWS(sample_ws);
+    let callbackWS = (sampleWS: SampleWS): void => {
+      let sample: Sample = SampleFromSampleWS(sampleWS);
       callback(sample);
     }
 
-    remoteSubscriber = await this.remote_session.declare_remote_subscriber(
-      keyExpr.toString(),
+    remoteSubscriber = await this.remoteSession.declare_remote_subscriber(
+      intoKeyExpr.toString(),
       callbackWS,
       drop
     );
 
-    let subscriber = Subscriber[NewSubscriber](
+    let subscriber = new Subscriber(
       remoteSubscriber,
       keyExpr,
       receiver,
@@ -437,7 +435,7 @@ export class Session {
    * @returns Liveliness
    */
   liveliness(): Liveliness {
-    return new Liveliness(this.remote_session)
+    return new Liveliness(this.remoteSession)
   }
 
   /**
@@ -447,7 +445,7 @@ export class Session {
    */
   async new_timestamp(): Promise<Timestamp> {
 
-    let tsIface: TimestampIface = await this.remote_session.new_timestamp();
+    let tsIface: TimestampIface = await this.remoteSession.new_timestamp();
 
     return new Timestamp(tsIface.id, tsIface.string_rep, tsIface.millis_since_epoch);
   }
@@ -455,31 +453,31 @@ export class Session {
   /**
   * Declares a new Queryable
   * 
-  * @param {IntoKeyExpr} key_expr - Queryable key expression
-  * @param {QueryableOptions} queryable_opts - Optional additional settings for a Queryable [QueryableOptions]
+  * @param {IntoKeyExpr} intoKeyExpr - Queryable key expression
+  * @param {QueryableOptions} queryableOpts - Optional additional settings for a Queryable [QueryableOptions]
   *
   * @returns Queryable
   */
   async declare_queryable(
-    key_expr: IntoKeyExpr,
-    queryable_opts?: QueryableOptions
+    intoKeyExpr: IntoKeyExpr,
+    queryableOpts?: QueryableOptions
   ): Promise<Queryable> {
-    let keyExpr = new KeyExpr(key_expr);
+    let keyExpr = new KeyExpr(intoKeyExpr);
 
     let complete = false;
-    if (queryable_opts?.complete != undefined) {
-      complete = queryable_opts?.complete;
+    if (queryableOpts?.complete != undefined) {
+      complete = queryableOpts?.complete;
     };
 
-    let handler = queryable_opts?.handler ?? new FifoChannel<Query>(256);
+    let handler = queryableOpts?.handler ?? new FifoChannel<Query>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
-    let callbackWS = (query_ws: QueryWS): void => {
-      let query = QueryFromQueryWS(query_ws, this.remote_session);
+    let callbackWS = (queryWS: QueryWS): void => {
+      let query = QueryFromQueryWS(queryWS, this.remoteSession);
       callback(query);
     }
 
-    let remoteQueryable = await this.remote_session.declare_remote_queryable(
+    let remoteQueryable = await this.remoteSession.declare_remote_queryable(
       keyExpr.toString(),
       complete,
       callbackWS,
@@ -496,47 +494,47 @@ export class Session {
   * @remarks
   *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
   * 
-  * @param {IntoKeyExpr} keyexpr - string of key_expression
-  * @param {PublisherOptions=} publisher_opts - Optional, set of options to be used when declaring a publisher
+  * @param {IntoKeyExpr} intoKeyExpr - string of key_expression
+  * @param {PublisherOptions=} publisherOpts - Optional, set of options to be used when declaring a publisher
   * @returns Publisher
   */
   async declare_publisher(
-    keyexpr: IntoKeyExpr,
-    publisher_opts?: PublisherOptions
+    intoKeyExpr: IntoKeyExpr,
+    publisherOpts?: PublisherOptions
   ): Promise<Publisher> {
-    let keyExpr: KeyExpr = new KeyExpr(keyexpr);
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
-    let express = publisher_opts?.express;
+    let express = publisherOpts?.express;
 
     let priorityRemote;
     let priority = Priority.DATA;
-    if (publisher_opts?.priority != null) {
-      priorityRemote = priority_to_int(publisher_opts?.priority);
-      priority = publisher_opts?.priority;
+    if (publisherOpts?.priority != null) {
+      priorityRemote = priority_to_int(publisherOpts?.priority);
+      priority = publisherOpts?.priority;
     }
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
-    if (publisher_opts?.congestion_control != null) {
-      congestionControlRemote = congestion_control_to_int(publisher_opts?.congestion_control);
-      congestionControl = publisher_opts?.congestion_control;
+    if (publisherOpts?.congestion_control != null) {
+      congestionControlRemote = congestion_control_to_int(publisherOpts?.congestion_control);
+      congestionControl = publisherOpts?.congestion_control;
     }
 
     let reliabilityRemote = 0; // Default Reliable
     let reliability = Reliability.RELIABLE;
-    if (publisher_opts?.reliability != null) {
-      reliabilityRemote = reliability_to_int(publisher_opts?.reliability);
+    if (publisherOpts?.reliability != null) {
+      reliabilityRemote = reliability_to_int(publisherOpts?.reliability);
     }
 
     let encodingRemote = "";
     let encoding = Encoding.default();
-    if (publisher_opts?.encoding != null) {
-      encodingRemote = publisher_opts?.encoding.toString();
-      encoding = publisher_opts?.encoding;
+    if (publisherOpts?.encoding != null) {
+      encodingRemote = publisherOpts?.encoding.toString();
+      encoding = publisherOpts?.encoding;
     }
 
     let remotePublisher: RemotePublisher =
-      await this.remote_session.declare_remote_publisher(
+      await this.remoteSession.declare_remote_publisher(
         keyExpr.toString(),
         encodingRemote,
         congestionControlRemote,
@@ -564,44 +562,44 @@ export class Session {
   * @returns Publisher
   */
   async declare_querier(
-    into_keyexpr: IntoKeyExpr,
-    querier_opts: QuerierOptions,
+    intoKeyexpr: IntoKeyExpr,
+    querierOpts: QuerierOptions,
   ): Promise<Querier> {
-    const keyExpr = new KeyExpr(into_keyexpr);
+    const keyExpr = new KeyExpr(intoKeyexpr);
 
     // Optional Parameters 
     let priorityRemote;
     let priority = Priority.DATA;
-    if (querier_opts?.priority != null) {
-      priorityRemote = priority_to_int(querier_opts?.priority);
-      priority = querier_opts?.priority;
+    if (querierOpts?.priority != null) {
+      priorityRemote = priority_to_int(querierOpts?.priority);
+      priority = querierOpts?.priority;
     }
 
     let congestionControlRemote;
     let congestionControl = CongestionControl.DROP;
-    if (querier_opts?.congestion_control != null) {
-      congestionControlRemote = congestion_control_to_int(querier_opts?.congestion_control);
-      congestionControl = querier_opts?.congestion_control;
+    if (querierOpts?.congestion_control != null) {
+      congestionControlRemote = congestion_control_to_int(querierOpts?.congestion_control);
+      congestionControl = querierOpts?.congestion_control;
     }
 
     let acceptRepliesRemote;
     let acceptReplies = ReplyKeyExpr.Any;
-    if (querier_opts?.accept_replies != null) {
-      acceptRepliesRemote = reply_key_expr_to_int(querier_opts?.accept_replies);
-      acceptReplies = querier_opts?.accept_replies;
+    if (querierOpts?.accept_replies != null) {
+      acceptRepliesRemote = reply_key_expr_to_int(querierOpts?.accept_replies);
+      acceptReplies = querierOpts?.accept_replies;
     }
 
-    let consolidation = consolidation_mode_to_int(querier_opts?.consolidation);
-    let target = query_target_to_int(querier_opts?.target);
-    let allowedDestination = locality_to_int(querier_opts?.allowed_destination);
-    let express = querier_opts?.express;
+    let consolidation = consolidation_mode_to_int(querierOpts?.consolidation);
+    let target = query_target_to_int(querierOpts?.target);
+    let allowedDestination = locality_to_int(querierOpts?.allowed_destination);
+    let express = querierOpts?.express;
     let timeoutMillis: number | undefined = undefined;
 
-    if (querier_opts?.timeout !== undefined) {
-      timeoutMillis = Duration.milliseconds.from(querier_opts?.timeout);
+    if (querierOpts?.timeout !== undefined) {
+      timeoutMillis = Duration.milliseconds.from(querierOpts?.timeout);
     }
 
-    let remoteQuerier = await this.remote_session.declare_remote_querier(
+    let remoteQuerier = await this.remoteSession.declare_remote_querier(
       keyExpr.toString(),
       consolidation,
       congestionControlRemote,
