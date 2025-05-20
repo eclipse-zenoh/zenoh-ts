@@ -207,29 +207,29 @@ export class Publisher {
     put_options?: PublisherPutOptions,
   ) {
     let zbytes: ZBytes = new ZBytes(payload);
-    let _encoding;
-    let _timestamp = null;
+    let encoding;
+    let timestamp = null;
     if (put_options?.timestamp != null) {
-      _timestamp = put_options.timestamp.get_resource_uuid() as unknown as string;
+      timestamp = put_options.timestamp.get_resource_uuid() as unknown as string;
     }
 
     if (put_options?.encoding != null) {
-      _encoding = Encoding.from_string(put_options.encoding.toString());
+      encoding = Encoding.from_string(put_options.encoding.toString());
     } else {
-      _encoding = Encoding.default();
+      encoding = Encoding.default();
     }
 
-    let _attachment = null;
+    let attachment = null;
     if (put_options?.attachment != null) {
-      let att_bytes = new ZBytes(put_options.attachment);
-      _attachment = Array.from(att_bytes.to_bytes());
+      let attBytes = new ZBytes(put_options.attachment);
+      attachment = Array.from(attBytes.to_bytes());
     }
 
     return await this._remote_publisher.put(
       Array.from(zbytes.to_bytes()),
-      _attachment,
-      _encoding.toString(),
-      _timestamp,
+      attachment,
+      encoding.toString(),
+      timestamp,
     );
   }
 
@@ -277,20 +277,20 @@ export class Publisher {
    */
   async delete(delete_options: PublisherDeleteOptions) {
 
-    let _attachment = null;
+    let attachment = null;
     if (delete_options.attachment != null) {
-      let att_bytes = new ZBytes(delete_options.attachment);
-      _attachment = Array.from(att_bytes.to_bytes());
+      let attBytes = new ZBytes(delete_options.attachment);
+      attachment = Array.from(attBytes.to_bytes());
     }
 
-    let _timestamp = null;
+    let timestamp = null;
     if (delete_options.timestamp != null) {
-      _timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
+      timestamp = delete_options.timestamp.get_resource_uuid() as unknown as string;
     }
 
     return await this._remote_publisher.delete(
-      _attachment,
-      _timestamp
+      attachment,
+      timestamp
     );
   }
 

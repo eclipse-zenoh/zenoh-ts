@@ -275,22 +275,22 @@ export class Sample {
  * Convenience function to convert between Sample and SampleWS
  */
 export function SampleFromSampleWS(sample_ws: SampleWS) {
-  let sample_kind: SampleKind;
+  let sampleKind: SampleKind;
   if (sample_ws.kind == "Delete") {
-    sample_kind = SampleKind.DELETE;
+    sampleKind = SampleKind.DELETE;
   } else {
-    sample_kind = SampleKind.PUT;
+    sampleKind = SampleKind.PUT;
   }
 
   let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
 
-  let key_exr = new KeyExpr(sample_ws.key_expr);
+  let keyExr = new KeyExpr(sample_ws.key_expr);
 
   let encoding = Encoding.from_string(sample_ws.encoding);
 
   let priority = priority_from_int(sample_ws.priority);
 
-  let congestion_control = congestion_control_from_int(
+  let congestionControl = congestion_control_from_int(
     sample_ws.congestion_control,
   );
 
@@ -304,13 +304,13 @@ export function SampleFromSampleWS(sample_ws: SampleWS) {
   }
 
   return new Sample(
-    key_exr,
+    keyExr,
     payload,
-    sample_kind,
+    sampleKind,
     encoding,
     priority,
     timestamp,
-    congestion_control,
+    congestionControl,
     express,
     attachment,
   );
@@ -327,20 +327,20 @@ export function SampleWSFromSample(
   express: boolean,
   attachement: ZBytes | undefined,
 ): SampleWS {
-  let key_expr: OwnedKeyExprWrapper = sample.keyexpr().toString();
+  let keyExpr: OwnedKeyExprWrapper = sample.keyexpr().toString();
   let value: Array<number> = Array.from(sample.payload().to_bytes());
 
-  let sample_kind: SampleKindWS;
+  let sampleKind: SampleKindWS;
   if (sample.kind() == SampleKind.DELETE) {
-    sample_kind = "Delete";
+    sampleKind = "Delete";
   } else if (sample.kind() == SampleKind.PUT) {
-    sample_kind = "Put";
+    sampleKind = "Put";
   } else {
     console.warn(
       "Sample Kind not PUT | DELETE, defaulting to PUT: ",
       sample.kind(),
     );
-    sample_kind = "Put";
+    sampleKind = "Put";
   }
 
   let attach = null;
@@ -348,10 +348,10 @@ export function SampleWSFromSample(
     attach = b64_str_from_bytes(new Uint8Array(attachement.to_bytes()));
   }
 
-  let sample_ws: SampleWS = {
-    key_expr: key_expr,
+  let sampleWS: SampleWS = {
+    key_expr: keyExpr,
     value: b64_str_from_bytes(new Uint8Array(value)),
-    kind: sample_kind,
+    kind: sampleKind,
     encoding: encoding.toString(),
     timestamp: null,
     priority: priority_to_int(priority),
@@ -360,5 +360,5 @@ export function SampleWSFromSample(
     attachement: attach,
   };
 
-  return sample_ws;
+  return sampleWS;
 }

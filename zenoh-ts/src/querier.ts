@@ -213,36 +213,36 @@ export class Querier {
     if (this.undeclared == true) {
       return undefined;
     }
-    let _payload;
-    let _attachment;
-    let _parameters;
-    let _encoding = get_options?.encoding?.toString()
+    let payload;
+    let attachment;
+    let parametersStr;
+    let encoding = get_options?.encoding?.toString()
 
     if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
+      attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
     }
     if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
+      payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
     }
     if (parameters != undefined) {
-      _parameters = parameters.toString();
+      parametersStr = parameters.toString();
     }
 
     let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
     
-    let callback_ws = (reply_ws: ReplyWS): void => {
+    let callbackWS = (reply_ws: ReplyWS): void => {
       let reply: Reply = ReplyFromReplyWS(reply_ws);
       callback(reply);
     }
 
     await this._remote_querier.get(
-      callback_ws,
+      callbackWS,
       drop,
-      _encoding,
-      _parameters,
-      _attachment,
-      _payload,
+      encoding,
+      parametersStr,
+      attachment,
+      payload,
     );
 
     return receiver;

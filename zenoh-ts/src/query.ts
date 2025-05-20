@@ -87,7 +87,7 @@ export function QueryFromQueryWS(
   query_ws: QueryWS,
   session_ref: RemoteSession
 ): Query {
-  let key_expr: KeyExpr = new KeyExpr(query_ws.key_expr);
+  let keyExpr: KeyExpr = new KeyExpr(query_ws.key_expr);
   let payload: ZBytes | undefined = undefined;
   let attachment: ZBytes | undefined = undefined;
   let parameters: Parameters = new Parameters(query_ws.parameters);
@@ -105,7 +105,7 @@ export function QueryFromQueryWS(
 
   return new Query(
     query_ws.query_uuid,
-    key_expr,
+    keyExpr,
     parameters,
     payload,
     attachment,
@@ -252,22 +252,22 @@ export class Query {
     * @returns void
     */
   async reply(key_expr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions) {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
+    let keyExpr: KeyExpr = new KeyExpr(key_expr);
 
-    let opt_attachment: Uint8Array | null = null;
+    let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      opt_attachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).to_bytes();
     }
 
     await this._session_ref.reply(
       this._query_id, 
-      _key_expr.toString(),
+      keyExpr.toString(),
       new ZBytes(payload).to_bytes(),
       options?.encoding?.toString() ?? null,
       congestion_control_to_int(options?.congestion_control),
       priority_to_int(options?.priority),
       options?.express ?? false,
-      opt_attachment,
+      optAttachment,
       options?.timestamp?.toString() ?? null,
     );
   }
@@ -292,20 +292,20 @@ export class Query {
     * @returns void
     */
   async reply_del(key_expr: IntoKeyExpr, options?: ReplyDelOptions) {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
+    let keyExpr: KeyExpr = new KeyExpr(key_expr);
 
-    let opt_attachment: Uint8Array | null = null;
+    let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      opt_attachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).to_bytes();
     }
 
     await this._session_ref.reply_del(
       this._query_id, 
-      _key_expr.toString(),
+      keyExpr.toString(),
       congestion_control_to_int(options?.congestion_control),
       priority_to_int(options?.priority),
       options?.express ?? false,
-      opt_attachment,
+      optAttachment,
       options?.timestamp?.toString() ?? null,
     );
   }
@@ -583,13 +583,13 @@ export class Reply {
  */
 export function ReplyFromReplyWS(reply_ws: ReplyWS) {
   if ("Ok" in reply_ws.result) {
-    let sample_ws = reply_ws.result["Ok"];
-    let sample = SampleFromSampleWS(sample_ws);
+    let sampleWS = reply_ws.result["Ok"];
+    let sample = SampleFromSampleWS(sampleWS);
     return new Reply(sample);
   } else {
-    let sample_ws_err: ReplyErrorWS = reply_ws.result["Err"];
-    let reply_error = new ReplyError(sample_ws_err);
-    return new Reply(reply_error);
+    let sampleWSEerr: ReplyErrorWS = reply_ws.result["Err"];
+    let replyError = new ReplyError(sampleWSEerr);
+    return new Reply(replyError);
   }
 }
 
@@ -647,17 +647,17 @@ export class Selector {
    * @returns Selector
    */
   constructor(selector: IntoSelector, parameters?: IntoParameters) {
-    let key_expr: KeyExpr;
+    let keyExpr: KeyExpr;
     if (selector instanceof Selector) {
       this._key_expr = selector._key_expr;
       this._parameters = selector._parameters;
       return;
     } else if (selector instanceof KeyExpr) {
-      key_expr = selector;
+      keyExpr = selector;
     } else {
-      key_expr = new KeyExpr(selector);
+      keyExpr = new KeyExpr(selector);
     }
-    this._key_expr = key_expr;
+    this._key_expr = keyExpr;
 
     if (parameters == undefined) {
       this._parameters = new Parameters("")

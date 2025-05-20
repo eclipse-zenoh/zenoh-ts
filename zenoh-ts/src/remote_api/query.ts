@@ -62,9 +62,9 @@ export class RemoteQueryable {
       return;
     }
 
-    let ctrl_message: ControlMsg = {
+    let ctrlMessage: ControlMsg = {
       UndeclareQueryable: this.queryable_id.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrlMessage);
   }
 }

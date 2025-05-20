@@ -38,34 +38,34 @@ export class Liveliness {
   }
 
   async declare_token(key_expr: IntoKeyExpr): Promise<LivelinessToken> {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
-    let uuid = await this.remote_session.declare_liveliness_token(_key_expr.toString());
+    let keyExpr: KeyExpr = new KeyExpr(key_expr);
+    let uuid = await this.remote_session.declare_liveliness_token(keyExpr.toString());
 
     return new LivelinessToken(this.remote_session, uuid)
   }
 
   async declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
 
-    let _key_expr = new KeyExpr(key_expr);
+    let keyExpr = new KeyExpr(key_expr);
 
-    let _history = false;
+    let history = false;
     if (options?.history != undefined) {
-      _history = options?.history;
+      history = options?.history;
     };
 
     let handler = options?.handler ?? new FifoChannel<Sample>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
-    let callback_ws = (sample_ws: SampleWS): void => {
+    let callbackWS = (sample_ws: SampleWS): void => {
       let sample: Sample = SampleFromSampleWS(sample_ws);
       callback(sample);
     }
 
-    let remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_ws, drop);
+    let remoteSubscriber = await this.remote_session.declare_liveliness_subscriber(keyExpr.toString(), history, callbackWS, drop);
 
     let subscriber = Subscriber[NewSubscriber](
-      remote_subscriber,
-      _key_expr,
+      remoteSubscriber,
+      keyExpr,
       receiver
     );
 
@@ -74,27 +74,27 @@ export class Liveliness {
 
   async get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<ChannelReceiver<Reply>| undefined> {
 
-    let _key_expr = new KeyExpr(key_expr);
+    let keyExpr = new KeyExpr(key_expr);
 
-    let _timeout_millis: number | undefined = undefined;
+    let timeoutMillis: number | undefined = undefined;
 
     if (options?.timeout !== undefined) {
-      _timeout_millis = Duration.milliseconds.from(options?.timeout);
+      timeoutMillis = Duration.milliseconds.from(options?.timeout);
     }
 
     let handler = options?.handler ?? new FifoChannel<Reply>(256);
     let [callback, drop, receiver] = into_cb_drop_receiver(handler);
 
-    let callback_ws = (reply_ws: ReplyWS): void => {
+    let callbackWS = (reply_ws: ReplyWS): void => {
       let reply: Reply = ReplyFromReplyWS(reply_ws);
       callback(reply);
     }
 
     await this.remote_session.get_liveliness(
-      _key_expr.toString(),
-      callback_ws,
+      keyExpr.toString(),
+      callbackWS,
       drop,
-      _timeout_millis,
+      timeoutMillis,
     );
 
     return receiver;
@@ -102,22 +102,22 @@ export class Liveliness {
 }
 
 export class LivelinessToken {
-  private remote_session: RemoteSession;
+  private remoteSession: RemoteSession;
   private uuid: UUIDv4;
 
   constructor(
     remote_session: RemoteSession,
     uuid: UUIDv4
   ) {
-    this.remote_session = remote_session;
+    this.remoteSession = remote_session;
     this.uuid = uuid;
   }
 
   async undeclare() {
-    let control_msg: ControlMsg = {
+    let controlMsg: ControlMsg = {
       Liveliness: { "UndeclareToken": this.uuid.toString() },
     };
 
-    await this.remote_session.send_ctrl_message(control_msg);
+    await this.remoteSession.send_ctrl_message(controlMsg);
   }
 }

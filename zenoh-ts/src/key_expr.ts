@@ -56,8 +56,8 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   join(other: IntoKeyExpr): KeyExpr {
-    const key_expr = join(this._inner, KeyExpr.into_string(other));
-    return new KeyExpr(key_expr)
+    const keyExpr = join(this._inner, KeyExpr.into_string(other));
+    return new KeyExpr(keyExpr)
   }
 
   /**
@@ -65,8 +65,8 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   concat(other: IntoKeyExpr): KeyExpr {
-    const key_expr = concat(this._inner, KeyExpr.into_string(other));
-    return new KeyExpr(key_expr)
+    const keyExpr = concat(this._inner, KeyExpr.into_string(other));
+    return new KeyExpr(keyExpr)
   }
 
   /**
@@ -90,8 +90,8 @@ export class KeyExpr {
   * @returns KeyExpr
   */
   static autocanonize(other: IntoKeyExpr): KeyExpr {
-    const key_expr = autocanonize(KeyExpr.into_string(other));
-    return new KeyExpr(key_expr)
+    const keyExpr = autocanonize(KeyExpr.into_string(other));
+    return new KeyExpr(keyExpr)
   }
 
   private static into_string(other: IntoKeyExpr): string {

@@ -66,7 +66,7 @@ export interface ZSerializeable {
   serialize_with_zserializer(serializer: ZBytesSerializer): void;
 }
 
-const is_little_endian: boolean = ((new Uint32Array((new Uint8Array([1,2,3,4])).buffer))[0] === 0x04030201)
+const isLittleEndian: boolean = ((new Uint32Array((new Uint8Array([1,2,3,4])).buffer))[0] === 0x04030201)
 
 /**
  * Interface for adding support for custom types deserialization.
@@ -164,7 +164,7 @@ export class ZBytesSerializer {
      */
     public serialize_uint16array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Uint16Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_uint16(element));
@@ -176,7 +176,7 @@ export class ZBytesSerializer {
      */
     public serialize_uint32array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Uint32Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_uint32(element));
@@ -188,7 +188,7 @@ export class ZBytesSerializer {
      */
     public serialize_biguint64array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: BigUint64Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_bigint_uint64(element));
@@ -208,7 +208,7 @@ export class ZBytesSerializer {
      */
     public serialize_int16array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Int16Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_int16(element));
@@ -220,7 +220,7 @@ export class ZBytesSerializer {
      */
     public serialize_int32array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Int32Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_int32(element));
@@ -232,7 +232,7 @@ export class ZBytesSerializer {
      */
     public serialize_bigint64array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: BigInt64Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_bigint_int64(element));
@@ -244,7 +244,7 @@ export class ZBytesSerializer {
      */
     public serialize_float32array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Float32Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_float32(element));
@@ -256,7 +256,7 @@ export class ZBytesSerializer {
      */
     public serialize_float64array<TArrayBuffer extends ArrayBufferLike = ArrayBufferLike>(val: Float64Array<TArrayBuffer>) {
       this.write_sequence_length(val.length)
-      if (is_little_endian) {
+      if (isLittleEndian) {
         this.append(new Uint8Array(val.buffer))
       } else {  
         val.forEach( (element) => this.serialize_number_float64(element));
@@ -307,16 +307,16 @@ export class ZBytesSerializer {
      * Serializes number as 64 bit integer.
      */
     public serialize_number_int64(val: number) {
-      let bigint_val = BigInt(val);
-      this.serialize_bigint_int64(bigint_val)
+      let bigintVal = BigInt(val);
+      this.serialize_bigint_int64(bigintVal)
     }
 
     /**
      * Serializes number as 64 bit unsigned integer.
      */
     public serialize_number_uint64(val: number) {
-      let bigint_val = BigInt(val);
-      this.serialize_bigint_uint64(bigint_val)
+      let bigintVal = BigInt(val);
+      this.serialize_bigint_uint64(bigintVal)
     }
 
     /**
@@ -460,17 +460,17 @@ export class ZBytesSerializer {
         }
         return ZS.array(t) as ZSTypeInfo<EnsureSerializeable<T>>
       } else if (data instanceof Map) {
-        let t_key = undefined
-        let t_value = undefined
+        let tKey = undefined
+        let tValue = undefined
         let val = data.entries().next()
         if (val !== undefined ) {
           let value = val.value
           if (value !== undefined) {
-            t_key = this._get_default_serialization_tag(value[0] as any)
-            t_value = this._get_default_serialization_tag(value[1] as any)
+            tKey = this._get_default_serialization_tag(value[0] as any)
+            tValue = this._get_default_serialization_tag(value[1] as any)
           }
         }
-        return ZS.map(t_key, t_value) as ZSTypeInfo<EnsureSerializeable<T>>
+        return ZS.map(tKey, tValue) as ZSTypeInfo<EnsureSerializeable<T>>
       } else {   // should never happen
         throw new Error(`Non-ZSerializeable type`); 
       }
@@ -1025,8 +1025,8 @@ export class ZBytesDeserializer {
    * @returns Number of sequence elements.
    */
   public read_sequence_length(): number {
-    let [res, bytes_read] = leb.decodeULEB128(this._buffer, this._idx)
-    this._idx += bytes_read
+    let [res, bytesRead] = leb.decodeULEB128(this._buffer, this._idx)
+    this._idx += bytesRead
     if (res > Number.MAX_SAFE_INTEGER) {
       throw new Error(`Array length overflow: ${res}`); 
     }
@@ -1055,7 +1055,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_uint16array(): Uint16Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Uint16Array(this._read_slice(len * 2).slice().buffer)
     } else {
       let out = new Uint16Array(len)
@@ -1071,7 +1071,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_uint32array(): Uint32Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Uint32Array(this._read_slice(len * 4).slice().buffer)
     } else {
       let out = new Uint32Array(len)
@@ -1087,7 +1087,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_biguint64array(): BigUint64Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new BigUint64Array(this._read_slice(len * 8).slice().buffer)
     } else {
       let out = new BigUint64Array(len)
@@ -1111,7 +1111,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_int16array(): Int16Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Int16Array(this._read_slice(len * 2).slice().buffer)
     } else {
       let out = new Int16Array(len)
@@ -1127,7 +1127,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_int32array(): Int32Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Int32Array(this._read_slice(len * 4).slice().buffer)
     } else {
       let out = new Int32Array(len)
@@ -1143,7 +1143,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_bigint64array(): BigInt64Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new BigInt64Array(this._read_slice(len * 8).slice().buffer)
     } else {
       let out = new BigInt64Array(len)
@@ -1159,7 +1159,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_float32array(): Float32Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Float32Array(this._read_slice(len * 4).slice().buffer)
     } else {
       let out = new Float32Array(len)
@@ -1175,7 +1175,7 @@ export class ZBytesDeserializer {
    */
   public deserialize_float64array(): Float64Array {
     let len = this.read_sequence_length();
-    if (is_little_endian) {
+    if (isLittleEndian) {
       return new Float64Array(this._read_slice(len * 8).slice().buffer)
     } else {
       let out = new Float64Array(len)

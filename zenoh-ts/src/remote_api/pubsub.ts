@@ -61,21 +61,21 @@ export class RemotePublisher {
       return;
     }
 
-    let optional_attachment = null;
+    let optionalAttachment = null;
     if (attachment != null) {
-      optional_attachment = b64_str_from_bytes(new Uint8Array(attachment));
+      optionalAttachment = b64_str_from_bytes(new Uint8Array(attachment));
     }
 
-    let data_msg: DataMsg = {
+    let dataMsg: DataMsg = {
       PublisherPut: {
         id: this.publisher_id.toString(),
         payload: b64_str_from_bytes(new Uint8Array(payload)),
-        attachment: optional_attachment,
+        attachment: optionalAttachment,
         encoding: encoding,
         timestamp: timestamp
       },
     };
-    await this.session_ref.send_data_message(data_msg);
+    await this.session_ref.send_data_message(dataMsg);
   }
 
   // Delete 
@@ -84,19 +84,19 @@ export class RemotePublisher {
     timestamp: string | null,
   ) {
 
-    let optional_attachment = null;
+    let optionalAttachment = null;
     if (attachment != null) {
-      optional_attachment = b64_str_from_bytes(new Uint8Array(attachment));
+      optionalAttachment = b64_str_from_bytes(new Uint8Array(attachment));
     }
 
-    let data_msg: DataMsg = {
+    let dataMsg: DataMsg = {
       PublisherDelete: {
         id: this.publisher_id.toString(),
-        attachment: optional_attachment,
+        attachment: optionalAttachment,
         timestamp: timestamp,
       },
     };
-    await this.session_ref.send_data_message(data_msg);
+    await this.session_ref.send_data_message(dataMsg);
   }
 
   async undeclare() {
@@ -111,10 +111,10 @@ export class RemotePublisher {
       return;
     }
     this.undeclared = true;
-    let ctrl_message: ControlMsg = {
+    let ctrlMessage: ControlMsg = {
       UndeclarePublisher: this.publisher_id.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrlMessage);
   }
 }
 
@@ -164,9 +164,9 @@ export class RemoteSubscriber {
       return;
     }
 
-    let ctrl_message: ControlMsg = {
+    let ctrlMessage: ControlMsg = {
       UndeclareSubscriber: this.subscriber_id.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrl_message);
+    await this.session_ref.send_ctrl_message(ctrlMessage);
   }
 }

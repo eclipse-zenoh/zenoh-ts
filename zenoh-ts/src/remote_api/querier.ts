@@ -33,11 +33,11 @@ export class RemoteQuerier {
 
   async undeclare() {
 
-    let control_msg: ControlMsg = {
+    let controlMsg: ControlMsg = {
       UndeclareQuerier: this.querier_id as string
     };
 
-    await this.session_ref.send_ctrl_message(control_msg);
+    await this.session_ref.send_ctrl_message(controlMsg);
   }
 
   async get(
@@ -48,8 +48,8 @@ export class RemoteQuerier {
     _attachment?: Array<number>,
     _payload?: Array<number>,
   ) {
-    let get_id = uuidv4();
-    this.session_ref.get_receivers.set(get_id, { callback, drop });
+    let getId = uuidv4();
+    this.session_ref.get_receivers.set(getId, { callback, drop });
 
     let payload = undefined;
     if (_payload != undefined) {
@@ -60,10 +60,10 @@ export class RemoteQuerier {
       attachment = b64_str_from_bytes(new Uint8Array(_attachment))
     }
 
-        let control_msg: ControlMsg = {
+        let controlMsg: ControlMsg = {
             QuerierGet: {
                 querier_id: this.querier_id as string,
-                get_id: get_id,
+                get_id: getId,
                 parameters: parameters,
                 encoding: encoding,
                 payload: payload,
@@ -71,7 +71,7 @@ export class RemoteQuerier {
             }
         };
 
-    await this.session_ref.send_ctrl_message(control_msg);
+    await this.session_ref.send_ctrl_message(controlMsg);
   }
 
 }
