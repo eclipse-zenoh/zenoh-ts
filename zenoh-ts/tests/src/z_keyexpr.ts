@@ -86,7 +86,7 @@ Deno.test("KeyExpr - Declare", async () => {
   try {
     const foobar = new KeyExpr("FOO/BAR");
     const foostar = new KeyExpr("FOO/*");
-    const declared = session.declare_keyexpr(foobar);
+    const declared = session.declareKeyexpr(foobar);
 
     assertEquals(declared.toString(), "FOO/BAR", "Declared keyexpr mismatch");
     assertEquals(declared.toString(), foobar.toString(), "Declared keyexpr != foobar");

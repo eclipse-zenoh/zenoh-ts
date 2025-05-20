@@ -18,7 +18,7 @@ import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 Deno.test("Channels - FIFO", async () => {
     const channel = new FifoChannel<number>(3);
-    const [sender, receiver] = channel.into_sender_receiver_pair();
+    const [sender, receiver] = channel.intoSenderReceiverPair();
 
     assertEquals(receiver.state(), ChannelState.empty, "Channel is not empty");
 
@@ -63,7 +63,7 @@ Deno.test("Channels - FIFO", async () => {
 
 Deno.test("Channels - Ring", async () => {
     const channel = new RingChannel<number>(3);
-    const [sender, receiver] = channel.into_sender_receiver_pair();
+    const [sender, receiver] = channel.intoSenderReceiverPair();
 
     assertEquals(receiver.state(), ChannelState.empty, "Channel is not empty");
 

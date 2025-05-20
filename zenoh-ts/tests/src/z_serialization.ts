@@ -22,13 +22,13 @@ class CustomStruct implements ZSerializeable, ZDeserializeable {
         public s: string = ""
     ) {}
 
-    serialize_with_zserializer(serializer: ZBytesSerializer): void {
+    serializeWithZSerializer(serializer: ZBytesSerializer): void {
         serializer.serialize(this.vd, ZS.array(ZS.number()));
         serializer.serialize(this.i, ZS.number(NumberFormat.Int32));
         serializer.serialize(this.s, ZS.string());
     }
 
-    deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+    deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
         this.vd = deserializer.deserialize(ZD.array(ZD.number()));
         this.i = deserializer.deserialize(ZD.number(NumberFormat.Int32));
         this.s = deserializer.deserialize(ZD.string());

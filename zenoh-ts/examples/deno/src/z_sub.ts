@@ -24,7 +24,7 @@ export async function main() {
   const key_expr = new KeyExpr(args.key);
 
   console.warn(`Declaring Subscriber on '${args.key}'...`);
-  const poll_subscriber: Subscriber = await session.declare_subscriber(key_expr, { handler: new RingChannel(10) });
+  const poll_subscriber: Subscriber = await session.declareSubscriber(key_expr, { handler: new RingChannel(10) });
   console.warn("Press CTRL-C to quit...");
   
   for await (const sample of poll_subscriber.receiver() as ChannelReceiver<Sample>) {
@@ -32,7 +32,7 @@ export async function main() {
       ">> [Subscriber] Received " +
       sample.kind() + " ('" +
       sample.keyexpr() + "': '" +
-      sample.payload().to_string() + "')",
+      sample.payload().toString() + "')",
     );
   }
 
