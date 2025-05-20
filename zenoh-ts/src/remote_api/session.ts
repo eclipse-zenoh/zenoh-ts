@@ -43,11 +43,12 @@ import { Closure, Drop } from "./closure.js";
 // ██   ██ ██      ██  ██  ██ ██    ██    ██    ██               ██ ██           ██      ██ ██ ██    ██ ██  ██ ██
 // ██   ██ ███████ ██      ██  ██████     ██    ███████     ███████ ███████ ███████ ███████ ██  ██████  ██   ████
 
-
 export interface TimestampIface {
   id: string,
-  stringRep: string,
-  millisSinceEpoch: bigint
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  string_rep: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  millis_since_epoch: bigint
 }
 
 export enum RemoteRecvErr {

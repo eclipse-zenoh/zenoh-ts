@@ -447,7 +447,7 @@ export class Session {
 
     let tsIface: TimestampIface = await this.remoteSession.newTimestamp();
 
-    return new Timestamp(tsIface.id, tsIface.stringRep, tsIface.millisSinceEpoch);
+    return new Timestamp(tsIface.id, tsIface.string_rep, tsIface.millis_since_epoch);
   }
 
   /**
