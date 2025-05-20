@@ -41,9 +41,9 @@ stop_daemon() {
   fi
 }
 
-# run build if needed
+run build if needed
 if [ ! -d "./dist" ]; then
-  yarn build || exit 1
+  yarn build library || exit 1
 fi
 
 # Check if DAEMON is the first argument
