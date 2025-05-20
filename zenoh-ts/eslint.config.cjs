@@ -38,12 +38,21 @@ module.exports = tseslint.config(
         {
           'selector': 'default',
           'format': ['camelCase'],
-          'leadingUnderscore': 'allow'
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase'],
-          'leadingUnderscore': 'allow'
+          'format': ['camelCase'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow'
+        },
+        {
+          'selector': 'variable',
+          'format': ['camelCase', 'UPPER_CASE'],
+          'leadingUnderscore': 'allow',
+          'trailingUnderscore': 'allow',
+          'modifiers': ['const']
         },
         {
           'selector': 'parameter',
@@ -121,8 +130,14 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
+          'format': ['camelCase', 'PascalCase', 'snake_case'],
           'leadingUnderscore': 'allow'
+        },
+        {
+          'selector': 'variable',
+          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
+          'leadingUnderscore': 'allow',
+          'modifiers': ['const']
         },
         {
           'selector': 'parameter',
