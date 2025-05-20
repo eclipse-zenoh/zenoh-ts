@@ -109,10 +109,12 @@ case "${component}" in
         ;;
     "tests")
         install_deps
+        build_library
         build_tests
         ;;
     "examples")
         install_deps
+        build_library
         build_examples "$subcomponent"
         ;;
     "ALL")
