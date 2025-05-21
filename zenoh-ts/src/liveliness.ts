@@ -98,12 +98,9 @@ export class Liveliness {
 }
 
 export class LivelinessToken {
-  private remoteSession: RemoteSession;
-  private uuid: UUIDv4;
-
   constructor(
-    remoteSession: RemoteSession,
-    uuid: UUIDv4
+    private remoteSession: RemoteSession,
+    private uuid: UUIDv4
   ) {
     this.remoteSession = remoteSession;
     this.uuid = uuid;

@@ -19,9 +19,7 @@ const MAX_RETRIES: number = 10;
 
 
 export class RemoteLink {
-  ws: WebSocket;
-
-  private constructor(ws: WebSocket) {
+  private constructor(private ws: WebSocket) {
     this.ws = ws;
   }
 

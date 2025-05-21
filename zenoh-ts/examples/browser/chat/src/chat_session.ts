@@ -6,8 +6,7 @@ export function validateUsername(username: string): boolean {
 }
 
 export class ChatUser {
-	username: string;
-	constructor(username: string) {
+	constructor(public readonly username: string) {
 		this.username = username;
 	}
 	public static fromString(username: string): ChatUser | null {
