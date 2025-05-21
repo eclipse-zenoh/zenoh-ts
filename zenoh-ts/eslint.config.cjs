@@ -159,7 +159,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'memberLike',
-          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow'
         },
         {
@@ -172,12 +172,12 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'property',
-          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow'
         },
         {
           'selector': 'classProperty',
-          'format': ['camelCase', 'PascalCase', 'UPPER_CASE', 'snake_case'],
+          'format': ['camelCase', 'UPPER_CASE'],
           'leadingUnderscore': 'allow',
           'modifiers': ['static', 'readonly']
         },

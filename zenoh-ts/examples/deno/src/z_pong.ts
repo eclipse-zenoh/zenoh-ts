@@ -45,6 +45,7 @@ function sleep(ms: number) {
 }
 
 class ParseArgs extends BaseParseArgs {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public no_express: boolean = false;
 
   constructor() {

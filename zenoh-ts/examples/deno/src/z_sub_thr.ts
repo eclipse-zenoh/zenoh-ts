@@ -16,10 +16,15 @@ import { Config, Session, Sample, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 // Throughput test
 class Stats {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_count: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_size: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   finished_rounds: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_start: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   global_start: number;
 
   constructor(roundSize: number) {
@@ -59,7 +64,7 @@ export async function main() {
   console.warn('Opening session...');
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const stats = new Stats(args.number);
-  const subscriberCallback = async function (_sample: Sample): Promise<void> {
+  const subscriberCallback = function (_sample: Sample): void {
     stats.increment();
   };
 

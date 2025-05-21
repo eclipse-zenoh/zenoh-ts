@@ -43,11 +43,11 @@ export class ChatSession {
 	constructor(public readonly domainKeyexpr: KeyExpr, public readonly user: ChatUser) {}
 
 	session: Session | null = null;
-	liveliness_token: LivelinessToken | null = null;
-	liveliness_subscriber: Subscriber | null = null;
-	messages_queryable: Queryable | null = null;
-	messages_publisher: Publisher | null = null;
-	message_subscriber: Subscriber | null = null;
+	livelinessToken: LivelinessToken | null = null;
+	livelinessSubscriber: Subscriber | null = null;
+	messagesQueryable: Queryable | null = null;
+	messagesPublisher: Publisher | null = null;
+	messageSubscriber: Subscriber | null = null;
 	users: ChatUser[] = [];
 	messages: ChatMessage[] = [];
 
@@ -211,11 +211,11 @@ export class ChatSession {
 
 		this.session = session;
 		this.messages = await this.requestMessageHistory(session, this.getHistoryKeyexpr());
-		this.messages_queryable = await this.declareMessageHistoryQueryable(session, this.getHistoryKeyexpr());
-		this.messages_publisher = await this.declareMessagePublisher(session, this.getUserKeyexpr());
-		this.message_subscriber = await this.declareMessageSubscriber(session, this.getAllUsersKeyexpr());
-		this.liveliness_token = await this.declareLivelinessToken(session, this.getUserKeyexpr());
-		this.liveliness_subscriber = await this.declareLivelinessSubscriber(session, this.getAllUsersKeyexpr());
+		this.messagesQueryable = await this.declareMessageHistoryQueryable(session, this.getHistoryKeyexpr());
+		this.messagesPublisher = await this.declareMessagePublisher(session, this.getUserKeyexpr());
+		this.messageSubscriber = await this.declareMessageSubscriber(session, this.getAllUsersKeyexpr());
+		this.livelinessToken = await this.declareLivelinessToken(session, this.getUserKeyexpr());
+		this.livelinessSubscriber = await this.declareLivelinessSubscriber(session, this.getAllUsersKeyexpr());
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
@@ -235,9 +235,9 @@ export class ChatSession {
 	}
 
 	async sendMessage(message: string) {
-		if (this.messages_publisher) {
+		if (this.messagesPublisher) {
 			log(`[Publisher] Put message: ${message}`);
-			await this.messages_publisher.put(message);
+			await this.messagesPublisher.put(message);
 		}
 	}
 
@@ -246,11 +246,11 @@ export class ChatSession {
 			await this.session.close();
 			log(`[Session] Close`);
 			this.session = null;
-			this.liveliness_token = null;
-			this.messages_queryable = null;
-			this.liveliness_subscriber = null;
-			this.messages_publisher = null;
-			this.message_subscriber = null;
+			this.livelinessToken = null;
+			this.messagesQueryable = null;
+			this.livelinessSubscriber = null;
+			this.messagesPublisher = null;
+			this.messageSubscriber = null;
 			this.users = [];
 			this.messages = [];
 			if (this.onDisconnectCallback) {
