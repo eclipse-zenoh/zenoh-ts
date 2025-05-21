@@ -4,20 +4,20 @@ import {
   UUIDv4
 } from "./remote_api/session.js";
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
-import { Sample, Sample_from_SampleWS } from "./sample.js";
-import { Reply, Reply_from_ReplyWS } from "./query.js";
+import { Sample, sampleFromSampleWS } from "./sample.js";
+import { Reply, replyFromReplyWS } from "./query.js";
 
 // Import interface
 import { ControlMsg } from "./remote_api/interface/ControlMsg.js";
 import { SampleWS } from "./remote_api/interface/SampleWS.js";
-import { NewSubscriber, Subscriber } from "./pubsub.js";
+import { Subscriber } from "./pubsub.js";
 
 // Liveliness API
 import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
 
 // External
 import { Duration, TimeDuration } from 'typed-duration'
-import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
 
 interface LivelinessSubscriberOptions {
   handler?: Handler<Sample>,
@@ -31,70 +31,66 @@ interface LivelinessGetOptions {
 
 export class Liveliness {
 
-  private remote_session: RemoteSession;
+  constructor(private remoteSession: RemoteSession) {}
 
-  constructor(remote_session: RemoteSession) {
-    this.remote_session = remote_session;
+  async declareToken(intoKeyExpr: IntoKeyExpr): Promise<LivelinessToken> {
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
+    let uuid = await this.remoteSession.declareLivelinessToken(keyExpr.toString());
+
+    return new LivelinessToken(this.remoteSession, uuid)
   }
 
-  async declare_token(key_expr: IntoKeyExpr): Promise<LivelinessToken> {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
-    let uuid = await this.remote_session.declare_liveliness_token(_key_expr.toString());
+  async declareSubscriber(intoKeyExpr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
 
-    return new LivelinessToken(this.remote_session, uuid)
-  }
+    let keyExpr = new KeyExpr(intoKeyExpr);
 
-  async declare_subscriber(key_expr: IntoKeyExpr, options?: LivelinessSubscriberOptions): Promise<Subscriber> {
-
-    let _key_expr = new KeyExpr(key_expr);
-
-    let _history = false;
+    let history = false;
     if (options?.history != undefined) {
-      _history = options?.history;
+      history = options?.history;
     };
 
     let handler = options?.handler ?? new FifoChannel<Sample>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
 
-    let callback_ws = (sample_ws: SampleWS): void => {
-      let sample: Sample = Sample_from_SampleWS(sample_ws);
+    let callbackWS = (sampleWS: SampleWS): void => {
+      let sample: Sample = sampleFromSampleWS(sampleWS);
       callback(sample);
     }
 
-    let remote_subscriber = await this.remote_session.declare_liveliness_subscriber(_key_expr.toString(), _history, callback_ws, drop);
+    let remoteSubscriber = await this.remoteSession.declareLivelinessSubscriber(keyExpr.toString(), history, callbackWS, drop);
 
-    let subscriber = Subscriber[NewSubscriber](
-      remote_subscriber,
-      _key_expr,
+    let subscriber = new Subscriber(
+      remoteSubscriber,
+      keyExpr,
       receiver
     );
 
     return subscriber;
   }
 
-  async get(key_expr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<ChannelReceiver<Reply>| undefined> {
+  async get(intoKeyExpr: IntoKeyExpr, options?: LivelinessGetOptions): Promise<ChannelReceiver<Reply>| undefined> {
 
-    let _key_expr = new KeyExpr(key_expr);
+    let keyExpr = new KeyExpr(intoKeyExpr);
 
-    let _timeout_millis: number | undefined = undefined;
+    let timeoutMillis: number | undefined = undefined;
 
     if (options?.timeout !== undefined) {
-      _timeout_millis = Duration.milliseconds.from(options?.timeout);
+      timeoutMillis = Duration.milliseconds.from(options?.timeout);
     }
 
     let handler = options?.handler ?? new FifoChannel<Reply>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
 
-    let callback_ws = (reply_ws: ReplyWS): void => {
-      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+    let callbackWS = (replyWS: ReplyWS): void => {
+      let reply: Reply = replyFromReplyWS(replyWS);
       callback(reply);
     }
 
-    await this.remote_session.get_liveliness(
-      _key_expr.toString(),
-      callback_ws,
+    await this.remoteSession.getLiveliness(
+      keyExpr.toString(),
+      callbackWS,
       drop,
-      _timeout_millis,
+      timeoutMillis,
     );
 
     return receiver;
@@ -102,22 +98,19 @@ export class Liveliness {
 }
 
 export class LivelinessToken {
-  private remote_session: RemoteSession;
-  private uuid: UUIDv4;
-
   constructor(
-    remote_session: RemoteSession,
-    uuid: UUIDv4
+    private remoteSession: RemoteSession,
+    private uuid: UUIDv4
   ) {
-    this.remote_session = remote_session;
+    this.remoteSession = remoteSession;
     this.uuid = uuid;
   }
 
   async undeclare() {
-    let control_msg: ControlMsg = {
+    let controlMsg: ControlMsg = {
       Liveliness: { "UndeclareToken": this.uuid.toString() },
     };
 
-    await this.remote_session.send_ctrl_message(control_msg);
+    await this.remoteSession.sendCtrlMessage(controlMsg);
   }
 }

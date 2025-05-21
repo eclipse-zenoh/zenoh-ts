@@ -93,7 +93,7 @@ function initialize() {
 	sendButton.disabled = true;
 
 	connectButton?.addEventListener('click', () => {
-		log_catch(async () => {
+		logCatch(async () => {
 			let user = ChatUser.fromString(usernameInput.value);
 			if (!user) {
 				log(`Invalid username: ${usernameInput.value}`);
@@ -113,7 +113,7 @@ function initialize() {
 	});
 
 	disconnectButton?.addEventListener('click', () => {
-		log_catch(async () => {
+		logCatch(async () => {
 			if (globalChatSession) {
 				await globalChatSession.disconnect();
 				globalChatSession = null;
@@ -153,7 +153,7 @@ function log(message: string) {
 	technicalLog.scrollTop = technicalLog.scrollHeight; // Scroll to the latest log message
 }
 
-async function log_catch(asyncFunc: () => Promise<void>) {
+async function logCatch(asyncFunc: () => Promise<void>) {
 	try {
 		await asyncFunc();
 	} catch (error) {

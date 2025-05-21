@@ -35,11 +35,11 @@ Deno.test("API - Put/Subscribe", async () => {
     const receivedMessages: Array<{ key: string; payload: string }> = [];
 
     // Declare a subscriber on session2
-    subscriber = await session2.declare_subscriber("zenoh/test", {
+    subscriber = await session2.declareSubscriber("zenoh/test", {
       handler: (sample: Sample) => {
         receivedMessages.push({
           key: sample.keyexpr().toString(),
-          payload: sample.payload().to_string(),
+          payload: sample.payload().toString(),
         });
       },
     });

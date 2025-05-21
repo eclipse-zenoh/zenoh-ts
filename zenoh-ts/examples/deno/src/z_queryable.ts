@@ -20,7 +20,7 @@ export async function main() {
   console.warn('Opening session...');
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = new KeyExpr(args.key);
+  const keyExpr = new KeyExpr(args.key);
   console.warn(`Declaring Queryable on: '${args.key}'...`);
 
   const response = args.payload;
@@ -56,7 +56,7 @@ export async function main() {
 
 
 
-  const queryable: Queryable = await session.declare_queryable(key_expr, {
+  const queryable: Queryable = await session.declareQueryable(keyExpr, {
     complete: args.complete,
   });
 
@@ -67,14 +67,14 @@ export async function main() {
       console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
     } else {
       console.warn!(
-        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.to_string()}'`,
+        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.toString()}'`,
       );
     }
 
     console.warn(
-      `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
+      `>> [Queryable ] Responding ${keyExpr.toString()} with payload '${response}'`,
     );
-    await query.reply(key_expr, response);
+    await query.reply(keyExpr, response);
   }
 }
 
@@ -88,7 +88,7 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       key: "Key expression for the queryable",
       payload: "Payload for the queryable",
@@ -96,7 +96,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

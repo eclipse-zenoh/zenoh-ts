@@ -35,13 +35,13 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       key: "Key expression for the deletion"
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

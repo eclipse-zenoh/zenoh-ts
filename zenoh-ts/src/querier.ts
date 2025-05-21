@@ -20,8 +20,8 @@ import { CongestionControl, ConsolidationMode, Priority, } from "./sample.js";
 import { TimeDuration } from "typed-duration";
 import { RemoteQuerier } from "./remote_api/querier.js";
 import { KeyExpr } from "./key_expr.js";
-import { Parameters, Reply, Reply_from_ReplyWS } from "./query.js";
-import { ChannelReceiver, FifoChannel, Handler, into_cb_drop_receiver } from "./remote_api/channels.js";
+import { Parameters, Reply, replyFromReplyWS } from "./query.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
 import { Encoding } from "./encoding.js";
 
 /**
@@ -41,8 +41,8 @@ export enum QueryTarget {
  * Convenience function to convert between QueryTarget and int
  * @internal
  */
-export function query_target_to_int(query_target?: QueryTarget): number {
-  switch (query_target) {
+export function queryTargetToInt(queryTarget?: QueryTarget): number {
+  switch (queryTarget) {
     case QueryTarget.BestMatching:
       return 0;
     case QueryTarget.All:
@@ -65,8 +65,8 @@ export enum Locality {
  * Convenience function to convert between Locality and int
  * @internal
  */
-export function locality_to_int(query_target?: Locality): number {
-  switch (query_target) {
+export function localityToInt(queryTarget?: Locality): number {
+  switch (queryTarget) {
     case Locality.SessionLocal:
       return 0;
     case Locality.Remote:
@@ -90,8 +90,8 @@ export enum ReplyKeyExpr {
  * Convenience function to convert between QueryTarget function and int
  * @internal
  */
-export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
-  switch (query_target) {
+export function replyKeyExprToInt(queryTarget?: ReplyKeyExpr): number {
+  switch (queryTarget) {
     case ReplyKeyExpr.Any:
       return 0;
     case ReplyKeyExpr.MatchingQuery:
@@ -107,15 +107,14 @@ export function reply_key_expr_to_int(query_target?: ReplyKeyExpr): number {
  * 
  */
 export interface QuerierOptions {
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   consolidation?: ConsolidationMode,
   priority?: Priority,
   express?: boolean,
   target: QueryTarget
   timeout?: TimeDuration,
-  allowed_destination?: Locality
-  // 
-  accept_replies?: ReplyKeyExpr
+  allowedDestination?: Locality
+  acceptReplies?: ReplyKeyExpr
 }
 
 export interface QuerierGetOptions {
@@ -130,12 +129,7 @@ export interface QuerierGetOptions {
  * created by Session.declare_queryable
  */
 export class Querier {
-  private _remote_querier: RemoteQuerier;
-  private _key_expr: KeyExpr;
-  private _congestion_control: CongestionControl;
-  private _priority: Priority;
-  private _accept_replies: ReplyKeyExpr;
-  private undeclared: boolean;
+  private undeclared: boolean = false;
   /** 
    * @ignore
    */
@@ -144,23 +138,17 @@ export class Querier {
   }
 
   /** 
+   * @ignore
    * Returns a Querier 
    * Note! : user must use declare_querier on a session
    */
   constructor(
-    remote_querier: RemoteQuerier,
-    key_expr: KeyExpr,
-    congestion_control: CongestionControl,
-    priority: Priority,
-    accept_replies: ReplyKeyExpr,
-  ) {
-    this._remote_querier = remote_querier;
-    this._key_expr = key_expr;
-    this._congestion_control = congestion_control;
-    this._priority = priority;
-    this._accept_replies = accept_replies;
-    this.undeclared = false;
-  }
+    private remoteQuerier: RemoteQuerier,
+    private keyExpr_: KeyExpr,
+    private congestionControl_: CongestionControl,
+    private priority_: Priority,
+    private acceptReplies_: ReplyKeyExpr,
+  ) {}
 
   /**
    * Undeclares Queryable
@@ -168,23 +156,23 @@ export class Querier {
    */
   async undeclare() {
     this.undeclared = true;
-    await this._remote_querier.undeclare()
+    await this.remoteQuerier.undeclare()
   }
 
   /**
    * returns key expression for this Querier
    * @returns KeyExpr
    */
-  key_expr() {
-    return this._key_expr;
+  keyExpr() {
+    return this.keyExpr_;
   }
 
   /**
    * returns Congestion Control for this Querier
    * @returns CongestionControl
    */
-  congestion_control() {
-    return this._congestion_control;
+  congestionControl() {
+    return this.congestionControl_;
   }
 
   /**
@@ -192,15 +180,15 @@ export class Querier {
    * @returns Priority
    */
   priority() {
-    return this._priority;
+    return this.priority_;
   }
 
   /**
    * returns ReplyKeyExpr for this Querier
    * @returns ReplyKeyExpr
    */
-  accept_replies() {
-    return this._accept_replies;
+  acceptReplies() {
+    return this.acceptReplies_;
   }
 
   /**
@@ -209,40 +197,40 @@ export class Querier {
    */
   async get(
     parameters?: Parameters,
-    get_options?: QuerierGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
+    getOptions?: QuerierGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
     if (this.undeclared == true) {
       return undefined;
     }
-    let _payload;
-    let _attachment;
-    let _parameters;
-    let _encoding = get_options?.encoding?.toString()
+    let payload;
+    let attachment;
+    let parametersStr;
+    let encoding = getOptions?.encoding?.toString()
 
-    if (get_options?.attachment != undefined) {
-      _attachment = Array.from(new ZBytes(get_options?.attachment).to_bytes())
+    if (getOptions?.attachment != undefined) {
+      attachment = Array.from(new ZBytes(getOptions?.attachment).toBytes())
     }
-    if (get_options?.payload != undefined) {
-      _payload = Array.from(new ZBytes(get_options?.payload).to_bytes())
+    if (getOptions?.payload != undefined) {
+      payload = Array.from(new ZBytes(getOptions?.payload).toBytes())
     }
     if (parameters != undefined) {
-      _parameters = parameters.toString();
+      parametersStr = parameters.toString();
     }
 
-    let handler = get_options?.handler ?? new FifoChannel<Reply>(256);
-    let [callback, drop, receiver] = into_cb_drop_receiver(handler);
+    let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
+    let [callback, drop, receiver] = intoCbDropReceiver(handler);
     
-    let callback_ws = (reply_ws: ReplyWS): void => {
-      let reply: Reply = Reply_from_ReplyWS(reply_ws);
+    let callbackWS = (replyWS: ReplyWS): void => {
+      let reply: Reply = replyFromReplyWS(replyWS);
       callback(reply);
     }
 
-    await this._remote_querier.get(
-      callback_ws,
+    await this.remoteQuerier.get(
+      callbackWS,
       drop,
-      _encoding,
-      _parameters,
-      _attachment,
-      _payload,
+      encoding,
+      parametersStr,
+      attachment,
+      payload,
     );
 
     return receiver;

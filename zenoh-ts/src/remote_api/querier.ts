@@ -20,24 +20,18 @@ import { ReplyCallback } from "./interface/ReplyWS.js";
 import { Drop } from "./closure.js";
 
 export class RemoteQuerier {
-  private querier_id: UUIDv4;
-  private session_ref: RemoteSession;
-
   constructor(
-    querier_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    this.querier_id = querier_id;
-    this.session_ref = session_ref;
-  }
+    private querierId: UUIDv4,
+    private sessionRef: RemoteSession,
+  ) {}
 
   async undeclare() {
 
-    let control_msg: ControlMsg = {
-      UndeclareQuerier: this.querier_id as string
+    let controlMsg: ControlMsg = {
+      UndeclareQuerier: this.querierId as string
     };
 
-    await this.session_ref.send_ctrl_message(control_msg);
+    await this.sessionRef.sendCtrlMessage(controlMsg);
   }
 
   async get(
@@ -45,33 +39,33 @@ export class RemoteQuerier {
     drop: Drop,
     encoding?: string,
     parameters?: string,
-    _attachment?: Array<number>,
-    _payload?: Array<number>,
+    attachment?: Array<number>,
+    payload?: Array<number>,
   ) {
-    let get_id = uuidv4();
-    this.session_ref.get_receivers.set(get_id, { callback, drop });
+    let getId = uuidv4();
+    this.sessionRef.getReceivers.set(getId, { callback, drop });
 
-    let payload = undefined;
-    if (_payload != undefined) {
-      payload = b64_str_from_bytes(new Uint8Array(_payload))
+    let payloadStr = undefined;
+    if (payload != undefined) {
+      payloadStr = b64_str_from_bytes(new Uint8Array(payload))
     }
-    let attachment = undefined;
-    if (_attachment != undefined) {
-      attachment = b64_str_from_bytes(new Uint8Array(_attachment))
+    let attachmentStr = undefined;
+    if (attachment != undefined) {
+      attachmentStr = b64_str_from_bytes(new Uint8Array(attachment))
     }
 
-        let control_msg: ControlMsg = {
+        let controlMsg: ControlMsg = {
             QuerierGet: {
-                querier_id: this.querier_id as string,
-                get_id: get_id,
+                querier_id: this.querierId as string,
+                get_id: getId,
                 parameters: parameters,
                 encoding: encoding,
-                payload: payload,
-                attachment: attachment,
+                payload: payloadStr,
+                attachment: attachmentStr,
             }
         };
 
-    await this.session_ref.send_ctrl_message(control_msg);
+    await this.sessionRef.sendCtrlMessage(controlMsg);
   }
 
 }

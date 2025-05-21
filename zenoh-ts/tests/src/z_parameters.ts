@@ -18,7 +18,7 @@ import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asse
 Deno.test("Parameters - Basic", () => {
   // Test empty string initialization
   const emptyParams = new Parameters("");
-  assert(emptyParams.is_empty(), "Empty string should create empty parameters");
+  assert(emptyParams.isEmpty(), "Empty string should create empty parameters");
 
   // Test single parameter with value
   const singleParam = new Parameters("p1=v1");
@@ -117,9 +117,9 @@ Deno.test("Parameters - Extend", () => {
 
 Deno.test("Parameters - Empty", () => {
   const params = Parameters.empty();
-  assert(params.is_empty(), "Empty parameters should be empty");
+  assert(params.isEmpty(), "Empty parameters should be empty");
   params.insert("key1", "value1");
-  assert(!params.is_empty(), "Parameters with values should not be empty");
+  assert(!params.isEmpty(), "Parameters with values should not be empty");
 });
 
 Deno.test("Parameters - Delete", () => {
@@ -181,5 +181,5 @@ Deno.test("Parameters - Performance", { ignore: true }, () => {
     assertEquals(params.get(`key${i}`), undefined, `Remove verification failed for key${i}`);
   }
 
-  assert(params.is_empty(), "Parameters should be empty after removing all entries");
+  assert(params.isEmpty(), "Parameters should be empty after removing all entries");
 });

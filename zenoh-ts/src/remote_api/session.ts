@@ -43,10 +43,11 @@ import { Closure, Drop } from "./closure.js";
 // ██   ██ ██      ██  ██  ██ ██    ██    ██    ██               ██ ██           ██      ██ ██ ██    ██ ██  ██ ██
 // ██   ██ ███████ ██      ██  ██████     ██    ███████     ███████ ███████ ███████ ███████ ██  ██████  ██   ████
 
-
 export interface TimestampIface {
   id: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   string_rep: string,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   millis_since_epoch: bigint
 }
 
@@ -65,24 +66,24 @@ export class RemoteSession {
   session: UUIDv4 | null;
   subscribers: Map<UUIDv4, Closure<SampleWS>>;
   queryables: Map<UUIDv4, Closure<QueryWS>>;
-  get_receivers: Map<UUIDv4, Closure<ReplyWS>>;
-  liveliness_subscribers: Map<UUIDv4, Closure<SampleWS>>;
-  liveliness_get_receivers: Map<UUIDv4, Closure<ReplyWS>>;
-  pending_queries: Set<UUIDv4>;
-  session_info: SessionInfoIface | null;
-  _new_timestamp: TimestampIface | null;
+  getReceivers: Map<UUIDv4, Closure<ReplyWS>>;
+  livelinessSubscribers: Map<UUIDv4, Closure<SampleWS>>;
+  livelinessGetReceivers: Map<UUIDv4, Closure<ReplyWS>>;
+  pendingQueries: Set<UUIDv4>;
+  sessionInfo: SessionInfoIface | null;
+  newTimestamp_: TimestampIface | null;
 
   private constructor(link: RemoteLink) {
     this.link = link;
     this.session = null;
     this.subscribers = new Map<UUIDv4, Closure<SampleWS>>();
     this.queryables = new Map<UUIDv4, Closure<QueryWS>>();
-    this.get_receivers = new Map<UUIDv4, Closure<ReplyWS>>();
-    this.liveliness_subscribers = new Map<UUIDv4, Closure<SampleWS>>();
-    this.liveliness_get_receivers = new Map<UUIDv4, Closure<ReplyWS>>();
-    this.pending_queries = new Set<UUIDv4>;
-    this.session_info = null;
-    this._new_timestamp = null;
+    this.getReceivers = new Map<UUIDv4, Closure<ReplyWS>>();
+    this.livelinessSubscribers = new Map<UUIDv4, Closure<SampleWS>>();
+    this.livelinessGetReceivers = new Map<UUIDv4, Closure<ReplyWS>>();
+    this.pendingQueries = new Set<UUIDv4>;
+    this.sessionInfo = null;
+    this.newTimestamp_ = null;
   }
 
   //
@@ -91,10 +92,10 @@ export class RemoteSession {
   static async new(locator: string): Promise<RemoteSession> {
     let link = await RemoteLink.new(locator);
     let session =  new RemoteSession(link);
-    session.link.onmessage((msg: any) => { session.on_message_received(msg); });
+    session.link.onmessage((msg: any) => { session.onMessageReceived(msg); });
 
     let open: ControlMsg = "OpenSession";
-    await session.send_ctrl_message(open);
+    await session.sendCtrlMessage(open);
     while (session.session == null) {
       await sleep(10);
     }
@@ -108,241 +109,241 @@ export class RemoteSession {
   //
   // Info
   async info(): Promise<SessionInfoIface> {
-    let ctrl_message: ControlMsg = "SessionInfo";
-    this.session_info = null;
-    await this.send_ctrl_message(ctrl_message);
+    let ctrlMessage: ControlMsg = "SessionInfo";
+    this.sessionInfo = null;
+    await this.sendCtrlMessage(ctrlMessage);
 
-    while (this.session_info === null) {
+    while (this.sessionInfo === null) {
       await sleep(10);
     }
-    return this.session_info;
+    return this.sessionInfo;
   }
 
   // Put
-  async put(key_expr: string,
+  async put(keyExpr: string,
     payload: Array<number>,
     encoding?: string,
-    congestion_control?: number,
+    congestionControl?: number,
     priority?: number,
     express?: boolean,
     attachment?: Array<number>,
     timestamp?:string,
   ) {
-    let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
+    let ownedKeyexpr: OwnedKeyExprWrapper = keyExpr;
 
-    let opt_attachment = undefined;
+    let optAttachment = undefined;
     if (attachment != undefined) {
-      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+      optAttachment = b64_str_from_bytes(new Uint8Array(attachment))
     }
 
-    let ctrl_message: ControlMsg = {
+    let ctrlMessage: ControlMsg = {
       Put: {
-        key_expr: owned_keyexpr,
+        key_expr: ownedKeyexpr,
         payload: b64_str_from_bytes(new Uint8Array(payload)),
         encoding: encoding,
-        congestion_control: congestion_control,
+        congestion_control: congestionControl,
         priority: priority,
         express: express,
-        attachment: opt_attachment,
+        attachment: optAttachment,
         timestamp: timestamp
       },
     };
-    await this.send_ctrl_message(ctrl_message);
+    await this.sendCtrlMessage(ctrlMessage);
   }
 
   // get
   async get(
-    key_expr: string,
+    keyExpr: string,
     parameters: string | null,
     callback: ReplyCallback,
     drop: Drop,
     consolidation?: number,
-    congestion_control?: number,
+    congestionControl?: number,
     priority?: number,
     express?: boolean,
     target?: number,
     encoding?: string,
     payload?: Array<number>,
     attachment?: Array<number>,
-    timeout_ms?: number,
+    timeoutMs?: number,
   ) {
     let uuid = uuidv4();
-    this.get_receivers.set(uuid, {callback, drop});
+    this.getReceivers.set(uuid, {callback, drop});
 
-    let opt_payload = undefined;
+    let optPayload = undefined;
     if (payload != undefined) {
-      opt_payload = b64_str_from_bytes(new Uint8Array(payload))
+      optPayload = b64_str_from_bytes(new Uint8Array(payload))
     }
-    let opt_attachment = undefined;
+    let optAttachment = undefined;
     if (attachment != undefined) {
-      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+      optAttachment = b64_str_from_bytes(new Uint8Array(attachment))
     }
 
-    let control_message: ControlMsg = {
+    let controlMessage: ControlMsg = {
       Get: {
-        key_expr: key_expr,
+        key_expr: keyExpr,
         parameters: parameters,
         id: uuid,
         consolidation: consolidation,
-        congestion_control: congestion_control,
+        congestion_control: congestionControl,
         priority: priority,
         express: express,
         target: target,
         encoding: encoding,
-        timeout: timeout_ms,
-        payload: opt_payload,
-        attachment: opt_attachment
+        timeout: timeoutMs,
+        payload: optPayload,
+        attachment: optAttachment
       },
     };
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
   }
 
   // delete
   async delete(
-    key_expr: string,
-    congestion_control?: number,
+    keyExpr: string,
+    congestionControl?: number,
     priority?: number,
     express?: boolean,
     attachment?: Array<number>,
     timestamp?: string,
   ) {
-    let owned_keyexpr: OwnedKeyExprWrapper = key_expr;
-    let opt_attachment = undefined;
+    let ownedKeyexpr: OwnedKeyExprWrapper = keyExpr;
+    let optAttachment = undefined;
     if (attachment != undefined) {
-      opt_attachment = b64_str_from_bytes(new Uint8Array(attachment))
+      optAttachment = b64_str_from_bytes(new Uint8Array(attachment))
     }
-    let data_message: ControlMsg = {
+    let dataMessage: ControlMsg = {
       Delete: {
-        key_expr: owned_keyexpr,
-        congestion_control: congestion_control,
+        key_expr: ownedKeyexpr,
+        congestion_control: congestionControl,
         priority: priority,
         express: express,
-        attachment: opt_attachment,
+        attachment: optAttachment,
         timestamp: timestamp
       }
     };
-    await this.send_ctrl_message(data_message);
+    await this.sendCtrlMessage(dataMessage);
   }
 
-  async reply_final(query_uuid: UUIDv4): Promise<boolean> {
-    return this.pending_queries.delete(query_uuid);
+  async replyFinal(queryUuid: UUIDv4): Promise<boolean> {
+    return this.pendingQueries.delete(queryUuid);
   }
 
   async reply(uuid: UUIDv4, 
-      key_expr: string,
+      keyExpr: string,
       payload: Uint8Array,
       encoding: string | null,
-      congestion_control: number,
+      congestionControl: number,
       priority: number,
       express: boolean,
       attachment: Uint8Array | null,
       timestamp: string | null
     ): Promise<boolean> {
-      if (!this.pending_queries.has(uuid)) {
+      if (!this.pendingQueries.has(uuid)) {
         console.warn("Attempt to reply to unknown query:", uuid);
         return false;
       }
 
-      let opt_attachment = null;
+      let optAttachment = null;
       if (attachment != undefined) {
-        opt_attachment = b64_str_from_bytes(attachment)
+        optAttachment = b64_str_from_bytes(attachment)
       }
       
-      let qr_variant: QueryReplyVariant = {
+      let qrVariant: QueryReplyVariant = {
         Reply: {
-          key_expr: key_expr.toString(),
+          key_expr: keyExpr.toString(),
           payload: b64_str_from_bytes(payload),
           encoding: encoding,
           priority: priority,
-          congestion_control: congestion_control,
+          congestion_control: congestionControl,
           express: express,
           timestamp: timestamp,
-          attachment: opt_attachment
+          attachment: optAttachment
         },
       };
 
-      let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
-      let data_msg: DataMsg = { Queryable: queryable_msg };
-      await this.send_data_message(data_msg);
+      let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
+      let dataMsg: DataMsg = { Queryable: queryableMsg };
+      await this.sendDataMessage(dataMsg);
 
-      return await this.reply_final(uuid);
+      return await this.replyFinal(uuid);
   }
 
-  async reply_err(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
-    if (!this.pending_queries.has(uuid)) {
+  async replyErr(uuid: UUIDv4, payload: Uint8Array, encoding: string | null): Promise<boolean> {
+    if (!this.pendingQueries.has(uuid)) {
       return false;
     }
     
-    let qr_variant: QueryReplyVariant = {
+    let qrVariant: QueryReplyVariant = {
       ReplyErr: {
         payload: b64_str_from_bytes(payload),
         encoding: encoding,
       },
     };
 
-    let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
-    let data_msg: DataMsg = { Queryable: queryable_msg };
-    await this.send_data_message(data_msg);
+    let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
+    let dataMsg: DataMsg = { Queryable: queryableMsg };
+    await this.sendDataMessage(dataMsg);
 
-    return await this.reply_final(uuid);
+    return await this.replyFinal(uuid);
   }
 
-  async reply_del(uuid: UUIDv4,
-      key_expr: string,
-      congestion_control: number,
+  async replyDel(uuid: UUIDv4,
+      keyExpr: string,
+      congestionControl: number,
       priority: number,
       express: boolean,
       attachment: Uint8Array | null,
       timestamp: string | null): Promise<boolean> {
-    if (!this.pending_queries.has(uuid)) {
+    if (!this.pendingQueries.has(uuid)) {
       return false;
     }
     
-    let opt_attachment : B64String | null = null;
+    let optAttachment : B64String | null = null;
     if (attachment != undefined) {
-      opt_attachment = b64_str_from_bytes(attachment);
+      optAttachment = b64_str_from_bytes(attachment);
     }
 
-    let qr_variant: QueryReplyVariant = {
+    let qrVariant: QueryReplyVariant = {
       ReplyDelete: {
-        key_expr: key_expr,
+        key_expr: keyExpr,
         priority: priority,
-        congestion_control: congestion_control,
+        congestion_control: congestionControl,
         express: express,
         timestamp: timestamp,
-        attachment: opt_attachment
+        attachment: optAttachment
       },
     };
 
-    let queryable_msg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qr_variant} } };
-    let data_msg: DataMsg = { Queryable: queryable_msg };
-    await this.send_data_message(data_msg);
+    let queryableMsg: QueryableMsg = { Reply: { reply: {query_uuid: uuid.toString(), result: qrVariant} } };
+    let dataMsg: DataMsg = { Queryable: queryableMsg };
+    await this.sendDataMessage(dataMsg);
 
-    return await this.reply_final(uuid);
+    return await this.replyFinal(uuid);
 }
 
   async close() {
-    let data_message: ControlMsg = "CloseSession";
-    await this.send_ctrl_message(data_message);
+    let dataMessage: ControlMsg = "CloseSession";
+    await this.sendCtrlMessage(dataMessage);
     this.link.close();
 
-    this.pending_queries.clear();
+    this.pendingQueries.clear();
     for (let v of this.subscribers.values()) {
       v.drop();
     }
     this.subscribers.clear();
 
-    for (let v of this.liveliness_subscribers.values()) {
+    for (let v of this.livelinessSubscribers.values()) {
       v.drop();
     }
-    this.liveliness_subscribers.clear();
+    this.livelinessSubscribers.clear();
 
-    for (let v of this.get_receivers.values()) {
+    for (let v of this.getReceivers.values()) {
       v.drop();
     }
-    this.get_receivers.clear();
+    this.getReceivers.clear();
 
-    for (let v of this.liveliness_get_receivers.values()) {
+    for (let v of this.livelinessGetReceivers.values()) {
       v.drop();
     }
 
@@ -352,23 +353,23 @@ export class RemoteSession {
     this.queryables.clear();
   }
 
-  async declare_remote_subscriber(
-    key_expr: string,
+  async declareRemoteSubscriber(
+    keyExpr: string,
     callback: SampleCallback,
     drop: Drop,
   ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
-    let control_message: ControlMsg = {
-      DeclareSubscriber: { key_expr: key_expr, id: uuid},
+    let controlMessage: ControlMsg = {
+      DeclareSubscriber: { key_expr: keyExpr, id: uuid},
     };
 
     this.subscribers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
 
-    let subscriber = RemoteSubscriber.new(
-      key_expr,
+    let subscriber = new RemoteSubscriber(
+      keyExpr,
       uuid,
       this
     );
@@ -376,24 +377,24 @@ export class RemoteSession {
   }
 
 
-  async declare_remote_queryable(
-    key_expr: string,
+  async declareRemoteQueryable(
+    keyExpr: string,
     complete: boolean,
     callback: QueryCallback,
     drop: Drop
   ): Promise<RemoteQueryable> {
     let uuid = uuidv4();
 
-    let control_message: ControlMsg = {
-      DeclareQueryable: { key_expr: key_expr, complete: complete, id: uuid},
+    let controlMessage: ControlMsg = {
+      DeclareQueryable: { key_expr: keyExpr, complete: complete, id: uuid},
     };
 
     this.queryables.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
 
-    let queryable = RemoteQueryable.new(
-      key_expr,
+    let queryable = new RemoteQueryable(
+      keyExpr,
       uuid,
       this,
     );
@@ -401,103 +402,103 @@ export class RemoteSession {
     return queryable;
   }
 
-  async declare_remote_publisher(
-    key_expr: string,
+  async declareRemotePublisher(
+    keyExpr: string,
     encoding?: string,
-    congestion_control?: number,
+    congestionControl?: number,
     priority?: number,
     express?: boolean,
     reliability?: number,
   ): Promise<RemotePublisher> {
     let uuid: string = uuidv4();
-    let publisher = new RemotePublisher(key_expr, uuid, this);
-    let control_message: ControlMsg = {
+    let publisher = new RemotePublisher(keyExpr, uuid, this);
+    let controlMessage: ControlMsg = {
       DeclarePublisher: {
-        key_expr: key_expr,
+        key_expr: keyExpr,
         encoding: encoding,
-        congestion_control: congestion_control,
+        congestion_control: congestionControl,
         priority: priority,
         express: express,
         reliability: reliability,
         id: uuid,
       },
     };
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
     return publisher;
   }
 
-  async declare_remote_querier(
-    key_expr: string,
+  async declareRemoteQuerier(
+    keyExpr: string,
     consolidation?: number,
-    congestion_control?: number,
+    congestionControl?: number,
     priority?: number,
     express?: boolean,
     target?: number,
-    allowed_destination?: number,
-    accept_replies?: number,
-    timeout_milliseconds?: number,
+    allowedDestination?: number,
+    acceptReplies?: number,
+    timeoutMilliseconds?: number,
   ): Promise<RemoteQuerier> {
     let timeout = undefined;
-    if (timeout_milliseconds !== undefined) {
-      timeout = timeout_milliseconds;
+    if (timeoutMilliseconds !== undefined) {
+      timeout = timeoutMilliseconds;
     }
 
     let uuid: string = uuidv4();
     let querier = new RemoteQuerier(uuid, this);
 
-    let control_message: ControlMsg = {
+    let controlMessage: ControlMsg = {
       DeclareQuerier: {
         id: uuid,
-        key_expr: key_expr,
-        congestion_control: congestion_control,
+        key_expr: keyExpr,
+        congestion_control: congestionControl,
         priority: priority,
         express: express,
         target: target,
         timeout: timeout,
-        accept_replies: accept_replies,
-        allowed_destination: allowed_destination,
+        accept_replies: acceptReplies,
+        allowed_destination: allowedDestination,
         consolidation: consolidation,
       },
     };
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
     return querier;
   }
 
 
   // Liveliness 
-  async declare_liveliness_token(
-    key_expr: string,
+  async declareLivelinessToken(
+    keyExpr: string,
   ): Promise<UUIDv4> {
     let uuid = uuidv4();
 
-    let control_message: ControlMsg = {
-      Liveliness: { DeclareToken: { key_expr: key_expr, id: uuid } }
+    let controlMessage: ControlMsg = {
+      Liveliness: { DeclareToken: { key_expr: keyExpr, id: uuid } }
     };
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
 
     return uuid;
   }
 
-  async declare_liveliness_subscriber(
-    key_expr: string,
+  async declareLivelinessSubscriber(
+    keyExpr: string,
     history: boolean,
     callback: SampleCallback,
     drop: Drop
   ): Promise<RemoteSubscriber> {
     let uuid = uuidv4();
 
-    let control_message: ControlMsg = {
-      Liveliness: { DeclareSubscriber: { key_expr: key_expr, id: uuid, history: history } }
+    let controlMessage: ControlMsg = {
+      Liveliness: { DeclareSubscriber: { key_expr: keyExpr, id: uuid, history: history } }
     };
 
-    this.liveliness_subscribers.set(uuid, {callback, drop});
+    this.livelinessSubscribers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
 
-    let subscriber = RemoteSubscriber.new(
-      key_expr,
+    let subscriber = new RemoteSubscriber(
+      keyExpr,
       uuid,
       this,
     );
@@ -505,80 +506,80 @@ export class RemoteSession {
     return subscriber;
   }
 
-  async get_liveliness(
-    key_expr: string,
+  async getLiveliness(
+    keyExpr: string,
     callback: ReplyCallback,
     drop: Drop,
-    timeout_milliseconds?: number
+    timeoutMilliseconds?: number
   ) {
     let uuid = uuidv4();
 
     let timeout = undefined;
-    if (timeout_milliseconds !== undefined) {
-      timeout = timeout_milliseconds;
+    if (timeoutMilliseconds !== undefined) {
+      timeout = timeoutMilliseconds;
     }
 
-    let control_message: ControlMsg = {
-      Liveliness: { Get: { key_expr: key_expr, id: uuid, timeout: timeout } }
+    let controlMessage: ControlMsg = {
+      Liveliness: { Get: { key_expr: keyExpr, id: uuid, timeout: timeout } }
     };
 
-    this.liveliness_get_receivers.set(uuid, {callback, drop});
+    this.livelinessGetReceivers.set(uuid, {callback, drop});
 
-    await this.send_ctrl_message(control_message);
+    await this.sendCtrlMessage(controlMessage);
   }
 
   // Note: This method blocks until Timestamp has been created
   // The correct way to do this would be with a request / response
-  async new_timestamp(): Promise<TimestampIface> {
+  async newTimestamp(): Promise<TimestampIface> {
     let uuid = uuidv4();
-    let control_message: ControlMsg = { "NewTimestamp": uuid };
-    this._new_timestamp = null;
-    await this.send_ctrl_message(control_message);
-    while (this._new_timestamp === null) {
+    let controlMessage: ControlMsg = { "NewTimestamp": uuid };
+    this.newTimestamp_ = null;
+    await this.sendCtrlMessage(controlMessage);
+    while (this.newTimestamp_ === null) {
       await sleep(10);
     }
-    return this._new_timestamp;
+    return this.newTimestamp_;
   }
 
   //
   // Sending Messages
   //
-  async send_data_message(data_message: DataMsg) {
-    let remote_api_message: RemoteAPIMsg = { Data: data_message };
-    await this.send_remote_api_message(remote_api_message);
+  async sendDataMessage(dataMessage: DataMsg) {
+    let remoteApiMmessage: RemoteAPIMsg = { Data: dataMessage };
+    await this.sendRemoteApiMessage(remoteApiMmessage);
   }
 
-  async send_ctrl_message(ctrl_message: ControlMsg) {
-    let remote_api_message: RemoteAPIMsg = { Control: ctrl_message };
-    await this.send_remote_api_message(remote_api_message);
+  async sendCtrlMessage(ctrlMessage: ControlMsg) {
+    let remoteApiMessage: RemoteAPIMsg = { Control: ctrlMessage };
+    await this.sendRemoteApiMessage(remoteApiMessage);
   }
 
-  private async send_remote_api_message(remote_api_message: RemoteAPIMsg) {
-    await this.link.send(JSON.stringify(remote_api_message));
+  private async sendRemoteApiMessage(remoteApiMessage: RemoteAPIMsg) {
+    await this.link.send(JSON.stringify(remoteApiMessage));
   }
 
   //
   // Manage Session and handle messages
   //
-  private on_message_received(message: JSONMessage) {
-    let remote_api_message: RemoteAPIMsg = JSON.parse(
+  private onMessageReceived(message: JSONMessage) {
+    let remoteApiMessage: RemoteAPIMsg = JSON.parse(
       message,
     ) as RemoteAPIMsg;
-    if ("Session" in remote_api_message) {
+    if ("Session" in remoteApiMessage) {
       console.warn("Continue Ignore Session Messages");
-    } else if ("Control" in remote_api_message) {
-      this.handle_control_message(remote_api_message["Control"]);
-    } else if ("Data" in remote_api_message) {
-      this.handle_data_message(remote_api_message["Data"]);
+    } else if ("Control" in remoteApiMessage) {
+      this.handleControlMessage(remoteApiMessage["Control"]);
+    } else if ("Data" in remoteApiMessage) {
+      this.handleDataMessage(remoteApiMessage["Data"]);
     } else {
       log.error(
         `RemoteAPIMsg Does not contain known Members`,
-        remote_api_message,
+        remoteApiMessage,
       );
     }
   }
 
-  undeclare_queryable(id: UUIDv4): boolean{
+  undeclareQueryable(id: UUIDv4): boolean{
     let handler = this.queryables.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -588,7 +589,7 @@ export class RemoteSession {
     return false;
   }
 
-  undeclare_subscriber(id: UUIDv4): boolean{
+  undeclareSubscriber(id: UUIDv4): boolean{
     let handler = this.subscribers.get(id);
     if (handler != undefined) {
       handler.drop();
@@ -598,113 +599,110 @@ export class RemoteSession {
     return false;
   }
 
-  undeclare_liveliness_subscriber(id: UUIDv4): boolean{
-    let handler = this.liveliness_subscribers.get(id);
+  undeclareLivelinessSubscriber(id: UUIDv4): boolean{
+    let handler = this.livelinessSubscribers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.liveliness_subscribers.delete(id);
+      this.livelinessSubscribers.delete(id);
       return true;
     }
     return false;
   }
 
-  private remove_get_receiver(id: UUIDv4): boolean{
-    let handler = this.get_receivers.get(id);
+  private removeGetReceiver(id: UUIDv4): boolean{
+    let handler = this.getReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.get_receivers.delete(id);
+      this.getReceivers.delete(id);
       return true;
     }
     return false;
   }
 
-  private remove_liveliness_get_receiver(id: UUIDv4): boolean{
-    let handler = this.liveliness_get_receivers.get(id);
+  private removeLivelinessGetReceiver(id: UUIDv4): boolean{
+    let handler = this.livelinessGetReceivers.get(id);
     if (handler != undefined) {
       handler.drop();
-      this.liveliness_get_receivers.delete(id);
+      this.livelinessGetReceivers.delete(id);
       return true;
     }
     return false;
   }
 
-  private handle_control_message(control_msg: ControlMsg) {
-    if (typeof control_msg === "string") {
-      console.warn("unhandled Control Message:", control_msg);
-    } else if (typeof control_msg === "object") {
-      if ("Session" in control_msg) {
-        this.session = control_msg["Session"];
-      } else if ("GetFinished" in control_msg) {
-        let id = control_msg["GetFinished"].id;
-        this.remove_get_receiver(id) || this.remove_liveliness_get_receiver(id);
-      } else if ("UndeclareSubscriber" in control_msg) {
-        let subscriber_uuid = control_msg["UndeclareSubscriber"];
-        this.undeclare_subscriber(subscriber_uuid);
-      } else if ("UndeclareQueryable" in control_msg) {
-        let queryable_uuid = control_msg["UndeclareQueryable"];
-        this.undeclare_queryable(queryable_uuid);
+  private handleControlMessage(controlMsg: ControlMsg) {
+    if (typeof controlMsg === "string") {
+      console.warn("unhandled Control Message:", controlMsg);
+    } else if (typeof controlMsg === "object") {
+      if ("Session" in controlMsg) {
+        this.session = controlMsg["Session"];
+      } else if ("GetFinished" in controlMsg) {
+        let id = controlMsg["GetFinished"].id;
+        this.removeGetReceiver(id) || this.removeLivelinessGetReceiver(id);
+      } else if ("UndeclareSubscriber" in controlMsg) {
+        let subscriberUuid = controlMsg["UndeclareSubscriber"];
+        this.undeclareSubscriber(subscriberUuid);
+      } else if ("UndeclareQueryable" in controlMsg) {
+        let queryableUuid = controlMsg["UndeclareQueryable"];
+        this.undeclareQueryable(queryableUuid);
       }
     }
   }
 
-  private handle_data_message(data_msg: DataMsg) {
-    if ("Sample" in data_msg) {
-      let subscription_uuid: UUIDv4 = data_msg["Sample"][1];
+  private handleDataMessage(dataMsg: DataMsg) {
+    if ("Sample" in dataMsg) {
+      let subscriptionUuid: UUIDv4 = dataMsg["Sample"][1];
 
-      let subscriber = this.subscribers.get(subscription_uuid) ?? this.liveliness_subscribers.get(subscription_uuid);
+      let subscriber = this.subscribers.get(subscriptionUuid) ?? this.livelinessSubscribers.get(subscriptionUuid);
 
       if (subscriber != undefined) {
-        let sample: SampleWS = data_msg["Sample"][0];
+        let sample: SampleWS = dataMsg["Sample"][0];
         subscriber.callback(sample);
       } else {
-        console.warn("Subscrption UUID not in map", subscription_uuid);
+        console.warn("Subscrption UUID not in map", subscriptionUuid);
       }
-    } else if ("GetReply" in data_msg) {
-      let get_reply: ReplyWS = data_msg["GetReply"];
+    } else if ("GetReply" in dataMsg) {
+      let getReply: ReplyWS = dataMsg["GetReply"];
 
-      let receiver = this.get_receivers.get(get_reply.query_uuid) ?? this.liveliness_get_receivers.get(get_reply.query_uuid);
+      let receiver = this.getReceivers.get(getReply.query_uuid) ?? this.livelinessGetReceivers.get(getReply.query_uuid);
 
       if (receiver != undefined) {
-        receiver.callback(get_reply);
+        receiver.callback(getReply);
       } else {
-        console.warn("Get receiver UUID not in map", get_reply.query_uuid);
+        console.warn("Get receiver UUID not in map", getReply.query_uuid);
       }
-    } else if ("Queryable" in data_msg) {
-      let queryable_msg: QueryableMsg = data_msg["Queryable"];
-      if ("Query" in queryable_msg) {
-        let queryable_uuid: UUIDv4 = queryable_msg.Query.queryable_uuid;
-        let queryable = this.queryables.get(queryable_uuid);
+    } else if ("Queryable" in dataMsg) {
+      let queryableMsg: QueryableMsg = dataMsg["Queryable"];
+      if ("Query" in queryableMsg) {
+        let queryableUuid: UUIDv4 = queryableMsg.Query.queryable_uuid;
+        let queryable = this.queryables.get(queryableUuid);
         if (queryable != undefined) {
-          this.pending_queries.add(queryable_msg.Query.query.query_uuid);
-          queryable.callback(queryable_msg.Query.query)
+          this.pendingQueries.add(queryableMsg.Query.query.query_uuid);
+          queryable.callback(queryableMsg.Query.query)
         } else {
-          console.warn("Queryable Message UUID not in map", queryable_uuid);
+          console.warn("Queryable Message UUID not in map", queryableUuid);
         }
-      } else if ("Reply" in queryable_msg) {
+      } else if ("Reply" in queryableMsg) {
         // Server
         console.warn("Client should not receive Reply in Queryable Message");
         console.warn("Replies to get queries should come via Get Reply");
       } else {
         console.warn("Queryable message Variant not recognized");
       }
-    } else if ("SessionInfo" in data_msg) {
-      let session_info: SessionInfoIface = data_msg["SessionInfo"];
-      this.session_info = session_info;
-    } else if ("NewTimestamp" in data_msg) {
-      let new_timestamp: TimestampIface = data_msg["NewTimestamp"];
-      this._new_timestamp = new_timestamp;
+    } else if ("SessionInfo" in dataMsg) {
+      let sessionInfo: SessionInfoIface = dataMsg["SessionInfo"];
+      this.sessionInfo = sessionInfo;
+    } else if ("NewTimestamp" in dataMsg) {
+      let newTimestamp: TimestampIface = dataMsg["NewTimestamp"];
+      this.newTimestamp_ = newTimestamp;
     } else {
-      console.warn("Data Message not recognized Expected Variant", data_msg);
+      console.warn("Data Message not recognized Expected Variant", dataMsg);
     }
   }
 
-  is_closed(): boolean {
-    return !this.link.is_ok();
+  isClosed(): boolean {
+    return !this.link.isOk();
   }
 }
-
-
-
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));

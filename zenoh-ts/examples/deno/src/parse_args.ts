@@ -18,8 +18,8 @@ import { parseArgs } from "@std/cli/parse-args";
 export abstract class BaseParseArgs {
   [key: string]: any;
 
-  abstract get_named_args_help(): Record<string, string>;
-  abstract get_positional_args_help(): [string, string][];
+  abstract getNamedArgsHelp(): Record<string, string>;
+  abstract getPositionalArgsHelp(): [string, string][];
 
   static fillTypesFromObject(obj: Record<string, any>): Record<string, any> {
     const types: Record<string, any> = {};
@@ -37,39 +37,39 @@ export abstract class BaseParseArgs {
   public parse() {
     const types = (this.constructor as typeof BaseParseArgs).fillTypesFromObject(this);
     const args = parseArgs(Deno.args, types);
-    let positional_args = this.get_positional_args_help();
+    const positionalArgs = this.getPositionalArgsHelp();
     if (args.help) {
         let s = "Usage: [OPTIONS]";
-        for (const p of positional_args) {
+        for (const p of positionalArgs) {
           s += " <" + p[0] + ">";
         }
-        if (positional_args.length != 0) {
+        if (positionalArgs.length != 0) {
           console.log("Arguments:");
-          for (let i = 0; i < positional_args.length; i++) {
-            console.log(`<${positional_args[i][0]}> <${typeof this.positional[i]}>`);
-            console.log(`\t${positional_args[i][1]}`);
+          for (let i = 0; i < positionalArgs.length; i++) {
+            console.log(`<${positionalArgs[i][0]}> <${typeof this.positional[i]}>`);
+            console.log(`\t${positionalArgs[i][1]}`);
           }
         }
 
-        const named_help = this.get_named_args_help();
+        const namedHelp = this.getNamedArgsHelp();
         console.log("Options:")
         console.log("--help\n\tPrint this help message");
-        for (const [arg, helpMessage] of Object.entries(named_help)) {
+        for (const [arg, helpMessage] of Object.entries(namedHelp)) {
             // find type of the argument
             let type = Object.keys(types).find(key => types[key].includes(arg));
             console.log(`--${arg} <${type}>`);
-            let default_value = this[arg];
-            if (default_value) {
-                console.log(`\t[default: ${default_value}]`);
+            const defaultValue = this[arg];
+            if (defaultValue) {
+                console.log(`\t[default: ${defaultValue}]`);
             }
             console.log(`\t${helpMessage}`);
         }
         Deno.exit(0);
     } else {
-      if (positional_args.length != args._.length) {
+      if (positionalArgs.length != args._.length) {
         throw new Error("Incorrect number of positional arguments");
       }
-      for (let i = 0; i < positional_args.length; i++) {
+      for (let i = 0; i < positionalArgs.length; i++) {
         if (typeof this.positional[i] === 'number') {
           this.positional[i] = Number(args._[i]).valueOf();
         } else if (typeof this.positional[i] === 'string') {
@@ -86,8 +86,8 @@ export abstract class BaseParseArgs {
   }
 }
 
-export function priority_from_int(prio_u8: number): Priority {
-  switch (prio_u8) {
+export function priorityFromInt(prioU8: number): Priority {
+  switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;
     case 2:

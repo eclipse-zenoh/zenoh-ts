@@ -22,13 +22,13 @@ class CustomStruct implements ZSerializeable, ZDeserializeable {
         public s: string = ""
     ) {}
 
-    serialize_with_zserializer(serializer: ZBytesSerializer): void {
+    serializeWithZSerializer(serializer: ZBytesSerializer): void {
         serializer.serialize(this.vd, ZS.array(ZS.number()));
         serializer.serialize(this.i, ZS.number(NumberFormat.Int32));
         serializer.serialize(this.s, ZS.string());
     }
 
-    deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+    deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
         this.vd = deserializer.deserialize(ZD.array(ZD.number()));
         this.i = deserializer.deserialize(ZD.number(NumberFormat.Int32));
         this.s = deserializer.deserialize(ZD.string());
@@ -38,43 +38,43 @@ class CustomStruct implements ZSerializeable, ZDeserializeable {
 Deno.test("Serialization - Primitive", () => {
     // Uint tests
     let bytes = zserialize(5, ZS.number(NumberFormat.Uint8));
-    let deserialized_num = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
-    assertEquals(deserialized_num, 5, "uint8 serialization failed");
+    let deserializedNum = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
+    assertEquals(deserializedNum, 5, "uint8 serialization failed");
 
     bytes = zserialize(500, ZS.number(NumberFormat.Uint16));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Uint16), bytes);
-    assertEquals(deserialized_num, 500, "uint16 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Uint16), bytes);
+    assertEquals(deserializedNum, 500, "uint16 serialization failed");
 
     bytes = zserialize(50000, ZS.number(NumberFormat.Uint32));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Uint32), bytes);
-    assertEquals(deserialized_num, 50000, "uint32 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Uint32), bytes);
+    assertEquals(deserializedNum, 50000, "uint32 serialization failed");
 
     bytes = zserialize(BigInt(500000000000), ZS.bigint(BigIntFormat.Uint64));
-    let deserialized_bigint = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
-    assertEquals(deserialized_bigint, BigInt(500000000000), "uint64 serialization failed");
+    let deserializedBigint = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
+    assertEquals(deserializedBigint, BigInt(500000000000), "uint64 serialization failed");
 
     // Int tests
     bytes = zserialize(-5, ZS.number(NumberFormat.Int8));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Int8), bytes);
-    assertEquals(deserialized_num, -5, "int8 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Int8), bytes);
+    assertEquals(deserializedNum, -5, "int8 serialization failed");
 
     bytes = zserialize(500, ZS.number(NumberFormat.Int16));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Int16), bytes);
-    assertEquals(deserialized_num, 500, "int16 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Int16), bytes);
+    assertEquals(deserializedNum, 500, "int16 serialization failed");
 
     bytes = zserialize(50000, ZS.number(NumberFormat.Int32));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Int32), bytes);
-    assertEquals(deserialized_num, 50000, "int32 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Int32), bytes);
+    assertEquals(deserializedNum, 50000, "int32 serialization failed");
 
     bytes = zserialize(BigInt(500000000000), ZS.bigint(BigIntFormat.Int64));
-    deserialized_bigint = zdeserialize(ZD.bigint(BigIntFormat.Int64), bytes);
-    assertEquals(deserialized_bigint, BigInt(500000000000), "int64 serialization failed");
+    deserializedBigint = zdeserialize(ZD.bigint(BigIntFormat.Int64), bytes);
+    assertEquals(deserializedBigint, BigInt(500000000000), "int64 serialization failed");
 
     // Test number larger than 32 bit but less than 53 bit
     const large32BitNum = 0x1_0000_0001; // Just over 32 bits
     bytes = zserialize(large32BitNum, ZS.number(NumberFormat.Int64));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Int64), bytes);
-    assertEquals(deserialized_num, large32BitNum, "large number (>32bit) serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Int64), bytes);
+    assertEquals(deserializedNum, large32BitNum, "large number (>32bit) serialization failed");
 
     // Test that deserializing number larger than 53 bit throws error
     const tooLargeNum = 9876543210123456789n; // Larger than 53 bits and less than 64 bits
@@ -84,33 +84,33 @@ Deno.test("Serialization - Primitive", () => {
     let threw = false;
     bytes = zserialize(tooLargeNum, ZS.bigint(BigIntFormat.Uint64));
     try {
-        deserialized_bigint = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
-        assertEquals(deserialized_bigint, tooLargeNum, "large number (>53bit) serialization failed");
-        deserialized_num = zdeserialize(ZD.number(NumberFormat.Uint64), bytes);
+        deserializedBigint = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
+        assertEquals(deserializedBigint, tooLargeNum, "large number (>53bit) serialization failed");
+        deserializedNum = zdeserialize(ZD.number(NumberFormat.Uint64), bytes);
     } catch (e) {
         threw = true;
         assert(e instanceof Error && e.message.includes("exceeds the safe range"), 
                "wrong error message for large number deserialization");
     }
-    assert(threw, `deserialized value ${deserialized_num} instead of throwing exception on attempt to deserialize ${tooLargeNum} into number`);
+    assert(threw, `deserialized value ${deserializedNum} instead of throwing exception on attempt to deserialize ${tooLargeNum} into number`);
 
     // Float tests
     bytes = zserialize(0.5, ZS.number(NumberFormat.Float32));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Float32), bytes);
-    assert(Math.abs(0.5 - deserialized_num) < 0.0001, "float32 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Float32), bytes);
+    assert(Math.abs(0.5 - deserializedNum) < 0.0001, "float32 serialization failed");
 
     bytes = zserialize(123.45, ZS.number(NumberFormat.Float64));
-    deserialized_num = zdeserialize(ZD.number(NumberFormat.Float64), bytes);
-    assert(Math.abs(123.45 - deserialized_num) < 0.0001, "float64 serialization failed");
+    deserializedNum = zdeserialize(ZD.number(NumberFormat.Float64), bytes);
+    assert(Math.abs(123.45 - deserializedNum) < 0.0001, "float64 serialization failed");
 
     // Boolean tests
     bytes = zserialize(true, ZS.boolean());
-    let deserialized_bool = zdeserialize(ZD.boolean(), bytes);
-    assertEquals(deserialized_bool, true, "boolean true serialization failed");
+    let deserializedBool = zdeserialize(ZD.boolean(), bytes);
+    assertEquals(deserializedBool, true, "boolean true serialization failed");
 
     bytes = zserialize(false, ZS.boolean());
-    deserialized_bool = zdeserialize(ZD.boolean(), bytes);
-    assertEquals(deserialized_bool, false, "boolean false serialization failed");
+    deserializedBool = zdeserialize(ZD.boolean(), bytes);
+    assertEquals(deserializedBool, false, "boolean false serialization failed");
 });
 
 Deno.test("Serialization - Tuple", () => {

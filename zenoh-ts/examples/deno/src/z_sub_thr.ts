@@ -16,15 +16,20 @@ import { Config, Session, Sample, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 // Throughput test
 class Stats {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_count: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_size: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   finished_rounds: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   round_start: number;
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   global_start: number;
 
-  constructor(round_size: number) {
+  constructor(roundSize: number) {
     this.round_count = 0;
-    this.round_size = round_size;
+    this.round_size = roundSize;
     this.finished_rounds = 0;
     this.round_start = Date.now();
     this.global_start = 0;
@@ -40,15 +45,15 @@ class Stats {
     } else if (this.round_count < this.round_size) {
       this.round_count += 1;
     } else {
-      this.print_round();
+      this.printRound();
       this.finished_rounds += 1;
       this.round_count = 0;
     }
   }
 
-  print_round() {
-    const elapsed_ms = Date.now() - this.round_start;
-    const throughput = (this.round_size) / (elapsed_ms / 1000);
+  printRound() {
+    const elapsedMs = Date.now() - this.round_start;
+    const throughput = (this.round_size) / (elapsedMs / 1000);
     console.warn(throughput, " msg/s");
   }
 }
@@ -59,16 +64,15 @@ export async function main() {
   console.warn('Opening session...');
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const stats = new Stats(args.number);
-  const subscriber_callback = async function (_sample: Sample): Promise<void> {
+  const subscriberCallback = function (_sample: Sample): void {
     stats.increment();
   };
 
-  await session.declare_subscriber(
+  await session.declareSubscriber(
     "test/thr",
-    { handler: subscriber_callback }
+    { handler: subscriberCallback }
   );
 
-  let count = 0;
   while (stats.finished_rounds < args.samples) {
     await sleep(500);
   }
@@ -90,18 +94,18 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_keyexpr(): KeyExpr {
+  public getKeyexpr(): KeyExpr {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       samples: "Number of throughput measurements",
       number: "Number of messages in each throughput measurements",
     };
   }
 
-  public get_positional_args_help(): [string, string][] {
+  public getPositionalArgsHelp(): [string, string][] {
     return [];
   };
 

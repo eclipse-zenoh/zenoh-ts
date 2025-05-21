@@ -39,7 +39,7 @@ Deno.test("Liveliness - Token Get", async () => {
     const tokenKe = new KeyExpr("zenoh/liveliness/test/1");
     
     // Declare a token on session1
-    token = await session1.liveliness().declare_token(tokenKe);
+    token = await session1.liveliness().declareToken(tokenKe);
 
     // Delay to ensure token is declared
     await sleep(500);
@@ -104,7 +104,7 @@ Deno.test("Liveliness - Subscriber", async () => {
     const deleteTokens: Set<string> = new Set();
 
     // Declare a subscriber on session1
-    subscriber = await session1.liveliness().declare_subscriber(ke, {
+    subscriber = await session1.liveliness().declareSubscriber(ke, {
       handler: (sample: Sample) => {
         if (sample.kind() === SampleKind.PUT) {
           putTokens.add(sample.keyexpr().toString());
@@ -119,8 +119,8 @@ Deno.test("Liveliness - Subscriber", async () => {
     await sleep(1000);
 
     // Declare tokens on session2
-    token1 = await session2.liveliness().declare_token(tokenKe1);
-    token2 = await session2.liveliness().declare_token(tokenKe2);
+    token1 = await session2.liveliness().declareToken(tokenKe1);
+    token2 = await session2.liveliness().declareToken(tokenKe2);
 
     // Delay to ensure tokens are declared
     await sleep(1000);

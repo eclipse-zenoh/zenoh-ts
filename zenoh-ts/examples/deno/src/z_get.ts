@@ -30,10 +30,10 @@ export async function main() {
   //   let resp = reply.result();
   //   if (resp instanceof Sample) {
   //     let sample: Sample = resp;
-  //     console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().to_string()), "')");
+  //     console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().toString()), "')");
   //   } else {
   //     let reply_error: ReplyError = resp;
-  //     console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
+  //     console.warn(">> Received (ERROR: '", reply_error.payload().toString(), "')");
   //   }
   // };
 
@@ -42,18 +42,18 @@ export async function main() {
   // Poll receiver
   const receiver = await session.get(args.selector, { 
     payload: args.payload, 
-    timeout: args.get_timeout(), 
-    target: args.get_query_target() 
+    timeout: args.getTimeout(), 
+    target: args.getQueryTarget() 
   });
 
   for await (const reply of receiver as ChannelReceiver<Reply>) {
     const resp = reply.result();
     if (resp instanceof Sample) {
       const sample: Sample = resp;
-      console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().to_string(), "')");
+      console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().toString(), "')");
     } else {
-      const reply_error: ReplyError = resp;
-      console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
+      const replyError: ReplyError = resp;
+      console.warn(">> Received (ERROR: '{", replyError.payload().toString(), "}')");
     }
   }
   console.warn("Get Finished");
@@ -70,11 +70,11 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_timeout(): Milliseconds {
+  public getTimeout(): Milliseconds {
     return milliseconds.of(this.timeout);
   }
 
-  public get_query_target(): QueryTarget {
+  public getQueryTarget(): QueryTarget {
     switch (this.target) {
       case "BEST_MATCHING":
         return QueryTarget.BestMatching;
@@ -87,7 +87,7 @@ class ParseArgs extends BaseParseArgs {
     }
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       selector: "Selector for the query",
       payload: "Payload for the query",
@@ -96,7 +96,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

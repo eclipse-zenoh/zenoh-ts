@@ -22,7 +22,7 @@ import { QueryWS } from "./remote_api/interface/QueryWS.js";
 // API
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import { congestion_control_to_int, CongestionControl, Priority, priority_to_int, Sample, Sample_from_SampleWS } from "./sample.js";
+import { congestionControlToInt, CongestionControl, Priority, priorityToInt, Sample, sampleFromSampleWS } from "./sample.js";
 import { Encoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./remote_api/channels.js";
@@ -42,9 +42,6 @@ import { ChannelReceiver } from "./remote_api/channels.js";
  * created by Session.declare_queryable
  */
 export class Queryable {
-  private _remote_queryable: RemoteQueryable;
-  private _receiver: ChannelReceiver<Query> | undefined;
-
   /** 
    * @ignore
    */
@@ -52,13 +49,11 @@ export class Queryable {
     await this.undeclare();
   }
   /** 
+   * @ignore
    * Returns a Queryable 
    * Note! : user must use declare_queryable on a session
    */
-  constructor(remote_queryable: RemoteQueryable, receiver?: ChannelReceiver<Query>) {
-    this._remote_queryable = remote_queryable;
-    this._receiver = receiver;
-  }
+  constructor(private remoteQueryable: RemoteQueryable, private receiver_?: ChannelReceiver<Query>) {}
 
   /**
    * returns a sample receiver for non-callback subscriber, undefined otherwise.
@@ -66,7 +61,7 @@ export class Queryable {
    * @returns ChannelReceiver<Sample> | undefined
    */
   receiver(): ChannelReceiver<Query> | undefined {
-    return this._receiver;
+    return this.receiver_;
   }
 
   /**
@@ -74,7 +69,7 @@ export class Queryable {
    * @returns void
    */
   async undeclare() {
-    this._remote_queryable.undeclare();
+    this.remoteQueryable.undeclare();
   }
 
 }
@@ -83,34 +78,34 @@ export class Queryable {
  * Convenience function to convert between QueryWS and Query 
  * @ignore
  */
-export function Query_from_QueryWS(
-  query_ws: QueryWS,
-  session_ref: RemoteSession
+export function queryFromQueryWS(
+  queryWS: QueryWS,
+  sessionRef: RemoteSession
 ): Query {
-  let key_expr: KeyExpr = new KeyExpr(query_ws.key_expr);
+  let keyExpr: KeyExpr = new KeyExpr(queryWS.key_expr);
   let payload: ZBytes | undefined = undefined;
   let attachment: ZBytes | undefined = undefined;
-  let parameters: Parameters = new Parameters(query_ws.parameters);
+  let parameters: Parameters = new Parameters(queryWS.parameters);
   let encoding: Encoding | undefined = undefined;
 
-  if (query_ws.payload != null) {
-    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.payload)));
+  if (queryWS.payload != null) {
+    payload = new ZBytes(new Uint8Array(b64_bytes_from_str(queryWS.payload)));
   }
-  if (query_ws.attachment != null) {
-    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(query_ws.attachment)));
+  if (queryWS.attachment != null) {
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(queryWS.attachment)));
   }
-  if (query_ws.encoding != null) {
-    encoding = Encoding.from_string(query_ws.encoding);
+  if (queryWS.encoding != null) {
+    encoding = Encoding.fromString(queryWS.encoding);
   }
 
   return new Query(
-    query_ws.query_uuid,
-    key_expr,
+    queryWS.query_uuid,
+    keyExpr,
     parameters,
     payload,
     attachment,
     encoding,
-    session_ref,
+    sessionRef,
   );
 }
 
@@ -134,7 +129,7 @@ export function Query_from_QueryWS(
 export interface ReplyOptions {
   encoding?: Encoding,
   priority?: Priority,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   express?: boolean,
   timestamp?: Timestamp;
   attachment?: IntoZBytes
@@ -160,7 +155,7 @@ export interface ReplyErrOptions {
  */
 export interface ReplyDelOptions {
   priority?: Priority,
-  congestion_control?: CongestionControl,
+  congestionControl?: CongestionControl,
   express?: boolean,
   timestamp?: Timestamp;
   attachment?: IntoZBytes
@@ -170,104 +165,89 @@ export interface ReplyDelOptions {
  * Query Class to handle  
  */
 export class Query {
-  private _query_id: UUIDv4;
-  private _key_expr: KeyExpr;
-  private _parameters: Parameters;
-  private _payload: ZBytes | undefined;
-  private _attachment: ZBytes | undefined;
-  private _encoding: Encoding | undefined;
-  private _session_ref: RemoteSession;
-
   /**
+    * @ignore  
     * New Function Used to Construct Query, 
     * Note: Users should not need to call this function
     * But will receieve 'Query's from Queryables 
     */
   constructor(
-    query_id: UUIDv4,
-    key_expr: KeyExpr,
-    parameters: Parameters,
-    payload: ZBytes | undefined,
-    attachment: ZBytes | undefined,
-    encoding: Encoding | undefined,
-    session: RemoteSession,
-  ) {
-    this._query_id = query_id;
-    this._key_expr = key_expr;
-    this._parameters = parameters;
-    this._payload = payload;
-    this._attachment = attachment;
-    this._encoding = encoding;
-    this._session_ref = session;
-  }
+    private queryId: UUIDv4,
+    private keyExpr_: KeyExpr,
+    private parameters_: Parameters,
+    private payload_: ZBytes | undefined,
+    private attachment_: ZBytes | undefined,
+    private encoding_: Encoding | undefined,
+    private sessionRef: RemoteSession,
+  ) {}
 
   /**
    * gets an selector of Query
    * @returns Selector
    */
   selector() {
-    return new Selector(this._key_expr, this._parameters)
+    return new Selector(this.keyExpr_, this.parameters_)
   }
   /**
    * gets the KeyExpr of Query
    * @returns KeyExpr
    */
-  key_expr(): KeyExpr {
-    return this._key_expr;
+  keyExpr(): KeyExpr {
+    return this.keyExpr_;
   }
   /**
    * gets the Parameters of Query
    * @returns Parameters
    */
   parameters(): Parameters {
-    return this._parameters;
+    return this.parameters_;
   }
   /**
     * gets the Optioanl payload of Query
     * @returns ZBytes | undefined
     */
   payload(): ZBytes | undefined {
-    return this._payload;
+    return this.payload_;
   }
   /**
     * gets the Optional Encoding of a Query
     * @returns Encoding | undefined
     */
   encoding(): Encoding | undefined {
-    return this._encoding;
+    return this.encoding_;
   }
   /**
     * gets the Optional Attachment of a Query
     * @returns ZBytes | undefined
     */
   attachment(): ZBytes | undefined {
-    return this._attachment;
+    return this.attachment_;
   }
 
   /**
     * Sends a Reply to for Query
-    * @param {IntoKeyExpr} key_expr 
+    * @param {IntoKeyExpr} intoKeyExpr 
     * @param {IntoZBytes} payload
     * @param {ReplyOptions=} options
     * @returns void
     */
-  async reply(key_expr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions) {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
+  async reply(intoKeyExpr: IntoKeyExpr, payload: IntoZBytes, options?: ReplyOptions) {
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
-    let opt_attachment: Uint8Array | null = null;
+    let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      opt_attachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).toBytes();
     }
 
-    await this._session_ref.reply(
-      this._query_id, 
-      _key_expr.toString(),
-      new ZBytes(payload).to_bytes(),
+    await this.sessionRef.reply(
+      this.queryId, 
+      keyExpr.toString(),
+      new ZBytes(payload).toBytes(),
       options?.encoding?.toString() ?? null,
-      congestion_control_to_int(options?.congestion_control),
-      priority_to_int(options?.priority),
+      congestionControlToInt(options?.congestionControl),
+      priorityToInt(options?.priority),
       options?.express ?? false,
-      opt_attachment,
+      optAttachment,
       options?.timestamp?.toString() ?? null,
     );
   }
@@ -277,41 +257,41 @@ export class Query {
   * @param {ReplyErrOptions=} options
   * @returns void
   */
-  async reply_err(payload: IntoZBytes, options?: ReplyErrOptions) {
-    await this._session_ref.reply_err(
-      this._query_id, 
-      new ZBytes(payload).to_bytes(),
+  async replyErr(payload: IntoZBytes, options?: ReplyErrOptions) {
+    await this.sessionRef.replyErr(
+      this.queryId, 
+      new ZBytes(payload).toBytes(),
       options?.encoding?.toString() ?? null,
     );
   }
 
   /**
     * Sends an Error Reply to a query
-    * @param key_expr IntoKeyExpr
+    * @param intoKeyExpr IntoKeyExpr
     * @param {ReplyDelOptions=} options
     * @returns void
     */
-  async reply_del(key_expr: IntoKeyExpr, options?: ReplyDelOptions) {
-    let _key_expr: KeyExpr = new KeyExpr(key_expr);
+  async replyDel(intoKeyExpr: IntoKeyExpr, options?: ReplyDelOptions) {
+    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
 
-    let opt_attachment: Uint8Array | null = null;
+    let optAttachment: Uint8Array | null = null;
     if (options?.attachment != undefined) {
-      opt_attachment = new ZBytes(options?.attachment).to_bytes();
+      optAttachment = new ZBytes(options?.attachment).toBytes();
     }
 
-    await this._session_ref.reply_del(
-      this._query_id, 
-      _key_expr.toString(),
-      congestion_control_to_int(options?.congestion_control),
-      priority_to_int(options?.priority),
+    await this.sessionRef.replyDel(
+      this.queryId, 
+      keyExpr.toString(),
+      congestionControlToInt(options?.congestionControl),
+      priorityToInt(options?.priority),
       options?.express ?? false,
-      opt_attachment,
+      optAttachment,
       options?.timestamp?.toString() ?? null,
     );
   }
 
   toString(): string {
-    return this.key_expr.toString() + "?" + this.parameters.toString()
+    return this.keyExpr.toString() + "?" + this.parameters.toString()
   }
 }
 
@@ -327,33 +307,33 @@ export type IntoParameters = Parameters | string | String | Map<string, string>
  * `let p = Parameters.new(a)`
  */
 export class Parameters {
-  private _source: string;
+  private source: string;
 
-  constructor(p: IntoParameters) {
-    if (p instanceof Parameters) {
-      this._source = p._source;
-    } else if (p instanceof Map) {
+  constructor(intoParameters: IntoParameters) {
+    if (intoParameters instanceof Parameters) {
+      this.source = intoParameters.source;
+    } else if (intoParameters instanceof Map) {
       // Convert Map to string format, handling empty values
-      this._source = Array.from(p.entries())
+      this.source = Array.from(intoParameters.entries())
         .map(([k, v]) => v ? `${k}=${v}` : k)
         .join(';');
     } else {
-      this._source = p.toString();
+      this.source = intoParameters.toString();
     }
   }
 
-  private *_iter(): Generator<[number, number, number, number]> {
-    if (this._source.length === 0) return;
+  private *iterByKeyValuePos(): Generator<[number, number, number, number]> {
+    if (this.source.length === 0) return;
     
     let pos = 0;
-    while (pos < this._source.length) {
+    while (pos < this.source.length) {
       // Skip leading semicolons
-      while (pos < this._source.length && this._source[pos] === ';') pos++;
-      if (pos >= this._source.length) break;
+      while (pos < this.source.length && this.source[pos] === ';') pos++;
+      if (pos >= this.source.length) break;
       
       const keyStart = pos;
       // Find end of key (semicolon or equals sign)
-      while (pos < this._source.length && this._source[pos] !== ';' && this._source[pos] !== '=') pos++;
+      while (pos < this.source.length && this.source[pos] !== ';' && this.source[pos] !== '=') pos++;
       const keyLen = pos - keyStart;
       if (keyLen === 0) continue; // Skip empty keys
       
@@ -361,11 +341,11 @@ export class Parameters {
       let valueLen = 0;
       
       // If we found an equals sign, look for the value
-      if (pos < this._source.length && this._source[pos] === '=') {
+      if (pos < this.source.length && this.source[pos] === '=') {
         pos++; // Skip equals sign
         valueStart = pos;
         // Find end of value (semicolon or end of string)
-        while (pos < this._source.length && this._source[pos] !== ';') pos++;
+        while (pos < this.source.length && this.source[pos] !== ';') pos++;
         valueLen = pos - valueStart;
       }
       
@@ -391,11 +371,11 @@ export class Parameters {
     let newSource = '';
     let lastPos = 0;
 
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      const currentKey = this._source.slice(keyStart, keyStart + keyLen);
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      const currentKey = this.source.slice(keyStart, keyStart + keyLen);
       if (currentKey == key) {
         // Add the part between last position and current key
-        newSource += this._source.slice(lastPos, keyStart);
+        newSource += this.source.slice(lastPos, keyStart);
         // Calculate where the next parameter starts
         lastPos = valueStart >= 0 ? 
           valueStart + valueLen + 1 : // +1 for semicolon
@@ -406,9 +386,9 @@ export class Parameters {
     
     if (found) {
       // Add remaining part of string
-      newSource += this._source.slice(lastPos);
+      newSource += this.source.slice(lastPos);
       // Clean up consecutive semicolons and trailing/leading semicolons
-      this._source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
+      this.source = newSource.replace(/;+/g, ';').replace(/^;|;$/g, '');
     }
     
     return found;
@@ -418,9 +398,9 @@ export class Parameters {
    * @returns Generator<string>
    */
   *iter(): Generator<[string, string]> {
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      let key = this._source.slice(keyStart, keyStart + keyLen);
-      let value = valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      let key = this.source.slice(keyStart, keyStart + keyLen);
+      let value = valueStart >= 0 ? this.source.slice(valueStart, valueStart + valueLen) : '';
       yield [key, value];
     }
   }
@@ -443,11 +423,11 @@ export class Parameters {
    * Returns true if properties does not contain anything.
    * @returns boolean
    */
-  is_empty(): boolean {
+  isEmpty(): boolean {
     // Quick check for empty string
-    if (!this._source) return true;
+    if (!this.source) return true;
     // Otherwise check if there are any valid entries
-    for (const _ of this._iter()) {
+    for (const _ of this.iterByKeyValuePos()) {
       return false;
     }
     return true;
@@ -457,9 +437,9 @@ export class Parameters {
    * checks if parameters contains key
    * @returns boolean
    */
-  contains_key(key: string): boolean {
-    for (const [keyStart, keyLen] of this._iter()) {
-      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
+  containsKey(key: string): boolean {
+    for (const [keyStart, keyLen] of this.iterByKeyValuePos()) {
+      if (this.source.slice(keyStart, keyStart + keyLen) === key) {
         return true;
       }
     }
@@ -471,9 +451,9 @@ export class Parameters {
    * @returns string | undefined
    */
   get(key: string): string | undefined {
-    for (const [keyStart, keyLen, valueStart, valueLen] of this._iter()) {
-      if (this._source.slice(keyStart, keyStart + keyLen) === key) {
-        return valueStart >= 0 ? this._source.slice(valueStart, valueStart + valueLen) : '';
+    for (const [keyStart, keyLen, valueStart, valueLen] of this.iterByKeyValuePos()) {
+      if (this.source.slice(keyStart, keyStart + keyLen) === key) {
+        return valueStart >= 0 ? this.source.slice(valueStart, valueStart + valueLen) : '';
       }
     }
     return undefined;
@@ -488,10 +468,10 @@ export class Parameters {
     this.remove(key);
     
     // Add new key-value pair
-    if (this._source && !this._source.endsWith(';') && this._source.length > 0) {
-      this._source += ';';
+    if (this.source && !this.source.endsWith(';') && this.source.length > 0) {
+      this.source += ';';
     }
-    this._source += `${key}=${value}`;
+    this.source += `${key}=${value}`;
   }
 
   /**
@@ -500,10 +480,10 @@ export class Parameters {
    */
   extend(other: IntoParameters): void {
     const otherParams = new Parameters(other);
-    for (const [keyStart, keyLen, valueStart, valueLen] of otherParams._iter()) {
-      const key = otherParams._source.slice(keyStart, keyStart + keyLen);
+    for (const [keyStart, keyLen, valueStart, valueLen] of otherParams.iterByKeyValuePos()) {
+      const key = otherParams.source.slice(keyStart, keyStart + keyLen);
       const value = valueStart >= 0 ? 
-        otherParams._source.slice(valueStart, valueStart + valueLen) : 
+        otherParams.source.slice(valueStart, valueStart + valueLen) : 
         '';
       this.insert(key, value);
     }
@@ -514,7 +494,7 @@ export class Parameters {
    * @returns string
    */
   toString(): string {
-    return this._source;
+    return this.source;
   }
 }
 
@@ -524,15 +504,15 @@ export class Parameters {
  * 
  */
 export class ReplyError {
-  private _payload: ZBytes;
-  private _encoding: Encoding;
+  private payload_: ZBytes;
+  private encoding_: Encoding;
 
   /**
    * Payload of Error Reply
    * @returns ZBytes
    */
   payload(): ZBytes {
-    return this._payload;
+    return this.payload_;
   }
 
   /**
@@ -540,18 +520,18 @@ export class ReplyError {
    * @returns ZBytes
    */
   encoding(): Encoding {
-    return this._encoding;
+    return this.encoding_;
   }
 
   /**
     * ReplyError gets created by the reply of a `get` on a session
     * 
     */
-  constructor(reply_err_ws: ReplyErrorWS) {
-    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(reply_err_ws.payload)));
-    let encoding = Encoding.from_string(reply_err_ws.encoding);
-    this._encoding = encoding;
-    this._payload = payload;
+  constructor(replyErrWS: ReplyErrorWS) {
+    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(replyErrWS.payload)));
+    let encoding = Encoding.fromString(replyErrWS.encoding);
+    this.encoding_ = encoding;
+    this.payload_ = payload;
   }
 
 }
@@ -560,36 +540,32 @@ export class ReplyError {
  * Reply object from a zenoh `get`
  */
 export class Reply {
-  private _result: Sample | ReplyError;
-
   /**
    * Payload of Error Reply
    * @returns Sample or ReplyError 
    */
   result(): Sample | ReplyError {
-    return this._result;
+    return this.result_;
   }
 
   /**
    * @ignore
    */
-  constructor(reply: Sample | ReplyError) {
-    this._result = reply;
-  }
+  constructor(private result_: Sample | ReplyError) {}
 }
 
 /**
  * Convenience function to convert between Reply and ReplyWS
  */
-export function Reply_from_ReplyWS(reply_ws: ReplyWS) {
-  if ("Ok" in reply_ws.result) {
-    let sample_ws = reply_ws.result["Ok"];
-    let sample = Sample_from_SampleWS(sample_ws);
+export function replyFromReplyWS(replyWS: ReplyWS) {
+  if ("Ok" in replyWS.result) {
+    let sampleWS = replyWS.result["Ok"];
+    let sample = sampleFromSampleWS(sampleWS);
     return new Reply(sample);
   } else {
-    let sample_ws_err: ReplyErrorWS = reply_ws.result["Err"];
-    let reply_error = new ReplyError(sample_ws_err);
-    return new Reply(reply_error);
+    let sampleWSEerr: ReplyErrorWS = replyWS.result["Err"];
+    let replyError = new ReplyError(sampleWSEerr);
+    return new Reply(replyError);
   }
 }
 
@@ -609,17 +585,17 @@ export type IntoSelector = Selector | IntoKeyExpr | String | string;
  */
 export class Selector {
   // KeyExpr object
-  private _key_expr: KeyExpr;
+  private keyExpr_: KeyExpr;
 
   // Optional : parameter field
-  private _parameters?: Parameters;
+  private parameters_?: Parameters;
 
   /**
    * gets Key Expression part of Selector 
    * @returns KeyExpr
    */
-  key_expr(): KeyExpr {
-    return this._key_expr;
+  keyExpr(): KeyExpr {
+    return this.keyExpr_;
   }
 
   /**
@@ -627,18 +603,18 @@ export class Selector {
    * @returns Parameters
    */
   parameters(): Parameters {
-    if (this._parameters == undefined) {
+    if (this.parameters_ == undefined) {
       return new Parameters("");
     } else {
-      return this._parameters;
+      return this.parameters_;
     }
   }
 
   toString(): string {
-    if (this._parameters != undefined) {
-      return this._key_expr.toString() + "?" + this._parameters?.toString()
+    if (this.parameters_ != undefined) {
+      return this.keyExpr_.toString() + "?" + this.parameters_?.toString()
     } else {
-      return this._key_expr.toString()
+      return this.keyExpr_.toString()
     }
   }
 
@@ -647,22 +623,22 @@ export class Selector {
    * @returns Selector
    */
   constructor(selector: IntoSelector, parameters?: IntoParameters) {
-    let key_expr: KeyExpr;
+    let keyExpr: KeyExpr;
     if (selector instanceof Selector) {
-      this._key_expr = selector._key_expr;
-      this._parameters = selector._parameters;
+      this.keyExpr_ = selector.keyExpr_;
+      this.parameters_ = selector.parameters_;
       return;
     } else if (selector instanceof KeyExpr) {
-      key_expr = selector;
+      keyExpr = selector;
     } else {
-      key_expr = new KeyExpr(selector);
+      keyExpr = new KeyExpr(selector);
     }
-    this._key_expr = key_expr;
+    this.keyExpr_ = keyExpr;
 
     if (parameters == undefined) {
-      this._parameters = new Parameters("")
+      this.parameters_ = new Parameters("")
     } else {
-      this._parameters = new Parameters(parameters);
+      this.parameters_ = new Parameters(parameters);
     }
   }
 

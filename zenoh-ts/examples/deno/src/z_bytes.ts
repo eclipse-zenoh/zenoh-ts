@@ -39,19 +39,19 @@ class MyStruct implements ZSerializeable, ZDeserializeable {
         }
     }
 
-    serialize_with_zserializer(serializer: ZBytesSerializer): void {
+    serializeWithZSerializer(serializer: ZBytesSerializer): void {
         serializer.serialize(this.v1, ZS.number(NumberFormat.Int32))
         serializer.serialize(this.v2)
         serializer.serialize(this.v3, ZS.array(ZS.number(NumberFormat.Int8)))
     }
 
-    deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+    deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
         this.v1 = deserializer.deserialize(ZD.number(NumberFormat.Uint32))
         this.v2 = deserializer.deserialize(ZD.string())
         this.v3 = deserializer.deserialize(ZD.array(ZD.number(NumberFormat.Int8)))
     }
 
-    to_string(): string {
+    toString(): string {
         return JSON.stringify(this)
     }
 
@@ -63,14 +63,14 @@ export async function main() {
     {
         let input = "test"
         let payload = new ZBytes(input)
-        let output = payload.to_string()
+        let output = payload.toString()
         console.log(`Input: ${input}, Output: ${output}`)
     }
     // Uint8Array
     {
         let input = new Uint8Array([1, 2, 3, 4])
         let payload = new ZBytes(input)
-        let output = payload.to_bytes()
+        let output = payload.toBytes()
         console.log(`Input: ${input}, Output: ${output}`)
     }
 
@@ -114,7 +114,7 @@ export async function main() {
         let input = new MyStruct(1234, "test", [1, 2, 3, 4])
         let payload = zserialize(input)
         let output = zdeserialize(ZD.object(MyStruct), payload)
-        console.log(`Input: ${input.to_string()}, Output: ${output.to_string()}`)
+        console.log(`Input: ${input.toString()}, Output: ${output.toString()}`)
     }
 }
 

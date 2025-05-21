@@ -12,28 +12,27 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ChannelReceiver, FifoChannel, Sample } from "@eclipse-zenoh/zenoh-ts";
-import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { ChannelReceiver, FifoChannel, Sample, Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const sub = await session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
-  const pub = await session.declare_publisher(
+  const sub = await session.declareSubscriber("test/pong", { handler: new FifoChannel(256) } );
+  const pub = await session.declarePublisher(
     "test/ping",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       express: !args.no_express
     },
   );
 
-  let payload_size = args.positional[0];
-  let payload = new Uint8Array(payload_size);
-  console.warn(`Will publish ${payload_size} B payload.`);
-  for (let i = 0; i < payload_size; i++) {
+  const payloadSize = args.positional[0];
+  let payload = new Uint8Array(payloadSize);
+  console.warn(`Will publish ${payloadSize} B payload.`);
+  for (let i = 0; i < payloadSize; i++) {
     payload[i] = i;
   }
 
@@ -41,22 +40,22 @@ export async function main() {
 
   // Warm up
   console.warn(`Warming up for ${args.warmup} seconds...`);
-  while (elapsed_ms(startTime) < args.warmup * 1000) {
+  while (elapsedMs(startTime) < args.warmup * 1000) {
     await pub.put(payload);
     await (sub.receiver() as ChannelReceiver<Sample>).receive();
   }
 
   const samples = args.samples;
-  const samples_out = [];
+  const samplesOut = [];
   for (let i = 0; i < samples; i++) {
-    const write_time = performance.now();
+    const writeTime = performance.now();
     await pub.put(payload);
     await (sub.receiver() as ChannelReceiver<Sample>).receive();
-    samples_out.push(elapsed_ms(write_time));
+    samplesOut.push(elapsedMs(writeTime));
   }
 
-  for (let i = 0; i < samples_out.length; i++) {
-    const rtt = samples_out[i];
+  for (let i = 0; i < samplesOut.length; i++) {
+    const rtt = samplesOut[i];
     console.warn(
       payload.length +
       "bytes: seq=" +
@@ -71,13 +70,14 @@ export async function main() {
   await session.close();
 }
 
-function elapsed_ms(startTime: number) {
+function elapsedMs(startTime: number) {
   const endTime = performance.now();
   return endTime - startTime;
 }
 
 
 class ParseArgs extends BaseParseArgs {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public no_express: boolean = false;
   public warmup: number = 1;
   public samples: number = 100;
@@ -88,7 +88,7 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       no_express: "Express for sending data",
       warmup: "Number of seconds to warm up",
@@ -96,7 +96,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [["PAYLOAD_SIZE", "Size of the payload to publish"]];
   }
 }
