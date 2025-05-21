@@ -76,8 +76,13 @@ export type IntoEncoding = Encoding | String | string;
 export class Encoding {
   private constructor(private strRep: string) {}
 
-  withSchema(input: string){
-    this.strRep = input;
+  withSchema(input: string): Encoding {
+    const idx = this.strRep.indexOf(";");
+    if (idx === -1) {
+      return new Encoding(this.strRep + ";" + input);
+    } else {
+      return new Encoding(this.strRep.substring(0, idx+1) + input);
+    }
   }
 
   static default(): Encoding {

@@ -41,7 +41,7 @@ stop_daemon() {
   fi
 }
 
-run build if needed
+# run build if needed
 if [ ! -d "./dist" ]; then
   yarn build library || exit 1
 fi
