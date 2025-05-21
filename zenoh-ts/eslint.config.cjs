@@ -33,7 +33,6 @@ module.exports = tseslint.config(
       }],
       // Allow use before define, common in TypeScript for hoisted classes/functions
       '@typescript-eslint/no-use-before-define': 'off',
-      // Enforce consistent naming convention (allowing both camelCase and snake_case)
       '@typescript-eslint/naming-convention': [
         'warn',
         {
@@ -102,7 +101,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'enumMember',
-          'format': ['PascalCase', 'UPPER_CASE', 'snake_case']
+          'format': ['PascalCase', 'UPPER_CASE']
         }
       ]
     }
@@ -126,7 +125,6 @@ module.exports = tseslint.config(
     rules: {
       // Disable the problematic rule for examples and tests
       '@typescript-eslint/no-use-before-define': 'off',
-      // Enforce consistent naming convention (allowing both camelCase and snake_case)
       '@typescript-eslint/naming-convention': [
         'warn',
         {
@@ -198,7 +196,7 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'enumMember',
-          'format': ['PascalCase', 'UPPER_CASE', 'snake_case']
+          'format': ['PascalCase', 'UPPER_CASE']
         }
       ]
     }
