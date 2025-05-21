@@ -106,7 +106,13 @@ jobs:
       - name: Verify build of zenoh-ts, tests and examples
         uses: borales/actions-yarn@v4
         with:
-          cmd: build
+          cmd: build ALL
+          dir: "zenoh-ts"
+
+      - name: Run linter
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: lint
           dir: "zenoh-ts"
 
       - name: Run tests
