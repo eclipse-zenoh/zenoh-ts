@@ -85,13 +85,13 @@ export class ChatSession {
 	}
 
 	public userFromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
-		let keyexpr_str = keyexpr.toString();
+		let keyexprStr = keyexpr.toString();
 		// strip the prefix or return null if it doesn't match
 		let prefix = this.domain_keyexpr.join("user").toString() + "/";
-		if (!keyexpr_str.startsWith(prefix)) {
+		if (!keyexprStr.startsWith(prefix)) {
 			return null;
 		}
-		let username = keyexpr_str.substring(prefix.length);
+		let username = keyexprStr.substring(prefix.length);
 		if (!validate_username(username)) {
 			return null;
 		}
@@ -153,8 +153,8 @@ export class ChatSession {
 				let user = this.userFromKeyexpr(sample.keyexpr());
 				if (user) {
 					const timestamp = new Date();
-					let message_rec = new ChatMessage(timestamp, user.username, message);
-					this.messages.push(message_rec);
+					let messageRec = new ChatMessage(timestamp, user.username, message);
+					this.messages.push(messageRec);
 					if (this.messageCallback) {
 						this.messageCallback(user, message);
 					}

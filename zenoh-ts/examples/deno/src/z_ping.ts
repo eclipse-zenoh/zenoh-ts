@@ -29,10 +29,10 @@ export async function main() {
     },
   );
 
-  let payload_size = args.positional[0];
-  let payload = new Uint8Array(payload_size);
-  console.warn(`Will publish ${payload_size} B payload.`);
-  for (let i = 0; i < payload_size; i++) {
+  const payloadSize = args.positional[0];
+  let payload = new Uint8Array(payloadSize);
+  console.warn(`Will publish ${payloadSize} B payload.`);
+  for (let i = 0; i < payloadSize; i++) {
     payload[i] = i;
   }
 
