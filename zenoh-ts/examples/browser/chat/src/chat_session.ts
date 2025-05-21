@@ -27,12 +27,12 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 		public user: string = "",
 		public message: string = ""
 	) {}
-	public serialize_with_zserializer(serializer: ZBytesSerializer): void {
+	public serializeWithZSerializer(serializer: ZBytesSerializer): void {
 		serializer.serialize(this.timestamp.valueOf(), ZS.number(NumberFormat.Uint64));
 		serializer.serialize(this.user, ZS.string());
 		serializer.serialize(this.message, ZS.string());
 	}
-	public deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+	public deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
 		this.timestamp = new Date(deserializer.deserialize(ZD.number(NumberFormat.Uint64)));
 		this.user = deserializer.deserialize(ZD.string());
 		this.message = deserializer.deserialize(ZD.string());
@@ -109,7 +109,7 @@ export class ChatSession {
 		let resp = reply?.result();
 		if (resp instanceof Sample) {
 			let payload = resp.payload();
-			let attachment = resp.attachment()?.to_string() ?? "";
+			let attachment = resp.attachment()?.toString() ?? "";
 			log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, payload size: ${payload.len()}, from user: ${attachment}`);
 			let messages: ChatMessage[] = [];
 			try {
@@ -125,7 +125,7 @@ export class ChatSession {
 	}
 
 	async declareMessageHistoryQueryable(session: Session, keyexpr: KeyExpr): Promise<Queryable> {
-		const queryable = await session.declare_queryable(keyexpr, {
+		const queryable = await session.declareQueryable(keyexpr, {
 			handler: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = zserialize(this.messages); //type parameter is ZS.array(ZS.object<ChatMessage>()) but this can be omitted
@@ -140,15 +140,15 @@ export class ChatSession {
 	}
 
 	async declareMessagePublisher(session: Session, keyexpr: KeyExpr): Promise<Publisher> {
-		const publisher = await session.declare_publisher(keyexpr, {});
+		const publisher = await session.declarePublisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 		return publisher;
 	}
 
 	async declareMessageSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
-		const subscriber = await session.declare_subscriber(keyexpr, {
+		const subscriber = await session.declareSubscriber(keyexpr, {
 			handler: (sample: Sample) => {
-				let message = sample.payload().to_string();
+				let message = sample.payload().toString();
 				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr()}`);
 				let user = this.userFromKeyexpr(sample.keyexpr());
 				if (user) {
@@ -168,13 +168,13 @@ export class ChatSession {
 	}
 
 	async declareLivelinessToken(session: Session, keyexpr: KeyExpr): Promise<LivelinessToken> {
-		const token = await session.liveliness().declare_token(keyexpr);
+		const token = await session.liveliness().declareToken(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
 		return token;
 	}
 
 	async declareLivelinessSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
-		const subscriber = await session.liveliness().declare_subscriber(keyexpr, {
+		const subscriber = await session.liveliness().declareSubscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = this.userFromKeyexpr(keyexpr);
