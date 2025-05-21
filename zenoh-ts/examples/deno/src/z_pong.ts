@@ -28,11 +28,11 @@ export async function main() {
     },
   );
 
-  const subscriber_callback = function (sample: Sample) {
+  const subscriberCallback = function (sample: Sample) {
     pub.put(sample.payload());
   };
 
-  await session.declareSubscriber("test/ping", { handler: subscriber_callback } );
+  await session.declareSubscriber("test/ping", { handler: subscriberCallback } );
 
   while (true) {
     const seconds = 100;

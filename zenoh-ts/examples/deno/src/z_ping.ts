@@ -46,16 +46,16 @@ export async function main() {
   }
 
   const samples = args.samples;
-  const samples_out = [];
+  const samplesOut = [];
   for (let i = 0; i < samples; i++) {
-    const write_time = performance.now();
+    const writeTime = performance.now();
     await pub.put(payload);
     await (sub.receiver() as ChannelReceiver<Sample>).receive();
-    samples_out.push(elapsed_ms(write_time));
+    samplesOut.push(elapsed_ms(writeTime));
   }
 
-  for (let i = 0; i < samples_out.length; i++) {
-    const rtt = samples_out[i];
+  for (let i = 0; i < samplesOut.length; i++) {
+    const rtt = samplesOut[i];
     console.warn(
       payload.length +
       "bytes: seq=" +

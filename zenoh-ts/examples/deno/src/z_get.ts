@@ -52,8 +52,8 @@ export async function main() {
       const sample: Sample = resp;
       console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().toString(), "')");
     } else {
-      const reply_error: ReplyError = resp;
-      console.warn(">> Received (ERROR: '{", reply_error.payload().toString(), "}')");
+      const replyError: ReplyError = resp;
+      console.warn(">> Received (ERROR: '{", replyError.payload().toString(), "}')");
     }
   }
   console.warn("Get Finished");

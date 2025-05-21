@@ -20,8 +20,8 @@ function sleep(ms: number) {
 }
 
 Deno.test("API - Session Get with Callback", async () => {
-    const ke_queryable = new KeyExpr("zenoh/test/*");
-    const ke_get = new KeyExpr("zenoh/test/1");
+    const keQueryable = new KeyExpr("zenoh/test/*");
+    const keGet = new KeyExpr("zenoh/test/1");
     const queries: Query[] = [];
     const replies: Reply[] = [];
 
@@ -33,7 +33,7 @@ Deno.test("API - Session Get with Callback", async () => {
         session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
         session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-        queryable = await session1.declareQueryable(ke_queryable, {
+        queryable = await session1.declareQueryable(keQueryable, {
             handler: (query: Query) => {
                 queries.push(query);
                 if (query.parameters().toString() === "ok") {
@@ -50,7 +50,7 @@ Deno.test("API - Session Get with Callback", async () => {
 
         const handler = (reply: Reply) => { replies.push(reply); };
 
-        await session2.get(new Selector(ke_get, "ok"), {
+        await session2.get(new Selector(keGet, "ok"), {
             payload: "1",
             handler: handler,
         });
@@ -58,7 +58,7 @@ Deno.test("API - Session Get with Callback", async () => {
         // sleep to ensure the request is handled
         await sleep(100);
 
-        await session2.get(new Selector(ke_get, "err"), {
+        await session2.get(new Selector(keGet, "err"), {
             payload: "2",
             handler: handler,
         });
@@ -69,10 +69,10 @@ Deno.test("API - Session Get with Callback", async () => {
         assertEquals(queries.length, 2, "Queries received");
         assertEquals(replies.length, 2, "Replies received");
 
-        assertEquals(queries[0].keyExpr().toString(), ke_get.toString(), "Query 0 key mismatch");
+        assertEquals(queries[0].keyExpr().toString(), keGet.toString(), "Query 0 key mismatch");
         assertEquals(queries[0].parameters().toString(), "ok", "Query 0 parameters mismatch");
         assertEquals(queries[0].payload()?.toString(), "1", "Query 0 payload mismatch");
-        assertEquals(queries[1].keyExpr().toString(), ke_get.toString(), "Query 1 key mismatch");
+        assertEquals(queries[1].keyExpr().toString(), keGet.toString(), "Query 1 key mismatch");
         assertEquals(queries[1].parameters().toString(), "err", "Query 1 parameters mismatch");
         assertEquals(queries[1].payload()?.toString(), "2", "Query 1 payload mismatch");
         assertEquals(replies[0].result() instanceof Sample, true, "Reply 0 should be Sample");

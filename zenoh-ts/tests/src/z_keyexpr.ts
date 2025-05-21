@@ -25,16 +25,16 @@ Deno.test("KeyExpr - Basic", () => {
 });
 
 Deno.test("KeyExpr - Canonize", () => {
-  const non_canon = "a/**/**/c";
+  const nonСanon = "a/**/**/c";
   const canon = "a/**/c";
 
   // Test autocanonization
-  const k_ok = KeyExpr.autocanonize(non_canon);
-  assertEquals(k_ok.toString(), canon, "Canonization failed");
+  const kOk = KeyExpr.autocanonize(nonСanon);
+  assertEquals(kOk.toString(), canon, "Canonization failed");
 
   // Verify that canonized expression remains unchanged when canonized again
-  const k_ok2 = KeyExpr.autocanonize(canon);
-  assertEquals(k_ok2.toString(), canon, "Re-canonization changed canonical form");
+  const kOk2 = KeyExpr.autocanonize(canon);
+  assertEquals(kOk2.toString(), canon, "Re-canonization changed canonical form");
 });
 
 Deno.test("KeyExpr - Concat", () => {

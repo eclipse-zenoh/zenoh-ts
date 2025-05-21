@@ -51,10 +51,10 @@ export abstract class BaseParseArgs {
           }
         }
 
-        const named_help = this.get_named_args_help();
+        const namedHelp = this.get_named_args_help();
         console.log("Options:")
         console.log("--help\n\tPrint this help message");
-        for (const [arg, helpMessage] of Object.entries(named_help)) {
+        for (const [arg, helpMessage] of Object.entries(namedHelp)) {
             // find type of the argument
             let type = Object.keys(types).find(key => types[key].includes(arg));
             console.log(`--${arg} <${type}>`);

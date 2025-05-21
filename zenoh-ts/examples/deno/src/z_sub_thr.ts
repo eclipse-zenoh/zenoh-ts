@@ -47,8 +47,8 @@ class Stats {
   }
 
   print_round() {
-    const elapsed_ms = Date.now() - this.round_start;
-    const throughput = (this.round_size) / (elapsed_ms / 1000);
+    const elapsedMs = Date.now() - this.round_start;
+    const throughput = (this.round_size) / (elapsedMs / 1000);
     console.warn(throughput, " msg/s");
   }
 }
@@ -59,13 +59,13 @@ export async function main() {
   console.warn('Opening session...');
   const session: Session = await Session.open(new Config("ws/127.0.0.1:10000"));
   const stats = new Stats(args.number);
-  const subscriber_callback = async function (_sample: Sample): Promise<void> {
+  const subscriberCallback = async function (_sample: Sample): Promise<void> {
     stats.increment();
   };
 
   await session.declareSubscriber(
     "test/thr",
-    { handler: subscriber_callback }
+    { handler: subscriberCallback }
   );
 
   while (stats.finished_rounds < args.samples) {

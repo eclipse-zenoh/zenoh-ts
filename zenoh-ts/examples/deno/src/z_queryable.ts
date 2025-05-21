@@ -20,7 +20,7 @@ export async function main() {
   console.warn('Opening session...');
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = new KeyExpr(args.key);
+  const keyExpr = new KeyExpr(args.key);
   console.warn(`Declaring Queryable on: '${args.key}'...`);
 
   const response = args.payload;
@@ -56,7 +56,7 @@ export async function main() {
 
 
 
-  const queryable: Queryable = await session.declareQueryable(key_expr, {
+  const queryable: Queryable = await session.declareQueryable(keyExpr, {
     complete: args.complete,
   });
 
@@ -72,9 +72,9 @@ export async function main() {
     }
 
     console.warn(
-      `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
+      `>> [Queryable ] Responding ${keyExpr.toString()} with payload '${response}'`,
     );
-    await query.reply(key_expr, response);
+    await query.reply(keyExpr, response);
   }
 }
 

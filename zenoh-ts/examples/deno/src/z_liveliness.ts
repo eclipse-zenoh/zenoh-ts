@@ -21,10 +21,10 @@ export async function main() {
 
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(args.key);
+  const keyExpr = new KeyExpr(args.key);
   console.log(`Declaring Liveliness token on '${args.key}'...`);
 
-  const token: LivelinessToken = await session.liveliness().declareToken(key_expr);
+  const token: LivelinessToken = await session.liveliness().declareToken(keyExpr);
   // LivelinessTokens are NOT automatically closed when dropped
   // please call token.undeclare();
 

@@ -136,12 +136,12 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'PascalCase'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow'
         },
         {
           'selector': 'variable',
-          'format': ['camelCase', 'UPPER_CASE', 'PascalCase', 'snake_case'],
+          'format': ['camelCase', 'UPPER_CASE'],
           'leadingUnderscore': 'allow',
           'modifiers': ['const']
         },

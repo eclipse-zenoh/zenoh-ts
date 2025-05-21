@@ -21,9 +21,9 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = args.get_keyexpr();
+  const keyExpr = args.get_keyexpr();
   const publisher: Publisher = await session.declarePublisher(
-    key_expr,
+    keyExpr,
     {
       encoding: Encoding.default(),
       congestionControl: CongestionControl.BLOCK,
@@ -37,7 +37,7 @@ export async function main() {
     const buf = `[${idx}] ${args.payload}`;
 
     console.warn("Block statement execution no : " + idx);
-    console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
+    console.warn(`Putting Data ('${keyExpr}': '${buf}')...`);
     await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
     await sleep(1000);
   }
