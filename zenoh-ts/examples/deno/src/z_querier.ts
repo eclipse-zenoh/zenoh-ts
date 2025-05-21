@@ -22,7 +22,7 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const querier = await session.declare_querier(args.get_selector().key_expr(), {
+  const querier = await session.declareQuerier(args.get_selector().keyExpr(), {
     target: args.get_query_target(),
     timeout: args.get_timeout(),
   });
@@ -36,10 +36,10 @@ export async function main() {
         const resp = reply.result();
         if (resp instanceof Sample) {
           const sample: Sample = resp;
-          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().to_string(), "')");
+          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().toString(), "')");
         } else {
           const reply_error: ReplyError = resp;
-          console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
+          console.warn(">> Received (ERROR: '{", reply_error.payload().toString(), "}')");
         }
     }
     console.warn("Get Finished");

@@ -27,12 +27,12 @@ export async function main() {
 
   console.log!(
     "routers zid: {:?}",
-    info.routers_zid()
+    info.routersZid()
   );
 
   console.log!(
     "peers zid: {:?}",
-    info.peers_zid()
+    info.peersZid()
   );
 
 }

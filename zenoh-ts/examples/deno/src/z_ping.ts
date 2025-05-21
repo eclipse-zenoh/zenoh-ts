@@ -12,20 +12,19 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ChannelReceiver, FifoChannel, Sample } from "@eclipse-zenoh/zenoh-ts";
-import { Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
+import { ChannelReceiver, FifoChannel, Sample, Encoding, CongestionControl, Config, Session } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const sub = await session.declare_subscriber("test/pong", { handler: new FifoChannel(256) } );
-  const pub = await session.declare_publisher(
+  const sub = await session.declareSubscriber("test/pong", { handler: new FifoChannel(256) } );
+  const pub = await session.declarePublisher(
     "test/ping",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       express: !args.no_express
     },
   );

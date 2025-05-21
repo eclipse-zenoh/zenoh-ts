@@ -19,11 +19,11 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const pub = await session.declare_publisher(
+  const pub = await session.declarePublisher(
     "test/pong",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       express: !args.no_express,
     },
   );
@@ -32,7 +32,7 @@ export async function main() {
     pub.put(sample.payload());
   };
 
-  await session.declare_subscriber("test/ping", { handler: subscriber_callback } );
+  await session.declareSubscriber("test/ping", { handler: subscriber_callback } );
 
   while (true) {
     const seconds = 100;

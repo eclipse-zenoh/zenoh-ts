@@ -30,10 +30,10 @@ export async function main() {
   //   let resp = reply.result();
   //   if (resp instanceof Sample) {
   //     let sample: Sample = resp;
-  //     console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().to_string()), "')");
+  //     console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().toString()), "')");
   //   } else {
   //     let reply_error: ReplyError = resp;
-  //     console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
+  //     console.warn(">> Received (ERROR: '", reply_error.payload().toString(), "')");
   //   }
   // };
 
@@ -50,10 +50,10 @@ export async function main() {
     const resp = reply.result();
     if (resp instanceof Sample) {
       const sample: Sample = resp;
-      console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().to_string(), "')");
+      console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().toString(), "')");
     } else {
       const reply_error: ReplyError = resp;
-      console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
+      console.warn(">> Received (ERROR: '{", reply_error.payload().toString(), "}')");
     }
   }
   console.warn("Get Finished");

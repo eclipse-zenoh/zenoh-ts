@@ -56,7 +56,7 @@ export async function main() {
 
 
 
-  const queryable: Queryable = await session.declare_queryable(key_expr, {
+  const queryable: Queryable = await session.declareQueryable(key_expr, {
     complete: args.complete,
   });
 
@@ -67,7 +67,7 @@ export async function main() {
       console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
     } else {
       console.warn!(
-        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.to_string()}'`,
+        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.toString()}'`,
       );
     }
 

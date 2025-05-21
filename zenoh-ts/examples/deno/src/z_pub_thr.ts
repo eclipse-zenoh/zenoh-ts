@@ -21,7 +21,7 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const publisher: Publisher = await session.declare_publisher(
+  const publisher: Publisher = await session.declarePublisher(
     "test/thr",
     { 
       express: args.express,

@@ -27,7 +27,7 @@ export async function main() {
   const key_expr = new KeyExpr(args.key);
   console.log(`Declaring Liveliness Subscriber on '${args.key}'`);
 
-  const liveliness_subscriber: Subscriber = await session.liveliness().declare_subscriber(key_expr, { history: args.history });
+  const liveliness_subscriber: Subscriber = await session.liveliness().declareSubscriber(key_expr, { history: args.history });
 
   for await (const sample of liveliness_subscriber.receiver() as ChannelReceiver<Sample>) {
     switch (sample.kind()) {

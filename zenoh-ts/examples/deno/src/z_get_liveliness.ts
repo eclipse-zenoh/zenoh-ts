@@ -41,7 +41,7 @@ export async function main() {
         console.warn(">> Alive token ('", sample.keyexpr().toString(), ")");
       } else {
         const reply_error: ReplyError = resp;
-        console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
+        console.warn(">> Received (ERROR: '", reply_error.payload().toString(), "')");
       }
   }
   console.warn("Liveliness query finished");

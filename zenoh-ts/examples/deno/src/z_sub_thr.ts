@@ -63,12 +63,11 @@ export async function main() {
     stats.increment();
   };
 
-  await session.declare_subscriber(
+  await session.declareSubscriber(
     "test/thr",
     { handler: subscriber_callback }
   );
 
-  let count = 0;
   while (stats.finished_rounds < args.samples) {
     await sleep(500);
   }

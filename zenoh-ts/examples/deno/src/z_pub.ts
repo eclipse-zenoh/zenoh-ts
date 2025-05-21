@@ -22,11 +22,11 @@ export async function main() {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
   const key_expr = args.get_keyexpr();
-  const publisher: Publisher = await session.declare_publisher(
+  const publisher: Publisher = await session.declarePublisher(
     key_expr,
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       priority: Priority.DATA,
       express: true,
       reliability: Reliability.RELIABLE
