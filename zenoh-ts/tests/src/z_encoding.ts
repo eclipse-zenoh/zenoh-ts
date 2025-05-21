@@ -21,6 +21,7 @@ Deno.test("Encoding - Basic", () => {
     assertEquals(Encoding.default().withSchema("foobar").toString(), "zenoh/bytes;foobar");
     assertEquals(Encoding.TEXT_PLAIN.toString(), "text/plain");
     assertEquals(Encoding.TEXT_PLAIN.withSchema("charset=utf-8").toString(), "text/plain;charset=utf-8");
+    assertEquals(Encoding.fromString("text/plain;charset=utf-8").withSchema("charset=ascii").toString(), "text/plain;charset=ascii");
     assertEquals(Encoding.fromString("zenoh/bytes"), Encoding.ZENOH_BYTES);
     assertEquals(Encoding.fromString("zenoh/bytes;foobar").toString(), "zenoh/bytes;foobar");
     assertEquals(Encoding.fromString("custom/encoding").toString(), "custom/encoding");
