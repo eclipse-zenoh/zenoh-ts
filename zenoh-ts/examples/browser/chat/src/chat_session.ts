@@ -1,7 +1,7 @@
 import { Config, Session, Queryable, Query, LivelinessToken, Reply, Sample, KeyExpr, Subscriber, SampleKind, Publisher, ChannelReceiver } from '@eclipse-zenoh/zenoh-ts';
 import { NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, zdeserialize, ZDeserializeable, ZS, zserialize, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
 
-export function validate_username(username: string): boolean {
+export function validateUsername(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
 }
 
@@ -11,7 +11,7 @@ export class ChatUser {
 		this.username = username;
 	}
 	public static fromString(username: string): ChatUser | null {
-		if (!validate_username(username)) {
+		if (!validateUsername(username)) {
 			return null;
 		}
 		return new ChatUser(username);
@@ -92,7 +92,7 @@ export class ChatSession {
 			return null;
 		}
 		let username = keyexprStr.substring(prefix.length);
-		if (!validate_username(username)) {
+		if (!validateUsername(username)) {
 			return null;
 		}
 		return new ChatUser(username);

@@ -40,7 +40,7 @@ export async function main() {
 
   // Warm up
   console.warn(`Warming up for ${args.warmup} seconds...`);
-  while (elapsed_ms(startTime) < args.warmup * 1000) {
+  while (elapsedMs(startTime) < args.warmup * 1000) {
     await pub.put(payload);
     await (sub.receiver() as ChannelReceiver<Sample>).receive();
   }
@@ -51,7 +51,7 @@ export async function main() {
     const writeTime = performance.now();
     await pub.put(payload);
     await (sub.receiver() as ChannelReceiver<Sample>).receive();
-    samplesOut.push(elapsed_ms(writeTime));
+    samplesOut.push(elapsedMs(writeTime));
   }
 
   for (let i = 0; i < samplesOut.length; i++) {
@@ -70,7 +70,7 @@ export async function main() {
   await session.close();
 }
 
-function elapsed_ms(startTime: number) {
+function elapsedMs(startTime: number) {
   const endTime = performance.now();
   return endTime - startTime;
 }
@@ -88,7 +88,7 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       no_express: "Express for sending data",
       warmup: "Number of seconds to warm up",
@@ -96,7 +96,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [["PAYLOAD_SIZE", "Size of the payload to publish"]];
   }
 }

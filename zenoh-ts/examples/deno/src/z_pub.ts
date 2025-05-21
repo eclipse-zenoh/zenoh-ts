@@ -21,7 +21,7 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const keyExpr = args.get_keyexpr();
+  const keyExpr = args.getKeyexpr();
   const publisher: Publisher = await session.declarePublisher(
     keyExpr,
     {
@@ -53,11 +53,11 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_keyexpr(): KeyExpr {
+  public getKeyexpr(): KeyExpr {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       payload: "Payload for the publication",
       key: "Key expression for the publication",
@@ -65,7 +65,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

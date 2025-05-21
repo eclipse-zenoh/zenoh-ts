@@ -42,8 +42,8 @@ export async function main() {
   // Poll receiver
   const receiver = await session.get(args.selector, { 
     payload: args.payload, 
-    timeout: args.get_timeout(), 
-    target: args.get_query_target() 
+    timeout: args.getTimeout(), 
+    target: args.getQueryTarget() 
   });
 
   for await (const reply of receiver as ChannelReceiver<Reply>) {
@@ -70,11 +70,11 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_timeout(): Milliseconds {
+  public getTimeout(): Milliseconds {
     return milliseconds.of(this.timeout);
   }
 
-  public get_query_target(): QueryTarget {
+  public getQueryTarget(): QueryTarget {
     switch (this.target) {
       case "BEST_MATCHING":
         return QueryTarget.BestMatching;
@@ -87,7 +87,7 @@ class ParseArgs extends BaseParseArgs {
     }
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       selector: "Selector for the query",
       payload: "Payload for the query",
@@ -96,7 +96,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

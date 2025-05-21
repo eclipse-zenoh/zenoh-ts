@@ -32,7 +32,7 @@ export async function main() {
   const keyExpr = new KeyExpr(args.key);
   console.log(`Sending Liveliness Query '${args.key}'...`);
 
-  const receiver = await session.liveliness().get(keyExpr, { timeout: args.get_timeout() });
+  const receiver = await session.liveliness().get(keyExpr, { timeout: args.getTimeout() });
 
   for await (const reply of receiver as ChannelReceiver<Reply>) {
       const resp = reply.result();
@@ -57,18 +57,18 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_timeout(): Milliseconds {
+  public getTimeout(): Milliseconds {
     return milliseconds.of(this.timeout);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       key: "Key expression for the liveliness query",
       timeout: "Timeout for the liveliness query"
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

@@ -18,8 +18,8 @@ import { parseArgs } from "@std/cli/parse-args";
 export abstract class BaseParseArgs {
   [key: string]: any;
 
-  abstract get_named_args_help(): Record<string, string>;
-  abstract get_positional_args_help(): [string, string][];
+  abstract getNamedArgsHelp(): Record<string, string>;
+  abstract getPositionalArgsHelp(): [string, string][];
 
   static fillTypesFromObject(obj: Record<string, any>): Record<string, any> {
     const types: Record<string, any> = {};
@@ -37,7 +37,7 @@ export abstract class BaseParseArgs {
   public parse() {
     const types = (this.constructor as typeof BaseParseArgs).fillTypesFromObject(this);
     const args = parseArgs(Deno.args, types);
-    const positionalArgs = this.get_positional_args_help();
+    const positionalArgs = this.getPositionalArgsHelp();
     if (args.help) {
         let s = "Usage: [OPTIONS]";
         for (const p of positionalArgs) {
@@ -51,7 +51,7 @@ export abstract class BaseParseArgs {
           }
         }
 
-        const namedHelp = this.get_named_args_help();
+        const namedHelp = this.getNamedArgsHelp();
         console.log("Options:")
         console.log("--help\n\tPrint this help message");
         for (const [arg, helpMessage] of Object.entries(namedHelp)) {
@@ -86,7 +86,7 @@ export abstract class BaseParseArgs {
   }
 }
 
-export function priority_from_int(prioU8: number): Priority {
+export function priorityFromInt(prioU8: number): Priority {
   switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;

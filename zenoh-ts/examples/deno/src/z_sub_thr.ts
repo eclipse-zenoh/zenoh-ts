@@ -45,13 +45,13 @@ class Stats {
     } else if (this.round_count < this.round_size) {
       this.round_count += 1;
     } else {
-      this.print_round();
+      this.printRound();
       this.finished_rounds += 1;
       this.round_count = 0;
     }
   }
 
-  print_round() {
+  printRound() {
     const elapsedMs = Date.now() - this.round_start;
     const throughput = (this.round_size) / (elapsedMs / 1000);
     console.warn(throughput, " msg/s");
@@ -94,18 +94,18 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_keyexpr(): KeyExpr {
+  public getKeyexpr(): KeyExpr {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       samples: "Number of throughput measurements",
       number: "Number of messages in each throughput measurements",
     };
   }
 
-  public get_positional_args_help(): [string, string][] {
+  public getPositionalArgsHelp(): [string, string][] {
     return [];
   };
 

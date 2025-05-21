@@ -53,13 +53,13 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       no_express: "Express for sending data",
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }
