@@ -147,13 +147,13 @@ module.exports = tseslint.config(
         },
         {
           'selector': 'parameter',
-          'format': ['camelCase', 'snake_case'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },
         {
           'selector': 'parameterProperty',
-          'format': ['camelCase', 'snake_case', 'PascalCase'],
+          'format': ['camelCase'],
           'leadingUnderscore': 'allow',
           'trailingUnderscore': 'allow'
         },

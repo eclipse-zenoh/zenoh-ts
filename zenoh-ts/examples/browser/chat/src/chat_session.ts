@@ -40,7 +40,7 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 }
 
 export class ChatSession {
-	constructor(public readonly domain_keyexpr: KeyExpr, public readonly user: ChatUser) {}
+	constructor(public readonly domainKeyexpr: KeyExpr, public readonly user: ChatUser) {}
 
 	session: Session | null = null;
 	liveliness_token: LivelinessToken | null = null;
@@ -73,21 +73,21 @@ export class ChatSession {
 	}
 
 	public getUserKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("user").join(this.user.username);
+		return this.domainKeyexpr.join("user").join(this.user.username);
 	}
 
 	public getAllUsersKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("user/*");
+		return this.domainKeyexpr.join("user/*");
 	}
 
 	public getHistoryKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("history");
+		return this.domainKeyexpr.join("history");
 	}
 
 	public userFromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
 		let keyexprStr = keyexpr.toString();
 		// strip the prefix or return null if it doesn't match
-		let prefix = this.domain_keyexpr.join("user").toString() + "/";
+		let prefix = this.domainKeyexpr.join("user").toString() + "/";
 		if (!keyexprStr.startsWith(prefix)) {
 			return null;
 		}

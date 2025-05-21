@@ -22,9 +22,9 @@ class Stats {
   round_start: number;
   global_start: number;
 
-  constructor(round_size: number) {
+  constructor(roundSize: number) {
     this.round_count = 0;
-    this.round_size = round_size;
+    this.round_size = roundSize;
     this.finished_rounds = 0;
     this.round_start = Date.now();
     this.global_start = 0;

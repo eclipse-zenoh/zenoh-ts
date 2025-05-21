@@ -86,8 +86,8 @@ export abstract class BaseParseArgs {
   }
 }
 
-export function priority_from_int(prio_u8: number): Priority {
-  switch (prio_u8) {
+export function priority_from_int(prioU8: number): Priority {
+  switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;
     case 2:
