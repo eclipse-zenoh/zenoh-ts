@@ -155,7 +155,7 @@ and daemon from the sources and start it.
 
    ```sh
    yarn install 
-   yarn build
+   yarn build library
    ```
 
    The result is placed into the `zenoh-ts/dist` directory.

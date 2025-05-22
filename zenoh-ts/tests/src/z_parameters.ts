@@ -13,55 +13,55 @@
 //
 
 import { Parameters } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq, run_test } from "./common/assertions.ts";
+import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
-export async function testParametersBasic() {
+Deno.test("Parameters - Basic", () => {
   // Test empty string initialization
   const emptyParams = new Parameters("");
-  assert(emptyParams.is_empty(), "Empty string should create empty parameters");
+  assert(emptyParams.isEmpty(), "Empty string should create empty parameters");
 
   // Test single parameter with value
   const singleParam = new Parameters("p1=v1");
-  assert_eq(singleParam.get("p1"), "v1", "Single parameter with value not matched");
+  assertEquals(singleParam.get("p1"), "v1", "Single parameter with value not matched");
 
   // Test multiple parameters with trailing semicolon
   const multiParamTrailing = new Parameters("p1=v1;p2=v2;");
-  assert_eq(multiParamTrailing.get("p1"), "v1", "First parameter not matched");
-  assert_eq(multiParamTrailing.get("p2"), "v2", "Second parameter not matched");
+  assertEquals(multiParamTrailing.get("p1"), "v1", "First parameter not matched");
+  assertEquals(multiParamTrailing.get("p2"), "v2", "Second parameter not matched");
 
   // Test parameters with extra delimiters
   const extraDelim = new Parameters("p1=v1;p2=v2;|=");
-  assert_eq(extraDelim.get("p1"), "v1", "Parameter p1 not matched with extra delimiters");
-  assert_eq(extraDelim.get("p2"), "v2", "Parameter p2 not matched with extra delimiters");
+  assertEquals(extraDelim.get("p1"), "v1", "Parameter p1 not matched with extra delimiters");
+  assertEquals(extraDelim.get("p2"), "v2", "Parameter p2 not matched with extra delimiters");
 
   // Test mix of parameters with and without values
   const mixedParams = new Parameters("p1=v1;p2;p3=v3");
-  assert_eq(mixedParams.get("p1"), "v1", "Parameter p1 not matched in mixed params");
-  assert_eq(mixedParams.get("p2"), "", "Parameter p2 should have empty value");
-  assert_eq(mixedParams.get("p3"), "v3", "Parameter p3 not matched in mixed params");
+  assertEquals(mixedParams.get("p1"), "v1", "Parameter p1 not matched in mixed params");
+  assertEquals(mixedParams.get("p2"), "", "Parameter p2 should have empty value");
+  assertEquals(mixedParams.get("p3"), "v3", "Parameter p3 not matched in mixed params");
 
   // Test parameters with spaces in values and keys
   const spacedParams = new Parameters("p1=v 1;p 2=v2");
-  assert_eq(spacedParams.get("p1"), "v 1", "Parameter with space in value not matched");
-  assert_eq(spacedParams.get("p 2"), "v2", "Parameter with space in key not matched");
+  assertEquals(spacedParams.get("p1"), "v 1", "Parameter with space in value not matched");
+  assertEquals(spacedParams.get("p 2"), "v2", "Parameter with space in key not matched");
 
   // Test parameters with equals signs in values
   const equalsParams = new Parameters("p1=x=y;p2=a==b");
-  assert_eq(equalsParams.get("p1"), "x=y", "Parameter with equals in value not matched");
-  assert_eq(equalsParams.get("p2"), "a==b", "Parameter with multiple equals in value not matched");
+  assertEquals(equalsParams.get("p1"), "x=y", "Parameter with equals in value not matched");
+  assertEquals(equalsParams.get("p2"), "a==b", "Parameter with multiple equals in value not matched");
 
   // Test `values(key)` function
   const mulitivalueParams = new Parameters("p1=v1|v2|v3|v4;p2=v5|v6|v7|v8");
-  assert_eq([...mulitivalueParams.values("p1")], ["v1", "v2", "v3", "v4"], "values() function not returning expected values");
-  assert_eq([...mulitivalueParams.values("p2")], ["v5", "v6", "v7", "v8"], "values() function not returning expected values");
-}
+  assertEquals([...mulitivalueParams.values("p1")], ["v1", "v2", "v3", "v4"], "values() function not returning expected values");
+  assertEquals([...mulitivalueParams.values("p2")], ["v5", "v6", "v7", "v8"], "values() function not returning expected values");
+});
 
-export async function testParametersNonexistent() {
+Deno.test("Parameters - Nonexistent", () => {
   const params = new Parameters("key1=value1");
-  assert_eq(params.get("nonexistent"), undefined, "Nonexistent parameter should return undefined");
-}
+  assertEquals(params.get("nonexistent"), undefined, "Nonexistent parameter should return undefined");
+});
 
-export async function testParametersIter() {
+Deno.test("Parameters - Iterator", () => {
   const map = new Map<string, string>();
   map.set("p1", "v1");
   map.set("p2", "v2");
@@ -70,84 +70,86 @@ export async function testParametersIter() {
   let count = 0;
   for (const [key, value] of mapParams.iter()) {
     count++;
-    assert_eq(mapParams.get(key), value, `Iterated key ${key} does not match expected value ${value}`);
+    assertEquals(mapParams.get(key), value, `Iterated key ${key} does not match expected value ${value}`);
   }
-  assert_eq(count, 3, "Iterating over parameters should yield 3 results");
+  assertEquals(count, 3, "Iterating over parameters should yield 3 results");
+
   // Test iterating over empty parameters
   const emptyParams = new Parameters("");
   let count0 = 0;
   for (const _ of emptyParams.iter()) {
     count0++;
   }
-  assert_eq(count0, 0, "Iterating over empty parameters should yield no results");
-}
+  assertEquals(count0, 0, "Iterating over empty parameters should yield no results");
+});
 
-export async function testParametersMap() {
+Deno.test("Parameters - Map", () => {
   // Test Map initialization
   const map = new Map<string, string>();
   map.set("p1", "v1");
   const mapParams = new Parameters(map);
   const stringParams = new Parameters("p1=v1");
-  assert_eq(mapParams.toString(), stringParams.toString(), "Map initialization not equivalent to string initialization");
+  assertEquals(mapParams.toString(), stringParams.toString(), "Map initialization not equivalent to string initialization");
 
   // Test parameter without value using Map
   const singleNoValue = new Parameters("p1");
   const emptyMap = new Map<string, string>();
   emptyMap.set("p1", "");
   const singleNoValueExpected = new Parameters(emptyMap);
-  assert_eq(singleNoValue.toString(), singleNoValueExpected.toString(), "Parameter without value should be equivalent to empty value");
-}
+  assertEquals(singleNoValue.toString(), singleNoValueExpected.toString(), 
+    "Parameter without value should be equivalent to empty value");
+});
 
-export async function testParametersInsert() {
+Deno.test("Parameters - Insert", () => {
   const params = Parameters.empty();
   params.insert("key1", "value1");
-  assert_eq(params.get("key1"), "value1", "Parameter insert failed");
-}
+  assertEquals(params.get("key1"), "value1", "Parameter insert failed");
+});
 
-export async function testParametersExtend() {
+Deno.test("Parameters - Extend", () => {
   const params1 = new Parameters("key1=value1");
   const params2 = new Parameters("key2=value2;key1=updated");
   
   params1.extend(params2);
-  assert_eq(params1.get("key1"), "updated", "Parameter extend should update existing key");
-  assert_eq(params1.get("key2"), "value2", "Parameter extend should add new key");
-}
+  assertEquals(params1.get("key1"), "updated", "Parameter extend should update existing key");
+  assertEquals(params1.get("key2"), "value2", "Parameter extend should add new key");
+});
 
-export async function testParametersEmpty() {
+Deno.test("Parameters - Empty", () => {
   const params = Parameters.empty();
-  assert(params.is_empty(), "Empty parameters should be empty");
+  assert(params.isEmpty(), "Empty parameters should be empty");
   params.insert("key1", "value1");
-  assert(!params.is_empty(), "Parameters with values should not be empty");
-}
+  assert(!params.isEmpty(), "Parameters with values should not be empty");
+});
 
-export async function testParametersDelete() {
+Deno.test("Parameters - Delete", () => {
   const params = Parameters.empty();
   params.insert("key1", "value1");
   params.remove("key1");
-  
-  assert_eq(params.get("key1"), undefined, "Parameter removal failed");
-}
+  assertEquals(params.get("key1"), undefined, "Parameter removal failed");
+});
 
-export async function testParametersDuplicates() {
+Deno.test("Parameters - Duplicates", () => {
   // Test duplicate handling in insert
   const params = new Parameters("key1=value1;key2=value2;key1=duplicate");
-  assert_eq(params.get("key1"), "value1", "Should return first occurrence of key1");
+  assertEquals(params.get("key1"), "value1", "Should return first occurrence of key1");
 
   // Test duplicate handling in remove
   const params2 = new Parameters("key1=value1;key2=value2;key1=duplicate;key3=value3");
   params2.remove("key1");
-  assert_eq(params2.toString(), "key2=value2;key3=value3", "Remove should remove all occurrences of key1");
-  assert_eq(params2.toString().split("key1").length - 1, 0, "Should have no occurrences of key1 after remove");
-  assert_eq(params2.get("key2"), "value2", "Other keys should remain intact");
-  assert_eq(params2.get("key3"), "value3", "Other keys should remain intact");
+  assertEquals(params2.toString(), "key2=value2;key3=value3", "Remove should remove all occurrences of key1");
+  assertEquals(params2.toString().split("key1").length - 1, 0, "Should have no occurrences of key1 after remove");
+  assertEquals(params2.get("key2"), "value2", "Other keys should remain intact");
+  assertEquals(params2.get("key3"), "value3", "Other keys should remain intact");
 
   // Insert should overwrite all duplicates
   params.insert("key1", "newvalue");
-  assert_eq(params.get("key1"), "newvalue", "Insert should remove duplicates");
-  assert_eq(params.toString().split("key1").length - 1, 1, "Should only have one occurrence of key1 after insert");
-}
+  assertEquals(params.get("key1"), "newvalue", "Insert should remove duplicates");
+  assertEquals(params.toString().split("key1").length - 1, 1, "Should only have one occurrence of key1 after insert");
+});
 
-export async function testParametersPerformance() {
+// Only run this test when performance testing is needed
+Deno.test("Parameters - Performance", { ignore: true }, () => {
   const numOperations = 10000;
   const params = Parameters.empty();
   
@@ -162,7 +164,7 @@ export async function testParametersPerformance() {
 
   // Verify all insertions were successful
   for (let i = 0; i < numOperations; i++) {
-    assert_eq(params.get(`key${i}`), `value${i}`, `Insert verification failed for key${i}`);
+    assertEquals(params.get(`key${i}`), `value${i}`, `Insert verification failed for key${i}`);
   }
 
   // Test remove performance
@@ -176,20 +178,8 @@ export async function testParametersPerformance() {
 
   // Verify all removals were successful
   for (let i = 0; i < numOperations; i++) {
-    assert_eq(params.get(`key${i}`), undefined, `Remove verification failed for key${i}`);
+    assertEquals(params.get(`key${i}`), undefined, `Remove verification failed for key${i}`);
   }
 
-  assert(params.is_empty(), "Parameters should be empty after removing all entries");
-}
-
-// Run all tests
-await run_test(testParametersBasic);
-await run_test(testParametersNonexistent);
-await run_test(testParametersIter);
-await run_test(testParametersMap);
-await run_test(testParametersInsert);
-await run_test(testParametersExtend);
-await run_test(testParametersEmpty);
-await run_test(testParametersDelete);
-await run_test(testParametersDuplicates);
-// await run_test(testParametersPerformance);
+  assert(params.isEmpty(), "Parameters should be empty after removing all entries");
+});

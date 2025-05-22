@@ -13,7 +13,7 @@
 //
 
 import { Priority, Reliability, Encoding, CongestionControl, Config, KeyExpr, Publisher, Session } from "@eclipse-zenoh/zenoh-ts";
-import { BaseParseArgs, priority_from_int } from "./parse_args.ts";
+import { BaseParseArgs, priorityFromInt } from "./parse_args.ts";
 
 export async function main() {
   const args = new ParseArgs();
@@ -21,18 +21,18 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const publisher: Publisher = await session.declare_publisher(
+  const publisher: Publisher = await session.declarePublisher(
     "test/thr",
     { 
       express: args.express,
-      priority: args.get_priority(),
+      priority: args.getPriority(),
     }
   );
   
-  let payload_size = args.positional[0];
-  let payload = new Uint8Array(payload_size);
-  console.warn(`Will publish ${payload_size} B payload.`);
-  for (let i = 0; i < payload_size; i++) {
+  const payloadSize = args.positional[0];
+  let payload = new Uint8Array(payloadSize);
+  console.warn(`Will publish ${payloadSize} B payload.`);
+  for (let i = 0; i < payloadSize; i++) {
     payload[i] = i;
   }
 
@@ -52,11 +52,11 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_keyexpr(): KeyExpr {
+  public getKeyexpr(): KeyExpr {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       express: "Express for sending data",
       priority: "Priority for sending data [1-7]",
@@ -64,12 +64,12 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  public get_positional_args_help(): [string, string][] {
+  public getPositionalArgsHelp(): [string, string][] {
     return [["PAYLOAD_SIZE", "payload size"] ];
   };
 
-  public get_priority(): Priority {
-    return priority_from_int(this.priority);
+  public getPriority(): Priority {
+    return priorityFromInt(this.priority);
   }
 }
 

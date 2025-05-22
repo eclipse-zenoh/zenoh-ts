@@ -21,12 +21,12 @@ export async function main() {
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const key_expr = args.get_keyexpr();
-  const publisher: Publisher = await session.declare_publisher(
-    key_expr,
+  const keyExpr = args.getKeyexpr();
+  const publisher: Publisher = await session.declarePublisher(
+    keyExpr,
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       priority: Priority.DATA,
       express: true,
       reliability: Reliability.RELIABLE
@@ -37,7 +37,7 @@ export async function main() {
     const buf = `[${idx}] ${args.payload}`;
 
     console.warn("Block statement execution no : " + idx);
-    console.warn(`Putting Data ('${key_expr}': '${buf}')...`);
+    console.warn(`Putting Data ('${keyExpr}': '${buf}')...`);
     await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
     await sleep(1000);
   }
@@ -53,11 +53,11 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_keyexpr(): KeyExpr {
+  public getKeyexpr(): KeyExpr {
     return KeyExpr.autocanonize(this.key);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       payload: "Payload for the publication",
       key: "Key expression for the publication",
@@ -65,7 +65,7 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

@@ -24,12 +24,12 @@ export async function main() {
   const args = new ParseArgs();
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(args.key);
+  const keyExpr = new KeyExpr(args.key);
   console.log(`Declaring Liveliness Subscriber on '${args.key}'`);
 
-  const liveliness_subscriber: Subscriber = await session.liveliness().declare_subscriber(key_expr, { history: args.history });
+  const livelinessSubscriber: Subscriber = await session.liveliness().declareSubscriber(keyExpr, { history: args.history });
 
-  for await (const sample of liveliness_subscriber.receiver() as ChannelReceiver<Sample>) {
+  for await (const sample of livelinessSubscriber.receiver() as ChannelReceiver<Sample>) {
     switch (sample.kind()) {
       case SampleKind.PUT: {
         console.log!(
@@ -47,7 +47,7 @@ export async function main() {
       }
     }
   }
-  await liveliness_subscriber.undeclare();
+  await livelinessSubscriber.undeclare();
   await session.close();
 }
 
@@ -60,14 +60,14 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       key: "Key expression for the liveliness subscriber",
       history: "History flag for the liveliness subscriber"
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

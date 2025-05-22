@@ -1,5 +1,24 @@
 {
   "imports": {
     "@std/cli": "jsr:@std/cli@^1.0.10"
-  }
+  },
+  "compilerOptions": {
+    "lib": [
+      "ES2020",
+      "DOM",
+      "DOM.Iterable",
+      "deno.ns"
+    ],
+    "types": [
+      "deno.ns",
+      "deno.unstable"
+    ],
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "unstable": [
+    "sloppy-imports"
+  ]
 }

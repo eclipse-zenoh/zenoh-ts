@@ -1,17 +1,16 @@
 import { Config, Session, Queryable, Query, LivelinessToken, Reply, Sample, KeyExpr, Subscriber, SampleKind, Publisher, ChannelReceiver } from '@eclipse-zenoh/zenoh-ts';
 import { NumberFormat, ZBytesDeserializer, ZBytesSerializer, ZD, zdeserialize, ZDeserializeable, ZS, zserialize, ZSerializeable } from '@eclipse-zenoh/zenoh-ts/ext';
 
-export function validate_username(username: string): boolean {
+export function validateUsername(username: string): boolean {
 	return /^[a-zA-Z0-9_-]+$/.test(username);
 }
 
 export class ChatUser {
-	username: string;
-	constructor(username: string) {
+	constructor(public readonly username: string) {
 		this.username = username;
 	}
 	public static fromString(username: string): ChatUser | null {
-		if (!validate_username(username)) {
+		if (!validateUsername(username)) {
 			return null;
 		}
 		return new ChatUser(username);
@@ -27,12 +26,12 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 		public user: string = "",
 		public message: string = ""
 	) {}
-	public serialize_with_zserializer(serializer: ZBytesSerializer): void {
+	public serializeWithZSerializer(serializer: ZBytesSerializer): void {
 		serializer.serialize(this.timestamp.valueOf(), ZS.number(NumberFormat.Uint64));
 		serializer.serialize(this.user, ZS.string());
 		serializer.serialize(this.message, ZS.string());
 	}
-	public deserialize_with_zdeserializer(deserializer: ZBytesDeserializer): void {
+	public deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
 		this.timestamp = new Date(deserializer.deserialize(ZD.number(NumberFormat.Uint64)));
 		this.user = deserializer.deserialize(ZD.string());
 		this.message = deserializer.deserialize(ZD.string());
@@ -40,14 +39,14 @@ export class ChatMessage implements ZSerializeable, ZDeserializeable {
 }
 
 export class ChatSession {
-	constructor(public readonly domain_keyexpr: KeyExpr, public readonly user: ChatUser) {}
+	constructor(public readonly domainKeyexpr: KeyExpr, public readonly user: ChatUser) {}
 
 	session: Session | null = null;
-	liveliness_token: LivelinessToken | null = null;
-	liveliness_subscriber: Subscriber | null = null;
-	messages_queryable: Queryable | null = null;
-	messages_publisher: Publisher | null = null;
-	message_subscriber: Subscriber | null = null;
+	livelinessToken: LivelinessToken | null = null;
+	livelinessSubscriber: Subscriber | null = null;
+	messagesQueryable: Queryable | null = null;
+	messagesPublisher: Publisher | null = null;
+	messageSubscriber: Subscriber | null = null;
 	users: ChatUser[] = [];
 	messages: ChatMessage[] = [];
 
@@ -73,26 +72,26 @@ export class ChatSession {
 	}
 
 	public getUserKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("user").join(this.user.username);
+		return this.domainKeyexpr.join("user").join(this.user.username);
 	}
 
 	public getAllUsersKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("user/*");
+		return this.domainKeyexpr.join("user/*");
 	}
 
 	public getHistoryKeyexpr(): KeyExpr {
-		return this.domain_keyexpr.join("history");
+		return this.domainKeyexpr.join("history");
 	}
 
 	public userFromKeyexpr(keyexpr: KeyExpr): ChatUser | null {
-		let keyexpr_str = keyexpr.toString();
+		let keyexprStr = keyexpr.toString();
 		// strip the prefix or return null if it doesn't match
-		let prefix = this.domain_keyexpr.join("user").toString() + "/";
-		if (!keyexpr_str.startsWith(prefix)) {
+		let prefix = this.domainKeyexpr.join("user").toString() + "/";
+		if (!keyexprStr.startsWith(prefix)) {
 			return null;
 		}
-		let username = keyexpr_str.substring(prefix.length);
-		if (!validate_username(username)) {
+		let username = keyexprStr.substring(prefix.length);
+		if (!validateUsername(username)) {
 			return null;
 		}
 		return new ChatUser(username);
@@ -109,7 +108,7 @@ export class ChatSession {
 		let resp = reply?.result();
 		if (resp instanceof Sample) {
 			let payload = resp.payload();
-			let attachment = resp.attachment()?.to_string() ?? "";
+			let attachment = resp.attachment()?.toString() ?? "";
 			log(`[Session] GetSuccess from ${resp.keyexpr().toString()}, payload size: ${payload.len()}, from user: ${attachment}`);
 			let messages: ChatMessage[] = [];
 			try {
@@ -125,7 +124,7 @@ export class ChatSession {
 	}
 
 	async declareMessageHistoryQueryable(session: Session, keyexpr: KeyExpr): Promise<Queryable> {
-		const queryable = await session.declare_queryable(keyexpr, {
+		const queryable = await session.declareQueryable(keyexpr, {
 			handler: (query: Query) => {
 				log(`[Queryable] Replying to query: ${query.selector().toString()}`);
 				const response = zserialize(this.messages); //type parameter is ZS.array(ZS.object<ChatMessage>()) but this can be omitted
@@ -140,21 +139,21 @@ export class ChatSession {
 	}
 
 	async declareMessagePublisher(session: Session, keyexpr: KeyExpr): Promise<Publisher> {
-		const publisher = await session.declare_publisher(keyexpr, {});
+		const publisher = await session.declarePublisher(keyexpr, {});
 		log(`[Session] Declare publisher on ${keyexpr}`);
 		return publisher;
 	}
 
 	async declareMessageSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
-		const subscriber = await session.declare_subscriber(keyexpr, {
+		const subscriber = await session.declareSubscriber(keyexpr, {
 			handler: (sample: Sample) => {
-				let message = sample.payload().to_string();
+				let message = sample.payload().toString();
 				log(`[Subscriber] Received message: ${message} from ${sample.keyexpr()}`);
 				let user = this.userFromKeyexpr(sample.keyexpr());
 				if (user) {
 					const timestamp = new Date();
-					let message_rec = new ChatMessage(timestamp, user.username, message);
-					this.messages.push(message_rec);
+					let messageRec = new ChatMessage(timestamp, user.username, message);
+					this.messages.push(messageRec);
 					if (this.messageCallback) {
 						this.messageCallback(user, message);
 					}
@@ -168,13 +167,13 @@ export class ChatSession {
 	}
 
 	async declareLivelinessToken(session: Session, keyexpr: KeyExpr): Promise<LivelinessToken> {
-		const token = await session.liveliness().declare_token(keyexpr);
+		const token = await session.liveliness().declareToken(keyexpr);
 		log(`[Session] Declare liveliness token on ${keyexpr}`);
 		return token;
 	}
 
 	async declareLivelinessSubscriber(session: Session, keyexpr: KeyExpr): Promise<Subscriber> {
-		const subscriber = await session.liveliness().declare_subscriber(keyexpr, {
+		const subscriber = await session.liveliness().declareSubscriber(keyexpr, {
 			handler: (sample: Sample) => {
 				let keyexpr = sample.keyexpr();
 				let user = this.userFromKeyexpr(keyexpr);
@@ -211,11 +210,11 @@ export class ChatSession {
 
 		this.session = session;
 		this.messages = await this.requestMessageHistory(session, this.getHistoryKeyexpr());
-		this.messages_queryable = await this.declareMessageHistoryQueryable(session, this.getHistoryKeyexpr());
-		this.messages_publisher = await this.declareMessagePublisher(session, this.getUserKeyexpr());
-		this.message_subscriber = await this.declareMessageSubscriber(session, this.getAllUsersKeyexpr());
-		this.liveliness_token = await this.declareLivelinessToken(session, this.getUserKeyexpr());
-		this.liveliness_subscriber = await this.declareLivelinessSubscriber(session, this.getAllUsersKeyexpr());
+		this.messagesQueryable = await this.declareMessageHistoryQueryable(session, this.getHistoryKeyexpr());
+		this.messagesPublisher = await this.declareMessagePublisher(session, this.getUserKeyexpr());
+		this.messageSubscriber = await this.declareMessageSubscriber(session, this.getAllUsersKeyexpr());
+		this.livelinessToken = await this.declareLivelinessToken(session, this.getUserKeyexpr());
+		this.livelinessSubscriber = await this.declareLivelinessSubscriber(session, this.getAllUsersKeyexpr());
 
 		if (this.onConnectCallback) {
 			this.onConnectCallback(this);
@@ -235,9 +234,9 @@ export class ChatSession {
 	}
 
 	async sendMessage(message: string) {
-		if (this.messages_publisher) {
+		if (this.messagesPublisher) {
 			log(`[Publisher] Put message: ${message}`);
-			await this.messages_publisher.put(message);
+			await this.messagesPublisher.put(message);
 		}
 	}
 
@@ -246,11 +245,11 @@ export class ChatSession {
 			await this.session.close();
 			log(`[Session] Close`);
 			this.session = null;
-			this.liveliness_token = null;
-			this.messages_queryable = null;
-			this.liveliness_subscriber = null;
-			this.messages_publisher = null;
-			this.message_subscriber = null;
+			this.livelinessToken = null;
+			this.messagesQueryable = null;
+			this.livelinessSubscriber = null;
+			this.messagesPublisher = null;
+			this.messageSubscriber = null;
 			this.users = [];
 			this.messages = [];
 			if (this.onDisconnectCallback) {

@@ -22,24 +22,24 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const querier = await session.declare_querier(args.get_selector().key_expr(), {
-    target: args.get_query_target(),
-    timeout: args.get_timeout(),
+  const querier = await session.declareQuerier(args.getSelector().keyExpr(), {
+    target: args.getQueryTarget(),
+    timeout: args.getTimeout(),
   });
 
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
     const payload = `[${i}] ${args.payload}`;
-    const receiver = await querier.get(args.get_selector().parameters(), { payload: payload }) as ChannelReceiver<Reply>;
+    const receiver = await querier.get(args.getSelector().parameters(), { payload: payload }) as ChannelReceiver<Reply>;
 
     for await (const reply of receiver) {
         const resp = reply.result();
         if (resp instanceof Sample) {
           const sample: Sample = resp;
-          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().to_string(), "')");
+          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().toString(), "')");
         } else {
-          const reply_error: ReplyError = resp;
-          console.warn(">> Received (ERROR: '{", reply_error.payload().to_string(), "}')");
+          const replyError: ReplyError = resp;
+          console.warn(">> Received (ERROR: '{", replyError.payload().toString(), "}')");
         }
     }
     console.warn("Get Finished");
@@ -57,7 +57,7 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       selector: "Selector for the query",
       payload: "Payload for the query",
@@ -66,16 +66,16 @@ class ParseArgs extends BaseParseArgs {
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
    }
 
-  public get_selector(): Selector {
-    const [key_expr, parameters] = this.selector.split("?");
-    return new Selector(key_expr, parameters);
+  public getSelector(): Selector {
+    const [keyExpr, parameters] = this.selector.split("?");
+    return new Selector(keyExpr, parameters);
   }
 
-  public get_query_target(): QueryTarget {
+  public getQueryTarget(): QueryTarget {
     switch (this.target) {
       case "BEST_MATCHING":
         return QueryTarget.BestMatching;
@@ -88,7 +88,7 @@ class ParseArgs extends BaseParseArgs {
     }
   }
 
-  public get_timeout(): Milliseconds {
+  public getTimeout(): Milliseconds {
     return milliseconds.of(this.timeout);
   }
 }

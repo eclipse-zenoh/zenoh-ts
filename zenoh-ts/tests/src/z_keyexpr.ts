@@ -13,40 +13,44 @@
 //
 
 import { Config, Session, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
-import { assert, assert_eq, run_test } from "./common/assertions.ts";
+import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
-export async function testKeyExprBasic() {
-  const foo = new KeyExpr("FOO");
-  assert(foo.toString() === "FOO", "KeyExpr string representation mismatch");
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function testKeyExprCanonize() {
-  const non_canon = "a/**/**/c";
+Deno.test("KeyExpr - Basic", () => {
+  const foo = new KeyExpr("FOO");
+  assert(foo.toString() === "FOO", "KeyExpr string representation mismatch");
+});
+
+Deno.test("KeyExpr - Canonize", () => {
+  const nonСanon = "a/**/**/c";
   const canon = "a/**/c";
 
   // Test autocanonization
-  const k_ok = KeyExpr.autocanonize(non_canon);
-  assert_eq(k_ok.toString(), canon, "Canonization failed");
+  const kOk = KeyExpr.autocanonize(nonСanon);
+  assertEquals(kOk.toString(), canon, "Canonization failed");
 
   // Verify that canonized expression remains unchanged when canonized again
-  const k_ok2 = KeyExpr.autocanonize(canon);
-  assert_eq(k_ok2.toString(), canon, "Re-canonization changed canonical form");
-}
+  const kOk2 = KeyExpr.autocanonize(canon);
+  assertEquals(kOk2.toString(), canon, "Re-canonization changed canonical form");
+});
 
-export async function testKeyExprConcat() {
+Deno.test("KeyExpr - Concat", () => {
   const foo = new KeyExpr("FOO");
   const foobar = foo.concat("BAR");
-  assert_eq(foobar.toString(), "FOOBAR", "Concatenation failed");
-}
+  assertEquals(foobar.toString(), "FOOBAR", "Concatenation failed");
+});
 
-export async function testKeyExprJoin() {
+Deno.test("KeyExpr - Join", () => {
   const foo = new KeyExpr("FOO");
   const bar = new KeyExpr("BAR");
   const foobar = foo.join(bar);
-  assert_eq(foobar.toString(), "FOO/BAR", "Join failed");
-}
+  assertEquals(foobar.toString(), "FOO/BAR", "Join failed");
+});
 
-export async function testKeyExprEquals() {
+Deno.test("KeyExpr - Equals", () => {
   const foo = new KeyExpr("FOO");
   const foo2 = new KeyExpr("FOO");
   const bar = new KeyExpr("BAR");
@@ -54,18 +58,18 @@ export async function testKeyExprEquals() {
   assert(foo.toString() !== bar.toString(), "Expected foo != bar");
   assert(foo.toString() === foo.toString(), "Expected foo == foo");
   assert(foo.toString() === foo2.toString(), "Expected foo == foo2");
-  assert(foo.toString() === "FOO", "Expected foo == 'FOO'");
+  assertEquals(foo.toString(), "FOO", "Expected foo == 'FOO'");
   assert(foo.toString() !== "BAR", "Expected foo != 'BAR'");
-}
+});
 
-export async function testKeyExprIncludes() {
+Deno.test("KeyExpr - Includes", () => {
   const foostar = new KeyExpr("FOO/*");
   const foobar = new KeyExpr("FOO/BAR");
   assert(foostar.includes(foobar), "Expected FOO/* to include FOO/BAR");
   assert(!foobar.includes(foostar), "Expected FOO/BAR to not include FOO/*");
-}
+});
 
-export async function testKeyExprIntersects() {
+Deno.test("KeyExpr - Intersects", () => {
   const foostar = new KeyExpr("FOO/*");
   const foobar = new KeyExpr("FOO/BAR");
   const starbuz = new KeyExpr("*/BUZ");
@@ -75,29 +79,21 @@ export async function testKeyExprIntersects() {
   assert(!starbuz.intersects(foobar), "Expected */BUZ to not intersect with FOO/BAR");
   assert(foobuz.intersects(starbuz), "Expected FOO/BUZ to intersect with */BUZ");
   assert(starbuz.intersects(foobuz), "Expected */BUZ to intersect with FOO/BUZ");
-}
+});
 
-export async function testKeyExprDeclare() {
+Deno.test("KeyExpr - Declare", async () => {
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  
-  const foobar = new KeyExpr("FOO/BAR");
-  const foostar = new KeyExpr("FOO/*");
-  const declared = session.declare_keyexpr(foobar);
+  try {
+    const foobar = new KeyExpr("FOO/BAR");
+    const foostar = new KeyExpr("FOO/*");
+    const declared = session.declareKeyexpr(foobar);
 
-  assert_eq(declared.toString(), "FOO/BAR", "Declared keyexpr mismatch");
-  assert_eq(declared.toString(), foobar.toString(), "Declared keyexpr != foobar");
-  assert(foostar.includes(declared), "Expected FOO/* to include declared");
-  assert(declared.intersects(foobar), "Expected declared to intersect with FOO/BAR");
-
-  await session.close();
-}
-
-// Run all tests
-await run_test(testKeyExprBasic);
-await run_test(testKeyExprCanonize);
-await run_test(testKeyExprConcat);
-await run_test(testKeyExprJoin);
-await run_test(testKeyExprEquals);
-await run_test(testKeyExprIncludes);
-await run_test(testKeyExprIntersects);
-await run_test(testKeyExprDeclare);
+    assertEquals(declared.toString(), "FOO/BAR", "Declared keyexpr mismatch");
+    assertEquals(declared.toString(), foobar.toString(), "Declared keyexpr != foobar");
+    assert(foostar.includes(declared), "Expected FOO/* to include declared");
+    assert(declared.intersects(foobar), "Expected declared to intersect with FOO/BAR");
+  } finally {
+    await session.close();
+    await sleep(100);
+  }
+});

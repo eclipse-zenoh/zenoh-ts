@@ -19,20 +19,18 @@ const MAX_RETRIES: number = 10;
 
 
 export class RemoteLink {
-  ws: WebSocket;
-
-  private constructor(ws: WebSocket) {
+  private constructor(private ws: WebSocket) {
     this.ws = ws;
   }
 
   static async new(locator: string): Promise<RemoteLink> {
-    let websocket_endpoint = this.parse_zenoh_locator(locator);
+    let websocketEndpoint = this.parseZenohLocator(locator);
 
     let retries = 0;
-    let retry_timeout_ms = RETRY_TIMEOUT_MS;
+    let retryTimeoutMs = RETRY_TIMEOUT_MS;
 
     while (retries < MAX_RETRIES) {
-      let ws = new WebSocket(websocket_endpoint);
+      let ws = new WebSocket(websocketEndpoint);
 
       ws.onerror = function (event: any) {
         console.warn("WebSocket error: ", event);
@@ -46,18 +44,18 @@ export class RemoteLink {
       while (ws.readyState != 1) {
         await sleep(100);
         wait += 100;
-        if (wait > (retry_timeout_ms)) {
+        if (wait > (retryTimeoutMs)) {
           ws.close();
-          retry_timeout_ms *= 2;
+          retryTimeoutMs *= 2;
           break;
         }
       }
 
       if (ws.readyState == 1) {
-        console.warn("Connected to", websocket_endpoint);
+        console.warn("Connected to", websocketEndpoint);
         return new RemoteLink(ws);
       } else {
-        ws = new WebSocket(websocket_endpoint);
+        ws = new WebSocket(websocketEndpoint);
         console.warn("Restart connection");
       }
     }
@@ -72,7 +70,7 @@ export class RemoteLink {
   }
 
   async send(msg: string | ArrayBufferLike | Blob | ArrayBufferView) {
-    if (!this.is_ok) {
+    if (!this.isOk) {
       throw new Error("WebSocket is closed");
     }
     while (this.ws.bufferedAmount > MAX_WS_BUFFER_SIZE) {
@@ -81,7 +79,7 @@ export class RemoteLink {
     this.ws.send(msg);
   }
 
-  is_ok(): boolean {
+  isOk(): boolean {
     return this.ws.readyState == WebSocket.OPEN;
   }
 
@@ -91,7 +89,7 @@ export class RemoteLink {
   }
 
 
-  private static parse_zenoh_locator(locator: string): string {
+  private static parseZenohLocator(locator: string): string {
     let parts = locator.split("/", 2);
     if (parts.length != 2) {
       return locator;

@@ -22,8 +22,6 @@
   * The configuration for a Zenoh Session.
   */
 export class Config {
-  locator: string;
-
   /**
    * Construct a new config, containing a locator
    * @param {string} locator - A string that respects the Locator to connect to. Currently this can be only the address of zenohd websocket plugin.
@@ -32,7 +30,5 @@ export class Config {
    * - common url form, e.g. `ws://127.0.0.1:10000`
    * @returns {Config} configuration instance
    */
-  constructor(locator: string) {
-    this.locator = locator;
-  }
+  constructor(public locator: string) {}
 }

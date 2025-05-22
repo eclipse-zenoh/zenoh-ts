@@ -25,7 +25,7 @@ export type IntoZBytes =
  * Class to represent an Array of Bytes received from Zenoh
  */
 export class ZBytes {
-  private _buffer: Uint8Array;
+  private buffer_: Uint8Array;
 
   /**
    * new function to create a ZBytes 
@@ -34,13 +34,13 @@ export class ZBytes {
    */
   constructor(bytes: IntoZBytes) {
     if (bytes instanceof ZBytes) {
-      this._buffer = bytes._buffer;
+      this.buffer_ = bytes.buffer_;
     } else if (bytes instanceof String || typeof bytes === "string") {
       const encoder = new TextEncoder();
       const encoded = encoder.encode(bytes.toString());
-      this._buffer = encoded;
+      this.buffer_ = encoded;
     } else {
-      this._buffer = Uint8Array.from(bytes);
+      this.buffer_ = Uint8Array.from(bytes);
     }
   }
 
@@ -50,7 +50,7 @@ export class ZBytes {
   * @returns number
   */
   public len(): number {
-    return this._buffer.length;
+    return this.buffer_.length;
   }
 
   /**
@@ -58,8 +58,8 @@ export class ZBytes {
   * 
   * @returns boolean
   */
-  public is_empty(): boolean {
-    return this._buffer.length == 0;
+  public isEmpty(): boolean {
+    return this.buffer_.length == 0;
   }
 
   /**
@@ -76,8 +76,8 @@ export class ZBytes {
    * 
    * @returns Uint8Array
    */
-  public to_bytes(): Uint8Array {
-    return this._buffer
+  public toBytes(): Uint8Array {
+    return this.buffer_
   }
 
   /**
@@ -85,9 +85,9 @@ export class ZBytes {
    * 
    * @returns string
    */
-  public to_string(): string {
+  public toString(): string {
     let decoder = new TextDecoder();
-    return decoder.decode(this._buffer)
+    return decoder.decode(this.buffer_)
   }
 
 }

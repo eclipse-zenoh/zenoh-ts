@@ -62,10 +62,10 @@ export enum ConsolidationMode {
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function consolidation_mode_to_int(
-  congestion_control?: ConsolidationMode,
+export function consolidationModeToInt(
+  congestionControl?: ConsolidationMode,
 ): number {
-  switch (congestion_control) {
+  switch (congestionControl) {
     case ConsolidationMode.Auto:
       return 0
     case ConsolidationMode.None:
@@ -83,10 +83,10 @@ export function consolidation_mode_to_int(
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function congestion_control_from_int(
-  prio_u8?: number,
+export function congestionControlFromInt(
+  prioU8?: number,
 ): CongestionControl {
-  switch (prio_u8) {
+  switch (prioU8) {
     case 0:
       return CongestionControl.DROP;
     case 1:
@@ -100,10 +100,10 @@ export function congestion_control_from_int(
  * Convenience function to convert between Congestion function and int
  * @internal
  */
-export function congestion_control_to_int(
-  congestion_control?: CongestionControl,
+export function congestionControlToInt(
+  congestionControl?: CongestionControl,
 ): number {
-  switch (congestion_control) {
+  switch (congestionControl) {
     case CongestionControl.DROP:
       return 0;
     case CongestionControl.BLOCK:
@@ -132,8 +132,8 @@ export enum Priority {
  * Convenience function to convert between Priority function and int
  * @internal
  */
-export function priority_from_int(prio_u8: number): Priority {
-  switch (prio_u8) {
+export function priorityFromInt(prioU8: number): Priority {
+  switch (prioU8) {
     case 1:
       return Priority.REAL_TIME;
     case 2:
@@ -158,7 +158,7 @@ export function priority_from_int(prio_u8: number): Priority {
  * Convenience function to convert between Priority function and int
  * @internal
  */
-export function priority_to_int(prio?: Priority): number {
+export function priorityToInt(prio?: Priority): number {
   switch (prio) {
     case Priority.REAL_TIME:
       return 1;
@@ -192,7 +192,7 @@ export enum Reliability {
 /**
  * @internal
  */
-export function reliability_to_int(reliability: Reliability) {
+export function reliabilityToInt(reliability: Reliability) {
   switch (reliability) {
     case Reliability.RELIABLE:
       return 0
@@ -208,109 +208,87 @@ export function reliability_to_int(reliability: Reliability) {
  * 
  */
 export class Sample {
-  private _keyexpr: KeyExpr;
-  private _payload: ZBytes;
-  private _kind: SampleKind;
-  private _encoding: Encoding;
-  private _priority: Priority;
-  private _timestamp: string | undefined;
-  private _congestion_control: CongestionControl;
-  private _express: boolean;
-  private _attachment: ZBytes | undefined;
+  constructor(
+    public readonly keyexpr_: KeyExpr,
+    public readonly payload_: ZBytes,
+    public readonly kind_: SampleKind,
+    public readonly encoding_: Encoding,
+    public readonly priority_: Priority,
+    public readonly timestamp_: string | undefined,
+    public readonly congestionControl_: CongestionControl,
+    public readonly express_: boolean,
+    public readonly attachment_: ZBytes | undefined,
+  ) {}
 
   keyexpr(): KeyExpr {
-    return this._keyexpr;
+    return this.keyexpr_;
   }
   payload(): ZBytes {
-    return this._payload;
+    return this.payload_;
   }
   kind(): SampleKind {
-    return this._kind;
+    return this.kind_;
   }
   encoding(): Encoding {
-    return this._encoding;
+    return this.encoding_;
   }
   timestamp(): string | undefined {
-    return this._timestamp;
+    return this.timestamp_;
   }
-  congestion_control(): CongestionControl {
-    return this._congestion_control;
+  congestionControl(): CongestionControl {
+    return this.congestionControl_;
   }
   priority(): Priority {
-    return this._priority;
+    return this.priority_;
   }
   express(): boolean {
-    return this._express;
+    return this.express_;
   }
   attachment(): ZBytes | undefined {
-    return this._attachment;
+    return this.attachment_;
   }
-
-  constructor(
-    keyexpr: KeyExpr,
-    payload: ZBytes,
-    kind: SampleKind,
-    encoding: Encoding,
-    priority: Priority,
-    timestamp: string | undefined,
-    congestion_control: CongestionControl,
-    express: boolean,
-    attachment: ZBytes | undefined,
-  ) {
-    this._keyexpr = keyexpr;
-    this._payload = payload;
-    this._kind = kind;
-    this._encoding = encoding;
-    this._priority = priority;
-    this._timestamp = timestamp;
-    this._congestion_control = congestion_control;
-    this._express = express;
-    this._attachment = attachment;
-  }
-
 }
-
 
 /**
  * Convenience function to convert between Sample and SampleWS
  */
-export function Sample_from_SampleWS(sample_ws: SampleWS) {
-  let sample_kind: SampleKind;
-  if (sample_ws.kind == "Delete") {
-    sample_kind = SampleKind.DELETE;
+export function sampleFromSampleWS(sampleWS: SampleWS) {
+  let sampleKind: SampleKind;
+  if (sampleWS.kind == "Delete") {
+    sampleKind = SampleKind.DELETE;
   } else {
-    sample_kind = SampleKind.PUT;
+    sampleKind = SampleKind.PUT;
   }
 
-  let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.value)));
+  let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(sampleWS.value)));
 
-  let key_exr = new KeyExpr(sample_ws.key_expr);
+  let keyExr = new KeyExpr(sampleWS.key_expr);
 
-  let encoding = Encoding.from_string(sample_ws.encoding);
+  let encoding = Encoding.fromString(sampleWS.encoding);
 
-  let priority = priority_from_int(sample_ws.priority);
+  let priority = priorityFromInt(sampleWS.priority);
 
-  let congestion_control = congestion_control_from_int(
-    sample_ws.congestion_control,
+  let congestionControl = congestionControlFromInt(
+    sampleWS.congestion_control,
   );
 
-  let timestamp: string | undefined = sample_ws.timestamp as string | undefined;
+  let timestamp: string | undefined = sampleWS.timestamp as string | undefined;
 
-  let express: boolean = sample_ws.express;
+  let express: boolean = sampleWS.express;
 
   let attachment = undefined;
-  if (sample_ws.attachement != undefined) {
-    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(sample_ws.attachement)));
+  if (sampleWS.attachement != undefined) {
+    attachment = new ZBytes(new Uint8Array(b64_bytes_from_str(sampleWS.attachement)));
   }
 
   return new Sample(
-    key_exr,
+    keyExr,
     payload,
-    sample_kind,
+    sampleKind,
     encoding,
     priority,
     timestamp,
-    congestion_control,
+    congestionControl,
     express,
     attachment,
   );
@@ -319,46 +297,46 @@ export function Sample_from_SampleWS(sample_ws: SampleWS) {
 /**
  * Convenience function to convert between SampleWS and Sample 
  */
-export function SampleWS_from_Sample(
+export function sampleWSFromSample(
   sample: Sample,
   encoding: Encoding,
   priority: Priority,
-  congestion_control: CongestionControl,
+  congestionControl: CongestionControl,
   express: boolean,
   attachement: ZBytes | undefined,
 ): SampleWS {
-  let key_expr: OwnedKeyExprWrapper = sample.keyexpr().toString();
-  let value: Array<number> = Array.from(sample.payload().to_bytes());
+  let keyExpr: OwnedKeyExprWrapper = sample.keyexpr().toString();
+  let value: Array<number> = Array.from(sample.payload().toBytes());
 
-  let sample_kind: SampleKindWS;
+  let sampleKind: SampleKindWS;
   if (sample.kind() == SampleKind.DELETE) {
-    sample_kind = "Delete";
+    sampleKind = "Delete";
   } else if (sample.kind() == SampleKind.PUT) {
-    sample_kind = "Put";
+    sampleKind = "Put";
   } else {
     console.warn(
       "Sample Kind not PUT | DELETE, defaulting to PUT: ",
       sample.kind(),
     );
-    sample_kind = "Put";
+    sampleKind = "Put";
   }
 
   let attach = null;
   if (attachement != null) {
-    attach = b64_str_from_bytes(new Uint8Array(attachement.to_bytes()));
+    attach = b64_str_from_bytes(new Uint8Array(attachement.toBytes()));
   }
 
-  let sample_ws: SampleWS = {
-    key_expr: key_expr,
+  let sampleWS: SampleWS = {
+    key_expr: keyExpr,
     value: b64_str_from_bytes(new Uint8Array(value)),
-    kind: sample_kind,
+    kind: sampleKind,
     encoding: encoding.toString(),
     timestamp: null,
-    priority: priority_to_int(priority),
-    congestion_control: congestion_control_to_int(congestion_control),
+    priority: priorityToInt(priority),
+    congestion_control: congestionControlToInt(congestionControl),
     express: express,
     attachement: attach,
   };
 
-  return sample_ws;
+  return sampleWS;
 }

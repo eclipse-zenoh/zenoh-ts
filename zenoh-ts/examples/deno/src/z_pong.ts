@@ -19,20 +19,20 @@ export async function main() {
   const args = new ParseArgs();
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
 
-  const pub = await session.declare_publisher(
+  const pub = await session.declarePublisher(
     "test/pong",
     {
       encoding: Encoding.default(),
-      congestion_control: CongestionControl.BLOCK,
+      congestionControl: CongestionControl.BLOCK,
       express: !args.no_express,
     },
   );
 
-  const subscriber_callback = function (sample: Sample) {
+  const subscriberCallback = function (sample: Sample) {
     pub.put(sample.payload());
   };
 
-  await session.declare_subscriber("test/ping", { handler: subscriber_callback } );
+  await session.declareSubscriber("test/ping", { handler: subscriberCallback } );
 
   while (true) {
     const seconds = 100;
@@ -45,6 +45,7 @@ function sleep(ms: number) {
 }
 
 class ParseArgs extends BaseParseArgs {
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   public no_express: boolean = false;
 
   constructor() {
@@ -52,13 +53,13 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       no_express: "Express for sending data",
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }

@@ -26,45 +26,25 @@ import { RemoteSession, UUIDv4 } from "./session.js";
 //                                                              ▀▀
 
 export class RemoteQueryable {
-  private key_expr: String;
-  private queryable_id: UUIDv4;
-  private session_ref: RemoteSession;
-
-  private constructor(
-    key_expr: String,
-    queryable_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    this.key_expr = key_expr;
-    this.queryable_id = queryable_id;
-    this.session_ref = session_ref;
-  }
-
-  static new(
-    key_expr: String,
-    queryable_id: UUIDv4,
-    session_ref: RemoteSession,
-  ) {
-    return new RemoteQueryable(
-      key_expr,
-      queryable_id,
-      session_ref,
-    );
-  }
+  constructor(
+    private keyExpr: String,
+    private queryableId: UUIDv4,
+    private sessionRef: RemoteSession,
+  ) {}
 
   async undeclare() {
-    if (!this.session_ref.undeclare_queryable(this.queryable_id.toString())) {
+    if (!this.sessionRef.undeclareQueryable(this.queryableId.toString())) {
       console.warn("Queryable keyexpr:`" +
-        this.key_expr +
+        this.keyExpr +
         "` id:`" +
-        this.queryable_id +
+        this.queryableId +
         "` already closed");
       return;
     }
 
-    let ctrl_message: ControlMsg = {
-      UndeclareQueryable: this.queryable_id.toString(),
+    let ctrlMessage: ControlMsg = {
+      UndeclareQueryable: this.queryableId.toString(),
     };
-    await this.session_ref.send_ctrl_message(ctrl_message);
+    await this.sessionRef.sendCtrlMessage(ctrlMessage);
   }
 }

@@ -29,10 +29,10 @@ export async function main() {
 
   console.log("Opening session...");
   const session = await Session.open(new Config("ws/127.0.0.1:10000"));
-  const key_expr = new KeyExpr(args.key);
+  const keyExpr = new KeyExpr(args.key);
   console.log(`Sending Liveliness Query '${args.key}'...`);
 
-  const receiver = await session.liveliness().get(key_expr, { timeout: args.get_timeout() });
+  const receiver = await session.liveliness().get(keyExpr, { timeout: args.getTimeout() });
 
   for await (const reply of receiver as ChannelReceiver<Reply>) {
       const resp = reply.result();
@@ -40,8 +40,8 @@ export async function main() {
         const sample: Sample = resp;
         console.warn(">> Alive token ('", sample.keyexpr().toString(), ")");
       } else {
-        const reply_error: ReplyError = resp;
-        console.warn(">> Received (ERROR: '", reply_error.payload().to_string(), "')");
+        const replyError: ReplyError = resp;
+        console.warn(">> Received (ERROR: '", replyError.payload().toString(), "')");
       }
   }
   console.warn("Liveliness query finished");
@@ -57,18 +57,18 @@ class ParseArgs extends BaseParseArgs {
     this.parse();
   }
 
-  public get_timeout(): Milliseconds {
+  public getTimeout(): Milliseconds {
     return milliseconds.of(this.timeout);
   }
 
-  public get_named_args_help(): Record<string, string> {
+  public getNamedArgsHelp(): Record<string, string> {
     return {
       key: "Key expression for the liveliness query",
       timeout: "Timeout for the liveliness query"
     };
   }
 
-  get_positional_args_help(): [string, string][] {
+  getPositionalArgsHelp(): [string, string][] {
     return [];
   }
 }
