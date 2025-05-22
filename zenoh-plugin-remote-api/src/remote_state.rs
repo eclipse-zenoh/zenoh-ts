@@ -156,11 +156,11 @@ impl RemoteState {
             .session
             .declare_publisher(declare_publisher.keyexpr)
             .encoding(declare_publisher.encoding)
-            .priority(declare_publisher.priority)
-            .congestion_control(declare_publisher.congestion_control)
-            .express(declare_publisher.express)
-            .allowed_destination(declare_publisher.allowed_destination)
-            .reliability(declare_publisher.reliability)
+            .priority(declare_publisher.qos.priority())
+            .congestion_control(declare_publisher.qos.congestion_control())
+            .express(declare_publisher.qos.express())
+            .allowed_destination(declare_publisher.qos.locality())
+            .reliability(declare_publisher.qos.reliability())
             .await?;
         self.admin_client
             .lock()
@@ -309,14 +309,14 @@ impl RemoteState {
         let querier = self
             .session
             .declare_querier(declare_querier.keyexpr)
-            .priority(declare_querier.priority)
-            .congestion_control(declare_querier.congestion_control)
-            .express(declare_querier.express)
-            .allowed_destination(declare_querier.allowed_destination)
-            .accept_replies(declare_querier.accept_replies)
-            .target(declare_querier.target)
+            .priority(declare_querier.qos.priority())
+            .congestion_control(declare_querier.qos.congestion_control())
+            .express(declare_querier.qos.express())
+            .allowed_destination(declare_querier.qos.locality())
+            .accept_replies(declare_querier.query_settings.reply_keyexpr())
+            .target(declare_querier.query_settings.target())
             .timeout(Duration::from_millis(declare_querier.timeout_ms))
-            .consolidation(declare_querier.consolidation)
+            .consolidation(declare_querier.query_settings.consolidation())
             .await?;
         self.admin_client
             .lock()
@@ -363,11 +363,11 @@ impl RemoteState {
             .put(put.keyexpr, put.payload)
             .encoding(put.encoding)
             .attachment(put.attachment)
-            .priority(put.priority)
-            .congestion_control(put.congestion_control)
-            .express(put.express)
-            .allowed_destination(put.allowed_destination)
-            .reliability(put.reliability)
+            .priority(put.qos.priority())
+            .congestion_control(put.qos.congestion_control())
+            .express(put.qos.express())
+            .allowed_destination(put.qos.locality())
+            .reliability(put.qos.reliability())
             .timestamp(put.timestamp)
             .await?;
         Ok(())
@@ -377,11 +377,11 @@ impl RemoteState {
         self.session
             .delete(delete.keyexpr)
             .attachment(delete.attachment)
-            .priority(delete.priority)
-            .congestion_control(delete.congestion_control)
-            .express(delete.express)
-            .allowed_destination(delete.allowed_destination)
-            .reliability(delete.reliability)
+            .priority(delete.qos.priority())
+            .congestion_control(delete.qos.congestion_control())
+            .express(delete.qos.express())
+            .allowed_destination(delete.qos.locality())
+            .reliability(delete.qos.reliability())
             .timestamp(delete.timestamp)
             .await?;
         Ok(())
@@ -463,13 +463,13 @@ impl RemoteState {
             gb = gb.encoding(encoding);
         }
 
-        gb.accept_replies(get.accept_replies)
-            .priority(get.priority)
-            .congestion_control(get.congestion_control)
-            .express(get.express)
-            .allowed_destination(get.allowed_destination)
-            .consolidation(get.consolidation)
-            .target(get.target)
+        gb.accept_replies(get.query_settings.reply_keyexpr())
+            .priority(get.qos.priority())
+            .congestion_control(get.qos.congestion_control())
+            .express(get.qos.express())
+            .allowed_destination(get.qos.locality())
+            .consolidation(get.query_settings.consolidation())
+            .target(get.query_settings.target())
             .timeout(Duration::from_millis(get.timeout_ms))
             .with(self.create_get_callback(get.id))
             .await?;
@@ -513,9 +513,9 @@ impl RemoteState {
                 q.reply(reply_ok.keyexpr, reply_ok.payload)
                     .attachment(reply_ok.attachment)
                     .encoding(reply_ok.encoding)
-                    .priority(reply_ok.priority)
-                    .congestion_control(reply_ok.congestion_control)
-                    .express(reply_ok.express)
+                    .priority(reply_ok.qos.priority())
+                    .congestion_control(reply_ok.qos.congestion_control())
+                    .express(reply_ok.qos.express())
                     .timestamp(reply_ok.timestamp)
                     .await?;
             }
@@ -539,9 +539,9 @@ impl RemoteState {
             Some(q) => {
                 q.reply_del(reply_del.keyexpr)
                     .attachment(reply_del.attachment)
-                    .priority(reply_del.priority)
-                    .congestion_control(reply_del.congestion_control)
-                    .express(reply_del.express)
+                    .priority(reply_del.qos.priority())
+                    .congestion_control(reply_del.qos.congestion_control())
+                    .express(reply_del.qos.express())
                     .timestamp(reply_del.timestamp)
                     .await?;
             }

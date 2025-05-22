@@ -74,41 +74,153 @@ impl Ok {
     }
 }
 
-fn congestion_control_from_u8(c: u8) -> Result<CongestionControl, zenoh_result::Error> {
-    match c {
-        0 => Ok(CongestionControl::Drop),
-        1 => Ok(CongestionControl::Block),
-        v => bail!("Unsupported congestion control value {}", v),
+pub(crate) struct Qos {
+    inner: u8,
+}
+
+impl Qos {
+    pub(crate) fn new(
+        priority: Priority,
+        congestion_control: CongestionControl,
+        express: bool,
+        reliability: Reliability,
+        locality: Locality,
+    ) -> Self {
+        let p = priority as u8;
+        let c = match congestion_control {
+            CongestionControl::Drop => 0u8,
+            CongestionControl::Block => 1u8,
+        };
+        let e = match express {
+            true => 1u8,
+            false => 0u8,
+        };
+        let r = match reliability {
+            Reliability::BestEffort => 0u8,
+            Reliability::Reliable => 1u8,
+        };
+        let l = match locality {
+            Locality::SessionLocal => 0u8,
+            Locality::Remote => 1u8,
+            Locality::Any => 2u8,
+        };
+        // llrecppp
+        Self {
+            inner: p | (c << 3) | (e << 4) | (r << 5) | (l << 6),
+        }
+    }
+
+    pub(crate) fn priority(&self) -> Priority {
+        let p = self.inner & 0b111u8;
+        p.try_into().unwrap_or_default()
+    }
+
+    pub(crate) fn congestion_control(&self) -> CongestionControl {
+        let c = (self.inner >> 3) & 1u8;
+        match c == 0 {
+            true => CongestionControl::Drop,
+            false => CongestionControl::Block,
+        }
+    }
+
+    pub(crate) fn express(&self) -> bool {
+        let e = (self.inner >> 4) & 1u8;
+        e > 0
+    }
+
+    pub(crate) fn reliability(&self) -> Reliability {
+        let r = (self.inner >> 5) & 1u8;
+        match r == 0 {
+            true => Reliability::BestEffort,
+            false => Reliability::Reliable,
+        }
+    }
+
+    pub(crate) fn locality(&self) -> Locality {
+        let l = (self.inner >> 6) & 0b11u8;
+        match l {
+            0u8 => Locality::SessionLocal,
+            1u8 => Locality::Remote,
+            2u8 => Locality::Any,
+            _ => Locality::default(),
+        }
     }
 }
 
-fn congestion_control_to_u8(c: CongestionControl) -> u8 {
-    match c {
-        CongestionControl::Drop => 0,
-        CongestionControl::Block => 1,
+impl Serialize for Qos {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.inner);
     }
 }
 
-fn priority_from_u8(p: u8) -> Result<Priority, zenoh_result::Error> {
-    p.try_into()
-}
-
-fn priority_to_u8(p: Priority) -> u8 {
-    p as u8
-}
-
-fn reliability_from_u8(r: u8) -> Result<Reliability, zenoh_result::Error> {
-    match r {
-        0 => Ok(Reliability::BestEffort),
-        1 => Ok(Reliability::Reliable),
-        v => bail!("Unsupported reliability value {}", v),
+impl Deserialize for Qos {
+    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
+        Ok(Self {
+            inner: deserializer.deserialize()?,
+        })
     }
 }
 
-fn reliability_to_u8(r: Reliability) -> u8 {
-    match r {
-        Reliability::BestEffort => 0,
-        Reliability::Reliable => 1,
+pub(crate) struct QuerySettings {
+    inner: u8,
+}
+
+impl QuerySettings {
+    #[allow(dead_code)]
+    pub(crate) fn new(
+        target: QueryTarget,
+        consolidation: ConsolidationMode,
+        reply_keyexpr: ReplyKeyExpr,
+    ) -> Self {
+        let t = match target {
+            QueryTarget::BestMatching => 0u8,
+            QueryTarget::All => 1u8,
+            QueryTarget::AllComplete => 2u8,
+        };
+        let c = match consolidation {
+            ConsolidationMode::Auto => 0u8,
+            ConsolidationMode::None => 1u8,
+            ConsolidationMode::Monotonic => 2u8,
+            ConsolidationMode::Latest => 3u8,
+        };
+        let r = match reply_keyexpr {
+            ReplyKeyExpr::Any => 0u8,
+            ReplyKeyExpr::MatchingQuery => 1u8,
+        };
+
+        // rcctt
+        Self {
+            inner: t | (c << 2) | (r << 4),
+        }
+    }
+
+    pub(crate) fn target(&self) -> QueryTarget {
+        let t = self.inner & 0b11u8;
+        match t {
+            0 => QueryTarget::All,
+            1 => QueryTarget::AllComplete,
+            2 => QueryTarget::BestMatching,
+            _ => QueryTarget::default(),
+        }
+    }
+
+    pub(crate) fn consolidation(&self) -> ConsolidationMode {
+        let c = (self.inner >> 2) & 0b11u8;
+        match c {
+            0 => ConsolidationMode::Auto,
+            1 => ConsolidationMode::None,
+            2 => ConsolidationMode::Monotonic,
+            3 => ConsolidationMode::Latest,
+            _ => ConsolidationMode::default(),
+        }
+    }
+
+    pub(crate) fn reply_keyexpr(&self) -> ReplyKeyExpr {
+        let r = (self.inner >> 4) & 1u8;
+        match r == 0 {
+            true => ReplyKeyExpr::Any,
+            false => ReplyKeyExpr::MatchingQuery,
+        }
     }
 }
 
@@ -121,37 +233,24 @@ fn locality_from_u8(l: u8) -> Result<Locality, zenoh_result::Error> {
     }
 }
 
-fn consolidation_from_u8(l: u8) -> Result<ConsolidationMode, zenoh_result::Error> {
-    match l {
-        0 => Ok(ConsolidationMode::Auto),
-        1 => Ok(ConsolidationMode::None),
-        2 => Ok(ConsolidationMode::Monotonic),
-        3 => Ok(ConsolidationMode::Latest),
-        v => bail!("Unsupported consolidation mode value {}", v),
-    }
-}
-
-fn query_target_from_u8(t: u8) -> Result<QueryTarget, zenoh_result::Error> {
-    match t {
-        0 => Ok(QueryTarget::All),
-        1 => Ok(QueryTarget::AllComplete),
-        2 => Ok(QueryTarget::BestMatching),
-        v => bail!("Unsupported query target value {}", v),
-    }
-}
-
-fn reply_keyexpr_from_u8(a: u8) -> Result<ReplyKeyExpr, zenoh_result::Error> {
-    match a {
-        0 => Ok(ReplyKeyExpr::Any),
-        1 => Ok(ReplyKeyExpr::MatchingQuery),
-        v => bail!("Unsupported reply keyexpr value {}", v),
-    }
-}
-
 fn reply_keyexpr_to_u8(a: ReplyKeyExpr) -> u8 {
     match a {
         ReplyKeyExpr::Any => 0,
         ReplyKeyExpr::MatchingQuery => 1,
+    }
+}
+
+impl Serialize for QuerySettings {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.inner);
+    }
+}
+
+impl Deserialize for QuerySettings {
+    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
+        Ok(Self {
+            inner: deserializer.deserialize()?,
+        })
     }
 }
 
@@ -214,11 +313,7 @@ pub(crate) struct DeclarePublisher {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) encoding: Encoding,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
-    pub(crate) reliability: Reliability,
-    pub(crate) allowed_destination: Locality,
+    pub(crate) qos: Qos,
 }
 
 impl DeclarePublisher {
@@ -227,11 +322,7 @@ impl DeclarePublisher {
             id: deserializer.deserialize()?,
             keyexpr: OwnedKeyExpr::try_from(deserializer.deserialize::<String>()?)?,
             encoding: encoding_from_id_schema(deserializer.deserialize()?),
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
-            reliability: reliability_from_u8(deserializer.deserialize()?)?,
-            allowed_destination: locality_from_u8(deserializer.deserialize()?)?,
+            qos: deserializer.deserialize()?,
         })
     }
 }
@@ -309,14 +400,9 @@ impl UndeclareQueryable {
 pub(crate) struct DeclareQuerier {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
-    pub(crate) target: QueryTarget,
-    pub(crate) accept_replies: ReplyKeyExpr,
+    pub(crate) qos: Qos,
+    pub(crate) query_settings: QuerySettings,
     pub(crate) timeout_ms: u64,
-    pub(crate) consolidation: ConsolidationMode,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
-    pub(crate) allowed_destination: Locality,
 }
 
 impl DeclareQuerier {
@@ -324,14 +410,9 @@ impl DeclareQuerier {
         Ok(DeclareQuerier {
             id: deserializer.deserialize()?,
             keyexpr: OwnedKeyExpr::try_from(deserializer.deserialize::<String>()?)?,
-            target: query_target_from_u8(deserializer.deserialize()?)?,
-            accept_replies: reply_keyexpr_from_u8(deserializer.deserialize()?)?,
+            qos: deserializer.deserialize()?,
+            query_settings: deserializer.deserialize()?,
             timeout_ms: deserializer.deserialize()?,
-            consolidation: consolidation_from_u8(deserializer.deserialize()?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
-            allowed_destination: locality_from_u8(deserializer.deserialize()?)?,
         })
     }
 }
@@ -398,11 +479,7 @@ pub(crate) struct Put {
     pub(crate) encoding: Encoding,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
-    pub(crate) reliability: Reliability,
-    pub(crate) allowed_destination: Locality,
+    pub(crate) qos: Qos,
 }
 
 impl Put {
@@ -413,11 +490,7 @@ impl Put {
             encoding: encoding_from_id_schema(deserializer.deserialize()?),
             attachment: deserialize_option(deserializer)?,
             timestamp: opt_timestamp_from_ntp_id(deserialize_option(deserializer)?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
-            reliability: reliability_from_u8(deserializer.deserialize()?)?,
-            allowed_destination: locality_from_u8(deserializer.deserialize()?)?,
+            qos: deserializer.deserialize()?,
         })
     }
 }
@@ -426,11 +499,7 @@ pub(crate) struct Delete {
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
-    pub(crate) reliability: Reliability,
-    pub(crate) allowed_destination: Locality,
+    pub(crate) qos: Qos,
 }
 
 impl Delete {
@@ -439,11 +508,7 @@ impl Delete {
             keyexpr: OwnedKeyExpr::try_from(deserializer.deserialize::<String>()?)?,
             attachment: deserialize_option(deserializer)?,
             timestamp: opt_timestamp_from_ntp_id(deserialize_option(deserializer)?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
-            reliability: reliability_from_u8(deserializer.deserialize()?)?,
-            allowed_destination: locality_from_u8(deserializer.deserialize()?)?,
+            qos: deserializer.deserialize()?,
         })
     }
 }
@@ -491,14 +556,9 @@ pub(crate) struct Get {
     pub(crate) payload: Option<Vec<u8>>,
     pub(crate) encoding: Option<Encoding>,
     pub(crate) attachment: Option<Vec<u8>>,
-    pub(crate) target: QueryTarget,
-    pub(crate) accept_replies: ReplyKeyExpr,
+    pub(crate) qos: Qos,
+    pub(crate) query_settings: QuerySettings,
     pub(crate) timeout_ms: u64,
-    pub(crate) consolidation: ConsolidationMode,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
-    pub(crate) allowed_destination: Locality,
 }
 
 impl Get {
@@ -510,14 +570,9 @@ impl Get {
             payload: deserialize_option(deserializer)?,
             encoding: opt_encoding_from_id_schema(deserialize_option(deserializer)?),
             attachment: deserialize_option(deserializer)?,
-            target: query_target_from_u8(deserializer.deserialize()?)?,
-            accept_replies: reply_keyexpr_from_u8(deserializer.deserialize()?)?,
+            qos: deserializer.deserialize()?,
+            query_settings: deserializer.deserialize()?,
             timeout_ms: deserializer.deserialize()?,
-            consolidation: consolidation_from_u8(deserializer.deserialize()?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
-            allowed_destination: locality_from_u8(deserializer.deserialize()?)?,
         })
     }
 }
@@ -554,10 +609,14 @@ fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample
         serializer,
         &sample.timestamp().map(|t| timestamp_to_ntp_id(t)),
     );
-    serializer.serialize(congestion_control_to_u8(sample.congestion_control()));
-    serializer.serialize(priority_to_u8(sample.priority()));
-    serializer.serialize(sample.express());
-    serializer.serialize(reliability_to_u8(sample.reliability()));
+    let qos = Qos::new(
+        sample.priority(),
+        sample.congestion_control(),
+        sample.express(),
+        sample.reliability(),
+        Locality::default(),
+    );
+    serializer.serialize(qos);
 }
 
 pub(crate) struct Sample {
@@ -635,9 +694,7 @@ pub(crate) struct ReplyOk {
     pub(crate) encoding: Encoding,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
+    pub(crate) qos: Qos,
 }
 
 impl ReplyOk {
@@ -649,9 +706,7 @@ impl ReplyOk {
             encoding: encoding_from_id_schema(deserializer.deserialize()?),
             attachment: deserialize_option(deserializer)?,
             timestamp: opt_timestamp_from_ntp_id(deserialize_option(deserializer)?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
+            qos: deserializer.deserialize()?,
         })
     }
 }
@@ -661,9 +716,7 @@ pub(crate) struct ReplyDel {
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
-    pub(crate) congestion_control: CongestionControl,
-    pub(crate) priority: Priority,
-    pub(crate) express: bool,
+    pub(crate) qos: Qos,
 }
 
 impl ReplyDel {
@@ -673,9 +726,7 @@ impl ReplyDel {
             keyexpr: OwnedKeyExpr::try_from(deserializer.deserialize::<String>()?)?,
             attachment: deserialize_option(deserializer)?,
             timestamp: opt_timestamp_from_ntp_id(deserialize_option(deserializer)?)?,
-            congestion_control: congestion_control_from_u8(deserializer.deserialize()?)?,
-            priority: priority_from_u8(deserializer.deserialize()?)?,
-            express: deserializer.deserialize()?,
+            qos: deserializer.deserialize()?,
         })
     }
 }
