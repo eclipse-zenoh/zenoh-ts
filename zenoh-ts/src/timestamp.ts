@@ -1,27 +1,38 @@
-import { UUIDv4 } from "./remote_api/session";
+import { ZBytesDeserializer, ZBytesSerializer } from "./ext";
+import { Zid } from "./zid";
 
 export class Timestamp {
-    constructor(private timestampId: UUIDv4, private stringRep: string, private msSinceUnixEpoch: bigint) {}
+    private constructor(private readonly zid: Zid, private readonly ntp64: bigint) {}
 
-    // Note: Developers Should not need to use this
-    getResourceUuid(): UUIDv4 {
-        return this.timestampId;
-    }
-
-    getId(): string {
-        return this.stringRep.split("/")[1] as string;
-    }
-
-    getTime(): string {
-        return this.stringRep.split("/")[0] as string;
+    getId(): Zid {
+        return this.zid;
     }
 
     getMsSinceUnixEpoch(): bigint {
-        return this.msSinceUnixEpoch;
+        return this.ntp64;
     }
 
     asDate(): Date {
         // Note: Values produced by this Bigint should fit into a number as they are ms since Unix Epoch
-        return new Date(this.msSinceUnixEpoch as unknown as number);
+        return new Date(this.ntp64 as unknown as number);
+    }
+
+    serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeBigintUint64(this.ntp64);
+        this.zid.serializeWithZSerializer(serializer);
+    }
+
+    static deserialize(deserializer: ZBytesDeserializer): Timestamp {
+        let ntp64 = deserializer.deserializeBigintUint64();
+        let zid = Zid.deserialize(deserializer);
+        return new Timestamp(zid, ntp64);
     }
 }
+
+export function deserializeOptTimestamp(deserializer: ZBytesDeserializer): Timestamp | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return Timestamp.deserialize(deserializer);
+    } else {
+        return undefined;
+    }
+  }

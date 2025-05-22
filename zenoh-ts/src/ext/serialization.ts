@@ -746,6 +746,17 @@ export namespace ZD{
   }
 
   /**
+   * Indicates that data should be deserialized as an object.
+   * @param create A function to create an object instance from deserializer.
+   * @returns Object deserialization tag.
+   */
+  export function objectStatic<T>(create: (deserializer: ZBytesDeserializer) => T): ZDTypeInfo<T> {
+    return new ZDTypeInfo(
+      (z: ZBytesDeserializer) => { return create(z); }
+    );
+  }
+
+  /**
    * Indicates that data should be deserialized as an array.
    * @param t An array element deserialization tag.
    * @returns Array deserialization tag.

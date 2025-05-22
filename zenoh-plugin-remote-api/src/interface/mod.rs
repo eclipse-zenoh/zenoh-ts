@@ -402,7 +402,7 @@ pub(crate) struct DeclareQuerier {
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) qos: Qos,
     pub(crate) query_settings: QuerySettings,
-    pub(crate) timeout_ms: u64,
+    pub(crate) timeout_ms: u32,
 }
 
 impl DeclareQuerier {
@@ -552,13 +552,13 @@ impl PublisherDelete {
 pub(crate) struct Get {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
-    pub(crate) parameters: Option<String>,
+    pub(crate) parameters: String,
     pub(crate) payload: Option<Vec<u8>>,
     pub(crate) encoding: Option<Encoding>,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) qos: Qos,
     pub(crate) query_settings: QuerySettings,
-    pub(crate) timeout_ms: u64,
+    pub(crate) timeout_ms: u32,
 }
 
 impl Get {
@@ -566,7 +566,7 @@ impl Get {
         Ok(Get {
             id: deserializer.deserialize()?,
             keyexpr: OwnedKeyExpr::try_from(deserializer.deserialize::<String>()?)?,
-            parameters: deserialize_option(deserializer)?,
+            parameters: deserializer.deserialize()?,
             payload: deserialize_option(deserializer)?,
             encoding: opt_encoding_from_id_schema(deserialize_option(deserializer)?),
             attachment: deserialize_option(deserializer)?,
@@ -580,7 +580,7 @@ impl Get {
 pub(crate) struct QuerierGet {
     pub(crate) querier_id: u32,
     pub(crate) id: u32,
-    pub(crate) parameters: Option<String>,
+    pub(crate) parameters: String,
     pub(crate) payload: Option<Vec<u8>>,
     pub(crate) encoding: Option<Encoding>,
     pub(crate) attachment: Option<Vec<u8>>,
@@ -591,7 +591,7 @@ impl QuerierGet {
         Ok(QuerierGet {
             querier_id: deserializer.deserialize()?,
             id: deserializer.deserialize()?,
-            parameters: deserialize_option(deserializer)?,
+            parameters: deserializer.deserialize()?,
             payload: deserialize_option(deserializer)?,
             encoding: opt_encoding_from_id_schema(deserialize_option(deserializer)?),
             attachment: deserialize_option(deserializer)?,
@@ -826,7 +826,7 @@ impl UndeclareLivelinessSubscriber {
 pub(crate) struct LivelinessGet {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
-    pub(crate) timeout_ms: u64,
+    pub(crate) timeout_ms: u32,
 }
 
 impl LivelinessGet {

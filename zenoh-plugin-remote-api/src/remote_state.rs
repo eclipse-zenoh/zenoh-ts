@@ -315,7 +315,7 @@ impl RemoteState {
             .allowed_destination(declare_querier.qos.locality())
             .accept_replies(declare_querier.query_settings.reply_keyexpr())
             .target(declare_querier.query_settings.target())
-            .timeout(Duration::from_millis(declare_querier.timeout_ms))
+            .timeout(Duration::from_millis(declare_querier.timeout_ms as u64))
             .consolidation(declare_querier.query_settings.consolidation())
             .await?;
         self.admin_client
@@ -448,9 +448,9 @@ impl RemoteState {
     }
 
     async fn get(&self, get: Get) -> Result<(), zenoh_result::Error> {
-        let selector: Selector = match get.parameters {
-            Some(p) => (get.keyexpr, p).into(),
-            None => get.keyexpr.into(),
+        let selector: Selector = match get.parameters.len() > 0 {
+            true => (get.keyexpr, get.parameters).into(),
+            false => get.keyexpr.into(),
         };
         let mut gb = self.session.get(selector);
         if let Some(payload) = get.payload {
@@ -470,7 +470,7 @@ impl RemoteState {
             .allowed_destination(get.qos.locality())
             .consolidation(get.query_settings.consolidation())
             .target(get.query_settings.target())
-            .timeout(Duration::from_millis(get.timeout_ms))
+            .timeout(Duration::from_millis(get.timeout_ms as u64))
             .with(self.create_get_callback(get.id))
             .await?;
         Ok(())
@@ -489,8 +489,8 @@ impl RemoteState {
                 if let Some(encoding) = querier_get.encoding {
                     gb = gb.encoding(encoding);
                 }
-                if let Some(params) = querier_get.parameters {
-                    gb = gb.parameters(params);
+                if querier_get.parameters.len() > 0 {
+                    gb = gb.parameters(querier_get.parameters);
                 }
 
                 gb.with(self.create_get_callback(querier_get.id)).await?;
@@ -675,7 +675,7 @@ impl RemoteState {
         self.session
             .liveliness()
             .get(liveliness_get.keyexpr)
-            .timeout(Duration::from_millis(liveliness_get.timeout_ms))
+            .timeout(Duration::from_millis(liveliness_get.timeout_ms as u64))
             .with(self.create_get_callback(liveliness_get.id))
             .await?;
         Ok(())
