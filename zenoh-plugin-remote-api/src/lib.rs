@@ -29,7 +29,7 @@ use std::{
 };
 
 use futures::{future, pin_mut, StreamExt, TryStreamExt};
-use interface::{InRemoteMessage, OpenAck, OutRemoteMessage, SequenceId};
+use interface::{InRemoteMessage, OutRemoteMessage, SequenceId};
 use remote_state::RemoteState;
 use rustls_pemfile::{certs, private_key};
 use serde::Serialize;
@@ -302,6 +302,10 @@ impl AdminSpaceClient {
     pub(crate) fn unregister_querier(&mut self, id: u32) {
         self.queriers.remove(&id);
     }
+
+    pub(crate) fn id(&self) -> &str {
+        &self.uuid
+    }
 }
 
 async fn run_admin_space_queryable(zenoh_runtime: Runtime, state_map: StateMap, config: Config) {
@@ -562,7 +566,6 @@ async fn run_websocket_server(
 
             let mut remote_state = RemoteState::new(ws_ch_tx.clone(), admin_client, session);
 
-            let _ = ws_ch_tx.send((OutRemoteMessage::OpenAck(OpenAck { uuid: id }), None));
             //  Incoming message from Websocket
             let incoming_ws = tokio::task::spawn(async move {
                 let mut non_close_messages = ws_rx.try_filter(|msg| future::ready(!msg.is_close()));
@@ -617,7 +620,6 @@ async fn handle_message(
                             // send error response if ack was requested
                             (
                                 OutRemoteMessage::Error(interface::Error {
-                                    content_id: header.content_id,
                                     error: error.to_string(),
                                 }),
                                 header.sequence_id,
@@ -641,7 +643,6 @@ async fn handle_message(
                         // send error response if ack was requested
                         (
                             OutRemoteMessage::Error(interface::Error {
-                                content_id: header.content_id,
                                 error: error.to_string(),
                             }),
                             header.sequence_id,

@@ -31,6 +31,7 @@ export class RemoteLink {
 
     while (retries < MAX_RETRIES) {
       let ws = new WebSocket(websocketEndpoint);
+      ws.binaryType = "arraybuffer";
 
       ws.onerror = function (event: any) {
         console.warn("WebSocket error: ", event);
@@ -63,13 +64,13 @@ export class RemoteLink {
     throw new Error(`Failed to connect to locator endpoint: ${locator} after ${MAX_RETRIES}`);
   }
 
-  onmessage(onmessage: (msg: any) => void) {
+  onmessage(onmessage: (msg: Uint8Array) => void) {
     this.ws.onmessage = function (event: any) {
-      onmessage(event.data);
+      onmessage(new Uint8Array(event.data));
     };
   }
 
-  async send(msg: string | ArrayBufferLike | Blob | ArrayBufferView) {
+  async send(msg: Uint8Array) {
     if (!this.isOk) {
       throw new Error("WebSocket is closed");
     }

@@ -15,7 +15,6 @@
 use std::ops::Not;
 
 use uhlc::{Timestamp, NTP64};
-use uuid::Uuid;
 use zenoh::{
     bytes::{Encoding, ZBytes},
     config::ZenohId,
@@ -53,13 +52,11 @@ pub(crate) fn deserialize_option<T: Sized + Deserialize>(
 }
 
 pub(crate) struct Error {
-    pub(crate) content_id: InRemoteMessageId,
     pub(crate) error: String,
 }
 
 impl Error {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.content_id as u8);
         serializer.serialize(&self.error);
     }
 }
@@ -299,13 +296,23 @@ fn sample_kind_to_u8(k: SampleKind) -> u8 {
     }
 }
 
-pub(crate) struct OpenAck {
-    pub(crate) uuid: Uuid,
+pub(crate) struct Ping {}
+
+impl Ping {
+    pub(crate) fn from_wire(
+        _deserializer: &mut ZDeserializer,
+    ) -> Result<Self, zenoh_result::Error> {
+        Ok(Self {})
+    }
 }
 
-impl OpenAck {
+pub(crate) struct PingAck {
+    pub(crate) uuid: String,
+}
+
+impl PingAck {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.uuid.to_string());
+        serializer.serialize(&self.uuid);
     }
 }
 
@@ -943,10 +950,16 @@ macro_rules! remote_message {
                 let mut serializer = ZSerializer::new();
                 match self {
                     $($name::$val(x) => {
-                        let t: $typ = $enum_name::$val.into();
-                        serializer.serialize(t);
-                        if let Some(id) = sequence_id {
-                            serializer.serialize(id);
+                        let mut t: $typ = $enum_name::$val.into();
+                        match sequence_id {
+                            Some(id) => {
+                                t = t | 0b10000000u8;
+                                serializer.serialize(t);
+                                serializer.serialize(id);
+                            },
+                            None => {
+                                serializer.serialize(t);
+                            }
                         }
                         x.to_wire(&mut serializer);
                         serializer.finish().to_bytes().to_vec()
@@ -986,6 +999,7 @@ remote_message! {
         ReplyDel,
         ReplyErr,
         QueryResponseFinal,
+        Ping,
     },
     InRemoteMessageId
 }
@@ -994,7 +1008,7 @@ remote_message! {
     @to_wire
     #[repr(u8)]
     pub(crate) enum OutRemoteMessage {
-        OpenAck,
+        PingAck,
         Ok,
         Error,
         ResponseTimestamp,

@@ -38,7 +38,7 @@ use zenoh_result::bail;
 use crate::{
     interface::{
         self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher,
-        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet,
+        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet, PingAck,
         PublisherDelete, PublisherPut, Put, QuerierGet, QueryResponseFinal, ReplyDel, ReplyErr,
         ReplyOk, ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
         UndeclareLivelinessToken, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable,
@@ -54,6 +54,7 @@ use crate::{
 
 const MAX_NUM_PENDING_QUERIES: usize = 1000;
 pub(crate) struct RemoteState {
+    id: String,
     tx: Sender<(OutRemoteMessage, Option<SequenceId>)>,
     admin_client: Arc<Mutex<AdminSpaceClient>>,
     session: Session,
@@ -73,7 +74,9 @@ impl RemoteState {
         admin_client: Arc<Mutex<AdminSpaceClient>>,
         session: Session,
     ) -> Self {
+        let id = admin_client.lock().unwrap().id().to_string();
         Self {
+            id,
             tx,
             admin_client,
             session,
@@ -787,6 +790,9 @@ impl RemoteState {
                 self.undeclare_liveliness_subscriber(undeclare_liveliness_subscriber)
                     .await
             }
+            InRemoteMessage::Ping(_) => Ok(Some(OutRemoteMessage::PingAck(PingAck {
+                uuid: self.id.clone(),
+            }))),
         }
     }
 }
