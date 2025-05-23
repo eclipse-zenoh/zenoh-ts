@@ -15,7 +15,8 @@
 // API Layer Files
 import { KeyExpr, IntoKeyExpr } from "./key_expr.js";
 import { ZBytes, IntoZBytes } from "./z_bytes.js";
-import { CongestionControl, ConsolidationMode, Priority, Reliability, Sample, SampleKind } from "./sample.js";
+import { CongestionControl, ConsolidationMode, Priority, Reliability, SampleKind } from "./enums.js";
+import { Sample } from "./sample.js";
 import { Publisher, Subscriber } from "./pubsub.js";
 import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query.js";
 import { Session, RecvErr, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo } from "./session.js";

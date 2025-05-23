@@ -674,8 +674,8 @@ fn serialize_reply(serializer: &mut ZSerializer, reply: &zenoh::query::Reply) {
         }
         Err(e) => {
             serializer.serialize(false);
-            serializer.serialize(encoding_to_id_schema(&e.encoding()));
             serializer.serialize(&e.payload().to_bytes());
+            serializer.serialize(encoding_to_id_schema(&e.encoding()));
         }
     }
 }

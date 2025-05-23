@@ -12,8 +12,6 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytesDeserializer } from "./ext";
-
 /**
  * Union Type to convert various primitives and containers into ZBytes
  */
@@ -92,15 +90,4 @@ export class ZBytes {
     return decoder.decode(this.buffer_)
   }
 
-}
-
-
-
-
-export function deserializeOptZBytes(deserializer: ZBytesDeserializer): ZBytes | undefined {
-  if (deserializer.deserializeBoolean()) {
-      return new ZBytes(deserializer.deserializeUint8Array());
-  } else {
-      return undefined;
-  }
 }

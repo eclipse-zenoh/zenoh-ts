@@ -13,14 +13,296 @@
 //
 
 import { ZBytesDeserializer, ZBytesSerializer, ZD } from "./ext"
-import { Encoding } from "./encoding.js";
+import { Encoding, EncodingPredefined } from "./encoding.js";
 import { KeyExpr } from "./key_expr.js";
-import { Qos, Locality, QuerySettings } from "./enums.js";
+import { Locality, Reliability, CongestionControl, Priority, SampleKind, ConsolidationMode, ReplyKeyExpr, QueryTarget } from "./enums.js";
 import { Timestamp } from "./timestamp";
-import { Zid } from "./zid";
+import { ZenohId } from "./zid";
 import { Sample } from "./sample";
+import { Parameters, QueryInner, Reply, ReplyError } from "./query";
 import { ZBytes } from "./z_bytes";
-import { Query } from "./query";
+
+function sampleKindFromUint8(val: number): SampleKind {
+    switch (val) {
+        case SampleKind.Put: return SampleKind.Put;
+        case SampleKind.Delete: return SampleKind.Delete;
+        default: {
+            console.warn(`Unsupported SampleKind value ${val}`);
+            return SampleKind.Put;
+        }
+    }
+}
+
+function priorityFromUint8(val: number): Priority {
+    switch (val) {
+        case Priority.REAL_TIME: return Priority.REAL_TIME;
+        case Priority.INTERACTIVE_HIGH: return Priority.INTERACTIVE_HIGH;
+        case Priority.INTERACTIVE_LOW: return Priority.INTERACTIVE_LOW;
+        case Priority.DATA_HIGH: return Priority.DATA_HIGH;
+        case Priority.DATA: return Priority.DATA;
+        case Priority.DATA_LOW: return Priority.DATA_LOW;
+        case Priority.BACKGROUND: return Priority.BACKGROUND;
+        default: {
+            console.warn(`Unsupported Priority value ${val}`);
+            return Priority.DEFAULT;
+        }
+    }
+}
+
+function congestionControlFromUint8(val: number): CongestionControl {
+    switch (val) {
+        case CongestionControl.DROP: return CongestionControl.DROP;
+        case CongestionControl.BLOCK: return CongestionControl.BLOCK;
+        default: {
+            console.warn(`Unsupported CongestionControl value ${val}`);
+            return CongestionControl.DEFAULT_PUSH;
+        }
+    }
+}
+
+function reliabilityFromUint8(val: number): Reliability {
+    switch (val) {
+        case Reliability.BEST_EFFORT: return Reliability.BEST_EFFORT;
+        case Reliability.RELIABLE: return Reliability.RELIABLE;
+        default: {
+            console.warn(`Unsupported Reliability value ${val}`);
+            return Reliability.DEFAULT;
+        }
+    }
+}
+
+function localityFromUint8(val: number): Locality {
+    switch (val) {
+        case Locality.SESSION_LOCAL: return Locality.SESSION_LOCAL;
+        case Locality.REMOTE: return Locality.REMOTE;
+        case Locality.ANY: return Locality.ANY;
+        default: {
+            console.warn(`Unsupported Locality value ${val}`);
+            return Locality.DEFAULT;
+        }
+    }
+}
+
+export class Qos  {
+    constructor(
+        public readonly priority: Priority,
+        public readonly congestion_control: CongestionControl, 
+        public readonly express: boolean,
+        public readonly reliability: Reliability,
+        public readonly locality: Locality
+    ) {}
+}
+
+function qosToUint8(qos: Qos): number {
+    // llrecppp
+    let e = qos.express ? 1 : 0;
+    return qos.priority | (qos.congestion_control << 3) | (e << 4) | (qos.reliability << 5) | (qos.locality << 6);
+}
+
+function qosFromUint8(val: number): Qos {
+    let p = val & 0b111;
+    let c = (val >> 3) & 0b1;
+    let e = (val >> 4) & 0b1;
+    let r = (val >> 5) & 0b1;
+    let l = (val >> 6) & 0b11;
+    return new Qos(priorityFromUint8(p), congestionControlFromUint8(c), e != 0, reliabilityFromUint8(r), localityFromUint8(l));
+}
+
+function queryTargetFromUint8(val: number): QueryTarget {
+    switch (val) {
+        case QueryTarget.BEST_MATCHING: return QueryTarget.BEST_MATCHING;
+        case QueryTarget.ALL: return QueryTarget.ALL;
+        case QueryTarget.ALL_COMPLETE: return QueryTarget.ALL_COMPLETE;
+        default: {
+            console.warn(`Unsupported QueryTarget value ${val}`);
+            return QueryTarget.DEFAULT;
+        }
+    }
+}
+
+function consolidationModeFromUint8(val: number): ConsolidationMode {
+    switch (val) {
+        case ConsolidationMode.AUTO: return ConsolidationMode.AUTO;
+        case ConsolidationMode.NONE: return ConsolidationMode.NONE;
+        case ConsolidationMode.MONOTONIC: return ConsolidationMode.MONOTONIC;
+        case ConsolidationMode.LATEST: return ConsolidationMode.LATEST;
+        default: {
+            console.warn(`Unsupported ConsolidationMode value ${val}`);
+            return ConsolidationMode.DEFAULT;
+        }
+    }
+}
+
+function replyKeyExprFromUint8(val: number): ReplyKeyExpr {
+    switch (val) {
+        case ReplyKeyExpr.ANY: return ReplyKeyExpr.ANY;
+        case ReplyKeyExpr.MATCHING_QUERY: return ReplyKeyExpr.MATCHING_QUERY;
+        default: {
+            console.warn(`Unsupported ReplyKeyExpr value ${val}`);
+            return ReplyKeyExpr.DEFAULT;
+        }
+    }
+}
+
+function serializeEncoding(e: Encoding, serializer: ZBytesSerializer) {
+    let [id, schema] = e.toIdSchema();
+    // TODO: add id for specifying custom encoding
+    serializer.serializeNumberUint16(id ?? EncodingPredefined.ZENOH_BYTES);
+    if (schema == undefined) {
+        serializer.serializeBoolean(false);
+    } else {
+        serializer.serializeBoolean(true);
+        serializer.serializeString(schema);
+    }
+}
+
+function serializeOptEncoding(e: Encoding | undefined, serializer: ZBytesSerializer) {
+    if (e == undefined) {
+        serializer.serializeBoolean(false);
+    } else {
+        serializer.serializeBoolean(true);
+        serializeEncoding(e, serializer);
+    }
+}
+
+function deserializeEncoding(deserializer: ZBytesDeserializer): Encoding {
+    // TODO: add id for specifying custom encoding
+    let id = deserializer.deserializeNumberUint16();
+    let schema: string | undefined;
+    if (deserializer.deserializeBoolean()) {
+        schema = deserializer.deserializeString();
+    } else {
+        schema = undefined;
+    }
+    return new Encoding(id, schema);
+}
+
+function deserializeOptEncoding(deserializer: ZBytesDeserializer): Encoding | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return deserializeEncoding(deserializer);
+    } else {
+        return undefined;
+    }
+}
+
+export class QuerySettings  {
+    constructor(
+        public readonly target: QueryTarget,
+        public readonly consolidation: ConsolidationMode, 
+        public readonly replyKeyExpr: ReplyKeyExpr,
+    ) {}
+}
+
+function querySettingsToUint8(qs: QuerySettings): number {
+    // rcctt
+    return qs.target | (qs.consolidation << 2) | (qs.replyKeyExpr << 4);
+}
+
+function querySettingsFromUint8(val: number): QuerySettings {
+    let t = val & 0b11;
+    let c = (val >> 2) & 0b11;
+    let r = (val >> 4) & 0b1;
+    return new QuerySettings(queryTargetFromUint8(t), consolidationModeFromUint8(c), replyKeyExprFromUint8(r));
+}
+
+function deserializeZenohId(deserializer: ZBytesDeserializer): ZenohId {
+    return new ZenohId(deserializer.deserializeUint8Array());
+}
+
+function serializeZid(zid: ZenohId, serializer: ZBytesSerializer) {
+    serializer.serializeUint8Array(zid.toLeBytes());
+}
+
+function serializeTimestamp(timestamp: Timestamp, serializer: ZBytesSerializer) {
+    serializer.serializeBigintUint64(timestamp.getMsSinceUnixEpoch());
+    serializeZid(timestamp.getId(), serializer);
+}
+
+function serializeOptTimestamp(timestamp: Timestamp | undefined, serializer: ZBytesSerializer) {
+    if (timestamp == undefined) {
+        serializer.serializeBoolean(false);
+    } else {
+        serializer.serializeBoolean(true);
+        serializeTimestamp(timestamp, serializer);
+    }
+}
+
+function deserializeTimestamp(deserializer: ZBytesDeserializer): Timestamp {
+    let ntp64 = deserializer.deserializeBigintUint64();
+    let zid = deserializeZenohId(deserializer);
+    return new Timestamp(zid, ntp64);
+}
+
+function deserializeOptTimestamp(deserializer: ZBytesDeserializer): Timestamp | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return deserializeTimestamp(deserializer);
+    } else {
+        return undefined;
+    }
+}
+
+function serializeOptUint8Array(a: Uint8Array | undefined, serializer: ZBytesSerializer) {
+    if (a == undefined) {
+        serializer.serialize(false);
+    } else {
+        serializer.serialize(true);
+        serializer.serializeUint8Array(a);
+    }
+}
+
+function deserializeOptUint8Array(deserializer: ZBytesDeserializer): Uint8Array | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return deserializer.deserializeUint8Array();
+    } else {
+        return undefined;
+    }
+}
+
+function deserializeOptZBytes(deserializer: ZBytesDeserializer): ZBytes | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return new ZBytes(deserializer.deserializeUint8Array());
+    } else {
+        return undefined;
+    }
+  }
+
+
+function deserializeSample(deserializer: ZBytesDeserializer): Sample {
+    let keyexpr = new KeyExpr(deserializer.deserializeString());
+    let payload = new ZBytes(deserializer.deserializeUint8Array());
+    let kind = sampleKindFromUint8(deserializer.deserializeNumberUint8());
+    let encoding = deserializeEncoding(deserializer);
+    let attachment = deserializeOptZBytes(deserializer);
+    let timestamp = deserializeOptTimestamp(deserializer);
+    let qos = qosFromUint8(deserializer.deserializeNumberUint8());
+
+    return new Sample(
+        keyexpr, payload, kind, encoding, attachment, timestamp, 
+        qos.priority, qos.congestion_control, qos.express
+    );
+}
+
+function deserializeReply(deserializer: ZBytesDeserializer): Reply {
+    if (deserializer.deserializeBoolean()) {
+        return new Reply(deserializeSample(deserializer));
+    } else {
+        let payload = new ZBytes(deserializer.deserializeUint8Array());
+        let encoding = deserializeEncoding(deserializer);
+        return new Reply(new ReplyError(payload, encoding));
+    }
+}
+
+function deserializeQueryInner(deserializer: ZBytesDeserializer): QueryInner {
+    let queryId = deserializer.deserializeNumberUint8();
+    let keyexpr = new KeyExpr(deserializer.deserializeString());
+    let params = new Parameters(deserializer.deserializeString());
+    let payload = deserializeOptZBytes(deserializer);
+    let encoding = deserializeOptEncoding(deserializer);
+    let attachment = deserializeOptZBytes(deserializer);
+    let replyKeyExpr = replyKeyExprFromUint8(deserializer.deserializeNumberUint8());
+
+    return new QueryInner(queryId, keyexpr, params, payload, encoding, attachment, replyKeyExpr);
+}
 
 const enum OutRemoteMessageId {
     DeclarePublisher = 0,
@@ -62,8 +344,8 @@ class DeclarePublisher {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
         serializer.serializeString(this.keyexpr.toString());
-        this.encoding.serializeWithZSerializer(serializer);
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializeEncoding(this.encoding, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
@@ -145,8 +427,9 @@ class DeclareQuerier {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
         serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeNumberUint8(this.qos.toUint8());
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
+        serializer.serializeNumberUint8(querySettingsToUint8(this.querySettings));
+        
         serializer.serializeNumberUint32(this.timeout_ms);
     }
 }
@@ -229,20 +512,10 @@ class Put {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeString(this.keyexpr.toString());
         serializer.serializeUint8Array(this.payload);
-        this.encoding.serializeWithZSerializer(serializer);
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializeEncoding(this.encoding, serializer);
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
@@ -257,19 +530,9 @@ class Delete {
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeString(this.keyexpr.toString());
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
@@ -286,24 +549,9 @@ class PublisherPut {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.publisherId);
         serializer.serializeUint8Array(this.payload);
-        if (this.encoding == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.encoding.serializeWithZSerializer(serializer);
-        }
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
+        serializeOptEncoding(this.encoding, serializer);
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
     }
 }
 
@@ -317,18 +565,8 @@ class PublisherDelete {
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.publisherId);
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
     }
 }
 
@@ -350,26 +588,11 @@ class Get {
         serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.keyexpr.toString());
         serializer.serializeString(this.parameters);
-        if (this.payload == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(false);
-            serializer.serializeUint8Array(this.payload);
-        }
-        if (this.encoding == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(false);
-            this.encoding.serializeWithZSerializer(serializer);
-        }
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        serializer.serializeNumberUint8(this.qos.toUint8());
-        serializer.serializeNumberUint8(this.querySettings.toUint8());
+        serializeOptUint8Array(this.payload, serializer);
+        serializeOptEncoding(this.encoding, serializer);
+        serializeOptUint8Array(this.attachment, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
+        serializer.serializeNumberUint8(querySettingsToUint8(this.querySettings));
         serializer.serializeNumberUint32(this.timeout_ms);
     }
 }
@@ -390,24 +613,9 @@ class QuerierGet {
         serializer.serializeNumberUint32(this.querierId);
         serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.parameters);
-        if (this.payload == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(false);
-            serializer.serializeUint8Array(this.payload);
-        }
-        if (this.encoding == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(false);
-            this.encoding.serializeWithZSerializer(serializer);
-        }
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
+        serializeOptUint8Array(this.payload, serializer);
+        serializeOptEncoding(this.encoding, serializer);
+        serializeOptUint8Array(this.attachment, serializer);
         serializer.serializeNumberUint32(this.timeout_ms);
     }
 }
@@ -443,20 +651,10 @@ class ReplyOk {
         serializer.serializeNumberUint8(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
         serializer.serializeUint8Array(this.payload);
-        this.encoding.serializeWithZSerializer(serializer);
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializeEncoding(this.encoding, serializer);
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
@@ -473,19 +671,9 @@ class ReplyDel {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
-        if (this.attachment == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeUint8Array(this.attachment);
-        }
-        if (this.timestamp == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            this.timestamp.serializeWithZSerializer(serializer);
-        }
-        serializer.serializeNumberUint8(this.qos.toUint8());
+        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptTimestamp(this.timestamp, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
@@ -500,7 +688,7 @@ class ReplyErr {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.queryId);
         serializer.serializeUint8Array(this.payload);
-        this.encoding.serializeWithZSerializer(serializer);
+        serializeEncoding(this.encoding, serializer);
     }
 }
 
@@ -583,7 +771,7 @@ class ResponseTimestamp {
     ) {}
 
     public deserialize(deserializer: ZBytesDeserializer): ResponseTimestamp {
-        return new ResponseTimestamp(Timestamp.deserialize(deserializer));
+        return new ResponseTimestamp(deserializeTimestamp(deserializer));
     }
 }
 
@@ -591,21 +779,19 @@ class ResponseSessionInfo {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseSessionInfo;
 
     public constructor(
-        public readonly zid: Zid,
-        public readonly routers: Zid[],
-        public readonly peers: Zid[],
+        public readonly zid: ZenohId,
+        public readonly routers: ZenohId[],
+        public readonly peers: ZenohId[],
     ) {}
 
     public deserialize(deserializer: ZBytesDeserializer): ResponseSessionInfo {
-        let zid = Zid.deserialize(deserializer);
-        let dt = ZD.array(ZD.objectStatic(Zid.deserialize));
+        let zid = deserializeZenohId(deserializer);
+        let dt = ZD.array(ZD.objectStatic(deserializeZenohId));
         let routers = deserializer.deserialize(dt);
         let peers = deserializer.deserialize(dt);
         return new ResponseSessionInfo(zid, routers, peers);
     }
 }
-
-
 
 class InSample {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InSample;
@@ -617,7 +803,7 @@ class InSample {
 
     public deserialize(deserializer: ZBytesDeserializer): InSample {
         let subscriberId = deserializer.deserializeNumberUint32();
-        let sample = Sample.deserialize(deserializer);
+        let sample = deserializeSample(deserializer);
         return new InSample(subscriberId, sample);
     }
 }
@@ -627,12 +813,27 @@ class InQuery {
 
     public constructor(
         public readonly queryableId: number,
-        public readonly query: Query,
+        public readonly query: QueryInner,
     ) {}
 
-    public deserialize(deserializer: ZBytesDeserializer): InSample {
+    public deserialize(deserializer: ZBytesDeserializer): InQuery {
         let queryableId = deserializer.deserializeNumberUint32();
-        let query = Query.deserialize(deserializer);
+        let query = deserializeQueryInner(deserializer);
         return new InQuery(queryableId, query);
+    }
+}
+
+class InReply {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InReply;
+
+    public constructor(
+        public readonly queryId: number,
+        public readonly reply: Reply,
+    ) {}
+
+    public deserialize(deserializer: ZBytesDeserializer): InReply {
+        let queryId = deserializer.deserializeNumberUint32();
+        let reply = deserializeReply(deserializer);
+        return new InReply(queryId, reply);
     }
 }

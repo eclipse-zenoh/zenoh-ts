@@ -26,6 +26,7 @@ import { congestionControlToInt, CongestionControl, Priority, priorityToInt, Sam
 import { Encoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./remote_api/channels.js";
+import { ReplyKeyExpr } from "./enums.js";
 
 
 
@@ -159,6 +160,18 @@ export interface ReplyDelOptions {
   express?: boolean,
   timestamp?: Timestamp;
   attachment?: IntoZBytes
+}
+
+export class QueryInner {
+  constructor(
+    public readonly queryId_: number,
+    public readonly keyexpr_: KeyExpr,
+    public readonly parameters_: Parameters,
+    public readonly payload_: ZBytes | undefined,
+    public readonly encoding_: Encoding | undefined,
+    public readonly attachment_: ZBytes | undefined,
+    public readonly replyKeyExpr_: ReplyKeyExpr,
+  ) {}
 }
 
 /**
@@ -504,9 +517,6 @@ export class Parameters {
  * 
  */
 export class ReplyError {
-  private payload_: ZBytes;
-  private encoding_: Encoding;
-
   /**
    * Payload of Error Reply
    * @returns ZBytes
@@ -517,23 +527,16 @@ export class ReplyError {
 
   /**
    * Encoding of Error Reply
-   * @returns ZBytes
+   * @returns Encoding
    */
   encoding(): Encoding {
     return this.encoding_;
   }
 
   /**
-    * ReplyError gets created by the reply of a `get` on a session
-    * 
+    * @internal
     */
-  constructor(replyErrWS: ReplyErrorWS) {
-    let payload = new ZBytes(new Uint8Array(b64_bytes_from_str(replyErrWS.payload)));
-    let encoding = Encoding.fromString(replyErrWS.encoding);
-    this.encoding_ = encoding;
-    this.payload_ = payload;
-  }
-
+  constructor(private payload_: ZBytes, private encoding_: Encoding) {}
 }
 
 /**
@@ -549,7 +552,7 @@ export class Reply {
   }
 
   /**
-   * @ignore
+   * @internal
    */
   constructor(private result_: Sample | ReplyError) {}
 }

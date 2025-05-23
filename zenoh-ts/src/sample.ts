@@ -13,37 +13,52 @@
 //
 
 import { KeyExpr } from "./key_expr";
-import { deserializeOptZBytes, ZBytes } from "./z_bytes";
+import { ZBytes } from "./z_bytes";
 import { Encoding } from "./encoding";
-import { CongestionControl, Priority, Qos, SampleKind, sampleKindFromUint8 } from "./enums";
-import { deserializeOptTimestamp, Timestamp } from "./timestamp";
-import { ZBytesDeserializer } from "./ext";
+import { CongestionControl, Priority, SampleKind } from "./enums";
+import { Timestamp } from "./timestamp";
 
 export class Sample {
+    /**
+     * @internal
+     */
     constructor(
-        public readonly keyexpr: KeyExpr,
-        public readonly payload: ZBytes,
-        public readonly kind: SampleKind,
-        public readonly encoding: Encoding,
-        public readonly attachment: ZBytes | undefined,
-        public readonly timestamp: Timestamp | undefined,
-        public readonly priority: Priority,
-        public readonly congestionControl: CongestionControl,
-        public readonly express: boolean,
+        private readonly keyexpr_: KeyExpr,
+        private readonly payload_: ZBytes,
+        private readonly kind_: SampleKind,
+        private readonly encoding_: Encoding,
+        private readonly attachment_: ZBytes | undefined,
+        private readonly timestamp_: Timestamp | undefined,
+        private readonly priority_: Priority,
+        private readonly congestionControl_: CongestionControl,
+        private readonly express_: boolean,
     ) { }
 
-    public static deserialize(deserializer: ZBytesDeserializer) {
-        let keyexpr = new KeyExpr(deserializer.deserializeString());
-        let payload = new ZBytes(deserializer.deserializeUint8Array());
-        let kind = sampleKindFromUint8(deserializer.deserializeNumberUint8());
-        let encoding = Encoding.deserialize(deserializer);
-        let attachment = deserializeOptZBytes(deserializer);
-        let timestamp = deserializeOptTimestamp(deserializer);
-        let qos = Qos.fromUint8(deserializer.deserializeNumberUint8());
-
-        return new Sample(
-            keyexpr, payload, kind, encoding, attachment, timestamp, 
-            qos.priority, qos.congestion_control, qos.express
-        );
+    keyexpr(): KeyExpr {
+        return this.keyexpr_;
+    }
+    payload(): ZBytes {
+        return this.payload_;
+    }
+    kind(): SampleKind {
+        return this.kind_;
+    }
+    encoding(): Encoding {
+        return this.encoding_;
+    }
+    timestamp(): Timestamp | undefined {
+        return this.timestamp_;
+    }
+    congestionControl(): CongestionControl {
+        return this.congestionControl_;
+    }
+    priority(): Priority {
+        return this.priority_;
+    }
+    express(): boolean {
+        return this.express_;
+    }
+    attachment(): ZBytes | undefined {
+        return this.attachment_;
     }
 }

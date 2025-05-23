@@ -12,9 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytesDeserializer, ZBytesSerializer } from "./ext";
-
-enum EncodingPredefined {
+export enum EncodingPredefined {
     ZENOH_BYTES = 0,
     ZENOH_STRING,
     ZENOH_SERIALIZED,
@@ -104,7 +102,7 @@ export class Encoding {
     private static readonly SEP = ";";
 
 
-    private constructor(private id?: EncodingPredefined, private schema?: string) {}
+    constructor(private id?: EncodingPredefined, private schema?: string) {}
 
     withSchema(input: string): Encoding {
         return new Encoding(this.id, input);
@@ -144,6 +142,10 @@ export class Encoding {
                 return new Encoding(undefined, input);
             }
         }
+    }
+
+    toIdSchema(): [EncodingPredefined?, string?] {
+        return [this.id, this.schema];
     }
 
     // Enum Variants
@@ -405,35 +407,4 @@ export class Encoding {
      * Constant alias for string "video/vp9"
      */
     static readonly VIDEO_VP9: Encoding = new Encoding(EncodingPredefined.VIDEO_VP9);
-
-    public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        // TODO: add id for specifying custom encoding
-        serializer.serializeNumberUint16(this.id ?? EncodingPredefined.ZENOH_BYTES);
-        if (this.schema == undefined) {
-            serializer.serializeBoolean(false);
-        } else {
-            serializer.serializeBoolean(true);
-            serializer.serializeString(this.schema);
-        }
-    }
-
-    public static deserialize(deserializer: ZBytesDeserializer): Encoding {
-        // TODO: add id for specifying custom encoding
-        let id = deserializer.deserializeNumberUint16();
-        let schema: string | undefined;
-        if (deserializer.deserializeBoolean()) {
-            schema = deserializer.deserializeString();
-        } else {
-            schema = undefined;
-        }
-        return new Encoding(id, schema);
-    }
-}
-
-export function deserializeOptEncoding(deserializer: ZBytesDeserializer): Encoding | undefined {
-    if (deserializer.deserializeBoolean()) {
-        return Encoding.deserialize(deserializer);
-    } else {
-        return undefined;
-    }
 }

@@ -12,11 +12,9 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytesDeserializer, ZBytesSerializer } from "./ext";
-
-export class Zid {
+export class ZenohId {
     private static KEY = '0123456789abcdef';
-    private constructor(private readonly zid: Uint8Array) {
+    constructor(private readonly zid: Uint8Array) {
         if (zid.length != 16 ) {
             throw new Error("Zid should contain exactly 16 bytes");
         }
@@ -25,17 +23,13 @@ export class Zid {
     toString() {
         let out: string = "";
         for (let b of this.zid) {
-            out += Zid.KEY[b >> 4];
-            out += Zid.KEY[b & 15];
+            out += ZenohId.KEY[b >> 4];
+            out += ZenohId.KEY[b & 15];
         }
         return out;
     }
 
-    static deserialize(deserializer: ZBytesDeserializer): Zid {
-        return new Zid(deserializer.deserializeUint8Array());
-    }
-
-    serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeUint8Array(this.zid);
+    toLeBytes() {
+        return this.zid;
     }
 }

@@ -1,10 +1,9 @@
-import { ZBytesDeserializer, ZBytesSerializer } from "./ext";
-import { Zid } from "./zid";
+import { ZenohId } from "./zid";
 
 export class Timestamp {
-    private constructor(private readonly zid: Zid, private readonly ntp64: bigint) {}
+    constructor(private readonly zid: ZenohId, private readonly ntp64: bigint) {}
 
-    getId(): Zid {
+    getId(): ZenohId {
         return this.zid;
     }
 
@@ -16,23 +15,4 @@ export class Timestamp {
         // Note: Values produced by this Bigint should fit into a number as they are ms since Unix Epoch
         return new Date(this.ntp64 as unknown as number);
     }
-
-    serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeBigintUint64(this.ntp64);
-        this.zid.serializeWithZSerializer(serializer);
-    }
-
-    static deserialize(deserializer: ZBytesDeserializer): Timestamp {
-        let ntp64 = deserializer.deserializeBigintUint64();
-        let zid = Zid.deserialize(deserializer);
-        return new Timestamp(zid, ntp64);
-    }
 }
-
-export function deserializeOptTimestamp(deserializer: ZBytesDeserializer): Timestamp | undefined {
-    if (deserializer.deserializeBoolean()) {
-        return Timestamp.deserialize(deserializer);
-    } else {
-        return undefined;
-    }
-  }
