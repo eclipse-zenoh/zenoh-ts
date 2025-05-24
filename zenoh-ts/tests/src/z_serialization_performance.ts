@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2025 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
@@ -11,7 +10,6 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-/// <reference lib="deno.ns" />
 
 import { 
     ZBytesSerializer, 
@@ -36,6 +34,7 @@ const TEST_CONFIG = {
 
     // String test configuration
     stringLength: 10000,  // Length of test strings - increased significantly
+    stringArraySize: 100, // Number of strings in the array
     
     // Map test configuration
     mapSize: 5000,      // Number of entries in test maps - increased significantly
@@ -57,8 +56,8 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
     float32Array: Float32Array;
     float64Array: Float64Array;
 
-    // String and Map
-    str: string;
+    // String Array and Map
+    strings: string[];
     numberMap: Map<number, string>;
 
     constructor() {
@@ -75,8 +74,9 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         this.float32Array = new Float32Array(size).map(() => Math.random() * 1000);
         this.float64Array = new Float64Array(size).map(() => Math.random() * 1000);
 
-        // Initialize string
-        this.str = "a".repeat(TEST_CONFIG.stringLength);
+        // Initialize string array
+        const str = "a".repeat(TEST_CONFIG.stringLength);
+        this.strings = Array(TEST_CONFIG.stringArraySize).fill(str);
 
         // Initialize map
         this.numberMap = new Map();
@@ -98,8 +98,8 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         serializer.serialize(this.float32Array, ZS.float32array());
         serializer.serialize(this.float64Array, ZS.float64array());
 
-        // Serialize string and map
-        serializer.serialize(this.str, ZS.string());
+        // Serialize string array and map
+        serializer.serialize(this.strings, ZS.array(ZS.string()));
         serializer.serialize(this.numberMap, ZS.map(ZS.number(), ZS.string()));
     }
 
@@ -116,8 +116,8 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         this.float32Array = deserializer.deserialize(ZD.float32array());
         this.float64Array = deserializer.deserialize(ZD.float64array());
 
-        // Deserialize string and map
-        this.str = deserializer.deserialize(ZD.string());
+        // Deserialize string array and map
+        this.strings = deserializer.deserialize(ZD.array(ZD.string()));
         this.numberMap = deserializer.deserialize(ZD.map(ZD.number(), ZD.string()));
     }
 }
@@ -169,10 +169,12 @@ function formatStats(
  */
 Deno.test("Serialization Performance Test", () => {
     console.log("\n=== Zenoh-TS Serialization Performance Test ===");
-    console.log(`Array Size:  ${TEST_CONFIG.dataArraySize} elements`);
-    console.log(`Map Size:    ${TEST_CONFIG.mapSize} entries`);
-    console.log(`String Size: ${TEST_CONFIG.stringLength} characters`);
-    console.log(`Iterations:  ${TEST_CONFIG.iterations}`);
+    console.log(`Array Size:      ${TEST_CONFIG.dataArraySize} elements`);
+    console.log(`Map Size:        ${TEST_CONFIG.mapSize} entries`);
+    console.log(`String Length:   ${TEST_CONFIG.stringLength} characters`);
+    console.log(`String Array:    ${TEST_CONFIG.stringArraySize} strings`);
+    console.log(`Total Strings:   ${TEST_CONFIG.stringArraySize * TEST_CONFIG.stringLength} characters`);
+    console.log(`Iterations:      ${TEST_CONFIG.iterations}`);
     
     const testData = new ComplexSerializationTest();
     const serializationTimes: number[] = [];
@@ -183,7 +185,7 @@ Deno.test("Serialization Performance Test", () => {
     console.log("\nPerforming warmup...");
     for (let i = 0; i < TEST_CONFIG.warmupIterations; i++) {
         const bytes = zserialize(testData, ZS.object());
-        const _result = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
+        const _ = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
     }
     
     // Main test
@@ -223,12 +225,12 @@ Deno.test("Serialization Performance Test", () => {
                                  int8Size + int16Size + int32Size + int64Size +
                                  float32Size + float64Size;
                 
-            // Calculate string size (2 bytes per character in JS)
-            const stringSize = testData.str.length * 2;
+            // Calculate string array size (2 bytes per character in JS)
+            const stringSize = testData.strings.reduce((total: number, str: string) => total + str.length, 0) * 2;
                 
             // Calculate map size (rough estimate: 8 bytes per number key + string lengths)
             const mapSize = Array.from(testData.numberMap.values())
-                .reduce((total, str) => total + 8 + str.length * 2, 0);
+                .reduce((total: number, str: string) => total + 8 + str.length * 2, 0);
                 
             // Add size of individual number fields (8 bytes each for numbers)
             const numberFieldsSize = 11 * 8;  // 11 number/bigint fields
@@ -246,17 +248,18 @@ Deno.test("Serialization Performance Test", () => {
   BigInt64Array:  ${(int64Size / 1024).toFixed(2)} KB (${int64Size} bytes)
   Float32Array:   ${(float32Size / 1024).toFixed(2)} KB (${float32Size} bytes)
   Float64Array:   ${(float64Size / 1024).toFixed(2)} KB (${float64Size} bytes)
-  String:         ${(stringSize / 1024).toFixed(2)} KB
+  String Array:   ${(stringSize / 1024).toFixed(2)} KB (${TEST_CONFIG.stringArraySize} x ${TEST_CONFIG.stringLength} chars)
   Map:            ${(mapSize / 1024).toFixed(2)} KB
   Numbers:        ${(numberFieldsSize / 1024).toFixed(2)} KB
   --------------
   Total:          ${(totalSize / 1024).toFixed(2)} KB`);
         }
         
-        // Verify correctness of a few key fields
+        // Verify correctness of key fields
         assert(result.uint8Array.length === testData.uint8Array.length, "Uint8Array length mismatch");
         assert(result.float64Array.length === testData.float64Array.length, "Float64Array length mismatch");
-        assert(result.str.length === testData.str.length, "String length mismatch");
+        assert(result.strings.length === testData.strings.length, "String array length mismatch");
+        assert(result.strings[0].length === testData.strings[0].length, "String length mismatch");
         assert(result.numberMap.size === testData.numberMap.size, "Map size mismatch");
     }
     
