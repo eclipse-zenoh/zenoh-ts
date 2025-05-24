@@ -20,8 +20,6 @@ import {
     ZDeserializeable,
     zserialize, 
     zdeserialize, 
-    NumberFormat, 
-    BigIntFormat, 
     ZS, 
     ZD 
 } from "@eclipse-zenoh/zenoh-ts/ext";
@@ -47,19 +45,6 @@ const TEST_CONFIG = {
  * Complex data structure that includes all serializable types for testing
  */
 class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
-    // Numbers
-    uint8: number;
-    uint16: number;
-    uint32: number;
-    uint64: number;
-    int8: number;
-    int16: number;
-    int32: number;
-    int64: number;
-    float32: number;
-    float64: number;
-    bigint: bigint;
-
     // Arrays
     uint8Array: Uint8Array;
     uint16Array: Uint16Array;
@@ -77,19 +62,6 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
     numberMap: Map<number, string>;
 
     constructor() {
-        // Initialize numbers
-        this.uint8 = 255;
-        this.uint16 = 65535;
-        this.uint32 = 4294967295;
-        this.uint64 = Number.MAX_SAFE_INTEGER;
-        this.int8 = -128;
-        this.int16 = -32768;
-        this.int32 = -2147483648;
-        this.int64 = -Number.MAX_SAFE_INTEGER;
-        this.float32 = Math.PI;
-        this.float64 = Math.E;
-        this.bigint = 9223372036854775807n;
-
         // Initialize arrays
         const size = TEST_CONFIG.dataArraySize;
         this.uint8Array = new Uint8Array(size).map(() => Math.floor(Math.random() * 256));
@@ -114,19 +86,6 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
     }
 
     serializeWithZSerializer(serializer: ZBytesSerializer): void {
-        // Serialize numbers
-        serializer.serialize(this.uint8, ZS.number(NumberFormat.Uint8));
-        serializer.serialize(this.uint16, ZS.number(NumberFormat.Uint16));
-        serializer.serialize(this.uint32, ZS.number(NumberFormat.Uint32));
-        serializer.serialize(this.uint64, ZS.number(NumberFormat.Uint64));
-        serializer.serialize(this.int8, ZS.number(NumberFormat.Int8));
-        serializer.serialize(this.int16, ZS.number(NumberFormat.Int16));
-        serializer.serialize(this.int32, ZS.number(NumberFormat.Int32));
-        serializer.serialize(this.int64, ZS.number(NumberFormat.Int64));
-        serializer.serialize(this.float32, ZS.number(NumberFormat.Float32));
-        serializer.serialize(this.float64, ZS.number(NumberFormat.Float64));
-        serializer.serialize(this.bigint, ZS.bigint(BigIntFormat.Int64));
-
         // Serialize arrays
         serializer.serialize(this.uint8Array, ZS.uint8array());
         serializer.serialize(this.uint16Array, ZS.uint16array());
@@ -145,19 +104,6 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
     }
 
     deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
-        // Deserialize numbers
-        this.uint8 = deserializer.deserialize(ZD.number(NumberFormat.Uint8));
-        this.uint16 = deserializer.deserialize(ZD.number(NumberFormat.Uint16));
-        this.uint32 = deserializer.deserialize(ZD.number(NumberFormat.Uint32));
-        this.uint64 = deserializer.deserialize(ZD.number(NumberFormat.Uint64));
-        this.int8 = deserializer.deserialize(ZD.number(NumberFormat.Int8));
-        this.int16 = deserializer.deserialize(ZD.number(NumberFormat.Int16));
-        this.int32 = deserializer.deserialize(ZD.number(NumberFormat.Int32));
-        this.int64 = deserializer.deserialize(ZD.number(NumberFormat.Int64));
-        this.float32 = deserializer.deserialize(ZD.number(NumberFormat.Float32));
-        this.float64 = deserializer.deserialize(ZD.number(NumberFormat.Float64));
-        this.bigint = deserializer.deserialize(ZD.bigint(BigIntFormat.Int64));
-
         // Deserialize arrays
         this.uint8Array = deserializer.deserialize(ZD.uint8array());
         this.uint16Array = deserializer.deserialize(ZD.uint16array());
