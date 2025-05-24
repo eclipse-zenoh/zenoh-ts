@@ -536,3 +536,245 @@ Deno.test("Serialization - TypedArray Collections", () => {
         "float64 mismatch"
     );
 });
+
+Deno.test("Serialization - Uint8 and Uint64 Formats", () => {
+    // Test serializeNumberUint8 and deserializeNumberUint8
+    const uint8Val = 250; // Just under the Uint8 max (255)
+    const uint8Bytes = zserialize(uint8Val, ZS.number(NumberFormat.Uint8));
+    const uint8Result = zdeserialize(ZD.number(NumberFormat.Uint8), uint8Bytes);
+    assertEquals(uint8Result, uint8Val, "uint8 serialization failed");
+    
+    // Test multiple uint8 values to ensure coverage
+    const uint8Values = [0, 127, 255];
+    for (const val of uint8Values) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint8));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
+        assertEquals(result, val, `uint8 serialization failed for value: ${val}`);
+    }
+    
+    // Test serializeNumberUint64 and deserializeNumberUint64
+    // Using a number that fits in the JavaScript safe integer range
+    const uint64Val = Number.MAX_SAFE_INTEGER; // 2^53-1
+    const uint64Bytes = zserialize(uint64Val, ZS.number(NumberFormat.Uint64));
+    const uint64Result = zdeserialize(ZD.number(NumberFormat.Uint64), uint64Bytes);
+    assertEquals(uint64Result, uint64Val, "uint64 serialization failed");
+    
+    // Test with a range of values for better coverage
+    const uint64Values = [0, 100, 1000000, 9007199254740991]; // MAX_SAFE_INTEGER
+    for (const val of uint64Values) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint64));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint64), bytes);
+        assertEquals(result, val, `uint64 serialization failed for value: ${val}`);
+    }
+});
+
+// Test complete Int8Array handling - all serialization/deserialization methods
+Deno.test("Serialization - Int8Array Complete Coverage", () => {
+    // Create an Int8Array with a range of values
+    const int8Data = new Int8Array([-128, -100, -50, 0, 50, 100, 127]);
+    
+    // Test with explicit serializer
+    const int8Bytes = zserialize(int8Data, ZS.int8array());
+    const int8Result = zdeserialize(ZD.int8array(), int8Bytes);
+    assert(int8Result instanceof Int8Array, "Result should be Int8Array");
+    assertEquals(
+        Array.from(int8Result),
+        Array.from(int8Data),
+        "Int8Array serialization failed"
+    );
+    
+    // Test auto detection
+    const int8AutoBytes = zserialize(int8Data);
+    const int8AutoResult = zdeserialize(ZD.int8array(), int8AutoBytes);
+    assert(int8AutoResult instanceof Int8Array, "Result should be Int8Array");
+    assertEquals(
+        Array.from(int8AutoResult),
+        Array.from(int8Data),
+        "Auto-detected Int8Array serialization failed"
+    );
+    
+    // Test serializing individual Int8 values
+    for (const val of [-128, -64, 0, 64, 127]) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Int8));
+        const result = zdeserialize(ZD.number(NumberFormat.Int8), bytes);
+        assertEquals(result, val, `Int8 serialization failed for value: ${val}`);
+    }
+    
+    // Test Uint8 values specifically to cover serializeNumberUint8 and deserializeNumberUint8
+    for (const val of [0, 1, 128, 255]) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint8));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
+        assertEquals(result, val, `Uint8 serialization failed for value: ${val}`);
+    }
+    
+    // Test array of Int8Arrays
+    const int8ArrayCollection = [
+        new Int8Array([-10, 20, -30]),
+        new Int8Array([40, -50, 60])
+    ];
+    
+    const collectionBytes = zserialize(int8ArrayCollection, ZS.array(ZS.int8array()));
+    const collectionResult = zdeserialize(ZD.array(ZD.int8array()), collectionBytes);
+    
+    assert(Array.isArray(collectionResult), "Result should be an Array");
+    assertEquals(collectionResult.length, int8ArrayCollection.length, "Collection length mismatch");
+    
+    for (let i = 0; i < collectionResult.length; i++) {
+        assert(collectionResult[i] instanceof Int8Array, `Item ${i} should be Int8Array`);
+        assertEquals(
+            Array.from(collectionResult[i]),
+            Array.from(int8ArrayCollection[i]),
+            `Item ${i} data mismatch`
+        );
+    }
+});
+
+// Test specifically targeting the serializeNumberUint8 and deserializeNumberUint8 functions
+Deno.test("Serialization - NumberUint8 Specific Functions", () => {
+    // Test all possible Uint8 values (0-255) to ensure coverage
+    const uint8Values = [0, 1, 127, 128, 254, 255];
+    
+    // Manually serialize each value using the method that would call serializeNumberUint8
+    for (const val of uint8Values) {
+        // Create a new serializer for each value
+        const serializer = new ZBytesSerializer();
+        
+        // This will internally call serializeNumberUint8
+        serializer.serialize(val, ZS.number(NumberFormat.Uint8));
+        const bytes = serializer.finish();
+        
+        // Deserialize and verify
+        const deserializer = new ZBytesDeserializer(bytes);
+        const result = deserializer.deserialize(ZD.number(NumberFormat.Uint8));
+        
+        assertEquals(result, val, `Uint8 serialization failed for value: ${val}`);
+    }
+    
+    // Also test direct serialization of a Uint8Array to cover the array case
+    const uint8Array = new Uint8Array([0, 128, 255]);
+    const bytes = zserialize(uint8Array, ZS.uint8array());
+    const result = zdeserialize(ZD.uint8array(), bytes);
+    
+    assert(result instanceof Uint8Array, "Result should be Uint8Array");
+    assertEquals(
+        Array.from(result),
+        Array.from(uint8Array),
+        "Uint8Array serialization failed"
+    );
+});
+
+// Test focusing on Uint8 serialization/deserialization
+Deno.test("Serialization - Additional Coverage for Uint8", () => {
+    // Test Uint8Array specifically
+    const uint8Data = new Uint8Array([0, 127, 255]);
+    
+    // Serialize with explicit format
+    const bytes = zserialize(uint8Data, ZS.uint8array());
+    const result = zdeserialize(ZD.uint8array(), bytes);
+    
+    assert(result instanceof Uint8Array, "Result should be Uint8Array");
+    assertEquals(
+        Array.from(result),
+        Array.from(uint8Data),
+        "Uint8Array serialization failed"
+    );
+    
+    // Test individual Uint8 values more thoroughly
+    for (const val of [0, 1, 127, 128, 254, 255]) {
+        // Use the number format explicitly
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint8));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
+        assertEquals(result, val, `Uint8 serialization failed for value: ${val}`);
+    }
+});
+
+// Test focusing on direct use of serializer/deserializer for Int8Array
+Deno.test("Serialization - Direct Int8Array Operations", () => {
+    // Create test data
+    const int8Data = new Int8Array([-128, -100, -50, 0, 50, 100, 127]);
+    
+    // Create a serializer and directly call serialize
+    const serializer = new ZBytesSerializer();
+    serializer.serialize(int8Data, ZS.int8array());
+    const bytes = serializer.finish();
+    
+    // Create a deserializer and directly call deserialize
+    const deserializer = new ZBytesDeserializer(bytes);
+    const result = deserializer.deserialize(ZD.int8array());
+    
+    // Verify the result
+    assert(result instanceof Int8Array, "Result should be Int8Array");
+    assertEquals(
+        Array.from(result),
+        Array.from(int8Data),
+        "Int8Array direct serialization failed"
+    );
+    
+    // Also test serializing a single value as Int8 and Uint8 in different ways
+    for (const val of [-128, -1, 0, 1, 127]) {
+        // Serialize as Int8
+        const s1 = new ZBytesSerializer();
+        s1.serialize(val, ZS.number(NumberFormat.Int8));
+        const b1 = s1.finish();
+        
+        // Deserialize
+        const d1 = new ZBytesDeserializer(b1);
+        const r1 = d1.deserialize(ZD.number(NumberFormat.Int8));
+        assertEquals(r1, val, `Int8 direct serialization failed for ${val}`);
+    }
+    
+    for (const val of [0, 1, 127, 128, 255]) {
+        // Serialize as Uint8
+        const s2 = new ZBytesSerializer();
+        s2.serialize(val, ZS.number(NumberFormat.Uint8));
+        const b2 = s2.finish();
+        
+        // Deserialize
+        const d2 = new ZBytesDeserializer(b2);
+        const r2 = d2.deserialize(ZD.number(NumberFormat.Uint8));
+        assertEquals(r2, val, `Uint8 direct serialization failed for ${val}`);
+    }
+});
+
+// Test specifically targeting the low-level Uint8 handling
+Deno.test("Serialization - Low Level Uint8 Handling", () => {
+    // Test with edge cases for Uint8
+    for (const val of [0, 1, 127, 128, 254, 255]) {
+        const s = new ZBytesSerializer();
+        s.serialize(val, ZS.number(NumberFormat.Uint8));
+        const b = s.finish();
+        const d = new ZBytesDeserializer(b);
+        const r = d.deserialize(ZD.number(NumberFormat.Uint8));
+        assertEquals(r, val, `Edge case Uint8 serialization failed for ${val}`);
+    }
+});
+
+// Test for direct access to low-level methods to cover remaining functions
+Deno.test("Serialization - Final Coverage for Uint8", () => {
+    // Create a test harness to exercise the serializeNumberUint8 method
+    class TestableSerializer extends ZBytesSerializer {
+        testSerializeUint8(val: number) {
+            // This method will directly call serializeNumberUint8 internally
+            this.serialize(val, ZS.number(NumberFormat.Uint8));
+            return this.finish();
+        }
+    }
+    
+    class TestableDeserializer extends ZBytesDeserializer {
+        testDeserializeUint8() {
+            // This method will directly call deserializeNumberUint8 internally
+            return this.deserialize(ZD.number(NumberFormat.Uint8));
+        }
+    }
+    
+    // Test various Uint8 values to ensure complete coverage
+    for (const val of [0, 1, 127, 128, 254, 255]) {
+        const serializer = new TestableSerializer();
+        const bytes = serializer.testSerializeUint8(val);
+        
+        const deserializer = new TestableDeserializer(bytes);
+        const result = deserializer.testDeserializeUint8();
+        
+        assertEquals(result, val, `Extended Uint8 serialization failed for value: ${val}`);
+    }
+});
