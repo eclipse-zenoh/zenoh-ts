@@ -11,12 +11,13 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { 
     ZBytesSerializer, 
-    ZBytesDeserializer, 
-    ZSerializeable, 
-    ZDeserializeable, 
+    ZBytesDeserializer,
+    ZSerializeable,
+    ZDeserializeable,
     zserialize, 
     zdeserialize, 
     NumberFormat, 
@@ -24,22 +25,22 @@ import {
     ZS, 
     ZD 
 } from "@eclipse-zenoh/zenoh-ts/ext";
-import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
+import { assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 /**
  * Configuration for the performance tests
  */
 const TEST_CONFIG = {
     // Basic test configuration
-    dataArraySize: 20000,   // Size of test arrays
-    iterations: 100,      // Number of iterations per test
-    warmupIterations: 10, // Number of warmup iterations
-    
+    dataArraySize: 10000,   // Size of test arrays - increased for more significant data volume
+    iterations: 10,      // Reduced iterations for quicker testing
+    warmupIterations: 2, // Reduced warmup iterations
+
     // String test configuration
-    stringLength: 100,    // Length of test strings
+    stringLength: 10000,  // Length of test strings - increased significantly
     
     // Map test configuration
-    mapSize: 100,        // Number of entries in test maps
+    mapSize: 5000,      // Number of entries in test maps - increased significantly
 };
 
 /**
@@ -235,8 +236,8 @@ Deno.test("Serialization Performance Test", () => {
     // Warmup
     console.log("\nPerforming warmup...");
     for (let i = 0; i < TEST_CONFIG.warmupIterations; i++) {
-        const bytes = zserialize(testData);
-        zdeserialize(ZD.object(ComplexSerializationTest), bytes);
+        const bytes = zserialize(testData, ZS.object());
+        const _result = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
     }
     
     // Main test
@@ -244,7 +245,7 @@ Deno.test("Serialization Performance Test", () => {
     for (let i = 0; i < TEST_CONFIG.iterations; i++) {
         // Measure serialization
         const serializeStart = performance.now();
-        const bytes = zserialize(testData);
+        const bytes = zserialize(testData, ZS.object());
         const serializeEnd = performance.now();
         serializationTimes.push(serializeEnd - serializeStart);
         
@@ -257,6 +258,54 @@ Deno.test("Serialization Performance Test", () => {
         const result = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
         const deserializeEnd = performance.now();
         deserializationTimes.push(deserializeEnd - deserializeStart);
+        
+        // Calculate actual structure size on first iteration
+        if (i === 0) {
+            // Calculate size of each array type
+            const uint8Size = testData.uint8Array.byteLength;
+            const uint16Size = testData.uint16Array.byteLength;
+            const uint32Size = testData.uint32Array.byteLength;
+            const uint64Size = testData.bigUint64Array.byteLength;
+            const int8Size = testData.int8Array.byteLength;
+            const int16Size = testData.int16Array.byteLength;
+            const int32Size = testData.int32Array.byteLength;
+            const int64Size = testData.bigInt64Array.byteLength;
+            const float32Size = testData.float32Array.byteLength;
+            const float64Size = testData.float64Array.byteLength;
+
+            const arrayTotalSize = uint8Size + uint16Size + uint32Size + uint64Size +
+                                 int8Size + int16Size + int32Size + int64Size +
+                                 float32Size + float64Size;
+                
+            // Calculate string size (2 bytes per character in JS)
+            const stringSize = testData.str.length * 2;
+                
+            // Calculate map size (rough estimate: 8 bytes per number key + string lengths)
+            const mapSize = Array.from(testData.numberMap.values())
+                .reduce((total, str) => total + 8 + str.length * 2, 0);
+                
+            // Add size of individual number fields (8 bytes each for numbers)
+            const numberFieldsSize = 11 * 8;  // 11 number/bigint fields
+                
+            const totalSize = arrayTotalSize + stringSize + mapSize + numberFieldsSize;
+
+            console.log(`\nMemory structure size details:
+  Uint8Array:     ${(uint8Size / 1024).toFixed(2)} KB (${uint8Size} bytes)
+  Uint16Array:    ${(uint16Size / 1024).toFixed(2)} KB (${uint16Size} bytes)
+  Uint32Array:    ${(uint32Size / 1024).toFixed(2)} KB (${uint32Size} bytes)
+  BigUint64Array: ${(uint64Size / 1024).toFixed(2)} KB (${uint64Size} bytes)
+  Int8Array:      ${(int8Size / 1024).toFixed(2)} KB (${int8Size} bytes)
+  Int16Array:     ${(int16Size / 1024).toFixed(2)} KB (${int16Size} bytes)
+  Int32Array:     ${(int32Size / 1024).toFixed(2)} KB (${int32Size} bytes)
+  BigInt64Array:  ${(int64Size / 1024).toFixed(2)} KB (${int64Size} bytes)
+  Float32Array:   ${(float32Size / 1024).toFixed(2)} KB (${float32Size} bytes)
+  Float64Array:   ${(float64Size / 1024).toFixed(2)} KB (${float64Size} bytes)
+  String:         ${(stringSize / 1024).toFixed(2)} KB
+  Map:            ${(mapSize / 1024).toFixed(2)} KB
+  Numbers:        ${(numberFieldsSize / 1024).toFixed(2)} KB
+  --------------
+  Total:          ${(totalSize / 1024).toFixed(2)} KB`);
+        }
         
         // Verify correctness of a few key fields
         assert(result.uint8Array.length === testData.uint8Array.length, "Uint8Array length mismatch");
