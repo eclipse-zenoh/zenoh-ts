@@ -92,8 +92,6 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         serializer.serialize(this.bigInt64Array, ZS.bigint64array());
         serializer.serialize(this.float32Array, ZS.float32array());
         serializer.serialize(this.float64Array, ZS.float64array());
-
-        // Serialize string array and map
         serializer.serialize(this.strings, ZS.array(ZS.string()));
         serializer.serialize(this.numberMap, ZS.map(ZS.number(), ZS.number()));
     }
@@ -110,8 +108,6 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         this.bigInt64Array = deserializer.deserialize(ZD.bigint64array());
         this.float32Array = deserializer.deserialize(ZD.float32array());
         this.float64Array = deserializer.deserialize(ZD.float64array());
-
-        // Deserialize string array and map
         this.strings = deserializer.deserialize(ZD.array(ZD.string()));
         this.numberMap = deserializer.deserialize(ZD.map(ZD.number(), ZD.number()));
     }
@@ -162,6 +158,16 @@ function formatStats(
  * A comprehensive performance test that measures serialization and deserialization times
  * for all serializable types in the zenoh-ts serialization framework.
  */
+interface TypePerformanceData {
+    serializationTimes: number[];
+    deserializationTimes: number[];
+    size: number;
+}
+
+interface TypeResults {
+    [key: string]: TypePerformanceData;
+}
+
 Deno.test("Serialization Performance Test", () => {
     console.log("\n=== Zenoh-TS Serialization Performance Test ===");
     console.log(`Array Size:      ${TEST_CONFIG.arraySize} elements`);
@@ -172,90 +178,184 @@ Deno.test("Serialization Performance Test", () => {
     console.log(`Iterations:      ${TEST_CONFIG.iterations}`);
     
     const testData = new ComplexSerializationTest();
-    const serializationTimes: number[] = [];
-    const deserializationTimes: number[] = [];
-    let serializedBytesSize = 0;
+    const typeResults: TypeResults = {
+        uint8Array: { serializationTimes: [], deserializationTimes: [], size: testData.uint8Array.byteLength },
+        uint16Array: { serializationTimes: [], deserializationTimes: [], size: testData.uint16Array.byteLength },
+        uint32Array: { serializationTimes: [], deserializationTimes: [], size: testData.uint32Array.byteLength },
+        bigUint64Array: { serializationTimes: [], deserializationTimes: [], size: testData.bigUint64Array.byteLength },
+        int8Array: { serializationTimes: [], deserializationTimes: [], size: testData.int8Array.byteLength },
+        int16Array: { serializationTimes: [], deserializationTimes: [], size: testData.int16Array.byteLength },
+        int32Array: { serializationTimes: [], deserializationTimes: [], size: testData.int32Array.byteLength },
+        bigInt64Array: { serializationTimes: [], deserializationTimes: [], size: testData.bigInt64Array.byteLength },
+        float32Array: { serializationTimes: [], deserializationTimes: [], size: testData.float32Array.byteLength },
+        float64Array: { serializationTimes: [], deserializationTimes: [], size: testData.float64Array.byteLength },
+        strings: { serializationTimes: [], deserializationTimes: [], size: testData.strings.reduce((total, str) => total + str.length * 2, 0) },
+        numberMap: { serializationTimes: [], deserializationTimes: [], size: testData.numberMap.size * 16 }  // 8 bytes each for key and value
+    };
 
-    // Calculate size of each array type
-    const uint8Size = testData.uint8Array.byteLength;
-    const uint16Size = testData.uint16Array.byteLength;
-    const uint32Size = testData.uint32Array.byteLength;
-    const uint64Size = testData.bigUint64Array.byteLength;
-    const int8Size = testData.int8Array.byteLength;
-    const int16Size = testData.int16Array.byteLength;
-    const int32Size = testData.int32Array.byteLength;
-    const int64Size = testData.bigInt64Array.byteLength;
-    const float32Size = testData.float32Array.byteLength;
-    const float64Size = testData.float64Array.byteLength;
-
-    const arrayTotalSize = uint8Size + uint16Size + uint32Size + uint64Size +
-                            int8Size + int16Size + int32Size + int64Size +
-                            float32Size + float64Size;
-        
-    // Calculate string array size (2 bytes per character in JS)
-    const stringArraySize = testData.strings.reduce((total: number, str: string) => total + str.length, 0);
-        
-    // Calculate map size: number of entries * size of each entry
-    const mapSize = testData.numberMap.size * (8 + 8); // 8 bytes for key and 8 bytes for value
-        
-    const totalSize = arrayTotalSize + stringArraySize + mapSize;
-
-    console.log(`\nMemory structure size details:
-Uint8Array:     ${(uint8Size / 1024).toFixed(2)} KB (${uint8Size} bytes)
-Uint16Array:    ${(uint16Size / 1024).toFixed(2)} KB (${uint16Size} bytes)
-Uint32Array:    ${(uint32Size / 1024).toFixed(2)} KB (${uint32Size} bytes)
-BigUint64Array: ${(uint64Size / 1024).toFixed(2)} KB (${uint64Size} bytes)
-Int8Array:      ${(int8Size / 1024).toFixed(2)} KB (${int8Size} bytes)
-Int16Array:     ${(int16Size / 1024).toFixed(2)} KB (${int16Size} bytes)
-Int32Array:     ${(int32Size / 1024).toFixed(2)} KB (${int32Size} bytes)
-BigInt64Array:  ${(int64Size / 1024).toFixed(2)} KB (${int64Size} bytes)
-Float32Array:   ${(float32Size / 1024).toFixed(2)} KB (${float32Size} bytes)
-Float64Array:   ${(float64Size / 1024).toFixed(2)} KB (${float64Size} bytes)
-String Array:   ${(stringArraySize / 1024).toFixed(2)} KB (${stringArraySize} bytes)
-Map:            ${(mapSize / 1024).toFixed(2)} KB (${mapSize} bytes)
---------------
-Total:          ${(totalSize / 1024).toFixed(2)} KB (${totalSize} bytes)`);
-
-    // Warmup
+    // Warmup using full testData
     console.log("\nPerforming warmup...");
     for (let i = 0; i < TEST_CONFIG.warmupIterations; i++) {
         const bytes = zserialize(testData, ZS.object());
         const _ = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
     }
     
-    // Main test
-    console.log("Running performance measurements...");
+    // Test each type separately
+    console.log("Running performance measurements for each type...");
+    
     for (let i = 0; i < TEST_CONFIG.iterations; i++) {
-        // Measure serialization
-        const serializeStart = performance.now();
-        const bytes = zserialize(testData, ZS.object());
-        const serializeEnd = performance.now();
-        serializationTimes.push(serializeEnd - serializeStart);
+        // uint8Array
+        let start = performance.now();
+        let bytes = zserialize(testData.uint8Array, ZS.uint8array());
+        let end = performance.now();
+        typeResults.uint8Array.serializationTimes.push(end - start);
         
-        if (i === 0) {
-            serializedBytesSize = bytes.len();
-        }
+        start = performance.now();
+        const uint8Result = zdeserialize(ZD.uint8array(), bytes);
+        end = performance.now();
+        typeResults.uint8Array.deserializationTimes.push(end - start);
+        assert(uint8Result.length === testData.uint8Array.length, "Uint8Array length mismatch");
+
+        // uint16Array
+        start = performance.now();
+        bytes = zserialize(testData.uint16Array, ZS.uint16array());
+        end = performance.now();
+        typeResults.uint16Array.serializationTimes.push(end - start);
         
-        // Measure deserialization
-        const deserializeStart = performance.now();
-        const result = zdeserialize(ZD.object(ComplexSerializationTest), bytes);
-        const deserializeEnd = performance.now();
-        deserializationTimes.push(deserializeEnd - deserializeStart);
+        start = performance.now();
+        const uint16Result = zdeserialize(ZD.uint16array(), bytes);
+        end = performance.now();
+        typeResults.uint16Array.deserializationTimes.push(end - start);
+        assert(uint16Result.length === testData.uint16Array.length, "Uint16Array length mismatch");
+
+        // uint32Array
+        start = performance.now();
+        bytes = zserialize(testData.uint32Array, ZS.uint32array());
+        end = performance.now();
+        typeResults.uint32Array.serializationTimes.push(end - start);
         
-       
-        // Verify correctness of key fields
-        assert(result.uint8Array.length === testData.uint8Array.length, "Uint8Array length mismatch");
-        assert(result.float64Array.length === testData.float64Array.length, "Float64Array length mismatch");
-        assert(result.strings.length === testData.strings.length, "String array length mismatch");
-        assert(result.strings[0].length === testData.strings[0].length, "String length mismatch");
-        assert(result.numberMap.size === testData.numberMap.size, "Map size mismatch");
+        start = performance.now();
+        const uint32Result = zdeserialize(ZD.uint32array(), bytes);
+        end = performance.now();
+        typeResults.uint32Array.deserializationTimes.push(end - start);
+        assert(uint32Result.length === testData.uint32Array.length, "Uint32Array length mismatch");
+
+        // bigUint64Array
+        start = performance.now();
+        bytes = zserialize(testData.bigUint64Array, ZS.biguint64array());
+        end = performance.now();
+        typeResults.bigUint64Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const bigUint64Result = zdeserialize(ZD.biguint64array(), bytes);
+        end = performance.now();
+        typeResults.bigUint64Array.deserializationTimes.push(end - start);
+        assert(bigUint64Result.length === testData.bigUint64Array.length, "BigUint64Array length mismatch");
+
+        // int8Array
+        start = performance.now();
+        bytes = zserialize(testData.int8Array, ZS.int8array());
+        end = performance.now();
+        typeResults.int8Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const int8Result = zdeserialize(ZD.int8array(), bytes);
+        end = performance.now();
+        typeResults.int8Array.deserializationTimes.push(end - start);
+        assert(int8Result.length === testData.int8Array.length, "Int8Array length mismatch");
+
+        // int16Array
+        start = performance.now();
+        bytes = zserialize(testData.int16Array, ZS.int16array());
+        end = performance.now();
+        typeResults.int16Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const int16Result = zdeserialize(ZD.int16array(), bytes);
+        end = performance.now();
+        typeResults.int16Array.deserializationTimes.push(end - start);
+        assert(int16Result.length === testData.int16Array.length, "Int16Array length mismatch");
+
+        // int32Array
+        start = performance.now();
+        bytes = zserialize(testData.int32Array, ZS.int32array());
+        end = performance.now();
+        typeResults.int32Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const int32Result = zdeserialize(ZD.int32array(), bytes);
+        end = performance.now();
+        typeResults.int32Array.deserializationTimes.push(end - start);
+        assert(int32Result.length === testData.int32Array.length, "Int32Array length mismatch");
+
+        // bigInt64Array
+        start = performance.now();
+        bytes = zserialize(testData.bigInt64Array, ZS.bigint64array());
+        end = performance.now();
+        typeResults.bigInt64Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const bigInt64Result = zdeserialize(ZD.bigint64array(), bytes);
+        end = performance.now();
+        typeResults.bigInt64Array.deserializationTimes.push(end - start);
+        assert(bigInt64Result.length === testData.bigInt64Array.length, "BigInt64Array length mismatch");
+
+        // float32Array
+        start = performance.now();
+        bytes = zserialize(testData.float32Array, ZS.float32array());
+        end = performance.now();
+        typeResults.float32Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const float32Result = zdeserialize(ZD.float32array(), bytes);
+        end = performance.now();
+        typeResults.float32Array.deserializationTimes.push(end - start);
+        assert(float32Result.length === testData.float32Array.length, "Float32Array length mismatch");
+
+        // float64Array
+        start = performance.now();
+        bytes = zserialize(testData.float64Array, ZS.float64array());
+        end = performance.now();
+        typeResults.float64Array.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const float64Result = zdeserialize(ZD.float64array(), bytes);
+        end = performance.now();
+        typeResults.float64Array.deserializationTimes.push(end - start);
+        assert(float64Result.length === testData.float64Array.length, "Float64Array length mismatch");
+
+        // strings
+        start = performance.now();
+        bytes = zserialize(testData.strings, ZS.array(ZS.string()));
+        end = performance.now();
+        typeResults.strings.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const stringsResult = zdeserialize(ZD.array(ZD.string()), bytes);
+        end = performance.now();
+        typeResults.strings.deserializationTimes.push(end - start);
+        assert(stringsResult.length === testData.strings.length, "String array length mismatch");
+
+        // numberMap
+        start = performance.now();
+        bytes = zserialize(testData.numberMap, ZS.map(ZS.number(), ZS.number()));
+        end = performance.now();
+        typeResults.numberMap.serializationTimes.push(end - start);
+        
+        start = performance.now();
+        const mapResult = zdeserialize(ZD.map(ZD.number(), ZD.number()), bytes);
+        end = performance.now();
+        typeResults.numberMap.deserializationTimes.push(end - start);
+        assert(mapResult.size === testData.numberMap.size, "Map size mismatch");
     }
     
-    // Calculate and print statistics
-    const serStats = calculateStats(serializationTimes, serializedBytesSize);
-    const deserStats = calculateStats(deserializationTimes, serializedBytesSize);
-    
-    console.log("\nResults:");
-    console.log(formatStats("Complex Type Performance", serStats, deserStats));
-    console.log(`\nSerialized Size: ${(serializedBytesSize / 1024).toFixed(2)} KB`);
+    // Calculate and print statistics for each type
+    console.log("\nResults per type:");
+    for (const [typeName, data] of Object.entries(typeResults)) {
+        const serStats = calculateStats(data.serializationTimes, data.size);
+        const deserStats = calculateStats(data.deserializationTimes, data.size);
+        console.log(`\n${typeName}:`);
+        console.log(formatStats(`  ${typeName} Performance`, serStats, deserStats));
+        console.log(`  Size: ${(data.size / 1024).toFixed(2)} KB`);
+    }
 });
