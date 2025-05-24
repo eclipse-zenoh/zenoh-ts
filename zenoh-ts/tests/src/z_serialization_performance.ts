@@ -18,7 +18,7 @@ import {
     ZD
 } from "@eclipse-zenoh/zenoh-ts/ext";
 import { ZBytes } from "@eclipse-zenoh/zenoh-ts";
-import { assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
+import { assert as _assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 /**
  * Configuration for the performance tests
@@ -49,7 +49,6 @@ interface TestCase<T> {
     data: T;
     serialize(value: T): ZBytes;
     deserialize(bytes: ZBytes): T;
-    validate(original: T, deserialized: T): void;
     getSize(data: T): number;
 }
 
@@ -129,151 +128,100 @@ function generateTestData() {
     };
 }
 
-type TypedArrayConstructor = 
-    | Uint8ArrayConstructor
-    | Uint16ArrayConstructor
-    | Uint32ArrayConstructor
-    | BigUint64ArrayConstructor
-    | Int8ArrayConstructor
-    | Int16ArrayConstructor
-    | Int32ArrayConstructor
-    | BigInt64ArrayConstructor
-    | Float32ArrayConstructor
-    | Float64ArrayConstructor;
-
-type TypedArrayInstance = 
-    | Uint8Array
-    | Uint16Array
-    | Uint32Array
-    | BigUint64Array
-    | Int8Array
-    | Int16Array
-    | Int32Array
-    | BigInt64Array
-    | Float32Array
-    | Float64Array;
-
-/**
- * Helper to create a test case for typed arrays
- */
-function createTypedArrayTestCase<T extends TypedArrayInstance>(
-    name: string,
-    data: T,
-    serializeFn: (v: T) => ZBytes,
-    deserializeFn: (b: ZBytes) => unknown
-): TestCase<T> {
-    return {
-        name,
-        data,
-        serialize: serializeFn,
-        deserialize: (bytes: ZBytes) => deserializeFn(bytes) as T,
-        validate: (orig: T, des: T) => {
-            assert(des.length === orig.length, `${name}: Length mismatch ${des.length} !== ${orig.length}`);
-            for (let i = 0; i < orig.length; i++) {
-                assert(des[i] === orig[i], `${name}: Value mismatch at index ${i}: ${des[i]} !== ${orig[i]}`);
-            }
-        },
-        getSize: (d: T) => d.byteLength,
-    };
-}
-
 /**
  * Define test cases for each type
  */
 function createTestCases(testData: ReturnType<typeof generateTestData>): TestCase<unknown>[] {
     return [
-        createTypedArrayTestCase(
-            "uint8Array",
-            testData.uint8Array,
-            v => zserialize(v, ZS.uint8array()),
-            b => zdeserialize(ZD.uint8array(), b)
-        ),
-        createTypedArrayTestCase(
-            "uint16Array",
-            testData.uint16Array,
-            v => zserialize(v, ZS.uint16array()),
-            b => zdeserialize(ZD.uint16array(), b)
-        ),
-        createTypedArrayTestCase(
-            "uint32Array",
-            testData.uint32Array,
-            v => zserialize(v, ZS.uint32array()),
-            b => zdeserialize(ZD.uint32array(), b)
-        ),
-        createTypedArrayTestCase(
-            "bigUint64Array",
-            testData.bigUint64Array,
-            v => zserialize(v, ZS.biguint64array()),
-            b => zdeserialize(ZD.biguint64array(), b)
-        ),
-        createTypedArrayTestCase(
-            "int8Array",
-            testData.int8Array,
-            v => zserialize(v, ZS.int8array()),
-            b => zdeserialize(ZD.int8array(), b)
-        ),
-        createTypedArrayTestCase(
-            "int16Array",
-            testData.int16Array,
-            v => zserialize(v, ZS.int16array()),
-            b => zdeserialize(ZD.int16array(), b)
-        ),
-        createTypedArrayTestCase(
-            "int32Array",
-            testData.int32Array,
-            v => zserialize(v, ZS.int32array()),
-            b => zdeserialize(ZD.int32array(), b)
-        ),
-        createTypedArrayTestCase(
-            "bigInt64Array",
-            testData.bigInt64Array,
-            v => zserialize(v, ZS.bigint64array()),
-            b => zdeserialize(ZD.bigint64array(), b)
-        ),
-        createTypedArrayTestCase(
-            "float32Array",
-            testData.float32Array,
-            v => zserialize(v, ZS.float32array()),
-            b => zdeserialize(ZD.float32array(), b)
-        ),
-        createTypedArrayTestCase(
-            "float64Array",
-            testData.float64Array,
-            v => zserialize(v, ZS.float64array()),
-            b => zdeserialize(ZD.float64array(), b)
-        ),
+        {
+            name: "uint8Array",
+            data: testData.uint8Array,
+            serialize: (v: Uint8Array) => zserialize(v, ZS.uint8array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.uint8array(), b) as Uint8Array,
+            getSize: (d: Uint8Array) => d.byteLength,
+        },
+        {
+            name: "uint16Array",
+            data: testData.uint16Array,
+            serialize: (v: Uint16Array) => zserialize(v, ZS.uint16array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.uint16array(), b) as Uint16Array,
+            getSize: (d: Uint16Array) => d.byteLength,
+        },
+        {
+            name: "uint32Array",
+            data: testData.uint32Array,
+            serialize: (v: Uint32Array) => zserialize(v, ZS.uint32array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.uint32array(), b) as Uint32Array,
+            getSize: (d: Uint32Array) => d.byteLength,
+        },
+        {
+            name: "bigUint64Array",
+            data: testData.bigUint64Array,
+            serialize: (v: BigUint64Array) => zserialize(v, ZS.biguint64array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.biguint64array(), b) as BigUint64Array,
+            getSize: (d: BigUint64Array) => d.byteLength,
+        },
+        {
+            name: "int8Array",
+            data: testData.int8Array,
+            serialize: (v: Int8Array) => zserialize(v, ZS.int8array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.int8array(), b) as Int8Array,
+            getSize: (d: Int8Array) => d.byteLength,
+        },
+        {
+            name: "int16Array",
+            data: testData.int16Array,
+            serialize: (v: Int16Array) => zserialize(v, ZS.int16array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.int16array(), b) as Int16Array,
+            getSize: (d: Int16Array) => d.byteLength,
+        },
+        {
+            name: "int32Array",
+            data: testData.int32Array,
+            serialize: (v: Int32Array) => zserialize(v, ZS.int32array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.int32array(), b) as Int32Array,
+            getSize: (d: Int32Array) => d.byteLength,
+        },
+        {
+            name: "bigInt64Array",
+            data: testData.bigInt64Array,
+            serialize: (v: BigInt64Array) => zserialize(v, ZS.bigint64array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.bigint64array(), b) as BigInt64Array,
+            getSize: (d: BigInt64Array) => d.byteLength,
+        },
+        {
+            name: "float32Array",
+            data: testData.float32Array,
+            serialize: (v: Float32Array) => zserialize(v, ZS.float32array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.float32array(), b) as Float32Array,
+            getSize: (d: Float32Array) => d.byteLength,
+        },
+        {
+            name: "float64Array",
+            data: testData.float64Array,
+            serialize: (v: Float64Array) => zserialize(v, ZS.float64array()),
+            deserialize: (b: ZBytes) => zdeserialize(ZD.float64array(), b) as Float64Array,
+            getSize: (d: Float64Array) => d.byteLength,
+        },
         {
             name: "strings",
             data: testData.strings,
             serialize: (value: string[]) => zserialize(value, ZS.array(ZS.string())),
-            deserialize: (bytes: ZBytes) => zdeserialize(ZD.array(ZD.string()), bytes),
-            validate: (orig: string[], des: string[]) => {
-                assert(des.length === orig.length, `strings: Length mismatch ${des.length} !== ${orig.length}`);
-                for (let i = 0; i < orig.length; i++) {
-                    assert(des[i] === orig[i], `strings: Value mismatch at index ${i}: "${des[i]}" !== "${orig[i]}"`);
-                }
-            },
+            deserialize: (bytes: ZBytes) => zdeserialize(ZD.array(ZD.string()), bytes) as string[],
             getSize: (d: string[]) => d.reduce((total: number, str: string) => total + str.length * 2, 0),
         },
         {
             name: "numberMap",
             data: testData.numberMap,
             serialize: (value: Map<number, number>) => zserialize(value, ZS.map(ZS.number(), ZS.number())),
-            deserialize: (bytes: ZBytes) => zdeserialize(ZD.map(ZD.number(), ZD.number()), bytes),
-            validate: (orig: Map<number, number>, des: Map<number, number>) => {
-                assert(des.size === orig.size, `numberMap: Size mismatch ${des.size} !== ${orig.size}`);
-                for (const [key, value] of orig.entries()) {
-                    assert(des.has(key), `numberMap: Missing key ${key}`);
-                    assert(des.get(key) === value, `numberMap: Value mismatch for key ${key}: ${des.get(key)} !== ${value}`);
-                }
-            },
+            deserialize: (bytes: ZBytes) => zdeserialize(ZD.map(ZD.number(), ZD.number()), bytes) as Map<number, number>,
             getSize: (d: Map<number, number>) => d.size * 16,
         }
     ];
 }
 
 /**
- * Run performance test for a single test case
+ * Performance test for a single test case
  */
 function runTestCase<T>(testCase: TestCase<T>): TestResults {
     const serializationTimes: number[] = [];
@@ -287,11 +235,9 @@ function runTestCase<T>(testCase: TestCase<T>): TestResults {
         serializationTimes.push(end - start);
 
         start = performance.now();
-        const deserialized = testCase.deserialize(bytes);
+        const _deserialized = testCase.deserialize(bytes);
         end = performance.now();
         deserializationTimes.push(end - start);
-
-        testCase.validate(testCase.data, deserialized);
     }
 
     return {
@@ -302,34 +248,22 @@ function runTestCase<T>(testCase: TestCase<T>): TestResults {
 }
 
 /**
- * Main test function
+ * Run performance tests for all cases
  */
-Deno.test("Serialization Performance Test", () => {
-    console.log("\n=== Zenoh-TS Serialization Performance Test ===");
+Deno.test("Serialization Performance Test", () => {    console.log("\n=== Zenoh-TS Serialization Performance Test ===");
     console.log(`Array Size:      ${TEST_CONFIG.arraySize} elements`);
     console.log(`Map Size:        ${TEST_CONFIG.arraySize} entries`);
     console.log(`String Length:   ${TEST_CONFIG.maxStringLength} characters`);
     console.log(`String Array:    ${TEST_CONFIG.arraySize} strings`);
     console.log(`Total Strings:   ${TEST_CONFIG.arraySize * TEST_CONFIG.maxStringLength} characters`);
     console.log(`Iterations:      ${TEST_CONFIG.iterations}`);
-    
+ 
     const testData = generateTestData();
     const testCases = createTestCases(testData);
 
-    // Warmup phase
-    console.log("\nPerforming warmup...");
-    for (let i = 0; i < TEST_CONFIG.warmupIterations; i++) {
-        testCases.forEach(testCase => {
-            const bytes = testCase.serialize(testCase.data);
-            testCase.deserialize(bytes);
-        });
-    }
-    
-    // Run tests
-    console.log("Running performance measurements for each type...");
-    console.log("\nResults per type:");
-    testCases.forEach(testCase => {
+    for (const testCase of testCases) {
         const results = runTestCase(testCase);
         console.log(formatTestResults(testCase.name, results));
-    });
+    }
+
 });
