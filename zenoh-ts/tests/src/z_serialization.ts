@@ -225,3 +225,314 @@ Deno.test("Serialization - Binary Format", () => {
     assertEquals(numResult, numbers, "number array serialization failed");
     assertEquals(strResult, strings, "string array serialization failed");
 });
+
+Deno.test("Serialization - TypedArrays", () => {
+    // Test Uint16Array
+    const uint16Data = new Uint16Array([100, 200, 300, 40000]);
+    const uint16Bytes = zserialize(uint16Data, ZS.uint16array());
+    const uint16Result = zdeserialize(ZD.uint16array(), uint16Bytes);
+    assert(uint16Result instanceof Uint16Array, "Result should be Uint16Array");
+    assertEquals(
+        Array.from(uint16Result), 
+        Array.from(uint16Data),
+        "Uint16Array serialization failed"
+    );
+
+    // Test Uint32Array
+    const uint32Data = new Uint32Array([100000, 200000, 300000, 4000000000]);
+    const uint32Bytes = zserialize(uint32Data, ZS.uint32array());
+    const uint32Result = zdeserialize(ZD.uint32array(), uint32Bytes);
+    assert(uint32Result instanceof Uint32Array, "Result should be Uint32Array");
+    assertEquals(
+        Array.from(uint32Result), 
+        Array.from(uint32Data),
+        "Uint32Array serialization failed"
+    );
+    
+    // Test Int16Array
+    const int16Data = new Int16Array([100, -200, 300, -30000]);
+    const int16Bytes = zserialize(int16Data, ZS.int16array());
+    const int16Result = zdeserialize(ZD.int16array(), int16Bytes);
+    assert(int16Result instanceof Int16Array, "Result should be Int16Array");
+    assertEquals(
+        Array.from(int16Result), 
+        Array.from(int16Data),
+        "Int16Array serialization failed"
+    );
+    
+    // Test Int32Array
+    const int32Data = new Int32Array([100000, -200000, 300000, -2000000000]);
+    const int32Bytes = zserialize(int32Data, ZS.int32array());
+    const int32Result = zdeserialize(ZD.int32array(), int32Bytes);
+    assert(int32Result instanceof Int32Array, "Result should be Int32Array");
+    assertEquals(
+        Array.from(int32Result), 
+        Array.from(int32Data),
+        "Int32Array serialization failed"
+    );
+    
+    // Test BigUint64Array
+    const bigUint64Data = new BigUint64Array([
+        100000n, 
+        200000n, 
+        300000n, 
+        4000000000n
+    ]);
+    const bigUint64Bytes = zserialize(bigUint64Data, ZS.biguint64array());
+    const bigUint64Result = zdeserialize(ZD.biguint64array(), bigUint64Bytes);
+    assert(bigUint64Result instanceof BigUint64Array, "Result should be BigUint64Array");
+    assertEquals(
+        Array.from(bigUint64Result), 
+        Array.from(bigUint64Data),
+        "BigUint64Array serialization failed"
+    );
+    
+    // Test BigInt64Array
+    const bigInt64Data = new BigInt64Array([
+        100000n, 
+        -200000n, 
+        300000n, 
+        -2000000000n
+    ]);
+    const bigInt64Bytes = zserialize(bigInt64Data, ZS.bigint64array());
+    const bigInt64Result = zdeserialize(ZD.bigint64array(), bigInt64Bytes);
+    assert(bigInt64Result instanceof BigInt64Array, "Result should be BigInt64Array");
+    assertEquals(
+        Array.from(bigInt64Result), 
+        Array.from(bigInt64Data),
+        "BigInt64Array serialization failed"
+    );
+    
+    // Test Float32Array
+    const float32Data = new Float32Array([1.5, -2.25, 3.75, -4.125]);
+    const float32Bytes = zserialize(float32Data, ZS.float32array());
+    const float32Result = zdeserialize(ZD.float32array(), float32Bytes);
+    assert(float32Result instanceof Float32Array, "Result should be Float32Array");
+    assert(
+        Array.from(float32Result).every((val, idx) => 
+            Math.abs(val - float32Data[idx]) < 0.0001),
+        "Float32Array serialization failed"
+    );
+    
+    // Test Float64Array
+    const float64Data = new Float64Array([1.12345, -2.34567, 3.45678, -4.56789]);
+    const float64Bytes = zserialize(float64Data, ZS.float64array());
+    const float64Result = zdeserialize(ZD.float64array(), float64Bytes);
+    assert(float64Result instanceof Float64Array, "Result should be Float64Array");
+    assert(
+        Array.from(float64Result).every((val, idx) => 
+            Math.abs(val - float64Data[idx]) < 0.0001),
+        "Float64Array serialization failed"
+    );
+});
+
+Deno.test("Serialization - TypedArray Auto Detection", () => {
+    // Test auto detection for Uint16Array
+    const uint16Data = new Uint16Array([100, 200, 300, 40000]);
+    const uint16Bytes = zserialize(uint16Data); // No explicit serializer tag
+    const uint16Result = zdeserialize(ZD.uint16array(), uint16Bytes);
+    assert(uint16Result instanceof Uint16Array, "Result should be Uint16Array");
+    assertEquals(
+        Array.from(uint16Result), 
+        Array.from(uint16Data),
+        "Auto-detected Uint16Array serialization failed"
+    );
+
+    // Test auto detection for Uint32Array
+    const uint32Data = new Uint32Array([100000, 200000, 300000, 4000000000]);
+    const uint32Bytes = zserialize(uint32Data); // No explicit serializer tag
+    const uint32Result = zdeserialize(ZD.uint32array(), uint32Bytes);
+    assert(uint32Result instanceof Uint32Array, "Result should be Uint32Array");
+    assertEquals(
+        Array.from(uint32Result), 
+        Array.from(uint32Data),
+        "Auto-detected Uint32Array serialization failed"
+    );
+    
+    // Test auto detection for Int16Array
+    const int16Data = new Int16Array([100, -200, 300, -30000]);
+    const int16Bytes = zserialize(int16Data); // No explicit serializer tag
+    const int16Result = zdeserialize(ZD.int16array(), int16Bytes);
+    assert(int16Result instanceof Int16Array, "Result should be Int16Array");
+    assertEquals(
+        Array.from(int16Result), 
+        Array.from(int16Data),
+        "Auto-detected Int16Array serialization failed"
+    );
+    
+    // Test auto detection for Int32Array
+    const int32Data = new Int32Array([100000, -200000, 300000, -2000000000]);
+    const int32Bytes = zserialize(int32Data); // No explicit serializer tag
+    const int32Result = zdeserialize(ZD.int32array(), int32Bytes);
+    assert(int32Result instanceof Int32Array, "Result should be Int32Array");
+    assertEquals(
+        Array.from(int32Result), 
+        Array.from(int32Data),
+        "Auto-detected Int32Array serialization failed"
+    );
+    
+    // Test auto detection for BigUint64Array
+    const bigUint64Data = new BigUint64Array([100000n, 200000n, 300000n, 4000000000n]);
+    const bigUint64Bytes = zserialize(bigUint64Data); // No explicit serializer tag
+    const bigUint64Result = zdeserialize(ZD.biguint64array(), bigUint64Bytes);
+    assert(bigUint64Result instanceof BigUint64Array, "Result should be BigUint64Array");
+    assertEquals(
+        Array.from(bigUint64Result), 
+        Array.from(bigUint64Data),
+        "Auto-detected BigUint64Array serialization failed"
+    );
+    
+    // Test auto detection for BigInt64Array
+    const bigInt64Data = new BigInt64Array([100000n, -200000n, 300000n, -2000000000n]);
+    const bigInt64Bytes = zserialize(bigInt64Data); // No explicit serializer tag
+    const bigInt64Result = zdeserialize(ZD.bigint64array(), bigInt64Bytes);
+    assert(bigInt64Result instanceof BigInt64Array, "Result should be BigInt64Array");
+    assertEquals(
+        Array.from(bigInt64Result), 
+        Array.from(bigInt64Data),
+        "Auto-detected BigInt64Array serialization failed"
+    );
+    
+    // Test auto detection for Float32Array
+    const float32Data = new Float32Array([1.5, -2.25, 3.75, -4.125]);
+    const float32Bytes = zserialize(float32Data); // No explicit serializer tag
+    const float32Result = zdeserialize(ZD.float32array(), float32Bytes);
+    assert(float32Result instanceof Float32Array, "Result should be Float32Array");
+    assert(
+        Array.from(float32Result).every((val, idx) => 
+            Math.abs(val - float32Data[idx]) < 0.0001),
+        "Auto-detected Float32Array serialization failed"
+    );
+    
+    // Test auto detection for Float64Array
+    const float64Data = new Float64Array([1.12345, -2.34567, 3.45678, -4.56789]);
+    const float64Bytes = zserialize(float64Data); // No explicit serializer tag
+    const float64Result = zdeserialize(ZD.float64array(), float64Bytes);
+    assert(float64Result instanceof Float64Array, "Result should be Float64Array");
+    assert(
+        Array.from(float64Result).every((val, idx) => 
+            Math.abs(val - float64Data[idx]) < 0.0001),
+        "Auto-detected Float64Array serialization failed"
+    );
+});
+
+Deno.test("Serialization - TypedArray Collections", () => {
+    // Test array of TypedArrays
+    const typedArrayCollection = [
+        new Uint16Array([1, 2, 3]),
+        new Uint16Array([4, 5, 6]),
+        new Uint16Array([7, 8, 9])
+    ];
+    
+    const collectionBytes = zserialize(typedArrayCollection, ZS.array(ZS.uint16array()));
+    const collectionResult = zdeserialize(ZD.array(ZD.uint16array()), collectionBytes);
+    
+    assert(Array.isArray(collectionResult), "Result should be an Array");
+    assertEquals(collectionResult.length, typedArrayCollection.length, "Collection length mismatch");
+    
+    for (let i = 0; i < collectionResult.length; i++) {
+        assert(collectionResult[i] instanceof Uint16Array, `Item ${i} should be Uint16Array`);
+        assertEquals(
+            Array.from(collectionResult[i]), 
+            Array.from(typedArrayCollection[i]),
+            `Item ${i} data mismatch`
+        );
+    }
+    
+    // Test Map with TypedArray keys and values
+    const typedArrayMap = new Map<Uint8Array, Float32Array>();
+    typedArrayMap.set(
+        new Uint8Array([1, 2, 3]), 
+        new Float32Array([1.1, 2.2, 3.3])
+    );
+    typedArrayMap.set(
+        new Uint8Array([4, 5, 6]), 
+        new Float32Array([4.4, 5.5, 6.6])
+    );
+    
+    const mapBytes = zserialize(typedArrayMap, ZS.map(ZS.uint8array(), ZS.float32array()));
+    const mapResult = zdeserialize(ZD.map(ZD.uint8array(), ZD.float32array()), mapBytes);
+    
+    assert(mapResult instanceof Map, "Result should be a Map");
+    assertEquals(mapResult.size, typedArrayMap.size, "Map size mismatch");
+    
+    // Compare map entries - need to convert to strings for comparison since TypedArrays can't be directly compared
+    for (const [key, value] of typedArrayMap.entries()) {
+        // Find matching key in result
+        let foundMatch = false;
+        for (const [resultKey, resultValue] of mapResult.entries()) {
+            if (Array.from(resultKey).toString() === Array.from(key).toString()) {
+                foundMatch = true;
+                assert(
+                    Array.from(resultValue).every((val, idx) => 
+                        Math.abs(val - value[idx]) < 0.0001),
+                    "Map value mismatch"
+                );
+                break;
+            }
+        }
+        assert(foundMatch, `No matching key found for ${Array.from(key)}`);
+    }
+    
+    // Test mixed collection with different TypedArrays
+    const mixedCollection = {
+        uint16: new Uint16Array([1, 2]),
+        int32: new Int32Array([3, 4]),
+        float64: new Float64Array([5.5, 6.6])
+    };
+    
+    // Custom serialization/deserialization for the mixed collection
+    class MixedCollection implements ZSerializeable, ZDeserializeable {
+        uint16: Uint16Array;
+        int32: Int32Array;
+        float64: Float64Array;
+        
+        constructor(
+            uint16: Uint16Array = new Uint16Array(0),
+            int32: Int32Array = new Int32Array(0),
+            float64: Float64Array = new Float64Array(0)
+        ) {
+            this.uint16 = uint16;
+            this.int32 = int32;
+            this.float64 = float64;
+        }
+        
+        serializeWithZSerializer(serializer: ZBytesSerializer): void {
+            serializer.serialize(this.uint16, ZS.uint16array());
+            serializer.serialize(this.int32, ZS.int32array());
+            serializer.serialize(this.float64, ZS.float64array());
+        }
+        
+        deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
+            this.uint16 = deserializer.deserialize(ZD.uint16array());
+            this.int32 = deserializer.deserialize(ZD.int32array());
+            this.float64 = deserializer.deserialize(ZD.float64array());
+        }
+    }
+    
+    const mixed = new MixedCollection(
+        mixedCollection.uint16,
+        mixedCollection.int32,
+        mixedCollection.float64
+    );
+    
+    const mixedBytes = zserialize(mixed);
+    const mixedResult = zdeserialize(ZD.object(MixedCollection), mixedBytes);
+    
+    assert(mixedResult instanceof MixedCollection, "Result should be a MixedCollection");
+    assertEquals(
+        Array.from(mixedResult.uint16), 
+        Array.from(mixedCollection.uint16),
+        "uint16 mismatch"
+    );
+    assertEquals(
+        Array.from(mixedResult.int32), 
+        Array.from(mixedCollection.int32),
+        "int32 mismatch"
+    );
+    assert(
+        Array.from(mixedResult.float64).every((val, idx) => 
+            Math.abs(val - mixedCollection.float64[idx]) < 0.0001),
+        "float64 mismatch"
+    );
+});
