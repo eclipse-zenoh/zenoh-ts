@@ -27,17 +27,10 @@ import { assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
  * Configuration for the performance tests
  */
 const TEST_CONFIG = {
-    // Basic test configuration
-    dataArraySize: 10000,   // Size of test arrays - increased for more significant data volume
+    arraySize: 10000,   // Size of test arrays - increased for more significant data volume
+    maxStringLength: 8,  // Length of test strings is randomized but capped
     iterations: 10,      // Reduced iterations for quicker testing
     warmupIterations: 2, // Reduced warmup iterations
-
-    // String test configuration
-    stringLength: 10000,  // Length of test strings - increased significantly
-    stringArraySize: 100, // Number of strings in the array
-    
-    // Map test configuration
-    mapSize: 5000,      // Number of entries in test maps - increased significantly
 };
 
 /**
@@ -58,11 +51,11 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
 
     // String Array and Map
     strings: string[];
-    numberMap: Map<number, string>;
+    numberMap: Map<number, number>;
 
     constructor() {
         // Initialize arrays
-        const size = TEST_CONFIG.dataArraySize;
+        const size = TEST_CONFIG.arraySize;
         this.uint8Array = new Uint8Array(size).map(() => Math.floor(Math.random() * 256));
         this.uint16Array = new Uint16Array(size).map(() => Math.floor(Math.random() * 65536));
         this.uint32Array = new Uint32Array(size).map(() => Math.floor(Math.random() * 4294967296));
@@ -74,14 +67,16 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
         this.float32Array = new Float32Array(size).map(() => Math.random() * 1000);
         this.float64Array = new Float64Array(size).map(() => Math.random() * 1000);
 
-        // Initialize string array
-        const str = "a".repeat(TEST_CONFIG.stringLength);
-        this.strings = Array(TEST_CONFIG.stringArraySize).fill(str);
+        // Initialize string array wirh random strings of max length TEST_CONFIG.maxStringLength
+        this.strings = Array.from({ length: TEST_CONFIG.arraySize }, () => {
+            const stringLength = Math.floor(Math.random() * TEST_CONFIG.maxStringLength) + 1; // Random length between 1 and max
+            return Array.from({ length: stringLength }, () => String.fromCharCode(Math.floor(Math.random() * 26) + 97)).join(''); // Random lowercase letters
+        });
 
         // Initialize map
         this.numberMap = new Map();
-        for (let i = 0; i < TEST_CONFIG.mapSize; i++) {
-            this.numberMap.set(i, `value${i}`);
+        for (let i = 0; i < TEST_CONFIG.arraySize / 2; i++) {
+            this.numberMap.set(i, i);
         }
     }
 
@@ -100,7 +95,7 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
 
         // Serialize string array and map
         serializer.serialize(this.strings, ZS.array(ZS.string()));
-        serializer.serialize(this.numberMap, ZS.map(ZS.number(), ZS.string()));
+        serializer.serialize(this.numberMap, ZS.map(ZS.number(), ZS.number()));
     }
 
     deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
@@ -118,7 +113,7 @@ class ComplexSerializationTest implements ZSerializeable, ZDeserializeable {
 
         // Deserialize string array and map
         this.strings = deserializer.deserialize(ZD.array(ZD.string()));
-        this.numberMap = deserializer.deserialize(ZD.map(ZD.number(), ZD.string()));
+        this.numberMap = deserializer.deserialize(ZD.map(ZD.number(), ZD.number()));
     }
 }
 
@@ -169,18 +164,58 @@ function formatStats(
  */
 Deno.test("Serialization Performance Test", () => {
     console.log("\n=== Zenoh-TS Serialization Performance Test ===");
-    console.log(`Array Size:      ${TEST_CONFIG.dataArraySize} elements`);
-    console.log(`Map Size:        ${TEST_CONFIG.mapSize} entries`);
-    console.log(`String Length:   ${TEST_CONFIG.stringLength} characters`);
-    console.log(`String Array:    ${TEST_CONFIG.stringArraySize} strings`);
-    console.log(`Total Strings:   ${TEST_CONFIG.stringArraySize * TEST_CONFIG.stringLength} characters`);
+    console.log(`Array Size:      ${TEST_CONFIG.arraySize} elements`);
+    console.log(`Map Size:        ${TEST_CONFIG.arraySize} entries`);
+    console.log(`String Length:   ${TEST_CONFIG.maxStringLength} characters`);
+    console.log(`String Array:    ${TEST_CONFIG.arraySize} strings`);
+    console.log(`Total Strings:   ${TEST_CONFIG.arraySize * TEST_CONFIG.maxStringLength} characters`);
     console.log(`Iterations:      ${TEST_CONFIG.iterations}`);
     
     const testData = new ComplexSerializationTest();
     const serializationTimes: number[] = [];
     const deserializationTimes: number[] = [];
     let serializedBytesSize = 0;
-    
+
+    // Calculate size of each array type
+    const uint8Size = testData.uint8Array.byteLength;
+    const uint16Size = testData.uint16Array.byteLength;
+    const uint32Size = testData.uint32Array.byteLength;
+    const uint64Size = testData.bigUint64Array.byteLength;
+    const int8Size = testData.int8Array.byteLength;
+    const int16Size = testData.int16Array.byteLength;
+    const int32Size = testData.int32Array.byteLength;
+    const int64Size = testData.bigInt64Array.byteLength;
+    const float32Size = testData.float32Array.byteLength;
+    const float64Size = testData.float64Array.byteLength;
+
+    const arrayTotalSize = uint8Size + uint16Size + uint32Size + uint64Size +
+                            int8Size + int16Size + int32Size + int64Size +
+                            float32Size + float64Size;
+        
+    // Calculate string array size (2 bytes per character in JS)
+    const stringArraySize = testData.strings.reduce((total: number, str: string) => total + str.length, 0);
+        
+    // Calculate map size: number of entries * size of each entry
+    const mapSize = testData.numberMap.size * (8 + 8); // 8 bytes for key and 8 bytes for value
+        
+    const totalSize = arrayTotalSize + stringArraySize + mapSize;
+
+    console.log(`\nMemory structure size details:
+Uint8Array:     ${(uint8Size / 1024).toFixed(2)} KB (${uint8Size} bytes)
+Uint16Array:    ${(uint16Size / 1024).toFixed(2)} KB (${uint16Size} bytes)
+Uint32Array:    ${(uint32Size / 1024).toFixed(2)} KB (${uint32Size} bytes)
+BigUint64Array: ${(uint64Size / 1024).toFixed(2)} KB (${uint64Size} bytes)
+Int8Array:      ${(int8Size / 1024).toFixed(2)} KB (${int8Size} bytes)
+Int16Array:     ${(int16Size / 1024).toFixed(2)} KB (${int16Size} bytes)
+Int32Array:     ${(int32Size / 1024).toFixed(2)} KB (${int32Size} bytes)
+BigInt64Array:  ${(int64Size / 1024).toFixed(2)} KB (${int64Size} bytes)
+Float32Array:   ${(float32Size / 1024).toFixed(2)} KB (${float32Size} bytes)
+Float64Array:   ${(float64Size / 1024).toFixed(2)} KB (${float64Size} bytes)
+String Array:   ${(stringArraySize / 1024).toFixed(2)} KB (${stringArraySize} bytes)
+Map:            ${(mapSize / 1024).toFixed(2)} KB (${mapSize} bytes)
+--------------
+Total:          ${(totalSize / 1024).toFixed(2)} KB (${totalSize} bytes)`);
+
     // Warmup
     console.log("\nPerforming warmup...");
     for (let i = 0; i < TEST_CONFIG.warmupIterations; i++) {
@@ -207,54 +242,7 @@ Deno.test("Serialization Performance Test", () => {
         const deserializeEnd = performance.now();
         deserializationTimes.push(deserializeEnd - deserializeStart);
         
-        // Calculate actual structure size on first iteration
-        if (i === 0) {
-            // Calculate size of each array type
-            const uint8Size = testData.uint8Array.byteLength;
-            const uint16Size = testData.uint16Array.byteLength;
-            const uint32Size = testData.uint32Array.byteLength;
-            const uint64Size = testData.bigUint64Array.byteLength;
-            const int8Size = testData.int8Array.byteLength;
-            const int16Size = testData.int16Array.byteLength;
-            const int32Size = testData.int32Array.byteLength;
-            const int64Size = testData.bigInt64Array.byteLength;
-            const float32Size = testData.float32Array.byteLength;
-            const float64Size = testData.float64Array.byteLength;
-
-            const arrayTotalSize = uint8Size + uint16Size + uint32Size + uint64Size +
-                                 int8Size + int16Size + int32Size + int64Size +
-                                 float32Size + float64Size;
-                
-            // Calculate string array size (2 bytes per character in JS)
-            const stringSize = testData.strings.reduce((total: number, str: string) => total + str.length, 0) * 2;
-                
-            // Calculate map size (rough estimate: 8 bytes per number key + string lengths)
-            const mapSize = Array.from(testData.numberMap.values())
-                .reduce((total: number, str: string) => total + 8 + str.length * 2, 0);
-                
-            // Add size of individual number fields (8 bytes each for numbers)
-            const numberFieldsSize = 11 * 8;  // 11 number/bigint fields
-                
-            const totalSize = arrayTotalSize + stringSize + mapSize + numberFieldsSize;
-
-            console.log(`\nMemory structure size details:
-  Uint8Array:     ${(uint8Size / 1024).toFixed(2)} KB (${uint8Size} bytes)
-  Uint16Array:    ${(uint16Size / 1024).toFixed(2)} KB (${uint16Size} bytes)
-  Uint32Array:    ${(uint32Size / 1024).toFixed(2)} KB (${uint32Size} bytes)
-  BigUint64Array: ${(uint64Size / 1024).toFixed(2)} KB (${uint64Size} bytes)
-  Int8Array:      ${(int8Size / 1024).toFixed(2)} KB (${int8Size} bytes)
-  Int16Array:     ${(int16Size / 1024).toFixed(2)} KB (${int16Size} bytes)
-  Int32Array:     ${(int32Size / 1024).toFixed(2)} KB (${int32Size} bytes)
-  BigInt64Array:  ${(int64Size / 1024).toFixed(2)} KB (${int64Size} bytes)
-  Float32Array:   ${(float32Size / 1024).toFixed(2)} KB (${float32Size} bytes)
-  Float64Array:   ${(float64Size / 1024).toFixed(2)} KB (${float64Size} bytes)
-  String Array:   ${(stringSize / 1024).toFixed(2)} KB (${TEST_CONFIG.stringArraySize} x ${TEST_CONFIG.stringLength} chars)
-  Map:            ${(mapSize / 1024).toFixed(2)} KB
-  Numbers:        ${(numberFieldsSize / 1024).toFixed(2)} KB
-  --------------
-  Total:          ${(totalSize / 1024).toFixed(2)} KB`);
-        }
-        
+       
         // Verify correctness of key fields
         assert(result.uint8Array.length === testData.uint8Array.length, "Uint8Array length mismatch");
         assert(result.float64Array.length === testData.float64Array.length, "Float64Array length mismatch");
