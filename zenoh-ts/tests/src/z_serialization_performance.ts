@@ -91,128 +91,108 @@ function formatTestResults(name: string, results: TestResults): string {
 }
 
 /**
- * Helper function to generate random test data
+ * Define test cases for each type
  */
-function generateTestData() {
+function createTestCases(): TestCase<unknown>[] {
     const stringGen = () => {
         const len = Math.floor(Math.random() * TEST_CONFIG.maxStringLength) + 1;
         return Array.from({ length: len }, () => 
             String.fromCharCode(Math.floor(Math.random() * 26) + 97)).join('');
     };
 
-    return {
-        uint8Array: new Uint8Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 256)),
-        uint16Array: new Uint16Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 65536)),
-        uint32Array: new Uint32Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 4294967296)),
-        bigUint64Array: new BigUint64Array(TEST_CONFIG.arraySize)
-            .fill(BigInt(Number.MAX_SAFE_INTEGER)),
-        int8Array: new Int8Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 256) - 128),
-        int16Array: new Int16Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 65536) - 32768),
-        int32Array: new Int32Array(TEST_CONFIG.arraySize)
-            .map(() => Math.floor(Math.random() * 4294967296) - 2147483648),
-        bigInt64Array: new BigInt64Array(TEST_CONFIG.arraySize)
-            .fill(BigInt("-9223372036854775808")),
-        float32Array: new Float32Array(TEST_CONFIG.arraySize)
-            .map(() => Math.random() * 1000),
-        float64Array: new Float64Array(TEST_CONFIG.arraySize)
-            .map(() => Math.random() * 1000),
-        strings: Array.from({ length: TEST_CONFIG.arraySize }, stringGen),
-        numberMap: new Map(
-            Array.from({ length: TEST_CONFIG.arraySize }, (_, i) => [i, i] as [number, number])
-        ),
-    };
-}
-
-/**
- * Define test cases for each type
- */
-function createTestCases(testData: ReturnType<typeof generateTestData>): TestCase<unknown>[] {
     return [
         {
             name: "uint8Array",
-            data: testData.uint8Array,
+            data: new Uint8Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 256)),
             serialize: (v: Uint8Array) => zserialize(v, ZS.uint8array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint8array(), b) as Uint8Array,
             getSize: (d: Uint8Array) => d.byteLength,
         },
         {
             name: "uint16Array",
-            data: testData.uint16Array,
+            data: new Uint16Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 65536)),
             serialize: (v: Uint16Array) => zserialize(v, ZS.uint16array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint16array(), b) as Uint16Array,
             getSize: (d: Uint16Array) => d.byteLength,
         },
         {
             name: "uint32Array",
-            data: testData.uint32Array,
+            data: new Uint32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 4294967296)),
             serialize: (v: Uint32Array) => zserialize(v, ZS.uint32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint32array(), b) as Uint32Array,
             getSize: (d: Uint32Array) => d.byteLength,
         },
         {
             name: "bigUint64Array",
-            data: testData.bigUint64Array,
+            data: new BigUint64Array(TEST_CONFIG.arraySize)
+                .fill(BigInt(Number.MAX_SAFE_INTEGER)),
             serialize: (v: BigUint64Array) => zserialize(v, ZS.biguint64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.biguint64array(), b) as BigUint64Array,
             getSize: (d: BigUint64Array) => d.byteLength,
         },
         {
             name: "int8Array",
-            data: testData.int8Array,
+            data: new Int8Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 256) - 128),
             serialize: (v: Int8Array) => zserialize(v, ZS.int8array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int8array(), b) as Int8Array,
             getSize: (d: Int8Array) => d.byteLength,
         },
         {
             name: "int16Array",
-            data: testData.int16Array,
+            data: new Int16Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 65536) - 32768),
             serialize: (v: Int16Array) => zserialize(v, ZS.int16array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int16array(), b) as Int16Array,
             getSize: (d: Int16Array) => d.byteLength,
         },
         {
             name: "int32Array",
-            data: testData.int32Array,
+            data: new Int32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 4294967296) - 2147483648),
             serialize: (v: Int32Array) => zserialize(v, ZS.int32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int32array(), b) as Int32Array,
             getSize: (d: Int32Array) => d.byteLength,
         },
         {
             name: "bigInt64Array",
-            data: testData.bigInt64Array,
+            data: new BigInt64Array(TEST_CONFIG.arraySize)
+                .fill(BigInt("-9223372036854775808")),
             serialize: (v: BigInt64Array) => zserialize(v, ZS.bigint64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.bigint64array(), b) as BigInt64Array,
             getSize: (d: BigInt64Array) => d.byteLength,
         },
         {
             name: "float32Array",
-            data: testData.float32Array,
+            data: new Float32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.random() * 1000),
             serialize: (v: Float32Array) => zserialize(v, ZS.float32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.float32array(), b) as Float32Array,
             getSize: (d: Float32Array) => d.byteLength,
         },
         {
             name: "float64Array",
-            data: testData.float64Array,
+            data: new Float64Array(TEST_CONFIG.arraySize)
+                .map(() => Math.random() * 1000),
             serialize: (v: Float64Array) => zserialize(v, ZS.float64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.float64array(), b) as Float64Array,
             getSize: (d: Float64Array) => d.byteLength,
         },
         {
             name: "strings",
-            data: testData.strings,
+            data: Array.from({ length: TEST_CONFIG.arraySize }, stringGen),
             serialize: (value: string[]) => zserialize(value, ZS.array(ZS.string())),
             deserialize: (bytes: ZBytes) => zdeserialize(ZD.array(ZD.string()), bytes) as string[],
             getSize: (d: string[]) => d.reduce((total: number, str: string) => total + str.length * 2, 0),
         },
         {
             name: "numberMap",
-            data: testData.numberMap,
+            data: new Map(
+                Array.from({ length: TEST_CONFIG.arraySize }, (_, i) => [i, i] as [number, number])
+            ),
             serialize: (value: Map<number, number>) => zserialize(value, ZS.map(ZS.number(), ZS.number())),
             deserialize: (bytes: ZBytes) => zdeserialize(ZD.map(ZD.number(), ZD.number()), bytes) as Map<number, number>,
             getSize: (d: Map<number, number>) => d.size * 16,
@@ -250,20 +230,18 @@ function runTestCase<T>(testCase: TestCase<T>): TestResults {
 /**
  * Run performance tests for all cases
  */
-Deno.test("Serialization Performance Test", () => {    console.log("\n=== Zenoh-TS Serialization Performance Test ===");
+Deno.test("Serialization Performance Test", () => {
+    console.log("\n=== Zenoh-TS Serialization Performance Test ===");
     console.log(`Array Size:      ${TEST_CONFIG.arraySize} elements`);
-    console.log(`Map Size:        ${TEST_CONFIG.arraySize} entries`);
     console.log(`String Length:   ${TEST_CONFIG.maxStringLength} characters`);
-    console.log(`String Array:    ${TEST_CONFIG.arraySize} strings`);
     console.log(`Total Strings:   ${TEST_CONFIG.arraySize * TEST_CONFIG.maxStringLength} characters`);
     console.log(`Iterations:      ${TEST_CONFIG.iterations}`);
- 
-    const testData = generateTestData();
-    const testCases = createTestCases(testData);
-
+    console.log("");
+    
+    const testCases = createTestCases();
+    
     for (const testCase of testCases) {
         const results = runTestCase(testCase);
         console.log(formatTestResults(testCase.name, results));
     }
-
 });
