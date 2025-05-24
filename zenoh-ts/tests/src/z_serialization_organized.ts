@@ -776,43 +776,43 @@ Deno.test("Serialization - Big Endian Simulation", () => {
     
     // Test Uint16Array
     let bytes = zserialize(uint16Data, ZS.uint16array());
-    let result = zdeserialize(ZD.uint16array(), bytes);
-    assertEquals(Array.from(result), Array.from(uint16Data), "Uint16Array big-endian serialization failed");
+    let uint16Result = zdeserialize(ZD.uint16array(), bytes);
+    assertEquals(Array.from(uint16Result), Array.from(uint16Data), "Uint16Array big-endian serialization failed");
     
     // Test Uint32Array
     bytes = zserialize(uint32Data, ZS.uint32array());
-    result = zdeserialize(ZD.uint32array(), bytes);
-    assertEquals(Array.from(result), Array.from(uint32Data), "Uint32Array big-endian serialization failed");
+    let uint32Result = zdeserialize(ZD.uint32array(), bytes);
+    assertEquals(Array.from(uint32Result), Array.from(uint32Data), "Uint32Array big-endian serialization failed");
     
     // Test BigUint64Array
     bytes = zserialize(bigUint64Data, ZS.biguint64array());
-    result = zdeserialize(ZD.biguint64array(), bytes);
-    assertEquals(Array.from(result), Array.from(bigUint64Data), "BigUint64Array big-endian serialization failed");
+    let bigUint64Result = zdeserialize(ZD.biguint64array(), bytes);
+    assertEquals(Array.from(bigUint64Result), Array.from(bigUint64Data), "BigUint64Array big-endian serialization failed");
     
     // Test Int16Array
     bytes = zserialize(int16Data, ZS.int16array());
-    result = zdeserialize(ZD.int16array(), bytes);
-    assertEquals(Array.from(result), Array.from(int16Data), "Int16Array big-endian serialization failed");
+    let int16Result = zdeserialize(ZD.int16array(), bytes);
+    assertEquals(Array.from(int16Result), Array.from(int16Data), "Int16Array big-endian serialization failed");
     
     // Test Int32Array
     bytes = zserialize(int32Data, ZS.int32array());
-    result = zdeserialize(ZD.int32array(), bytes);
-    assertEquals(Array.from(result), Array.from(int32Data), "Int32Array big-endian serialization failed");
+    let int32Result = zdeserialize(ZD.int32array(), bytes);
+    assertEquals(Array.from(int32Result), Array.from(int32Data), "Int32Array big-endian serialization failed");
     
     // Test BigInt64Array
     bytes = zserialize(bigInt64Data, ZS.bigint64array());
-    result = zdeserialize(ZD.bigint64array(), bytes);
-    assertEquals(Array.from(result), Array.from(bigInt64Data), "BigInt64Array big-endian serialization failed");
+    let bigInt64Result = zdeserialize(ZD.bigint64array(), bytes);
+    assertEquals(Array.from(bigInt64Result), Array.from(bigInt64Data), "BigInt64Array big-endian serialization failed");
     
     // Test Float32Array
     bytes = zserialize(float32Data, ZS.float32array());
-    result = zdeserialize(ZD.float32array(), bytes);
-    assert(compareFloatArrays(result, float32Data), "Float32Array big-endian serialization failed");
+    let float32Result = zdeserialize(ZD.float32array(), bytes);
+    assert(compareFloatArrays(float32Result, float32Data), "Float32Array big-endian serialization failed");
     
     // Test Float64Array
     bytes = zserialize(float64Data, ZS.float64array());
-    result = zdeserialize(ZD.float64array(), bytes);
-    assert(compareFloatArrays(result, float64Data), "Float64Array big-endian serialization failed");
+    let float64Result = zdeserialize(ZD.float64array(), bytes);
+    assert(compareFloatArrays(float64Result, float64Data), "Float64Array big-endian serialization failed");
 });
 
 Deno.test("Serialization - Error Handling and Bounds", () => {
@@ -832,7 +832,7 @@ Deno.test("Serialization - Error Handling and Bounds", () => {
         deserializer.deserializeString(); // This should fail
     } catch (e) {
         errorThrown = true;
-        assert(e.message.includes("out of bounds"), "Expected out of bounds error");
+        assert((e as Error).message.includes("out of bounds"), "Expected out of bounds error");
     }
     assert(errorThrown, "Expected error for reading beyond buffer bounds");
     
@@ -841,9 +841,9 @@ Deno.test("Serialization - Error Handling and Bounds", () => {
     // Test with a very large sequence that could cause overflow
     largeSerializer.writeSequenceLength(Number.MAX_SAFE_INTEGER + 1);
     
-    // Test invalid boolean values
+    // Test invalid boolean values - create manually by serializing an invalid value
     const boolSerializer = new ZBytesSerializer();
-    boolSerializer.append(new Uint8Array([5])); // Invalid boolean value (not 0 or 1)
+    boolSerializer.serializeNumberUint8(5); // Invalid boolean value (not 0 or 1)
     const invalidBoolBytes = boolSerializer.finish();
     
     errorThrown = false;
@@ -851,14 +851,16 @@ Deno.test("Serialization - Error Handling and Bounds", () => {
         zdeserialize(ZD.boolean(), invalidBoolBytes);
     } catch (e) {
         errorThrown = true;
-        assert(e.message.includes("Unexpected boolean value"), "Expected boolean error");
+        assert((e as Error).message.includes("Unexpected boolean value"), "Expected boolean error");
     }
     assert(errorThrown, "Expected error for invalid boolean value");
     
-    // Test payload with extra bytes
+    // Test payload with extra bytes - create a valid string with extra data
     const extraBytesSerializer = new ZBytesSerializer();
     extraBytesSerializer.serializeString("test");
-    extraBytesSerializer.append(new Uint8Array([1, 2, 3])); // Extra bytes
+    extraBytesSerializer.serializeNumberUint8(1); // Extra byte
+    extraBytesSerializer.serializeNumberUint8(2); // More extra bytes
+    extraBytesSerializer.serializeNumberUint8(3);
     const extraBytes = extraBytesSerializer.finish();
     
     errorThrown = false;
@@ -866,7 +868,7 @@ Deno.test("Serialization - Error Handling and Bounds", () => {
         zdeserialize(ZD.string(), extraBytes);
     } catch (e) {
         errorThrown = true;
-        assert(e.message.includes("more bytes than required"), "Expected extra bytes error");
+        assert((e as Error).message.includes("more bytes than required"), "Expected extra bytes error");
     }
     assert(errorThrown, "Expected error for extra bytes in payload");
 });
@@ -897,33 +899,60 @@ Deno.test("Serialization - NumberUint8 Specific Edge Cases", () => {
 Deno.test("Serialization - Default Tag Detection Edge Cases", () => {
     // Test getDefaultSerializationTag branches that aren't covered
     
-    // Test with different data types to trigger various branches
-    const testCases = [
-        { data: true, deserializer: ZD.boolean() },
-        { data: 42n, deserializer: ZD.bigint() },
-        { data: new Uint16Array([1, 2]), deserializer: ZD.uint16array() },
-        { data: new Uint32Array([1, 2]), deserializer: ZD.uint32array() },
-        { data: new BigUint64Array([1n, 2n]), deserializer: ZD.biguint64array() },
-        { data: new Int16Array([1, 2]), deserializer: ZD.int16array() },
-        { data: new Int32Array([1, 2]), deserializer: ZD.int32array() },
-        { data: new BigInt64Array([1n, 2n]), deserializer: ZD.bigint64array() },
-        { data: new Float64Array([1.0, 2.0]), deserializer: ZD.float64array() }
-    ];
+    // Test boolean
+    const boolData = true;
+    const boolBytes = zserialize(boolData);
+    const boolResult = zdeserialize(ZD.boolean(), boolBytes);
+    assertEquals(boolResult, boolData, `Auto serialization failed for boolean`);
     
-    for (const testCase of testCases) {
-        // Test automatic serialization without explicit tags
-        const bytes = zserialize(testCase.data);
-        const result = zdeserialize(testCase.deserializer, bytes);
-        
-        if (typeof testCase.data === "boolean") {
-            assertEquals(result, testCase.data, `Auto serialization failed for boolean`);
-        } else if (typeof testCase.data === "bigint") {
-            assertEquals(result, testCase.data, `Auto serialization failed for bigint`);
-        } else {
-            assertEquals(Array.from(result as any), Array.from(testCase.data as any), 
-                        `Auto serialization failed for typed array`);
-        }
-    }
+    // Test bigint
+    const bigintData = 42n;
+    const bigintBytes = zserialize(bigintData);
+    const bigintResult = zdeserialize(ZD.bigint(), bigintBytes);
+    assertEquals(bigintResult, bigintData, `Auto serialization failed for bigint`);
+    
+    // Test various typed arrays
+    const uint16Data = new Uint16Array([1, 2]);
+    const uint16Bytes = zserialize(uint16Data);
+    const uint16Result = zdeserialize(ZD.uint16array(), uint16Bytes);
+    assertEquals(Array.from(uint16Result), Array.from(uint16Data), 
+                `Auto serialization failed for Uint16Array`);
+    
+    const uint32Data = new Uint32Array([1, 2]);
+    const uint32Bytes = zserialize(uint32Data);
+    const uint32Result = zdeserialize(ZD.uint32array(), uint32Bytes);
+    assertEquals(Array.from(uint32Result), Array.from(uint32Data), 
+                `Auto serialization failed for Uint32Array`);
+    
+    const bigUint64Data = new BigUint64Array([1n, 2n]);
+    const bigUint64Bytes = zserialize(bigUint64Data);
+    const bigUint64Result = zdeserialize(ZD.biguint64array(), bigUint64Bytes);
+    assertEquals(Array.from(bigUint64Result), Array.from(bigUint64Data), 
+                `Auto serialization failed for BigUint64Array`);
+    
+    const int16Data = new Int16Array([1, 2]);
+    const int16Bytes = zserialize(int16Data);
+    const int16Result = zdeserialize(ZD.int16array(), int16Bytes);
+    assertEquals(Array.from(int16Result), Array.from(int16Data), 
+                `Auto serialization failed for Int16Array`);
+    
+    const int32Data = new Int32Array([1, 2]);
+    const int32Bytes = zserialize(int32Data);
+    const int32Result = zdeserialize(ZD.int32array(), int32Bytes);
+    assertEquals(Array.from(int32Result), Array.from(int32Data), 
+                `Auto serialization failed for Int32Array`);
+    
+    const bigInt64Data = new BigInt64Array([1n, 2n]);
+    const bigInt64Bytes = zserialize(bigInt64Data);
+    const bigInt64Result = zdeserialize(ZD.bigint64array(), bigInt64Bytes);
+    assertEquals(Array.from(bigInt64Result), Array.from(bigInt64Data), 
+                `Auto serialization failed for BigInt64Array`);
+    
+    const float64Data = new Float64Array([1.0, 2.0]);
+    const float64Bytes = zserialize(float64Data);
+    const float64Result = zdeserialize(ZD.float64array(), float64Bytes);
+    assertEquals(Array.from(float64Result), Array.from(float64Data), 
+                `Auto serialization failed for Float64Array`);
     
     // Test array with undefined tag detection
     const mixedArray = [1, 2, 3];
@@ -948,8 +977,8 @@ Deno.test("Serialization - Non-Serializable Type Error", () => {
         zserialize(invalidData as any);
     } catch (e) {
         errorThrown = true;
-        assert(e.message.includes("Non-ZSerializeable type") || 
-               e.message.includes("Cannot serialize"), 
+        assert((e as Error).message.includes("Non-ZSerializeable type") || 
+               (e as Error).message.includes("Cannot serialize"), 
                "Expected non-serializable type error");
     }
     assert(errorThrown, "Expected error for non-serializable type");
@@ -961,8 +990,8 @@ Deno.test("Serialization - Non-Serializable Type Error", () => {
         zserialize(plainObject as any);
     } catch (e) {
         errorThrown = true;
-        assert(e.message.includes("Non-ZSerializeable type") || 
-               e.message.includes("Cannot serialize"), 
+        assert((e as Error).message.includes("Non-ZSerializeable type") || 
+               (e as Error).message.includes("Cannot serialize"), 
                "Expected non-serializable object error");
     }
     assert(errorThrown, "Expected error for plain object without ZSerializeable interface");
