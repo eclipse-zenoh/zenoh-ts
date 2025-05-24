@@ -31,9 +31,9 @@ import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asse
  */
 const TEST_CONFIG = {
     // Basic test configuration
-    dataArraySize: 5000,   // Size of test arrays
-    iterations: 300,      // Number of iterations per test
-    warmupIterations: 20, // Number of warmup iterations
+    dataArraySize: 20000,   // Size of test arrays
+    iterations: 100,      // Number of iterations per test
+    warmupIterations: 10, // Number of warmup iterations
     
     // String test configuration
     stringLength: 100,    // Length of test strings
@@ -186,7 +186,6 @@ function calculateStats(
     min: number; 
     max: number; 
     stddev: number;
-    throughput: number; 
     bytesPerSecond: number 
 } {
     const avg = times.reduce((a, b) => a + b) / times.length;
@@ -197,10 +196,9 @@ function calculateStats(
     const variance = times.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / times.length;
     const stddev = Math.sqrt(variance);
 
-    const throughput = TEST_CONFIG.dataArraySize / avg * 1000;
     const bytesPerSecond = bytesSize / avg * 1000;
     
-    return { avg, min, max, stddev, throughput, bytesPerSecond };
+    return { avg, min, max, stddev, bytesPerSecond };
 }
 
 /**
@@ -215,7 +213,6 @@ function formatStats(
   Serialization:   ${serStats.avg.toFixed(3)} ms (min: ${serStats.min.toFixed(3)}, max: ${serStats.max.toFixed(3)}, stddev: ${serStats.stddev.toFixed(3)})
   Deserialization: ${deserStats.avg.toFixed(3)} ms (min: ${deserStats.min.toFixed(3)}, max: ${deserStats.max.toFixed(3)}, stddev: ${deserStats.stddev.toFixed(3)})
   Total:           ${(serStats.avg + deserStats.avg).toFixed(3)} ms
-  Throughput:      ${Math.floor(serStats.throughput)} items/sec serialization, ${Math.floor(deserStats.throughput)} items/sec deserialization
   Bandwidth:       ${Math.floor(serStats.bytesPerSecond / 1024)} KB/sec serialization, ${Math.floor(deserStats.bytesPerSecond / 1024)} KB/sec deserialization`;
 }
 
