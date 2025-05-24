@@ -950,3 +950,412 @@ Deno.test("Serialization - Non-Serializable Type Error", () => {
     }
     assert(errorThrown, "Expected error for plain object without ZSerializeable interface");
 });
+
+Deno.test("Serialization - Edge Cases for getDefaultSerializationTag Branches", () => {
+    // Test empty array (should have undefined tag)
+    const emptyArray: number[] = [];
+    const emptyArrayBytes = zserialize(emptyArray);
+    const emptyArrayResult = zdeserialize(ZD.array(ZD.number()), emptyArrayBytes);
+    assertEquals(emptyArrayResult, emptyArray, "Empty array serialization failed");
+    
+    // Test empty map (should have undefined key/value tags)
+    const emptyMap = new Map<string, number>();
+    const emptyMapBytes = zserialize(emptyMap);
+    const emptyMapResult = zdeserialize(ZD.map(ZD.string(), ZD.number()), emptyMapBytes);
+    assertEquals(Array.from(emptyMapResult.entries()), Array.from(emptyMap.entries()), "Empty map serialization failed");
+    
+    // Test map where entries().next() returns valid data but edge case handling
+    const singleEntryMap = new Map([["test", 123]]);
+    const singleMapBytes = zserialize(singleEntryMap);
+    const singleMapResult = zdeserialize(ZD.map(ZD.string(), ZD.number()), singleMapBytes);
+    assertEquals(Array.from(singleMapResult.entries()), Array.from(singleEntryMap.entries()), "Single entry map failed");
+    
+    // Test different data types to ensure all branches are hit
+    const boolTest = true;
+    const boolBytes = zserialize(boolTest);
+    const boolResult = zdeserialize(ZD.boolean(), boolBytes);
+    assertEquals(boolResult, boolTest, "boolean serialization failed");
+    
+    const bigintTest = 123n;
+    const bigintBytes = zserialize(bigintTest);
+    const bigintResult = zdeserialize(ZD.bigint(), bigintBytes);
+    assertEquals(bigintResult, bigintTest, "bigint serialization failed");
+    
+    const stringTest = "test";
+    const stringBytes = zserialize(stringTest);
+    const stringResult = zdeserialize(ZD.string(), stringBytes);
+    assertEquals(stringResult, stringTest, "string serialization failed");
+    
+    const numberTest = 42.5;
+    const numberBytes = zserialize(numberTest);
+    const numberResult = zdeserialize(ZD.number(), numberBytes);
+    assertEquals(numberResult, numberTest, "number serialization failed");
+    
+    const uint8Test = new Uint8Array([1, 2, 3]);
+    const uint8Bytes = zserialize(uint8Test);
+    const uint8Result = zdeserialize(ZD.uint8array(), uint8Bytes);
+    assertEquals(Array.from(uint8Result), Array.from(uint8Test), "Uint8Array serialization failed");
+    
+    const float32Test = new Float32Array([1.0, 2.0]);
+    const float32Bytes = zserialize(float32Test);
+    const float32Result = zdeserialize(ZD.float32array(), float32Bytes);
+    assertEquals(Array.from(float32Result), Array.from(float32Test), "Float32Array serialization failed");
+});
+
+// Test targeting very specific uncovered branches to improve coverage
+Deno.test("Serialization - Complete Branch Coverage for getDefaultSerializationTag", () => {
+    // Test custom object implementing ZSerializeable (first branch in getDefaultSerializationTag)
+    class TestSerializeable implements ZSerializeable, ZDeserializeable {
+        public value: number = 42;
+        
+        serializeWithZSerializer(serializer: ZBytesSerializer): void {
+            serializer.serialize(this.value, ZS.number());
+        }
+        
+        deserializeWithZDeserializer(deserializer: ZBytesDeserializer): void {
+            this.value = deserializer.deserialize(ZD.number());
+        }
+    }
+    
+    const testObj = new TestSerializeable();
+    const objBytes = zserialize(testObj);
+    const objResult = zdeserialize(ZD.object(TestSerializeable), objBytes);
+    assertEquals(objResult.value, testObj.value, "ZSerializeable object serialization failed");
+    
+    // Test all basic types to ensure complete branch coverage
+    const testNumber = 123.456;
+    const numBytes = zserialize(testNumber);
+    const numResult = zdeserialize(ZD.number(), numBytes);
+    assertEquals(numResult, testNumber, "Number auto-tag failed");
+    
+    const testBigint = 9007199254740991n;
+    const bigintBytes = zserialize(testBigint);
+    const bigintResult = zdeserialize(ZD.bigint(), bigintBytes);
+    assertEquals(bigintResult, testBigint, "Bigint auto-tag failed");
+    
+    const testString = "hello world";
+    const stringBytes = zserialize(testString);
+    const stringResult = zdeserialize(ZD.string(), stringBytes);
+    assertEquals(stringResult, testString, "String auto-tag failed");
+    
+    const testBoolean = false;
+    const boolBytes = zserialize(testBoolean);
+    const boolResult = zdeserialize(ZD.boolean(), boolBytes);
+    assertEquals(boolResult, testBoolean, "Boolean auto-tag failed");
+    
+    // Test all TypedArray types for complete branch coverage
+    const uint8Test = new Uint8Array([1, 2, 3]);
+    const uint8Bytes = zserialize(uint8Test);
+    const uint8Result = zdeserialize(ZD.uint8array(), uint8Bytes);
+    assertEquals(Array.from(uint8Result), Array.from(uint8Test), "Uint8Array auto-tag failed");
+    
+    const uint16Test = new Uint16Array([256, 512]);
+    const uint16Bytes = zserialize(uint16Test);
+    const uint16Result = zdeserialize(ZD.uint16array(), uint16Bytes);
+    assertEquals(Array.from(uint16Result), Array.from(uint16Test), "Uint16Array auto-tag failed");
+    
+    const uint32Test = new Uint32Array([65536, 131072]);
+    const uint32Bytes = zserialize(uint32Test);
+    const uint32Result = zdeserialize(ZD.uint32array(), uint32Bytes);
+    assertEquals(Array.from(uint32Result), Array.from(uint32Test), "Uint32Array auto-tag failed");
+    
+    const bigUint64Test = new BigUint64Array([1n, 2n, 3n]);
+    const bigUint64Bytes = zserialize(bigUint64Test);
+    const bigUint64Result = zdeserialize(ZD.biguint64array(), bigUint64Bytes);
+    assertEquals(Array.from(bigUint64Result), Array.from(bigUint64Test), "BigUint64Array auto-tag failed");
+    
+    const int8Test = new Int8Array([-1, 0, 1]);
+    const int8Bytes = zserialize(int8Test);
+    const int8Result = zdeserialize(ZD.int8array(), int8Bytes);
+    assertEquals(Array.from(int8Result), Array.from(int8Test), "Int8Array auto-tag failed");
+    
+    const int16Test = new Int16Array([-256, 0, 256]);
+    const int16Bytes = zserialize(int16Test);
+    const int16Result = zdeserialize(ZD.int16array(), int16Bytes);
+    assertEquals(Array.from(int16Result), Array.from(int16Test), "Int16Array auto-tag failed");
+    
+    const int32Test = new Int32Array([-65536, 0, 65536]);
+    const int32Bytes = zserialize(int32Test);
+    const int32Result = zdeserialize(ZD.int32array(), int32Bytes);
+    assertEquals(Array.from(int32Result), Array.from(int32Test), "Int32Array auto-tag failed");
+    
+    const bigInt64Test = new BigInt64Array([-1n, 0n, 1n]);
+    const bigInt64Bytes = zserialize(bigInt64Test);
+    const bigInt64Result = zdeserialize(ZD.bigint64array(), bigInt64Bytes);
+    assertEquals(Array.from(bigInt64Result), Array.from(bigInt64Test), "BigInt64Array auto-tag failed");
+    
+    const float32Test = new Float32Array([1.5, -2.5, 3.5]);
+    const float32Bytes = zserialize(float32Test);
+    const float32Result = zdeserialize(ZD.float32array(), float32Bytes);
+    assertEquals(Array.from(float32Result), Array.from(float32Test), "Float32Array auto-tag failed");
+    
+    const float64Test = new Float64Array([1.1234567890123456, -2.1234567890123456]);
+    const float64Bytes = zserialize(float64Test);
+    const float64Result = zdeserialize(ZD.float64array(), float64Bytes);
+    assertEquals(Array.from(float64Result), Array.from(float64Test), "Float64Array auto-tag failed");
+});
+
+Deno.test("Serialization - Array and Map Edge Cases for Branch Coverage", () => {
+    // Test array with single element to ensure getDefaultSerializationTag is called
+    const singleElementArray = [42];
+    const singleBytes = zserialize(singleElementArray);
+    const singleResult = zdeserialize(ZD.array(ZD.number()), singleBytes);
+    assertEquals(singleResult, singleElementArray, "Single element array failed");
+    
+    // Test array with multiple elements of same type
+    const multiElementArray = [1, 2, 3, 4, 5];
+    const multiBytes = zserialize(multiElementArray);
+    const multiResult = zdeserialize(ZD.array(ZD.number()), multiBytes);
+    assertEquals(multiResult, multiElementArray, "Multi element array failed");
+    
+    // Test Map with single entry to trigger the map branch logic
+    const singleEntryMap = new Map<string, boolean>();
+    singleEntryMap.set("test", true);
+    const mapBytes = zserialize(singleEntryMap);
+    const mapResult = zdeserialize(ZD.map(ZD.string(), ZD.boolean()), mapBytes);
+    assertEquals(Array.from(mapResult.entries()), Array.from(singleEntryMap.entries()), "Single entry map failed");
+    
+    // Test Map with multiple entries
+    const multiEntryMap = new Map<number, string>();
+    multiEntryMap.set(1, "one");
+    multiEntryMap.set(2, "two");
+    multiEntryMap.set(3, "three");
+    const multiMapBytes = zserialize(multiEntryMap);
+    const multiMapResult = zdeserialize(ZD.map(ZD.number(), ZD.string()), multiMapBytes);
+    assertEquals(Array.from(multiMapResult.entries()), Array.from(multiEntryMap.entries()), "Multi entry map failed");
+    
+    // Test edge case: Map where entries().next() might have edge behavior
+    const complexMap = new Map<bigint, Uint8Array>();
+    complexMap.set(123n, new Uint8Array([1, 2, 3]));
+    const complexMapBytes = zserialize(complexMap);
+    const complexMapResult = zdeserialize(ZD.map(ZD.bigint(), ZD.uint8array()), complexMapBytes);
+    assertEquals(complexMapResult.size, complexMap.size, "Complex map size mismatch");
+    
+    // Verify the content
+    for (const [key, value] of complexMap.entries()) {
+        const resultValue = complexMapResult.get(key);
+        assert(resultValue !== undefined, "Map key not found in result");
+        assertEquals(Array.from(resultValue), Array.from(value), "Map value mismatch");
+    }
+});
+
+Deno.test("Serialization - Edge Cases for Serialization Methods to Improve Coverage", () => {
+    // Test direct array serialization with no type specified
+    const serializer = new ZBytesSerializer();
+    const testArray = [10, 20, 30];
+    serializer.serializeArray(testArray); // This should trigger getDefaultSerializationTag
+    const arrayBytes = serializer.finish();
+    
+    const deserializer = new ZBytesDeserializer(arrayBytes);
+    const arrayResult = deserializer.deserializeArray(ZD.number());
+    assertEquals(arrayResult, testArray, "Direct array serialization failed");
+    
+    // Test direct map serialization with no types specified
+    const mapSerializer = new ZBytesSerializer();
+    const testMap = new Map<string, number>();
+    testMap.set("a", 1);
+    testMap.set("b", 2);
+    mapSerializer.serializeMap(testMap); // This should trigger getDefaultSerializationTag for both key and value
+    const mapBytes = mapSerializer.finish();
+    
+    const mapDeserializer = new ZBytesDeserializer(mapBytes);
+    const mapResult = mapDeserializer.deserializeMap(ZD.string(), ZD.number());
+    assertEquals(Array.from(mapResult.entries()), Array.from(testMap.entries()), "Direct map serialization failed");
+    
+    // Test empty array case where array.length == 0 (should have t=undefined)
+    const emptyArraySerializer = new ZBytesSerializer();
+    const emptyArray: number[] = [];
+    emptyArraySerializer.serializeArray(emptyArray);
+    const emptyArrayBytes = emptyArraySerializer.finish();
+    
+    const emptyArrayDeserializer = new ZBytesDeserializer(emptyArrayBytes);
+    const emptyArrayResult = emptyArrayDeserializer.deserializeArray(ZD.number());
+    assertEquals(emptyArrayResult, emptyArray, "Empty array direct serialization failed");
+    
+    // Test empty map case where map.size == 0
+    const emptyMapSerializer = new ZBytesSerializer();
+    const emptyMap = new Map<string, number>();
+    emptyMapSerializer.serializeMap(emptyMap);
+    const emptyMapBytes = emptyMapSerializer.finish();
+    
+    const emptyMapDeserializer = new ZBytesDeserializer(emptyMapBytes);
+    const emptyMapResult = emptyMapDeserializer.deserializeMap(ZD.string(), ZD.number());
+    assertEquals(Array.from(emptyMapResult.entries()), Array.from(emptyMap.entries()), "Empty map direct serialization failed");
+});
+
+Deno.test("Serialization - Testing Big Endian Path Coverage", () => {
+    // Create test data for all typed arrays to ensure both little and big endian paths are covered
+    // Even though we can't change the system endianness, we want to ensure all serialization calls are made
+    
+    const uint16Data = new Uint16Array([0x1234, 0x5678]);
+    const uint16Bytes = zserialize(uint16Data, ZS.uint16array());
+    const uint16Result = zdeserialize(ZD.uint16array(), uint16Bytes);
+    assertEquals(Array.from(uint16Result), Array.from(uint16Data), "Uint16Array serialization path failed");
+    
+    const uint32Data = new Uint32Array([0x12345678, 0x9ABCDEF0]);
+    const uint32Bytes = zserialize(uint32Data, ZS.uint32array());
+    const uint32Result = zdeserialize(ZD.uint32array(), uint32Bytes);
+    assertEquals(Array.from(uint32Result), Array.from(uint32Data), "Uint32Array serialization path failed");
+    
+    const bigUint64Data = new BigUint64Array([0x123456789ABCDEFn, 0xFEDCBA9876543210n]);
+    const bigUint64Bytes = zserialize(bigUint64Data, ZS.biguint64array());
+    const bigUint64Result = zdeserialize(ZD.biguint64array(), bigUint64Bytes);
+    assertEquals(Array.from(bigUint64Result), Array.from(bigUint64Data), "BigUint64Array serialization path failed");
+    
+    const int16Data = new Int16Array([-0x1234, 0x5678]);
+    const int16Bytes = zserialize(int16Data, ZS.int16array());
+    const int16Result = zdeserialize(ZD.int16array(), int16Bytes);
+    assertEquals(Array.from(int16Result), Array.from(int16Data), "Int16Array serialization path failed");
+    
+    const int32Data = new Int32Array([-0x12345678, 0x7ABCDEF0]);
+    const int32Bytes = zserialize(int32Data, ZS.int32array());
+    const int32Result = zdeserialize(ZD.int32array(), int32Bytes);
+    assertEquals(Array.from(int32Result), Array.from(int32Data), "Int32Array serialization path failed");
+    
+    const bigInt64Data = new BigInt64Array([-0x123456789ABCDEFn, 0x7EDCBA9876543210n]);
+    const bigInt64Bytes = zserialize(bigInt64Data, ZS.bigint64array());
+    const bigInt64Result = zdeserialize(ZD.bigint64array(), bigInt64Bytes);
+    assertEquals(Array.from(bigInt64Result), Array.from(bigInt64Data), "BigInt64Array serialization path failed");
+    
+    const float32Data = new Float32Array([3.14159, -2.71828, 1.41421, -0.57722]);
+    const float32Bytes = zserialize(float32Data, ZS.float32array());
+    const float32Result = zdeserialize(ZD.float32array(), float32Bytes);
+    assertEquals(Array.from(float32Result), Array.from(float32Data), "Float32Array serialization path failed");
+    
+    const float64Data = new Float64Array([Math.PI, -Math.E, Math.SQRT2, -Math.LN2]);
+    const float64Bytes = zserialize(float64Data, ZS.float64array());
+    const float64Result = zdeserialize(ZD.float64array(), float64Bytes);
+    assertEquals(Array.from(float64Result), Array.from(float64Data), "Float64Array serialization path failed");
+});
+
+Deno.test("Serialization - Individual Number Format Testing for Complete Coverage", () => {
+    // Test all number formats individually to ensure complete coverage
+    const testValues = {
+        float64: [1.7976931348623157e+308, -1.7976931348623157e+308, 0.0, -0.0],
+        float32: [3.4028235e+38, -3.4028235e+38, 1.175494e-38, -1.175494e-38],
+        int64: [9007199254740991, -9007199254740991, 0, 1, -1],
+        uint64: [9007199254740991, 0, 1, 2],
+        int32: [2147483647, -2147483648, 0, 1, -1],
+        uint32: [4294967295, 0, 1, 2],
+        int16: [32767, -32768, 0, 1, -1],
+        uint16: [65535, 0, 1, 2],
+        int8: [127, -128, 0, 1, -1],
+        uint8: [255, 0, 1, 2]
+    };
+    
+    // Test Float64
+    for (const val of testValues.float64) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Float64));
+        const result = zdeserialize(ZD.number(NumberFormat.Float64), bytes);
+        assertEquals(result, val, `Float64 failed for ${val}`);
+    }
+    
+    // Test Float32
+    for (const val of testValues.float32) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Float32));
+        const result = zdeserialize(ZD.number(NumberFormat.Float32), bytes);
+        // Use appropriate tolerance for Float32 precision
+        assert(Math.abs(result - val) < Math.abs(val) * 1e-6 || Math.abs(result - val) < 1e-30, `Float32 failed for ${val}, got ${result}`);
+    }
+    
+    // Test Int64
+    for (const val of testValues.int64) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Int64));
+        const result = zdeserialize(ZD.number(NumberFormat.Int64), bytes);
+        assertEquals(result, val, `Int64 failed for ${val}`);
+    }
+    
+    // Test Uint64
+    for (const val of testValues.uint64) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint64));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint64), bytes);
+        assertEquals(result, val, `Uint64 failed for ${val}`);
+    }
+    
+    // Test Int32
+    for (const val of testValues.int32) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Int32));
+        const result = zdeserialize(ZD.number(NumberFormat.Int32), bytes);
+        assertEquals(result, val, `Int32 failed for ${val}`);
+    }
+    
+    // Test Uint32
+    for (const val of testValues.uint32) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint32));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint32), bytes);
+        assertEquals(result, val, `Uint32 failed for ${val}`);
+    }
+    
+    // Test Int16
+    for (const val of testValues.int16) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Int16));
+        const result = zdeserialize(ZD.number(NumberFormat.Int16), bytes);
+        assertEquals(result, val, `Int16 failed for ${val}`);
+    }
+    
+    // Test Uint16
+    for (const val of testValues.uint16) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint16));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint16), bytes);
+        assertEquals(result, val, `Uint16 failed for ${val}`);
+    }
+    
+    // Test Int8
+    for (const val of testValues.int8) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Int8));
+        const result = zdeserialize(ZD.number(NumberFormat.Int8), bytes);
+        assertEquals(result, val, `Int8 failed for ${val}`);
+    }
+    
+    // Test Uint8
+    for (const val of testValues.uint8) {
+        const bytes = zserialize(val, ZS.number(NumberFormat.Uint8));
+        const result = zdeserialize(ZD.number(NumberFormat.Uint8), bytes);
+        assertEquals(result, val, `Uint8 failed for ${val}`);
+    }
+});
+
+Deno.test("Serialization - BigInt Format Testing for Complete Coverage", () => {
+    // Test both BigInt formats with edge values
+    const bigintValues = [
+        0n, 1n, -1n, 
+        9223372036854775807n, -9223372036854775808n, // Int64 limits
+        18446744073709551615n, // Uint64 max
+        123456789012345678n, -987654321098765432n
+    ];
+    
+    // Test BigIntFormat.Int64
+    for (const val of bigintValues) {
+        try {
+            const bytes = zserialize(val, ZS.bigint(BigIntFormat.Int64));
+            const result = zdeserialize(ZD.bigint(BigIntFormat.Int64), bytes);
+            assertEquals(result, val, `BigInt Int64 failed for ${val}`);
+        } catch (e) {
+            // Some values might be out of range for Int64, that's expected
+            if (val > 9223372036854775807n || val < -9223372036854775808n) {
+                // Expected for out of range values
+                continue;
+            } else {
+                throw e;
+            }
+        }
+    }
+    
+    // Test BigIntFormat.Uint64 (only positive values)
+    const uint64Values = bigintValues.filter(v => v >= 0n);
+    for (const val of uint64Values) {
+        try {
+            const bytes = zserialize(val, ZS.bigint(BigIntFormat.Uint64));
+            const result = zdeserialize(ZD.bigint(BigIntFormat.Uint64), bytes);
+            assertEquals(result, val, `BigInt Uint64 failed for ${val}`);
+        } catch (e) {
+            // Some values might be out of range for Uint64, that's expected
+            if (val > 18446744073709551615n || val < 0n) {
+                // Expected for out of range values
+                continue;
+            } else {
+                throw e;
+            }
+        }
+    }
+});
