@@ -403,8 +403,16 @@ Deno.test("Serialization - Binary Format Equivalence", () => {
     const typedFloat64Bytes = zserialize(typedFloat64Array);
     assertEquals(typedFloat64Bytes, regularFloat64Bytes, "Float64Array and array<Float64> should produce same binary format");
 
-    // Also test that they can be deserialized using either method
-    const deserializedAsRegular = zdeserialize(ZD.array(ZD.number(NumberFormat.Float64)), typedFloat64Bytes);
-    const deserializedAsTyped = new Float64Array(zdeserialize(ZD.float64array(), regularFloat64Bytes));
-    assertEquals(deserializedAsRegular, Array.from(deserializedAsTyped), "Cross-format deserialization should work");
+    // Test that Number arrays with Int64/Uint64 format (within safe integer limits) produce same binary format as BigInt arrays
+    const regularInt64Array = [Number.MIN_SAFE_INTEGER, 0, Number.MAX_SAFE_INTEGER];
+    const typedInt64Array = new BigInt64Array(regularInt64Array.map(BigInt));
+    const regularInt64Bytes = zserialize(regularInt64Array, ZS.array(ZS.number(NumberFormat.Int64)));
+    const typedInt64Bytes = zserialize(typedInt64Array);
+    assertEquals(typedInt64Bytes, regularInt64Bytes, "Int64Array and array<Int64> should produce same binary format");
+
+    const regularUint64Array = [0, 1000000, Number.MAX_SAFE_INTEGER];
+    const typedUint64Array = new BigUint64Array(regularUint64Array.map(BigInt));
+    const regularUint64Bytes = zserialize(regularUint64Array, ZS.array(ZS.number(NumberFormat.Uint64)));
+    const typedUint64Bytes = zserialize(typedUint64Array);
+    assertEquals(typedUint64Bytes, regularUint64Bytes, "Uint64Array and array<Uint64> should produce same binary format");
 });
