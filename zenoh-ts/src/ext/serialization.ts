@@ -593,7 +593,7 @@ export namespace ZD{
         );
       case NumberFormat.Uint8:
         return new ZDTypeInfo(
-          (z: ZBytesDeserializer) => { return z.deserializeNumberInt16() }
+          (z: ZBytesDeserializer) => { return z.deserializeNumberUint8() }
         );
     }
   }
@@ -814,7 +814,7 @@ export namespace ZS{
         );
       case NumberFormat.Uint8:
         return new ZSTypeInfo(
-          (z: ZBytesSerializer, val: number) => {z.serializeNumberInt16(val);}
+          (z: ZBytesSerializer, val: number) => {z.serializeNumberUint8(val);}
         );
     }
   }
@@ -1291,7 +1291,7 @@ export class ZBytesDeserializer {
   public deserializeNumberUint8(): number {
     let data = this.readSlice(1).slice();
     let view = new DataView(data.buffer);
-    return view.getInt8(0);
+    return view.getUint8(0);
   }
 
   /**

@@ -345,3 +345,66 @@ Deno.test("Serialization - TypedArrays", () => {
     const bigInt64Bytes = zserialize(bigInt64Array);
     assertEquals(new BigInt64Array(zdeserialize(ZD.bigint64array(), bigInt64Bytes)), bigInt64Array, "BigInt64Array serialization failed");
 });
+
+Deno.test("Serialization - Binary Format Equivalence", () => {
+    // Test that Uint8Array and array of Uint8 produce the same binary format
+    const regularUint8Array = [0, 127, 255];
+    const typedUint8Array = new Uint8Array(regularUint8Array);
+    const regularBytes = zserialize(regularUint8Array, ZS.array(ZS.number(NumberFormat.Uint8)));
+    const typedBytes = zserialize(typedUint8Array);
+    assertEquals(typedBytes, regularBytes, "Uint8Array and array<Uint8> should produce same binary format");
+
+    // Test that Int8Array and array of Int8 produce the same binary format
+    const regularInt8Array = [-128, 0, 127];
+    const typedInt8Array = new Int8Array(regularInt8Array);
+    const regularInt8Bytes = zserialize(regularInt8Array, ZS.array(ZS.number(NumberFormat.Int8)));
+    const typedInt8Bytes = zserialize(typedInt8Array);
+    assertEquals(typedInt8Bytes, regularInt8Bytes, "Int8Array and array<Int8> should produce same binary format");
+
+    // Test that Uint16Array and array of Uint16 produce the same binary format
+    const regularUint16Array = [0, 32767, 65535];
+    const typedUint16Array = new Uint16Array(regularUint16Array);
+    const regularUint16Bytes = zserialize(regularUint16Array, ZS.array(ZS.number(NumberFormat.Uint16)));
+    const typedUint16Bytes = zserialize(typedUint16Array);
+    assertEquals(typedUint16Bytes, regularUint16Bytes, "Uint16Array and array<Uint16> should produce same binary format");
+
+    // Test that Int16Array and array of Int16 produce the same binary format
+    const regularInt16Array = [-32768, 0, 32767];
+    const typedInt16Array = new Int16Array(regularInt16Array);
+    const regularInt16Bytes = zserialize(regularInt16Array, ZS.array(ZS.number(NumberFormat.Int16)));
+    const typedInt16Bytes = zserialize(typedInt16Array);
+    assertEquals(typedInt16Bytes, regularInt16Bytes, "Int16Array and array<Int16> should produce same binary format");
+
+    // Test that Uint32Array and array of Uint32 produce the same binary format
+    const regularUint32Array = [0, 2147483647, 4294967295];
+    const typedUint32Array = new Uint32Array(regularUint32Array);
+    const regularUint32Bytes = zserialize(regularUint32Array, ZS.array(ZS.number(NumberFormat.Uint32)));
+    const typedUint32Bytes = zserialize(typedUint32Array);
+    assertEquals(typedUint32Bytes, regularUint32Bytes, "Uint32Array and array<Uint32> should produce same binary format");
+
+    // Test that Int32Array and array of Int32 produce the same binary format
+    const regularInt32Array = [-2147483648, 0, 2147483647];
+    const typedInt32Array = new Int32Array(regularInt32Array);
+    const regularInt32Bytes = zserialize(regularInt32Array, ZS.array(ZS.number(NumberFormat.Int32)));
+    const typedInt32Bytes = zserialize(typedInt32Array);
+    assertEquals(typedInt32Bytes, regularInt32Bytes, "Int32Array and array<Int32> should produce same binary format");
+
+    // Test that Float32Array and array of Float32 produce the same binary format
+    const regularFloat32Array = [-3.14, 0, 3.14, 1e-7, 1e7];
+    const typedFloat32Array = new Float32Array(regularFloat32Array);
+    const regularFloat32Bytes = zserialize(regularFloat32Array, ZS.array(ZS.number(NumberFormat.Float32)));
+    const typedFloat32Bytes = zserialize(typedFloat32Array);
+    assertEquals(typedFloat32Bytes, regularFloat32Bytes, "Float32Array and array<Float32> should produce same binary format");
+
+    // Test that Float64Array and array of Float64 produce the same binary format
+    const regularFloat64Array = [-3.14159265359, 0, 3.14159265359, 1e-15, 1e15];
+    const typedFloat64Array = new Float64Array(regularFloat64Array);
+    const regularFloat64Bytes = zserialize(regularFloat64Array, ZS.array(ZS.number(NumberFormat.Float64)));
+    const typedFloat64Bytes = zserialize(typedFloat64Array);
+    assertEquals(typedFloat64Bytes, regularFloat64Bytes, "Float64Array and array<Float64> should produce same binary format");
+
+    // Also test that they can be deserialized using either method
+    const deserializedAsRegular = zdeserialize(ZD.array(ZD.number(NumberFormat.Float64)), typedFloat64Bytes);
+    const deserializedAsTyped = new Float64Array(zdeserialize(ZD.float64array(), regularFloat64Bytes));
+    assertEquals(deserializedAsRegular, Array.from(deserializedAsTyped), "Cross-format deserialization should work");
+});
