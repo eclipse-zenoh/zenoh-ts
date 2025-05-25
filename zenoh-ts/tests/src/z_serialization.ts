@@ -302,3 +302,46 @@ Deno.test("Serialization - Comprehensive Array Tests", () => {
     const emptyBytes = zserialize(emptyNumArray, ZS.array(ZS.number()));
     assertEquals(zdeserialize(ZD.array(ZD.number()), emptyBytes), emptyNumArray, "empty array serialization failed");
 });
+
+Deno.test("Serialization - TypedArrays", () => {
+    // Test TypedArray serialization
+    const uint8Array = new Uint8Array([0, 127, 255]);
+    const uint8Bytes = zserialize(uint8Array);
+    assertEquals(new Uint8Array(zdeserialize(ZD.uint8array(), uint8Bytes)), uint8Array, "Uint8Array serialization failed");
+
+    const int8Array = new Int8Array([-128, 0, 127]);
+    const int8Bytes = zserialize(int8Array);
+    assertEquals(new Int8Array(zdeserialize(ZD.int8array(), int8Bytes)), int8Array, "Int8Array serialization failed");
+
+    const uint16Array = new Uint16Array([0, 32767, 65535]);
+    const uint16Bytes = zserialize(uint16Array);
+    assertEquals(new Uint16Array(zdeserialize(ZD.uint16array(), uint16Bytes)), uint16Array, "Uint16Array serialization failed");
+
+    const int16Array = new Int16Array([-32768, 0, 32767]);
+    const int16Bytes = zserialize(int16Array);
+    assertEquals(new Int16Array(zdeserialize(ZD.int16array(), int16Bytes)), int16Array, "Int16Array serialization failed");
+
+    const uint32Array = new Uint32Array([0, 2147483647, 4294967295]);
+    const uint32Bytes = zserialize(uint32Array);
+    assertEquals(new Uint32Array(zdeserialize(ZD.uint32array(), uint32Bytes)), uint32Array, "Uint32Array serialization failed");
+
+    const int32Array = new Int32Array([-2147483648, 0, 2147483647]);
+    const int32Bytes = zserialize(int32Array);
+    assertEquals(new Int32Array(zdeserialize(ZD.int32array(), int32Bytes)), int32Array, "Int32Array serialization failed");
+
+    const float32Array = new Float32Array([-3.14, 0, 3.14, 1e-7, 1e7]);
+    const float32Bytes = zserialize(float32Array);
+    assertEquals(new Float32Array(zdeserialize(ZD.float32array(), float32Bytes)), float32Array, "Float32Array serialization failed");
+
+    const float64Array = new Float64Array([-3.14159265359, 0, 3.14159265359, 1e-15, 1e15]);
+    const float64Bytes = zserialize(float64Array);
+    assertEquals(new Float64Array(zdeserialize(ZD.float64array(), float64Bytes)), float64Array, "Float64Array serialization failed");
+
+    const bigUint64Array = new BigUint64Array([0n, 9007199254740991n, 18446744073709551615n]);
+    const bigUint64Bytes = zserialize(bigUint64Array);
+    assertEquals(new BigUint64Array(zdeserialize(ZD.biguint64array(), bigUint64Bytes)), bigUint64Array, "BigUint64Array serialization failed");
+
+    const bigInt64Array = new BigInt64Array([-9223372036854775808n, 0n, 9223372036854775807n]);
+    const bigInt64Bytes = zserialize(bigInt64Array);
+    assertEquals(new BigInt64Array(zdeserialize(ZD.bigint64array(), bigInt64Bytes)), bigInt64Array, "BigInt64Array serialization failed");
+});
