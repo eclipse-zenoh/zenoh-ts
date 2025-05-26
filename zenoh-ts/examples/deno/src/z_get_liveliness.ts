@@ -14,7 +14,6 @@
 
 import {
   Sample, Config, Session, KeyExpr,
-  RecvErr,
   ReplyError,
   ChannelReceiver,
   Reply

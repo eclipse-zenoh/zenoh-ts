@@ -1,4 +1,4 @@
-import { ZenohId } from "./zid";
+import { ZenohId } from "./zid.js";
 
 export class Timestamp {
     constructor(private readonly zid: ZenohId, private readonly ntp64: bigint) {}

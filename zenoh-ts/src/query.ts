@@ -609,8 +609,8 @@ export class Selector {
      * New Function to create a selector from Selector / KeyExpr and Parameters
      * @returns Selector
      */
-    constructor(keyexpr: KeyExpr, parameters?: IntoParameters) {
-        this.keyExpr_ = keyexpr;
+    constructor(keyexpr: IntoKeyExpr, parameters?: IntoParameters) {
+        this.keyExpr_ = new KeyExpr(keyexpr);
         if (parameters == undefined) {
             this.parameters_ = new Parameters("")
         } else {

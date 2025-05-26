@@ -192,11 +192,11 @@ Deno.test("API - Querier Get with Channel", async () => {
         await sleep(1000);
         
         querier = await session2.declareQuerier(selector, {
-            target: QueryTarget.BestMatching
+            target: QueryTarget.BEST_MATCHING
         });
 
         // First query with ok parameters
-        receiver1 = await querier.get(new Parameters("ok"), { payload: "1" });
+        receiver1 = await querier.get({ parameters: new Parameters("ok"), payload: "1" });
         if (!receiver1) {
             throw new Error("Failed to get receiver");
         }
@@ -222,7 +222,7 @@ Deno.test("API - Querier Get with Channel", async () => {
         }
 
         // Second query using the same querier with error parameters
-        receiver2 = await querier.get(new Parameters("err"), { payload: "2" });
+        receiver2 = await querier.get({ parameters: new Parameters("err"), payload: "2" });
         if (!receiver2) {
             throw new Error("Failed to get receiver");
         }
@@ -283,7 +283,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         await sleep(1000);
         
         querier = await session2.declareQuerier(selector, {
-            target: QueryTarget.BestMatching
+            target: QueryTarget.BEST_MATCHING
         });
 
         // First query with ok parameters
@@ -292,7 +292,7 @@ Deno.test("API - Querier Get with Callback", async () => {
             replies.push(reply);
         };
 
-        const receiver1 = await querier.get(new Parameters("ok"), { payload: "1", handler });
+        const receiver1 = await querier.get({ parameters: new Parameters("ok"), payload: "1", handler });
         assertEquals(receiver1, undefined, "Receiver should be undefined when handler is provided");
 
 
@@ -318,7 +318,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         }
 
         // Second query using the same querier with error parameters
-        const receiver2 = await querier.get(new Parameters("err"), { payload: "2", handler });
+        const receiver2 = await querier.get({ parameters: new Parameters("err"), payload: "2", handler });
         assertEquals(receiver2, undefined, "Receiver should be undefined when handler is provided");
 
         const query2 = await queryable.receiver()?.receive();

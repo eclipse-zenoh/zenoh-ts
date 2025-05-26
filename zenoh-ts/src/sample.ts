@@ -12,11 +12,11 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { KeyExpr } from "./key_expr";
-import { ZBytes } from "./z_bytes";
-import { Encoding } from "./encoding";
-import { CongestionControl, Priority, SampleKind } from "./enums";
-import { Timestamp } from "./timestamp";
+import { KeyExpr } from "./key_expr.js";
+import { ZBytes } from "./z_bytes.js";
+import { Encoding } from "./encoding.js";
+import { CongestionControl, Priority, SampleKind } from "./enums.js";
+import { Timestamp } from "./timestamp.js";
 
 export class Sample {
     /**

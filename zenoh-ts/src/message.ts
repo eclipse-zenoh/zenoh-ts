@@ -12,24 +12,24 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ZBytesDeserializer, ZBytesSerializer, ZD } from "./ext"
-import { Encoding, EncodingPredefined } from "./encoding.js";
+import { ZBytesDeserializer, ZBytesSerializer, ZD } from "./ext/index.js"
+import { Encoding } from "./encoding.js";
 import { KeyExpr } from "./key_expr.js";
 import { Locality, Reliability, CongestionControl, Priority, SampleKind, ConsolidationMode, ReplyKeyExpr, QueryTarget } from "./enums.js";
-import { Timestamp } from "./timestamp";
-import { ZenohId } from "./zid";
-import { Sample } from "./sample";
-import { Parameters, QueryInner, Reply, ReplyError } from "./query";
-import { ZBytes } from "./z_bytes";
-import { SessionInfo } from "./session";
+import { Timestamp } from "./timestamp.js";
+import { ZenohId } from "./zid.js";
+import { Sample } from "./sample.js";
+import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
+import { ZBytes } from "./z_bytes.js";
+import { SessionInfo } from "./session.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
-        case SampleKind.Put: return SampleKind.Put;
-        case SampleKind.Delete: return SampleKind.Delete;
+        case SampleKind.PUT: return SampleKind.PUT;
+        case SampleKind.DELETE: return SampleKind.DELETE;
         default: {
             console.warn(`Unsupported SampleKind value ${val}`);
-            return SampleKind.Put;
+            return SampleKind.PUT;
         }
     }
 }
@@ -109,31 +109,6 @@ function qosFromUint8(val: number): Qos {
     return new Qos(priorityFromUint8(p), congestionControlFromUint8(c), e != 0, reliabilityFromUint8(r), localityFromUint8(l));
 }
 
-function queryTargetFromUint8(val: number): QueryTarget {
-    switch (val) {
-        case QueryTarget.BEST_MATCHING: return QueryTarget.BEST_MATCHING;
-        case QueryTarget.ALL: return QueryTarget.ALL;
-        case QueryTarget.ALL_COMPLETE: return QueryTarget.ALL_COMPLETE;
-        default: {
-            console.warn(`Unsupported QueryTarget value ${val}`);
-            return QueryTarget.DEFAULT;
-        }
-    }
-}
-
-function consolidationModeFromUint8(val: number): ConsolidationMode {
-    switch (val) {
-        case ConsolidationMode.AUTO: return ConsolidationMode.AUTO;
-        case ConsolidationMode.NONE: return ConsolidationMode.NONE;
-        case ConsolidationMode.MONOTONIC: return ConsolidationMode.MONOTONIC;
-        case ConsolidationMode.LATEST: return ConsolidationMode.LATEST;
-        default: {
-            console.warn(`Unsupported ConsolidationMode value ${val}`);
-            return ConsolidationMode.DEFAULT;
-        }
-    }
-}
-
 function replyKeyExprFromUint8(val: number): ReplyKeyExpr {
     switch (val) {
         case ReplyKeyExpr.ANY: return ReplyKeyExpr.ANY;
@@ -195,13 +170,6 @@ export class QuerySettings  {
 function querySettingsToUint8(qs: QuerySettings): number {
     // rcctt
     return qs.target | (qs.consolidation << 2) | (qs.replyKeyExpr << 4);
-}
-
-function querySettingsFromUint8(val: number): QuerySettings {
-    let t = val & 0b11;
-    let c = (val >> 2) & 0b11;
-    let r = (val >> 4) & 0b1;
-    return new QuerySettings(queryTargetFromUint8(t), consolidationModeFromUint8(c), replyKeyExprFromUint8(r));
 }
 
 function deserializeZenohId(deserializer: ZBytesDeserializer): ZenohId {
@@ -295,7 +263,7 @@ function deserializeQueryInner(deserializer: ZBytesDeserializer): QueryInner {
     return new QueryInner(queryId, keyexpr, params, payload, encoding, attachment, replyKeyExpr);
 }
 
-export const enum OutRemoteMessageId {
+export enum OutRemoteMessageId {
     DeclarePublisher = 0,
     UndeclarePublisher,
     DeclareSubscriber,
@@ -749,7 +717,7 @@ export class Ping {
 }
 
 
-export const enum InRemoteMessageId {
+export enum InRemoteMessageId {
     ResponsePing = 0,
     ResponseOk,
     ResponseError,

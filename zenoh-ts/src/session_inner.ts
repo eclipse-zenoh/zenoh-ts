@@ -13,16 +13,16 @@
 //
 // Remote API interface
 
-import { ZBytesDeserializer, ZBytesSerializer } from "./ext";
-import { KeyExpr } from "./key_expr";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, OutMessageInterface, Ping, PublisherDelete, PublisherProperties, PublisherPut, Put, QuerierGet, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessToken, UndeclarePublisher, UndeclareQueryable, UndeclareSubscriber } from "./message";
-import { Query, Reply, ReplyError } from "./query";
-import { Closure } from "./closure";
-import { RemoteLink } from "./link";
-import { Sample } from "./sample";
-import { SessionInfo } from "./session";
-import { Timestamp } from "./timestamp";
-import { ZBytes } from "./z_bytes";
+import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
+import { KeyExpr } from "./key_expr.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, OutMessageInterface, Ping, PublisherDelete, PublisherProperties, PublisherPut, Put, QuerierGet, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessToken, UndeclarePublisher, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { Query, Reply } from "./query.js";
+import { Closure } from "./closure.js";
+import { RemoteLink } from "./link.js";
+import { Sample } from "./sample.js";
+import { SessionInfo } from "./session.js";
+import { Timestamp } from "./timestamp.js";
+import { ZBytes } from "./z_bytes.js";
 
 class IdSource {
     private static MAX: number = 1 << 31;

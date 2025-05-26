@@ -13,7 +13,7 @@
 //
 
 // Message priority.
-export const enum Priority {
+export enum Priority {
     REAL_TIME = 1,
     INTERACTIVE_HIGH = 2,
     INTERACTIVE_LOW = 3,
@@ -25,7 +25,7 @@ export const enum Priority {
 }
 
 // Congestion control strategy.
-export const enum CongestionControl {
+export enum CongestionControl {
     // When transmitting a message in a node with a full queue, the node may drop the message.
     DROP = 0,
     // When transmitting a message in a node with a full queue, the node will wait for queue to
@@ -39,14 +39,14 @@ export const enum CongestionControl {
 // The publisher reliability.
 // Currently `reliability` does not trigger any data retransmission on the wire.
 //  It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
-export const enum Reliability {
+export enum Reliability {
     BEST_EFFORT = 0,
     RELIABLE = 1,
     DEFAULT = RELIABLE
 }
 
 // The locality of samples to be received by subscribers or targeted by publishers.
-export const enum Locality {
+export enum Locality {
     SESSION_LOCAL = 0,
     REMOTE = 1,
     ANY = 2,
@@ -54,13 +54,13 @@ export const enum Locality {
 }
 
 
-export const enum SampleKind {
-    Put = 0,
-    Delete = 1
+export enum SampleKind {
+    PUT = 0,
+    DELETE = 1
 }
 
 // The `zenoh.queryable.Queryables that should be target of a `zenoh.Session.get()`.
-export const enum QueryTarget {
+export enum QueryTarget {
     // Let Zenoh find the BestMatching queryable capabale of serving the query.
     BEST_MATCHING = 0,
     // Deliver the query to all queryables matching the query's key expression.
@@ -71,7 +71,7 @@ export const enum QueryTarget {
 }
 
 // The kind of consolidation to apply to a query.
-export const enum ConsolidationMode {
+export enum ConsolidationMode {
     // Apply automatic consolidation based on queryable's preferences
     AUTO = 0,
     // No consolidation applied: multiple samples may be received for the same key-timestamp.
@@ -90,7 +90,7 @@ export const enum ConsolidationMode {
 }
 
 // The kind of accepted query replies.
-export const enum ReplyKeyExpr {
+export enum ReplyKeyExpr {
     // Accept replies whose key expressions may not match the query key expression.
     ANY = 0,
     // // Accept replies whose key expressions match the query key expression.

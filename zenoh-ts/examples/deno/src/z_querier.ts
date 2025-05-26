@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError, Config, RecvErr, Sample, Session, QueryTarget, Selector, ChannelReceiver, Reply, } from "@eclipse-zenoh/zenoh-ts";
+import { ReplyError, Config, Sample, Session, QueryTarget, Selector, ChannelReceiver, Reply, } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -30,7 +30,7 @@ export async function main() {
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
     const payload = `[${i}] ${args.payload}`;
-    const receiver = await querier.get(args.getSelector().parameters(), { payload: payload }) as ChannelReceiver<Reply>;
+    const receiver = await querier.get({ parameters: args.getSelector().parameters(), payload: payload }) as ChannelReceiver<Reply>;
 
     for await (const reply of receiver) {
         const resp = reply.result();
@@ -78,13 +78,13 @@ class ParseArgs extends BaseParseArgs {
   public getQueryTarget(): QueryTarget {
     switch (this.target) {
       case "BEST_MATCHING":
-        return QueryTarget.BestMatching;
+        return QueryTarget.BEST_MATCHING;
       case "ALL":
-        return QueryTarget.All;
+        return QueryTarget.ALL;
       case "ALL_COMPLETE":
-        return QueryTarget.AllComplete;
+        return QueryTarget.ALL_COMPLETE;
       default:
-        return QueryTarget.BestMatching;
+        return QueryTarget.BEST_MATCHING;
     }
   }
 
