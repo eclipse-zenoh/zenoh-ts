@@ -655,6 +655,5 @@ async fn handle_message(
             tracing::error!("RemoteAPI: message format is not `Binary`");
             None
         }
-    };
-    None
+    }
 }

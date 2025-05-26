@@ -152,7 +152,7 @@ export class SessionInner {
         const msgId = this.messageIdCounter.get();
         serializeHeader([msg.outMessageId, msgId], serializer);
 
-        serializer.serializeNumberUint8(msgId);
+        msg.serializeWithZSerializer(serializer);
         const p = new Promise((resolve: OnResponseReceivedCallback, _) => {
             this.pendingMessageResponses.set(msgId, resolve);
         });

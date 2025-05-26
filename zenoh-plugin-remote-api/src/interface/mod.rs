@@ -223,9 +223,9 @@ impl QuerySettings {
 
 fn locality_from_u8(l: u8) -> Result<Locality, zenoh_result::Error> {
     match l {
-        0 => Ok(Locality::Any),
+        0 => Ok(Locality::SessionLocal),
         1 => Ok(Locality::Remote),
-        2 => Ok(Locality::SessionLocal),
+        2 => Ok(Locality::Any),
         v => bail!("Unsupported locality value {}", v),
     }
 }
@@ -926,9 +926,13 @@ macro_rules! remote_message {
                 let enum_t: $enum_name = (t & 0b01111111u8).try_into()?;
                 match enum_t {
                     $($enum_name::$val => {
+                        let sequence_id = match requires_ack {
+                            true =>  Some(deserializer.deserialize::<SequenceId>()?),
+                            false => None
+                        };
                         let header = Header {
                             content_id: enum_t,
-                            sequence_id: requires_ack.then_some(deserializer.deserialize::<SequenceId>()?)
+                            sequence_id
                         };
                         Ok((header, $name::$val($val::from_wire(&mut deserializer).map_err(|e| FromWireError::BodyError((header, e.into())))?)))
                     },)*

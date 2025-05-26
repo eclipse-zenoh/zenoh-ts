@@ -123,12 +123,7 @@ function replyKeyExprFromUint8(val: number): ReplyKeyExpr {
 function serializeEncoding(e: Encoding, serializer: ZBytesSerializer) {
     let [id, schema] = e.toIdSchema();
     serializer.serializeNumberUint16(id);
-    if (schema == undefined) {
-        serializer.serializeBoolean(false);
-    } else {
-        serializer.serializeBoolean(true);
-        serializer.serializeString(schema);
-    }
+    serializer.serializeString(schema ?? "");
 }
 
 function serializeOptEncoding(e: Encoding | undefined, serializer: ZBytesSerializer) {
@@ -142,10 +137,8 @@ function serializeOptEncoding(e: Encoding | undefined, serializer: ZBytesSeriali
 
 function deserializeEncoding(deserializer: ZBytesDeserializer): Encoding {
     let id = deserializer.deserializeNumberUint16();
-    let schema: string | undefined;
-    if (deserializer.deserializeBoolean()) {
-        schema = deserializer.deserializeString();
-    } else {
+    let schema: string | undefined = deserializer.deserializeString();
+    if (schema.length == 0) {
         schema = undefined;
     }
     return new Encoding(id, schema);
@@ -306,7 +299,7 @@ export class DeclarePublisher {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializeEncoding(this.properties.encoding, serializer);
         serializer.serializeNumberUint8(qosToUint8(this.properties.qos));
@@ -320,7 +313,7 @@ export class UndeclarePublisher {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -337,7 +330,7 @@ export class DeclareSubscriber {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeNumberUint8(this.properties.allowedOrigin);
     }
@@ -350,7 +343,7 @@ export class UndeclareSubscriber {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -367,7 +360,7 @@ export class DeclareQueryable {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeBoolean(this.properties.complete);
         serializer.serializeNumberUint8(this.properties.allowedOrigin);
@@ -381,7 +374,7 @@ export class UndeclareQueryable {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -400,7 +393,7 @@ export class DeclareQuerier {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeNumberUint8(qosToUint8(this.properties.qos));
         serializer.serializeNumberUint8(querySettingsToUint8(this.properties.querySettings));
@@ -415,7 +408,7 @@ export class UndeclareQuerier {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -427,7 +420,7 @@ export class DeclareLivelinessToken {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.keyexpr.toString());
     }
 }
@@ -439,7 +432,7 @@ export class UndeclareLivelinessToken {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -456,7 +449,7 @@ export class DeclareLivelinessSubscriber {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeBoolean(this.properties.history);
     }
@@ -469,7 +462,7 @@ export class UndeclareLivelinessSubscriber {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.id);
+        serializer.serializeNumberUint32(this.id);
     }
 }
 
@@ -646,7 +639,7 @@ export class ReplyOk {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.queryId);
+        serializer.serializeNumberUint32(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
         serializer.serializeUint8Array(this.payload.toBytes());
         serializeEncoding(this.encoding, serializer);
@@ -667,7 +660,7 @@ export class ReplyDel {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.queryId);
+        serializer.serializeNumberUint32(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
         serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
@@ -684,7 +677,7 @@ export class ReplyErr {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.queryId);
+        serializer.serializeNumberUint32(this.queryId);
         serializer.serializeUint8Array(this.payload.toBytes());
         serializeEncoding(this.encoding, serializer);
     }
@@ -699,11 +692,11 @@ export class QueryResponseFinal {
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint8(this.queryId);
+        serializer.serializeNumberUint32(this.queryId);
     }
 
     public static deserialize(deserializer: ZBytesDeserializer): QueryResponseFinal {
-        let queryId = deserializer.deserializeNumberUint8();
+        let queryId = deserializer.deserializeNumberUint32();
         return new QueryResponseFinal(queryId);
     }
 }
