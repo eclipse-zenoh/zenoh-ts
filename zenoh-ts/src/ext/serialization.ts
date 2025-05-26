@@ -117,21 +117,21 @@ function isSerializeable(s: any): s is ZSerializeable {
  * Provides functionality for tuple-like serialization.
  */
 export class ZBytesSerializer {
-    private buffer_: Uint8Array
+    private buffer: Uint8Array[];
+    private len: number;
     /**
      * new function to create a ZBytesSerializer.
      * 
      * @returns ZBytesSerializer
      */
     constructor() {
-      this.buffer_ = new Uint8Array();
+      this.buffer = new Array<Uint8Array>;
+      this.len = 0;
     }
 
     private append(buf: Uint8Array) {
-      let b = new Uint8Array(this.buffer_.length + buf.length)
-      b.set(this.buffer_)
-      b.set(buf, this.buffer_.length)
-      this.buffer_ = b
+      this.buffer.push(buf);
+      this.len += buf.length;
     }
 
     /**
@@ -383,7 +383,7 @@ export class ZBytesSerializer {
      * Serializes boolean.
      */
     public serializeBoolean(val: Boolean) {
-      const b:Uint8Array = new Uint8Array(1)
+      const b: Uint8Array = new Uint8Array(1)
       b[0] = val === true ? 1 : 0
       this.append(b)
     }
@@ -499,9 +499,24 @@ export class ZBytesSerializer {
      * @returns ZBytes
      */
     public finish(): ZBytes {
-      let out = new ZBytes(this.buffer_);
-      this.buffer_ = new Uint8Array()
-      return out
+      let out: ZBytes;
+      if (this.buffer.length == 0) {
+        out =  new ZBytes(new Uint8Array(0));
+      } else if (this.buffer.length == 1) {
+        out = new ZBytes(this.buffer[0] as Uint8Array);
+      } else {
+        let b = new Uint8Array(this.len);
+        let offset = 0;
+        for (let a of this.buffer) {
+          b.set(a, offset);
+          offset += a.length;
+        }
+        out = new ZBytes(b);
+      }
+
+      this.buffer = new Array();
+      this.len = 0;
+      return out;
     }
 }
 
