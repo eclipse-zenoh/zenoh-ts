@@ -76,6 +76,9 @@ export class RemoteLink {
     }
     while (this.ws.bufferedAmount > MAX_WS_BUFFER_SIZE) {
       await sleep(10);
+      if (!this.isOk) {
+        throw new Error("WebSocket is closed");
+      }
     }
     this.ws.send(msg);
   }

@@ -66,14 +66,14 @@ export enum EncodingPredefined {
     VIDEO_RAW,
     VIDEO_VP8,
     VIDEO_VP9,
-    // TODO: add id for specifying custom encoding
+    CUSTOM = 0xFFFF,
 }
 
 function createIdToEncodingMap(): Map<EncodingPredefined, string> {
     let out = new Map<EncodingPredefined, string>();
     for (let e in EncodingPredefined) {
         let n = Number(e);
-        if (!isNaN(n)) {
+        if (!isNaN(n) && n != EncodingPredefined.CUSTOM) {
             out.set(n as EncodingPredefined, (EncodingPredefined[n] as string).toLocaleLowerCase().replaceAll('_', '/'));
         }
     }
@@ -84,7 +84,7 @@ function createEncodingToIdMap(): Map<string, EncodingPredefined> {
     let out = new Map<string, EncodingPredefined>();
     for (let e in EncodingPredefined) {
         let n = Number(e);
-        if (!isNaN(n)) {
+        if (!isNaN(n) && n != EncodingPredefined.CUSTOM) {
             out.set((EncodingPredefined[n] as string).toLocaleLowerCase().replaceAll('_', '/'), n as EncodingPredefined);
         }
     }
@@ -102,7 +102,7 @@ export class Encoding {
     private static readonly SEP = ";";
 
 
-    constructor(private id?: EncodingPredefined, private schema?: string) {}
+    constructor(private id: EncodingPredefined, private schema?: string) {}
 
     withSchema(input: string): Encoding {
         return new Encoding(this.id, input);
@@ -114,11 +114,11 @@ export class Encoding {
 
     toString(): string {
         let out: string = "";
-        if (this.id != undefined) {
+        if (this.id != EncodingPredefined.CUSTOM) {
             out += Encoding.ID_TO_ENCODING.get(this.id) as string;
         }
         if (this.schema != undefined) {
-            if (this.id != undefined) {
+            if (this.id != EncodingPredefined.CUSTOM) {
                 out += ";";
             }
             out += this.schema;
@@ -131,20 +131,27 @@ export class Encoding {
             return new Encoding(EncodingPredefined.ZENOH_BYTES, undefined)
         }
         const idx = input.indexOf(Encoding.SEP);
+        let key: string;
+        let schema: string | undefined = undefined;
         if (idx == -1) {
-            return new Encoding(undefined, input);
+            key = input;
         } else {
-            const id = Encoding.ENCODING_TO_ID.get(input.substring(0, idx + 1));
-            if (id != undefined) {
-                let schema = input.substring(idx + 1)
-                return new Encoding(id, schema.length == 0 ? undefined : schema);
-            } else {
-                return new Encoding(undefined, input);
-            }
+            key = input.substring(0, idx + 1);
+            schema = input.substring(idx + 1);
+        }
+        const id = Encoding.ENCODING_TO_ID.get(key) ?? EncodingPredefined.CUSTOM;
+        return new Encoding(id, schema);
+    }
+
+    static from(input: IntoEncoding): Encoding {
+        if (input instanceof Encoding) {
+            return input;
+        } else {
+            return Encoding.fromString(input.toString());
         }
     }
 
-    toIdSchema(): [EncodingPredefined?, string?] {
+    toIdSchema(): [EncodingPredefined, string?] {
         return [this.id, this.schema];
     }
 

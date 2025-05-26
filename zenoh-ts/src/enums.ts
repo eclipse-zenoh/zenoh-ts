@@ -32,9 +32,13 @@ export const enum CongestionControl {
     // progress.
     BLOCK = 1,
     DEFAULT_PUSH = DROP,
-    DEFAULT_REQUEST = BLOCK
+    DEFAULT_REQUEST = BLOCK,
+    DEFAULT_RESPONSE = BLOCK
 }
 
+// The publisher reliability.
+// Currently `reliability` does not trigger any data retransmission on the wire.
+//  It is rather used as a marker on the wire and it may be used to select the best link available (e.g. TCP for reliable data and UDP for best effort data).
 export const enum Reliability {
     BEST_EFFORT = 0,
     RELIABLE = 1,
@@ -55,7 +59,7 @@ export const enum SampleKind {
     Delete = 1
 }
 
-// The `zenoh::queryable::Queryable`s that should be target of a `zenoh::Session::get()`.
+// The `zenoh.queryable.Queryables that should be target of a `zenoh.Session.get()`.
 export const enum QueryTarget {
     // Let Zenoh find the BestMatching queryable capabale of serving the query.
     BEST_MATCHING = 0,

@@ -11,22 +11,15 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-
-// Remote API
-import { RemoteSubscriber, RemotePublisher } from "./remote_api/pubsub.js";
-
-// API
 import { KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
-import {
-  CongestionControl,
-  Priority,
-  Reliability,
-  Sample,
-} from "./sample.js";
+import { Sample } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver } from "./remote_api/channels.js";
+import { ChannelReceiver } from "./channels.js";
+import { SessionInner } from "./session_inner.js";
+import { PublisherDelete, PublisherProperties, PublisherPut } from "./message.js";
+import { CongestionControl, Priority, Reliability } from "./enums.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -42,44 +35,45 @@ import { ChannelReceiver } from "./remote_api/channels.js";
  */
 
 export class Subscriber {
-  /**
-   * @ignore 
-   */
-  async [Symbol.asyncDispose]() {
-    await this.undeclare();
-  }
-  /**
-   * @ignore 
-   */
-  constructor(
-    private remoteSubscriber: RemoteSubscriber,
-    private keyExpr_: KeyExpr,
-    private receiver_?: ChannelReceiver<Sample>,
-  ) {}
+    /**
+     * @ignore 
+     */
+    async [Symbol.asyncDispose]() {
+        await this.undeclare();
+    }
+    /**
+     * @ignore 
+     */
+    constructor(
+        private session: SessionInner,
+        private id: number,
+        private keyExpr_: KeyExpr,
+        private receiver_?: ChannelReceiver<Sample>,
+    ) { }
 
-  /**
-   * returns the key expression of an object
-   * @returns KeyExpr
-   */
-  keyExpr(): KeyExpr {
-    return this.keyExpr_
-  }
-  /**
-   * returns a sample receiver for non-callback subscriber, undefined otherwise.
-   *
-   * @returns ChannelReceiver<Sample> | undefined
-   */
-  receiver(): ChannelReceiver<Sample> | undefined {
-    return this.receiver_;
-  }
+    /**
+     * returns the key expression of an object
+     * @returns KeyExpr
+     */
+    keyExpr(): KeyExpr {
+        return this.keyExpr_
+    }
+    /**
+     * returns a sample receiver for non-callback subscriber, undefined otherwise.
+     *
+     * @returns ChannelReceiver<Sample> | undefined
+     */
+    receiver(): ChannelReceiver<Sample> | undefined {
+        return this.receiver_;
+    }
 
-  /**
-   * Undeclares a subscriber on the session
-   *
-   */
-  async undeclare() {
-    await this.remoteSubscriber.undeclare();
-  }
+    /**
+     * Undeclares a subscriber on the session
+     *
+     */
+    async undeclare() {
+        await this.session.undeclareSubscriber(this.id);
+    }
 }
 
 // ██████  ██    ██ ██████  ██      ██ ███████ ██   ██ ███████ ██████
@@ -93,173 +87,131 @@ export class Subscriber {
  * @param {IntoZBytes=} attachment - optional extra data to send with Payload
  */
 export interface PublisherPutOptions {
-  encoding?: IntoEncoding,
-  attachment?: IntoZBytes,
-  timestamp?: Timestamp;
+    encoding?: IntoEncoding,
+    attachment?: IntoZBytes,
+    timestamp?: Timestamp;
 }
 
 /**
  * @param {IntoZBytes=} attachment - optional extra data to send with Payload
  */
 export interface PublisherDeleteOptions {
-  attachment?: IntoZBytes,
-  timestamp?: Timestamp
+    attachment?: IntoZBytes,
+    timestamp?: Timestamp
 }
 
+/**
+ * Class that represents a Zenoh Publisher, 
+ * created by calling `Session.declarePublisher()`
+ */
 export class Publisher {
-  /**
-   * Class that represents a Zenoh Publisher, 
-   * created by calling `declare_publisher()` on a `session`
-   */
-
-  /** 
-   * @ignore 
-   */
-  async [Symbol.asyncDispose]() {
-    await this.undeclare();
-  }
-
-  /**
-   * @ignore 
-   * 
-   * Creates a new Publisher on a session
-   *  Note: this should never be called directly by the user. 
-   *  please use `declare_publisher` on a session.
-   * 
-   * @param {KeyExpr} keyExpr_ -  A Key Expression
-   * @param {RemotePublisher} remotePublisher -  A Session to create the publisher on
-   * @param {CongestionControl} congestionControl_ -  Congestion control 
-   * @param {Priority} priority_ -  Priority for Zenoh Data
-   * @param {Reliability} reliability_ - Reliability for publishing data
-   * 
-   * @returns {Publisher} a new  instance of a publisher 
-   * 
-   */
-  constructor(
-    private remotePublisher: RemotePublisher,
-    private keyExpr_: KeyExpr,
-    private congestionControl_: CongestionControl,
-    private priority_: Priority,
-    private reliability_: Reliability,
-    private encoding_: Encoding,
-  ) {}
-
-  /**
-   * gets the Key Expression from Publisher
-   *
-   * @returns {KeyExpr} instance
-   */
-  keyExpr(): KeyExpr {
-    return this.keyExpr_;
-  }
-
-  /**
-   * Puts a payload on the publisher associated with this class instance
-   *
-   * @param {IntoZBytes} payload
-   * @param {PublisherPutOptions} putOptions
-   *
-   * @returns void
-   */
-  async put(
-    payload: IntoZBytes,
-    putOptions?: PublisherPutOptions,
-  ) {
-    let zbytes: ZBytes = new ZBytes(payload);
-    let encoding;
-    let timestamp = null;
-    if (putOptions?.timestamp != null) {
-      timestamp = putOptions.timestamp.getResourceUuid() as unknown as string;
+    /** 
+     * @ignore 
+     */
+    async [Symbol.asyncDispose]() {
+        await this.undeclare();
     }
 
-    if (putOptions?.encoding != null) {
-      encoding = Encoding.fromString(putOptions.encoding.toString());
-    } else {
-      encoding = Encoding.default();
+    /**
+     * @ignore 
+     */
+    constructor(
+        private session: SessionInner,
+        private publisherId: number,
+        private properties: PublisherProperties,
+    ) { }
+
+    /**
+     * gets the Key Expression from Publisher
+     *
+     * @returns {KeyExpr} instance
+     */
+    keyExpr(): KeyExpr {
+        return this.properties.keyexpr;
     }
 
-    let attachment = null;
-    if (putOptions?.attachment != null) {
-      let attBytes = new ZBytes(putOptions.attachment);
-      attachment = Array.from(attBytes.toBytes());
+    /**
+     * Puts a payload on the publisher associated with this class instance
+     *
+     * @param {IntoZBytes} payload
+     * @param {PublisherPutOptions} putOptions
+     *
+     * @returns void
+     */
+    async put(
+        payload: IntoZBytes,
+        putOptions?: PublisherPutOptions,
+    ) {
+        await this.session.publisherPut(
+            new PublisherPut(
+                this.publisherId,
+                new ZBytes(payload),
+                putOptions?.encoding ? Encoding.from(putOptions.encoding) : undefined,
+                putOptions?.attachment ? new ZBytes(putOptions.attachment) : undefined,
+                putOptions?.timestamp
+            )
+        );
     }
 
-    return await this.remotePublisher.put(
-      Array.from(zbytes.toBytes()),
-      attachment,
-      encoding.toString(),
-      timestamp,
-    );
-  }
-
-  /**
-  * get Encoding declared for Publisher
-  *   
-  * @returns {Encoding}
-  */
-  encoding(): Encoding {
-    return this.encoding_;
-  }
-
-  /**
-  * get Priority declared for Publisher
-  *   
-  * @returns {Priority}
-  */
-  priority(): Priority {
-    return this.priority_;
-  }
-
-  /**
-  * get Reliability declared for Publisher
-  *   
-  * @returns {Reliability}
-  */
-  reliability(): Reliability {
-    return this.reliability_;
-  }
-
-  /**
-   * get Congestion Control for a Publisher
-   *   
-   * @returns {CongestionControl}
-   */
-  congestionControl(): CongestionControl {
-    return this.congestionControl_;
-  }
-
-  /**
-   * 
-   * executes delete on publisher
-   * @param {PublisherDeleteOptions} deleteOptions:  Options associated with a publishers delete
-   * @returns void
-   */
-  async delete(deleteOptions: PublisherDeleteOptions) {
-
-    let attachment = null;
-    if (deleteOptions.attachment != null) {
-      let attBytes = new ZBytes(deleteOptions.attachment);
-      attachment = Array.from(attBytes.toBytes());
+    /**
+    * get Encoding declared for Publisher
+    *   
+    * @returns {Encoding}
+    */
+    encoding(): Encoding {
+        return this.properties.encoding;
     }
 
-    let timestamp = null;
-    if (deleteOptions.timestamp != null) {
-      timestamp = deleteOptions.timestamp.getResourceUuid() as unknown as string;
+    /**
+    * get Priority declared for Publisher
+    *   
+    * @returns {Priority}
+    */
+    priority(): Priority {
+        return this.properties.qos.priority;
     }
 
-    return await this.remotePublisher.delete(
-      attachment,
-      timestamp
-    );
-  }
+    /**
+    * get Reliability declared for Publisher
+    *   
+    * @returns {Reliability}
+    */
+    reliability(): Reliability {
+        return this.properties.qos.reliability;
+    }
 
-  /**
-   * undeclares publisher
-   *   
-   * @returns void
-   */
-  async undeclare() {
-    await this.remotePublisher.undeclare();
-  }
+    /**
+     * get Congestion Control declared for a Publisher
+     *   
+     * @returns {CongestionControl}
+     */
+    congestionControl(): CongestionControl {
+        return this.properties.qos.congestionControl;
+    }
+
+    /**
+     * 
+     * executes delete on publisher
+     * @param {PublisherDeleteOptions=} deleteOptions:  Options associated with a publishers delete
+     * @returns void
+     */
+    async delete(deleteOptions?: PublisherDeleteOptions) {
+        await this.session.publisherDelete(
+            new PublisherDelete(
+                this.publisherId,
+                deleteOptions?.attachment ? new ZBytes(deleteOptions.attachment) : undefined,
+                deleteOptions?.timestamp
+            )
+        )
+    }
+
+    /**
+     * undeclares publisher
+     *   
+     * @returns void
+     */
+    async undeclare() {
+        await this.session.undeclarePublisher(this.publisherId);
+    }
 
 }

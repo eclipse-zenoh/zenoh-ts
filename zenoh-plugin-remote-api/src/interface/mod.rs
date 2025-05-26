@@ -585,8 +585,8 @@ impl Get {
 }
 
 pub(crate) struct QuerierGet {
-    pub(crate) querier_id: u32,
     pub(crate) id: u32,
+    pub(crate) querier_id: u32,
     pub(crate) parameters: String,
     pub(crate) payload: Option<Vec<u8>>,
     pub(crate) encoding: Option<Encoding>,
@@ -596,8 +596,8 @@ pub(crate) struct QuerierGet {
 impl QuerierGet {
     pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
         Ok(QuerierGet {
-            querier_id: deserializer.deserialize()?,
             id: deserializer.deserialize()?,
+            querier_id: deserializer.deserialize()?,
             parameters: deserializer.deserialize()?,
             payload: deserialize_option(deserializer)?,
             encoding: opt_encoding_from_id_schema(deserialize_option(deserializer)?),

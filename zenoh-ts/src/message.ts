@@ -21,6 +21,7 @@ import { ZenohId } from "./zid";
 import { Sample } from "./sample";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query";
 import { ZBytes } from "./z_bytes";
+import { SessionInfo } from "./session";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
@@ -86,7 +87,7 @@ function localityFromUint8(val: number): Locality {
 export class Qos  {
     constructor(
         public readonly priority: Priority,
-        public readonly congestion_control: CongestionControl, 
+        public readonly congestionControl: CongestionControl, 
         public readonly express: boolean,
         public readonly reliability: Reliability,
         public readonly locality: Locality
@@ -96,7 +97,7 @@ export class Qos  {
 function qosToUint8(qos: Qos): number {
     // llrecppp
     let e = qos.express ? 1 : 0;
-    return qos.priority | (qos.congestion_control << 3) | (e << 4) | (qos.reliability << 5) | (qos.locality << 6);
+    return qos.priority | (qos.congestionControl << 3) | (e << 4) | (qos.reliability << 5) | (qos.locality << 6);
 }
 
 function qosFromUint8(val: number): Qos {
@@ -146,8 +147,7 @@ function replyKeyExprFromUint8(val: number): ReplyKeyExpr {
 
 function serializeEncoding(e: Encoding, serializer: ZBytesSerializer) {
     let [id, schema] = e.toIdSchema();
-    // TODO: add id for specifying custom encoding
-    serializer.serializeNumberUint16(id ?? EncodingPredefined.ZENOH_BYTES);
+    serializer.serializeNumberUint16(id);
     if (schema == undefined) {
         serializer.serializeBoolean(false);
     } else {
@@ -166,7 +166,6 @@ function serializeOptEncoding(e: Encoding | undefined, serializer: ZBytesSeriali
 }
 
 function deserializeEncoding(deserializer: ZBytesDeserializer): Encoding {
-    // TODO: add id for specifying custom encoding
     let id = deserializer.deserializeNumberUint16();
     let schema: string | undefined;
     if (deserializer.deserializeBoolean()) {
@@ -241,20 +240,12 @@ function deserializeOptTimestamp(deserializer: ZBytesDeserializer): Timestamp | 
     }
 }
 
-function serializeOptUint8Array(a: Uint8Array | undefined, serializer: ZBytesSerializer) {
+function serializeOptZBytes(a: ZBytes | undefined, serializer: ZBytesSerializer) {
     if (a == undefined) {
         serializer.serialize(false);
     } else {
         serializer.serialize(true);
-        serializer.serializeUint8Array(a);
-    }
-}
-
-function deserializeOptUint8Array(deserializer: ZBytesDeserializer): Uint8Array | undefined {
-    if (deserializer.deserializeBoolean()) {
-        return deserializer.deserializeUint8Array();
-    } else {
-        return undefined;
+        serializer.serializeUint8Array(a.toBytes());
     }
 }
 
@@ -278,7 +269,7 @@ function deserializeSample(deserializer: ZBytesDeserializer): Sample {
 
     return new Sample(
         keyexpr, payload, kind, encoding, attachment, timestamp, 
-        qos.priority, qos.congestion_control, qos.express
+        qos.priority, qos.congestionControl, qos.express
     );
 }
 
@@ -343,14 +334,14 @@ export class DeclarePublisher {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclarePublisher;
     public constructor(
         public readonly id: number,
-        public readonly info: PublisherProperties,
+        public readonly properties: PublisherProperties,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
-        serializer.serializeString(this.info.keyexpr.toString());
-        serializeEncoding(this.info.encoding, serializer);
-        serializer.serializeNumberUint8(qosToUint8(this.info.qos));
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializeEncoding(this.properties.encoding, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.properties.qos));
     }
 }
 
@@ -367,20 +358,20 @@ export class UndeclarePublisher {
 
 export type SubscriberProperties = {
     keyexpr: KeyExpr,
-    allowed_origin: Locality
+    allowedOrigin: Locality
 };
 
 export class DeclareSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareSubscriber;
     public constructor(
         public readonly id: number,
-        public readonly info: SubscriberProperties
+        public readonly properties: SubscriberProperties
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
-        serializer.serializeString(this.info.keyexpr.toString());
-        serializer.serializeNumberUint8(this.info.allowed_origin);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeNumberUint8(this.properties.allowedOrigin);
     }
 }
 
@@ -398,20 +389,20 @@ export class UndeclareSubscriber {
 export type QueryableProperties = {
     keyexpr: KeyExpr,
     complete: boolean,
-    allowed_origin: Locality
+    allowedOrigin: Locality
 }
 export class DeclareQueryable {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareQueryable;
     public constructor(
         public readonly id: number,
-        public readonly info: QueryableProperties,
+        public readonly properties: QueryableProperties,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
-        serializer.serializeString(this.info.keyexpr.toString());
-        serializer.serializeBoolean(this.info.complete);
-        serializer.serializeNumberUint8(this.info.allowed_origin);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeBoolean(this.properties.complete);
+        serializer.serializeNumberUint8(this.properties.allowedOrigin);
     }
 }
 
@@ -426,27 +417,30 @@ export class UndeclareQueryable {
     }
 }
 
-class DeclareQuerier {
+export type QuerierProperties = {
+    keyexpr: KeyExpr,
+    qos: Qos,
+    querySettings: QuerySettings,
+    timeoutMs: number,
+}
+
+export class DeclareQuerier {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareQuerier;
     public constructor(
         public readonly id: number,
-        public readonly keyexpr: KeyExpr,
-        public readonly qos: Qos,
-        public readonly querySettings: QuerySettings,
-        public readonly timeoutMs: number,
+        public readonly properties: QuerierProperties,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
-        serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeNumberUint8(qosToUint8(this.qos));
-        serializer.serializeNumberUint8(querySettingsToUint8(this.querySettings));
-        
-        serializer.serializeNumberUint32(this.timeoutMs);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeNumberUint8(qosToUint8(this.properties.qos));
+        serializer.serializeNumberUint8(querySettingsToUint8(this.properties.querySettings));
+        serializer.serializeNumberUint32(this.properties.timeoutMs);
     }
 }
 
-class UndeclareQuerier {
+export class UndeclareQuerier {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareQuerier;
     public constructor(
         public readonly id: number,
@@ -457,7 +451,7 @@ class UndeclareQuerier {
     }
 }
 
-class DeclareLivelinessToken {
+export class DeclareLivelinessToken {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessToken;
     public constructor(
         public readonly id: number,
@@ -470,7 +464,7 @@ class DeclareLivelinessToken {
     }
 }
 
-class UndeclareLivelinessToken {
+export class UndeclareLivelinessToken {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessToken;
     public constructor(
         public readonly id: number,
@@ -481,180 +475,204 @@ class UndeclareLivelinessToken {
     }
 }
 
-class DeclareLivelinessSubscriber {
+export type LivelinessSubscriberProperties = {
+    keyexpr: KeyExpr,
+    history: boolean,
+}
+
+export class DeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessSubscriber;
     public constructor(
         public readonly id: number,
-        public readonly keyexpr: KeyExpr,
-        public readonly history: boolean,
+        public readonly properties: LivelinessSubscriberProperties,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.id);
-        serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeBoolean(this.history);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeBoolean(this.properties.history);
     }
 }
 
-class GetSessionInfo {
+export class UndeclareLivelinessSubscriber {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessSubscriber;
+    public constructor(
+        public readonly id: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint8(this.id);
+    }
+}
+
+export class GetSessionInfo {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.GetSessionInfo;
     public constructor() {}
 
     public serializeWithZSerializer(_serializer: ZBytesSerializer) {}
 }
 
-class GetTimestamp {
+export class GetTimestamp {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.GetTimestamp;
     public constructor() {}
 
     public serializeWithZSerializer(_serializer: ZBytesSerializer) {}
 }
 
-class Put {
+export class Put {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.Put;
     public constructor(
         public readonly keyexpr: KeyExpr,
-        public readonly payload: Uint8Array,
+        public readonly payload: ZBytes,
         public readonly encoding: Encoding,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
         public readonly qos: Qos
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeUint8Array(this.payload);
+        serializer.serializeUint8Array(this.payload.toBytes());
         serializeEncoding(this.encoding, serializer);
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
         serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
-class Delete {
+export class Delete {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.Delete;
     public constructor(
         public readonly keyexpr: KeyExpr,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
         public readonly qos: Qos
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeString(this.keyexpr.toString());
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
         serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
-class PublisherPut {
+export class PublisherPut {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherPut;
     public constructor(
         public readonly publisherId: number,
-        public readonly payload: Uint8Array,
+        public readonly payload: ZBytes,
         public readonly encoding: Encoding | undefined,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.publisherId);
-        serializer.serializeUint8Array(this.payload);
+        serializer.serializeUint8Array(this.payload.toBytes());
         serializeOptEncoding(this.encoding, serializer);
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
     }
 }
 
-class PublisherDelete {
+export class PublisherDelete {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherDelete;
     public constructor(
         public readonly publisherId: number,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.publisherId);
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
     }
 }
 
-class Get {
+export type GetProperties = {
+    keyexpr: KeyExpr,
+    parameters: string,
+    payload: ZBytes | undefined,
+    encoding: Encoding | undefined,
+    attachment: ZBytes | undefined,
+    qos: Qos,
+    querySettings: QuerySettings,
+    timeoutMs: number,
+}
+export class Get {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.Get;
     public constructor(
         public readonly id: number,
-        public readonly keyexpr: KeyExpr,
-        public readonly parameters: string,
-        public readonly payload: Uint8Array | undefined,
-        public readonly encoding: Encoding | undefined,
-        public readonly attachment: Uint8Array | undefined,
-        public readonly qos: Qos,
-        public readonly querySettings: QuerySettings,
-        public readonly timeoutMs: number,
+        public readonly properties: GetProperties
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.id);
-        serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeString(this.parameters);
-        serializeOptUint8Array(this.payload, serializer);
-        serializeOptEncoding(this.encoding, serializer);
-        serializeOptUint8Array(this.attachment, serializer);
-        serializer.serializeNumberUint8(qosToUint8(this.qos));
-        serializer.serializeNumberUint8(querySettingsToUint8(this.querySettings));
-        serializer.serializeNumberUint32(this.timeoutMs);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeString(this.properties.parameters);
+        serializeOptZBytes(this.properties.payload, serializer);
+        serializeOptEncoding(this.properties.encoding, serializer);
+        serializeOptZBytes(this.properties.attachment, serializer);
+        serializer.serializeNumberUint8(qosToUint8(this.properties.qos));
+        serializer.serializeNumberUint8(querySettingsToUint8(this.properties.querySettings));
+        serializer.serializeNumberUint32(this.properties.timeoutMs);
     }
 }
 
-class QuerierGet {
+export type QuerierGetProperties = {
+    querierId: number,
+    parameters: string,
+    payload: ZBytes | undefined,
+    encoding: Encoding | undefined,
+    attachment: ZBytes | undefined,
+}
+
+export class QuerierGet {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierGet;
     public constructor(
-        public readonly querierId: number,
         public readonly id: number,
-        public readonly parameters: string,
-        public readonly payload: Uint8Array | undefined,
-        public readonly encoding: Encoding | undefined,
-        public readonly attachment: Uint8Array | undefined,
-        public readonly timeoutMs: number,
+        public readonly properties: QuerierGetProperties
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint32(this.querierId);
         serializer.serializeNumberUint32(this.id);
-        serializer.serializeString(this.parameters);
-        serializeOptUint8Array(this.payload, serializer);
-        serializeOptEncoding(this.encoding, serializer);
-        serializeOptUint8Array(this.attachment, serializer);
-        serializer.serializeNumberUint32(this.timeoutMs);
+        serializer.serializeNumberUint32(this.properties.querierId);
+        serializer.serializeString(this.properties.parameters);
+        serializeOptZBytes(this.properties.payload, serializer);
+        serializeOptEncoding(this.properties.encoding, serializer);
+        serializeOptZBytes(this.properties.attachment, serializer);
     }
 }
 
-class LivelinessGet {
+export type LivelinessGetProperties = {
+    keyexpr: KeyExpr,
+    timeoutMs: number,
+}
+
+export class LivelinessGet {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.LivelinessGet;
     public constructor(
         public readonly id: number,
-        public readonly keyexpr: KeyExpr,
-        public readonly timeoutMs: number,
+        public readonly properties: LivelinessGetProperties,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint32(this.id);
-        serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeNumberUint32(this.timeoutMs);
+        serializer.serializeString(this.properties.keyexpr.toString());
+        serializer.serializeNumberUint32(this.properties.timeoutMs);
     }
 }
 
-class ReplyOk {
+export class ReplyOk {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyOk;
     public constructor(
         public readonly queryId: number,
         public readonly keyexpr: KeyExpr,
-        public readonly payload: Uint8Array,
+        public readonly payload: ZBytes,
         public readonly encoding: Encoding,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
         public readonly qos: Qos
     ) {}
@@ -662,20 +680,20 @@ class ReplyOk {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
-        serializer.serializeUint8Array(this.payload);
+        serializer.serializeUint8Array(this.payload.toBytes());
         serializeEncoding(this.encoding, serializer);
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
         serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
-class ReplyDel {
+export class ReplyDel {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyDel;
     public constructor(
         public readonly queryId: number,
         public readonly keyexpr: KeyExpr,
-        public readonly attachment: Uint8Array | undefined,
+        public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
         public readonly qos: Qos
     ) {}
@@ -683,28 +701,28 @@ class ReplyDel {
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.queryId);
         serializer.serializeString(this.keyexpr.toString());
-        serializeOptUint8Array(this.attachment, serializer);
+        serializeOptZBytes(this.attachment, serializer);
         serializeOptTimestamp(this.timestamp, serializer);
         serializer.serializeNumberUint8(qosToUint8(this.qos));
     }
 }
 
-class ReplyErr {
+export class ReplyErr {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyErr;
     public constructor(
         public readonly queryId: number,
-        public readonly payload: Uint8Array,
+        public readonly payload: ZBytes,
         public readonly encoding: Encoding,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
         serializer.serializeNumberUint8(this.queryId);
-        serializer.serializeUint8Array(this.payload);
+        serializer.serializeUint8Array(this.payload.toBytes());
         serializeEncoding(this.encoding, serializer);
     }
 }
 
-class QueryResponseFinal {
+export class QueryResponseFinal {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QueryResponseFinal;
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.QueryResponseFinal;
 
@@ -798,9 +816,7 @@ export class ResponseSessionInfo {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseSessionInfo;
 
     public constructor(
-        public readonly zid: ZenohId,
-        public readonly routers: ZenohId[],
-        public readonly peers: ZenohId[],
+        public readonly info: SessionInfo,
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseSessionInfo {
@@ -808,7 +824,7 @@ export class ResponseSessionInfo {
         let dt = ZD.array(ZD.objectStatic(deserializeZenohId));
         let routers = deserializer.deserialize(dt);
         let peers = deserializer.deserialize(dt);
-        return new ResponseSessionInfo(zid, routers, peers);
+        return new ResponseSessionInfo(new SessionInfo(zid, peers, routers));
     }
 }
 
