@@ -225,3 +225,194 @@ Deno.test("Serialization - Binary Format", () => {
     assertEquals(numResult, numbers, "number array serialization failed");
     assertEquals(strResult, strings, "string array serialization failed");
 });
+
+Deno.test("Serialization - Comprehensive Array Tests", () => {
+    // Test arrays of all numeric types
+    const uint8Array = [0, 127, 255];
+    const uint8Bytes = zserialize(uint8Array, ZS.array(ZS.number(NumberFormat.Uint8)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Uint8)), uint8Bytes), uint8Array, "uint8 array serialization failed");
+
+    const int8Array = [-128, 0, 127];
+    const int8Bytes = zserialize(int8Array, ZS.array(ZS.number(NumberFormat.Int8)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Int8)), int8Bytes), int8Array, "int8 array serialization failed");
+
+    const uint16Array = [0, 32767, 65535];
+    const uint16Bytes = zserialize(uint16Array, ZS.array(ZS.number(NumberFormat.Uint16)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Uint16)), uint16Bytes), uint16Array, "uint16 array serialization failed");
+
+    const int16Array = [-32768, 0, 32767];
+    const int16Bytes = zserialize(int16Array, ZS.array(ZS.number(NumberFormat.Int16)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Int16)), int16Bytes), int16Array, "int16 array serialization failed");
+
+    const uint32Array = [0, 2147483647, 4294967295];
+    const uint32Bytes = zserialize(uint32Array, ZS.array(ZS.number(NumberFormat.Uint32)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Uint32)), uint32Bytes), uint32Array, "uint32 array serialization failed");
+
+    const int32Array = [-2147483648, 0, 2147483647];
+    const int32Bytes = zserialize(int32Array, ZS.array(ZS.number(NumberFormat.Int32)));
+    assertEquals(zdeserialize(ZD.array(ZD.number(NumberFormat.Int32)), int32Bytes), int32Array, "int32 array serialization failed");
+
+    // Test array of float32 with tolerance check
+    const float32Array = [-3.14, 0, 3.14, 1e-7, 1e7];
+    const float32Bytes = zserialize(float32Array, ZS.array(ZS.number(NumberFormat.Float32)));
+    const float32Result = zdeserialize(ZD.array(ZD.number(NumberFormat.Float32)), float32Bytes);
+    assert(float32Result.every((val, idx) => Math.abs(val - float32Array[idx]) < 0.0001), 
+           "float32 array serialization failed");
+
+    // Test array of float64 with tolerance check
+    const float64Array = [-3.14159265359, 0, 3.14159265359, 1e-15, 1e15];
+    const float64Bytes = zserialize(float64Array, ZS.array(ZS.number(NumberFormat.Float64)));
+    const float64Result = zdeserialize(ZD.array(ZD.number(NumberFormat.Float64)), float64Bytes);
+    assert(float64Result.every((val, idx) => Math.abs(val - float64Array[idx]) < 0.000000001), 
+           "float64 array serialization failed");
+
+    // Test array of bigints (uint64 and int64)
+    const uint64Array = [0n, 9007199254740991n, 18446744073709551615n];
+    const uint64Bytes = zserialize(uint64Array, ZS.array(ZS.bigint(BigIntFormat.Uint64)));
+    assertEquals(zdeserialize(ZD.array(ZD.bigint(BigIntFormat.Uint64)), uint64Bytes), uint64Array, "uint64 array serialization failed");
+
+    const int64Array = [-9223372036854775808n, 0n, 9223372036854775807n];
+    const int64Bytes = zserialize(int64Array, ZS.array(ZS.bigint(BigIntFormat.Int64)));
+    assertEquals(zdeserialize(ZD.array(ZD.bigint(BigIntFormat.Int64)), int64Bytes), int64Array, "int64 array serialization failed");
+
+    // Test array of booleans
+    const boolArray = [true, false, true, false, true];
+    const boolBytes = zserialize(boolArray, ZS.array(ZS.boolean()));
+    assertEquals(zdeserialize(ZD.array(ZD.boolean()), boolBytes), boolArray, "boolean array serialization failed");
+
+    // Test array of custom objects
+    const customArray = [
+        new CustomStruct([1.1, 2.2], 1, "first"),
+        new CustomStruct([3.3, 4.4], 2, "second"),
+        new CustomStruct([5.5, 6.6], 3, "third")
+    ];
+    const customBytes = zserialize(customArray);
+    const customResult = zdeserialize(ZD.array(ZD.object(CustomStruct)), customBytes) as CustomStruct[];
+    
+    // Compare each custom object in the array
+    assertEquals(customResult.length, customArray.length, "custom object array length mismatch");
+    for (let i = 0; i < customArray.length; i++) {
+        assertEquals(customResult[i].vd, customArray[i].vd, `CustomStruct[${i}].vd serialization failed`);
+        assertEquals(customResult[i].i, customArray[i].i, `CustomStruct[${i}].i serialization failed`);
+        assertEquals(customResult[i].s, customArray[i].s, `CustomStruct[${i}].s serialization failed`);
+    }
+
+    // Test empty arrays
+    const emptyNumArray: number[] = [];
+    const emptyBytes = zserialize(emptyNumArray, ZS.array(ZS.number()));
+    assertEquals(zdeserialize(ZD.array(ZD.number()), emptyBytes), emptyNumArray, "empty array serialization failed");
+});
+
+Deno.test("Serialization - TypedArrays", () => {
+    // Test TypedArray serialization
+    const uint8Array = new Uint8Array([0, 127, 255]);
+    const uint8Bytes = zserialize(uint8Array);
+    assertEquals(new Uint8Array(zdeserialize(ZD.uint8array(), uint8Bytes)), uint8Array, "Uint8Array serialization failed");
+
+    const int8Array = new Int8Array([-128, 0, 127]);
+    const int8Bytes = zserialize(int8Array);
+    assertEquals(new Int8Array(zdeserialize(ZD.int8array(), int8Bytes)), int8Array, "Int8Array serialization failed");
+
+    const uint16Array = new Uint16Array([0, 32767, 65535]);
+    const uint16Bytes = zserialize(uint16Array);
+    assertEquals(new Uint16Array(zdeserialize(ZD.uint16array(), uint16Bytes)), uint16Array, "Uint16Array serialization failed");
+
+    const int16Array = new Int16Array([-32768, 0, 32767]);
+    const int16Bytes = zserialize(int16Array);
+    assertEquals(new Int16Array(zdeserialize(ZD.int16array(), int16Bytes)), int16Array, "Int16Array serialization failed");
+
+    const uint32Array = new Uint32Array([0, 2147483647, 4294967295]);
+    const uint32Bytes = zserialize(uint32Array);
+    assertEquals(new Uint32Array(zdeserialize(ZD.uint32array(), uint32Bytes)), uint32Array, "Uint32Array serialization failed");
+
+    const int32Array = new Int32Array([-2147483648, 0, 2147483647]);
+    const int32Bytes = zserialize(int32Array);
+    assertEquals(new Int32Array(zdeserialize(ZD.int32array(), int32Bytes)), int32Array, "Int32Array serialization failed");
+
+    const float32Array = new Float32Array([-3.14, 0, 3.14, 1e-7, 1e7]);
+    const float32Bytes = zserialize(float32Array);
+    assertEquals(new Float32Array(zdeserialize(ZD.float32array(), float32Bytes)), float32Array, "Float32Array serialization failed");
+
+    const float64Array = new Float64Array([-3.14159265359, 0, 3.14159265359, 1e-15, 1e15]);
+    const float64Bytes = zserialize(float64Array);
+    assertEquals(new Float64Array(zdeserialize(ZD.float64array(), float64Bytes)), float64Array, "Float64Array serialization failed");
+
+    const bigUint64Array = new BigUint64Array([0n, 9007199254740991n, 18446744073709551615n]);
+    const bigUint64Bytes = zserialize(bigUint64Array);
+    assertEquals(new BigUint64Array(zdeserialize(ZD.biguint64array(), bigUint64Bytes)), bigUint64Array, "BigUint64Array serialization failed");
+
+    const bigInt64Array = new BigInt64Array([-9223372036854775808n, 0n, 9223372036854775807n]);
+    const bigInt64Bytes = zserialize(bigInt64Array);
+    assertEquals(new BigInt64Array(zdeserialize(ZD.bigint64array(), bigInt64Bytes)), bigInt64Array, "BigInt64Array serialization failed");
+});
+
+Deno.test("Serialization - Binary Format Equivalence", () => {
+    // Test that Uint8Array and array of Uint8 produce the same binary format
+    const regularUint8Array = [0, 127, 255];
+    const typedUint8Array = new Uint8Array(regularUint8Array);
+    const regularBytes = zserialize(regularUint8Array, ZS.array(ZS.number(NumberFormat.Uint8)));
+    const typedBytes = zserialize(typedUint8Array);
+    assertEquals(typedBytes, regularBytes, "Uint8Array and array<Uint8> should produce same binary format");
+
+    // Test that Int8Array and array of Int8 produce the same binary format
+    const regularInt8Array = [-128, 0, 127];
+    const typedInt8Array = new Int8Array(regularInt8Array);
+    const regularInt8Bytes = zserialize(regularInt8Array, ZS.array(ZS.number(NumberFormat.Int8)));
+    const typedInt8Bytes = zserialize(typedInt8Array);
+    assertEquals(typedInt8Bytes, regularInt8Bytes, "Int8Array and array<Int8> should produce same binary format");
+
+    // Test that Uint16Array and array of Uint16 produce the same binary format
+    const regularUint16Array = [0, 32767, 65535];
+    const typedUint16Array = new Uint16Array(regularUint16Array);
+    const regularUint16Bytes = zserialize(regularUint16Array, ZS.array(ZS.number(NumberFormat.Uint16)));
+    const typedUint16Bytes = zserialize(typedUint16Array);
+    assertEquals(typedUint16Bytes, regularUint16Bytes, "Uint16Array and array<Uint16> should produce same binary format");
+
+    // Test that Int16Array and array of Int16 produce the same binary format
+    const regularInt16Array = [-32768, 0, 32767];
+    const typedInt16Array = new Int16Array(regularInt16Array);
+    const regularInt16Bytes = zserialize(regularInt16Array, ZS.array(ZS.number(NumberFormat.Int16)));
+    const typedInt16Bytes = zserialize(typedInt16Array);
+    assertEquals(typedInt16Bytes, regularInt16Bytes, "Int16Array and array<Int16> should produce same binary format");
+
+    // Test that Uint32Array and array of Uint32 produce the same binary format
+    const regularUint32Array = [0, 2147483647, 4294967295];
+    const typedUint32Array = new Uint32Array(regularUint32Array);
+    const regularUint32Bytes = zserialize(regularUint32Array, ZS.array(ZS.number(NumberFormat.Uint32)));
+    const typedUint32Bytes = zserialize(typedUint32Array);
+    assertEquals(typedUint32Bytes, regularUint32Bytes, "Uint32Array and array<Uint32> should produce same binary format");
+
+    // Test that Int32Array and array of Int32 produce the same binary format
+    const regularInt32Array = [-2147483648, 0, 2147483647];
+    const typedInt32Array = new Int32Array(regularInt32Array);
+    const regularInt32Bytes = zserialize(regularInt32Array, ZS.array(ZS.number(NumberFormat.Int32)));
+    const typedInt32Bytes = zserialize(typedInt32Array);
+    assertEquals(typedInt32Bytes, regularInt32Bytes, "Int32Array and array<Int32> should produce same binary format");
+
+    // Test that Float32Array and array of Float32 produce the same binary format
+    const regularFloat32Array = [-3.14, 0, 3.14, 1e-7, 1e7];
+    const typedFloat32Array = new Float32Array(regularFloat32Array);
+    const regularFloat32Bytes = zserialize(regularFloat32Array, ZS.array(ZS.number(NumberFormat.Float32)));
+    const typedFloat32Bytes = zserialize(typedFloat32Array);
+    assertEquals(typedFloat32Bytes, regularFloat32Bytes, "Float32Array and array<Float32> should produce same binary format");
+
+    // Test that Float64Array and array of Float64 produce the same binary format
+    const regularFloat64Array = [-3.14159265359, 0, 3.14159265359, 1e-15, 1e15];
+    const typedFloat64Array = new Float64Array(regularFloat64Array);
+    const regularFloat64Bytes = zserialize(regularFloat64Array, ZS.array(ZS.number(NumberFormat.Float64)));
+    const typedFloat64Bytes = zserialize(typedFloat64Array);
+    assertEquals(typedFloat64Bytes, regularFloat64Bytes, "Float64Array and array<Float64> should produce same binary format");
+
+    // Test that Number arrays with Int64/Uint64 format (within safe integer limits) produce same binary format as BigInt arrays
+    const regularInt64Array = [Number.MIN_SAFE_INTEGER, 0, Number.MAX_SAFE_INTEGER];
+    const typedInt64Array = new BigInt64Array(regularInt64Array.map(BigInt));
+    const regularInt64Bytes = zserialize(regularInt64Array, ZS.array(ZS.number(NumberFormat.Int64)));
+    const typedInt64Bytes = zserialize(typedInt64Array);
+    assertEquals(typedInt64Bytes, regularInt64Bytes, "Int64Array and array<Int64> should produce same binary format");
+
+    const regularUint64Array = [0, 1000000, Number.MAX_SAFE_INTEGER];
+    const typedUint64Array = new BigUint64Array(regularUint64Array.map(BigInt));
+    const regularUint64Bytes = zserialize(regularUint64Array, ZS.array(ZS.number(NumberFormat.Uint64)));
+    const typedUint64Bytes = zserialize(typedUint64Array);
+    assertEquals(typedUint64Bytes, regularUint64Bytes, "Uint64Array and array<Uint64> should produce same binary format");
+});
