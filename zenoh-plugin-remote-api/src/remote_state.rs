@@ -436,11 +436,8 @@ impl RemoteState {
         let tx1 = self.tx.clone();
         let tx2 = self.tx.clone();
         CallbackDrop {
-            callback: move |r: zenoh::query::Reply| {
-                let msg = interface::Reply {
-                    query_id,
-                    reply: r,
-                };
+            callback: move |reply: zenoh::query::Reply| {
+                let msg = interface::Reply { query_id, reply };
                 let _ = tx1.send((OutRemoteMessage::Reply(msg), None));
             },
             drop: move || {
@@ -639,10 +636,10 @@ impl RemoteState {
             .liveliness()
             .declare_subscriber(declare_liveliness_subscriber.keyexpr)
             .history(declare_liveliness_subscriber.history)
-            .callback(move |s| {
+            .callback(move |sample| {
                 let msg = interface::Sample {
                     subscriber_id: declare_liveliness_subscriber.id,
-                    sample: s,
+                    sample,
                 };
                 let _ = tx.send((OutRemoteMessage::Sample(msg), None));
             })

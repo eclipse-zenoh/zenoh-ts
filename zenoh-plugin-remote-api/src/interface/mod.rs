@@ -611,10 +611,7 @@ fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample
     serializer.serialize(sample_kind_to_u8(sample.kind()));
     serializer.serialize(encoding_to_id_schema(sample.encoding()));
     serialize_option(serializer, &sample.attachment().map(|a| a.to_bytes()));
-    serialize_option(
-        serializer,
-        &sample.timestamp().map(timestamp_to_ntp_id),
-    );
+    serialize_option(serializer, &sample.timestamp().map(timestamp_to_ntp_id));
     let qos = Qos::new(
         sample.priority(),
         sample.congestion_control(),
@@ -647,10 +644,7 @@ fn serialize_query(serializer: &mut ZSerializer, query: &zenoh::query::Query) {
     serializer.serialize(query.key_expr().as_str());
     serializer.serialize(query.parameters().as_str());
     serialize_option(serializer, &query.payload().map(|p| p.to_bytes()));
-    serialize_option(
-        serializer,
-        &query.encoding().map(encoding_to_id_schema),
-    );
+    serialize_option(serializer, &query.encoding().map(encoding_to_id_schema));
     serialize_option(serializer, &query.attachment().map(|a| a.to_bytes()));
     serializer.serialize(reply_keyexpr_to_u8(
         query
