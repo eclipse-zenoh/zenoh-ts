@@ -398,7 +398,7 @@ Deno.test("API - Session Get with multiple responses", async () => {
         query.replyErr("3");
         query.finalize();
 
-        let replies = new  Array<Reply>();
+        let replies = new Array<Reply>();
         for await (const reply of receiver1) {
             replies.push(reply);
         }
@@ -416,6 +416,23 @@ Deno.test("API - Session Get with multiple responses", async () => {
         assertEquals(result instanceof ReplyError, true, "Reply should be ERROR");
         assertEquals(result.payload().toString(), "3", "Reply payload mismatch");
 
+
+        receiver2 = await session2.get(new Selector(selector, "ok"), { payload: "1", consolidation: ConsolidationMode.NONE });
+        if (!receiver2) {
+            throw new Error("Failed to get receiver");
+        }
+
+        const query2 = await queryable.receiver()?.receive();
+        if (!query2) {
+            throw new Error("Failed to get query");
+        }
+        query2.finalize();
+
+        let replies2 = new Array<Reply>();
+        for await (const reply of receiver2) {
+            replies2.push(reply);
+        }
+        assertEquals(replies2.length, 0, "Should receive 0 replies");
 
     } finally {
         // Cleanup in reverse order of creation
