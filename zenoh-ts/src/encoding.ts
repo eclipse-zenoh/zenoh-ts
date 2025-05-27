@@ -105,7 +105,16 @@ export class Encoding {
     constructor(private id: EncodingPredefined, private schema?: string) {}
 
     withSchema(input: string): Encoding {
-        return new Encoding(this.id, input);
+        if (this.id != EncodingPredefined.CUSTOM || this.schema == undefined) {
+            return new Encoding(this.id, input);
+        } else {
+            const idx = this.schema.indexOf(Encoding.SEP);
+            if (idx == -1) {
+                return new Encoding(this.id, this.schema + ";" + input);
+            } else {
+                return new Encoding(this.id, this.schema.substring(0, idx) + ";" + input);
+            }
+        }
     }
 
     static default(): Encoding {
@@ -136,10 +145,13 @@ export class Encoding {
         if (idx == -1) {
             key = input;
         } else {
-            key = input.substring(0, idx + 1);
+            key = input.substring(0, idx);
             schema = input.substring(idx + 1);
         }
         const id = Encoding.ENCODING_TO_ID.get(key) ?? EncodingPredefined.CUSTOM;
+        if (id == EncodingPredefined.CUSTOM) {
+            schema = schema ? key + ";" + schema : key;
+        }
         return new Encoding(id, schema);
     }
 
