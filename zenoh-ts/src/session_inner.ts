@@ -15,7 +15,7 @@
 
 import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
 import { KeyExpr } from "./key_expr.js";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, OutMessageInterface, Ping, PublisherDelete, PublisherProperties, PublisherPut, Put, QuerierGet, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessToken, UndeclarePublisher, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, OutMessageInterface, Ping, PublisherDelete, PublisherProperties, PublisherPut, Put, QuerierGet, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
 import { Query, Reply } from "./query.js";
 import { Closure } from "./closure.js";
 import { RemoteLink } from "./link.js";
@@ -209,12 +209,17 @@ export class SessionInner {
 
     async declareSubscriber(info: SubscriberProperties, closure: Closure<Sample>): Promise<number> {
         let subscriberId = this.subscriberIdCounter.get();
-        await this.sendRequest(
-            new DeclareSubscriber(subscriberId, info), 
-            InRemoteMessageId.ResponseOk, 
-            ResponseOk.deserialize
-        );
         this.subscribers.set(subscriberId, closure);
+        try {
+            await this.sendRequest(
+                new DeclareSubscriber(subscriberId, info), 
+                InRemoteMessageId.ResponseOk, 
+                ResponseOk.deserialize
+            );
+        } catch (error) {
+            this.subscribers.delete(subscriberId);
+            throw error;
+        } 
         return subscriberId;
     }
 
@@ -271,7 +276,7 @@ export class SessionInner {
 
     async undeclareQuerier(querierId: number) {
         await this.sendRequest(
-            new UndeclareQueryable(querierId), 
+            new UndeclareQuerier(querierId), 
             InRemoteMessageId.ResponseOk, 
             ResponseOk.deserialize
         );
@@ -297,12 +302,17 @@ export class SessionInner {
 
     async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<number> {
         let subscriberId = this.subscriberIdCounter.get();
-        await this.sendRequest(
-            new DeclareLivelinessSubscriber(subscriberId, info), 
-            InRemoteMessageId.ResponseOk, 
-            ResponseOk.deserialize
-        );
         this.subscribers.set(subscriberId, closure);
+        try {
+            await this.sendRequest(
+                new DeclareLivelinessSubscriber(subscriberId, info), 
+                InRemoteMessageId.ResponseOk, 
+                ResponseOk.deserialize
+            );
+        } catch (error) {
+            this.subscribers.delete(subscriberId);
+            throw error;
+        }
         return subscriberId;
     }
 
@@ -315,7 +325,7 @@ export class SessionInner {
             subscriber.drop();
         }
         await this.sendRequest(
-            new UndeclareSubscriber(subscriberId), 
+            new UndeclareLivelinessSubscriber(subscriberId), 
             InRemoteMessageId.ResponseOk, 
             ResponseOk.deserialize
         );
@@ -360,19 +370,34 @@ export class SessionInner {
     async get(data: GetProperties, closure: Closure<Reply>) {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
-        await this.sendMessage(new Get(getId, data));
+        try {
+            await this.sendMessage(new Get(getId, data));
+        } catch (error) {
+            this.gets.delete(getId);
+            throw error;
+        }
     }
 
     async querierGet(data: QuerierGetProperties, closure: Closure<Reply>) {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
-        await this.sendMessage(new QuerierGet(getId, data));
+        try {
+            await this.sendMessage(new QuerierGet(getId, data));
+        } catch (error) {
+            this.gets.delete(getId);
+            throw error;
+        }
     }
 
     async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>) {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
-        await this.sendMessage(new LivelinessGet(getId, data));
+        try {
+            await this.sendMessage(new LivelinessGet(getId, data));
+        } catch (error) {
+            this.gets.delete(getId);
+            throw error;
+        }
     }
 
     async replyOk(data: ReplyOk) {

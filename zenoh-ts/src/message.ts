@@ -245,7 +245,7 @@ function deserializeReply(deserializer: ZBytesDeserializer): Reply {
 }
 
 function deserializeQueryInner(deserializer: ZBytesDeserializer): QueryInner {
-    let queryId = deserializer.deserializeNumberUint8();
+    let queryId = deserializer.deserializeNumberUint32();
     let keyexpr = new KeyExpr(deserializer.deserializeString());
     let params = new Parameters(deserializer.deserializeString());
     let payload = deserializeOptZBytes(deserializer);

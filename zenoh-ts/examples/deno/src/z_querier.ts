@@ -30,13 +30,14 @@ export async function main() {
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
     const payload = `[${i}] ${args.payload}`;
+    console.log!(`Querying '${args.getSelector().toString()}' with payload: '${payload}'...`);
     const receiver = await querier.get({ parameters: args.getSelector().parameters(), payload: payload }) as ChannelReceiver<Reply>;
 
     for await (const reply of receiver) {
         const resp = reply.result();
         if (resp instanceof Sample) {
           const sample: Sample = resp;
-          console.warn(">> Received ('", sample.keyexpr(), ":", sample.payload().toString(), "')");
+          console.warn(">> Received ('", sample.keyexpr().toString(), ":", sample.payload().toString(), "')");
         } else {
           const replyError: ReplyError = resp;
           console.warn(">> Received (ERROR: '{", replyError.payload().toString(), "}')");

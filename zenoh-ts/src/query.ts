@@ -143,7 +143,10 @@ export class QueryInner {
 }
 
 /**
- * Query Class to handle  
+ * A Zenoh Query
+ * @remarks Once all replies have been sent, it is necessary to call Query.finalize
+ * to signal, that no more replies will be provided by the given queryable, otherwise this
+ * will result in query timeout error on the querier side.
  */
 export class Query {
     /**
@@ -265,8 +268,7 @@ export class Query {
     }
 
     /**
-      * Finalize query, signaling that all replies have been sent. 
-      * This function MUST be called once all replies to the query have been sent.
+      * Finalizes query, signaling that all replies have been sent. 
       * @returns void
       */
     async finalize() {
@@ -574,7 +576,7 @@ export class Selector {
 
     toString(): string {
         if (this.parameters_ != undefined) {
-            return this.keyExpr_.toString() + "?" + this.parameters_?.toString()
+            return this.keyExpr_.toString() + "?" + this.parameters_.toString()
         } else {
             return this.keyExpr_.toString()
         }

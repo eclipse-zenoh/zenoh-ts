@@ -22,7 +22,8 @@ export class ZenohId {
 
     toString() {
         let out: string = "";
-        for (let b of this.zid) {
+        for (let i = this.zid.length - 1; i >= 0; --i) {
+            let b = this.zid[i] as number;
             out += ZenohId.KEY[b >> 4];
             out += ZenohId.KEY[b & 15];
         }
