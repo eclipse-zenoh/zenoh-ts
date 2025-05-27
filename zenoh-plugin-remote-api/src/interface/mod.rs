@@ -23,7 +23,6 @@ use zenoh::{
     query::{ConsolidationMode, QueryTarget, ReplyKeyExpr},
     sample::{Locality, SampleKind},
 };
-
 use zenoh_ext::{Deserialize, Serialize, ZDeserializeError, ZDeserializer, ZSerializer};
 use zenoh_result::bail;
 
@@ -273,7 +272,7 @@ fn encoding_to_id_schema(encoding: &Encoding) -> (u16, &[u8]) {
 }
 
 fn opt_encoding_from_id_schema(id_schema: Option<(u16, String)>) -> Option<Encoding> {
-    id_schema.map(|x| encoding_from_id_schema(x))
+    id_schema.map(encoding_from_id_schema)
 }
 
 fn opt_timestamp_from_ntp_id(
@@ -608,13 +607,13 @@ impl QuerierGet {
 
 fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample) {
     serializer.serialize(sample.key_expr().as_str());
-    serializer.serialize(&sample.payload().to_bytes());
+    serializer.serialize(sample.payload().to_bytes());
     serializer.serialize(sample_kind_to_u8(sample.kind()));
-    serializer.serialize(encoding_to_id_schema(&sample.encoding()));
+    serializer.serialize(encoding_to_id_schema(sample.encoding()));
     serialize_option(serializer, &sample.attachment().map(|a| a.to_bytes()));
     serialize_option(
         serializer,
-        &sample.timestamp().map(|t| timestamp_to_ntp_id(t)),
+        &sample.timestamp().map(timestamp_to_ntp_id),
     );
     let qos = Qos::new(
         sample.priority(),
@@ -633,7 +632,7 @@ pub(crate) struct Sample {
 
 impl Sample {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(&self.subscriber_id);
+        serializer.serialize(self.subscriber_id);
         serialize_sample(serializer, &self.sample);
     }
 }
@@ -650,7 +649,7 @@ fn serialize_query(serializer: &mut ZSerializer, query: &zenoh::query::Query) {
     serialize_option(serializer, &query.payload().map(|p| p.to_bytes()));
     serialize_option(
         serializer,
-        &query.encoding().map(|e| encoding_to_id_schema(e)),
+        &query.encoding().map(encoding_to_id_schema),
     );
     serialize_option(serializer, &query.attachment().map(|a| a.to_bytes()));
     serializer.serialize(reply_keyexpr_to_u8(
@@ -662,8 +661,8 @@ fn serialize_query(serializer: &mut ZSerializer, query: &zenoh::query::Query) {
 
 impl Query {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(&self.queryable_id);
-        serializer.serialize(&self.query_id);
+        serializer.serialize(self.queryable_id);
+        serializer.serialize(self.query_id);
         serialize_query(serializer, &self.query);
     }
 }
@@ -681,15 +680,15 @@ fn serialize_reply(serializer: &mut ZSerializer, reply: &zenoh::query::Reply) {
         }
         Err(e) => {
             serializer.serialize(false);
-            serializer.serialize(&e.payload().to_bytes());
-            serializer.serialize(encoding_to_id_schema(&e.encoding()));
+            serializer.serialize(e.payload().to_bytes());
+            serializer.serialize(encoding_to_id_schema(e.encoding()));
         }
     }
 }
 
 impl Reply {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(&self.query_id);
+        serializer.serialize(self.query_id);
         serialize_reply(serializer, &self.reply);
     }
 }
@@ -760,7 +759,7 @@ pub(crate) struct QueryResponseFinal {
 
 impl QueryResponseFinal {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(&self.query_id);
+        serializer.serialize(self.query_id);
     }
 
     pub(crate) fn from_wire(
@@ -957,7 +956,7 @@ macro_rules! remote_message {
                         let mut t: $typ = $enum_name::$val.into();
                         match sequence_id {
                             Some(id) => {
-                                t = t | 0b10000000u8;
+                                t |= 0b10000000u8;
                                 serializer.serialize(t);
                                 serializer.serialize(id);
                             },

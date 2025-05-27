@@ -48,7 +48,6 @@ use tokio_rustls::{
     TlsAcceptor,
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
-use tracing;
 use uuid::Uuid;
 use zenoh::{
     bytes::{Encoding, ZBytes},

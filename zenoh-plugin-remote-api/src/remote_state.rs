@@ -211,7 +211,7 @@ impl RemoteState {
             .callback(move |s| {
                 let msg = interface::Sample {
                     subscriber_id: declare_subscriber.id,
-                    sample: s.into(),
+                    sample: s,
                 };
                 let _ = tx.send((OutRemoteMessage::Sample(msg), None));
             })
@@ -439,7 +439,7 @@ impl RemoteState {
             callback: move |r: zenoh::query::Reply| {
                 let msg = interface::Reply {
                     query_id,
-                    reply: r.into(),
+                    reply: r,
                 };
                 let _ = tx1.send((OutRemoteMessage::Reply(msg), None));
             },
@@ -451,7 +451,7 @@ impl RemoteState {
     }
 
     async fn get(&self, get: Get) -> Result<(), zenoh_result::Error> {
-        let selector: Selector = match get.parameters.len() > 0 {
+        let selector: Selector = match !get.parameters.is_empty() {
             true => (get.keyexpr, get.parameters).into(),
             false => get.keyexpr.into(),
         };
@@ -492,7 +492,7 @@ impl RemoteState {
                 if let Some(encoding) = querier_get.encoding {
                     gb = gb.encoding(encoding);
                 }
-                if querier_get.parameters.len() > 0 {
+                if !querier_get.parameters.is_empty() {
                     gb = gb.parameters(querier_get.parameters);
                 }
 
@@ -642,7 +642,7 @@ impl RemoteState {
             .callback(move |s| {
                 let msg = interface::Sample {
                     subscriber_id: declare_liveliness_subscriber.id,
-                    sample: s.into(),
+                    sample: s,
                 };
                 let _ = tx.send((OutRemoteMessage::Sample(msg), None));
             })
