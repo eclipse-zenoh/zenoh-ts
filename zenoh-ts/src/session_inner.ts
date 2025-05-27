@@ -144,7 +144,7 @@ export class SessionInner {
         let serializer = new ZBytesSerializer();
         serializer.serializeNumberUint8(msg.outMessageId);
         msg.serializeWithZSerializer(serializer);
-        return await this.link.send(serializer.finish().toBytes());
+        return await this.link.send(serializer.toBytes());
     }
 
     private async sendRequest<T>(msg: OutMessageInterface, expectedResponseId: InRemoteMessageId, deserialize: (deserializer: ZBytesDeserializer) => T): Promise<T> {

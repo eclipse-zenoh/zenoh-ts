@@ -117,20 +117,41 @@ function isSerializeable(s: any): s is ZSerializeable {
  * Provides functionality for tuple-like serialization.
  */
 export class ZBytesSerializer {
-    private buffer: Uint8Array[];
+    private static readonly DEFAULT_BUFFER_SIZE = 256;
+    private buffer: Uint8Array;
+    private bufferLen: number;
+    private data: Uint8Array[];
     private len: number;
+
+    private resetBuffer(size: number) {
+      if (size < ZBytesSerializer.DEFAULT_BUFFER_SIZE) {
+        size = ZBytesSerializer.DEFAULT_BUFFER_SIZE;
+      }
+      this.buffer = new Uint8Array(size);
+      this.bufferLen = 0;
+    }
+
+    private ensureBuffer(size: number) {
+      if (this.bufferLen + size >= this.buffer.length) {
+        this.resetBuffer(size);
+      }
+      this.bufferLen += size;
+      return this.buffer.subarray(this.bufferLen - size, this.bufferLen);
+    }
     /**
      * new function to create a ZBytesSerializer.
      * 
      * @returns ZBytesSerializer
      */
     constructor() {
-      this.buffer = new Array<Uint8Array>;
+      this.data = new Array<Uint8Array>;
       this.len = 0;
+      this.buffer = new Uint8Array(ZBytesSerializer.DEFAULT_BUFFER_SIZE);
+      this.bufferLen = 0;
     }
 
     private append(buf: Uint8Array) {
-      this.buffer.push(buf);
+      this.data.push(buf);
       this.len += buf.length;
     }
 
@@ -138,7 +159,11 @@ export class ZBytesSerializer {
      * Serializes length of the sequence. Can be used when defining serialization for custom containers.
      */
     public writeSequenceLength(len: number) {
-      this.append(leb.encodeULEB128(len))
+      let a = this.ensureBuffer(10);
+      let sz = leb.encodeULEB128Into(a, len);
+      a = a.subarray(0, sz);
+      this.bufferLen -= (10 - sz);
+      this.append(a);
     }
 
     /**
@@ -267,8 +292,8 @@ export class ZBytesSerializer {
      * Serializes bigint as 64 bit signed integer.
      */
     public serializeBigintInt64(val: bigint) {
-      let data = new Uint8Array(8);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(8);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setBigInt64(0, val, true);
       this.append(data)
     }
@@ -277,8 +302,8 @@ export class ZBytesSerializer {
      * Serializes bigint as 64 bit unsigned integer.
      */
     public serializeBigintUint64(val: bigint) {
-      let data = new Uint8Array(8);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(8);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setBigUint64(0, val, true);
       this.append(data)
     }
@@ -287,8 +312,8 @@ export class ZBytesSerializer {
      * Serializes number as 64 bit floating point number.
      */
     public serializeNumberFloat64(val: number) {
-      let data = new Uint8Array(8);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(8);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setFloat64(0, val, true);
       this.append(data)
     }
@@ -297,8 +322,8 @@ export class ZBytesSerializer {
      * Serializes number as 32 bit floating point number.
      */
     public serializeNumberFloat32(val: number) {
-      let data = new Uint8Array(4);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(4);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setFloat32(0, val, true);
       this.append(data)
     }
@@ -323,8 +348,8 @@ export class ZBytesSerializer {
      * Serializes number as 32 bit integer.
      */
     public serializeNumberInt32(val: number) {
-      let data = new Uint8Array(4);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(4);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setInt32(0, val, true);
       this.append(data)
     }
@@ -333,8 +358,8 @@ export class ZBytesSerializer {
      * Serializes number as 32 bit unsigned integer.
      */
     public serializeNumberUint32(val: number) {
-      let data = new Uint8Array(4);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(4);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setUint32(0, val, true);
       this.append(data)
     }
@@ -343,8 +368,8 @@ export class ZBytesSerializer {
      * Serializes number as 16 bit integer.
      */
     public serializeNumberInt16(val: number) {
-      let data = new Uint8Array(2);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(2);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setInt16(0, val, true);
       this.append(data)
     }
@@ -353,8 +378,8 @@ export class ZBytesSerializer {
      * Serializes number as 16 bit unsigned integer.
      */
     public serializeNumberUint16(val: number) {
-      let data = new Uint8Array(2);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(2);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setUint16(0, val, true);
       this.append(data)
     }
@@ -363,8 +388,8 @@ export class ZBytesSerializer {
      * Serializes number as 8 bit integer.
      */
     public serializeNumberInt8(val: number) {
-      let data = new Uint8Array(1);
-      let view = new DataView(data.buffer);
+      let data = this.ensureBuffer(1);
+      let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
       view.setInt8(0, val);
       this.append(data)
     }
@@ -373,19 +398,16 @@ export class ZBytesSerializer {
      * Serializes number as 8 bit unsigned integer.
      */
     public serializeNumberUint8(val: number) {
-      let data = new Uint8Array(1);
-      let view = new DataView(data.buffer);
-      view.setUint8(0, val);
-      this.append(data)
+      let data = this.ensureBuffer(1);
+      data[0] = val;
+      this.append(data);
     }
 
     /**
      * Serializes boolean.
      */
     public serializeBoolean(val: Boolean) {
-      const b: Uint8Array = new Uint8Array(1)
-      b[0] = val === true ? 1 : 0
-      this.append(b)
+      this.serializeNumberUint8(val === true ? 1 : 0);
     }
 
     /**
@@ -499,24 +521,32 @@ export class ZBytesSerializer {
      * @returns ZBytes
      */
     public finish(): ZBytes {
-      let out: ZBytes;
-      if (this.buffer.length == 0) {
-        out =  new ZBytes(new Uint8Array(0));
-      } else if (this.buffer.length == 1) {
-        out = new ZBytes(this.buffer[0] as Uint8Array);
+      const out = new ZBytes(this.toBytes());
+      this.data = new Array();
+      this.len = 0;
+      this.bufferLen = 0;
+      return new ZBytes(out);
+    }
+
+     /**
+     * Extracts currently serialized bytes.
+     * 
+     * @returns ZBytes
+     */
+     public toBytes(): Uint8Array {
+      if (this.data.length == 0) {
+        return  new Uint8Array(0);
+      } else if (this.data.length == 1) {
+        return this.data[0] as Uint8Array;
       } else {
         let b = new Uint8Array(this.len);
         let offset = 0;
-        for (let a of this.buffer) {
+        for (let a of this.data) {
           b.set(a, offset);
           offset += a.length;
         }
-        out = new ZBytes(b);
+        return b;
       }
-
-      this.buffer = new Array();
-      this.len = 0;
-      return out;
     }
 }
 
@@ -1038,6 +1068,15 @@ export class ZBytesDeserializer {
     return s
   }
 
+  private readByte(): number {
+    if (this.idx_ >= this.buffer_.length) {
+      throw new Error(`Array index is out of bounds: ${this.idx_ + 1} / ${this.buffer_.length}`); 
+    }
+    const b = this.buffer_[this.idx_] as number;
+    this.idx_ += 1;
+    return b;
+  }
+
   /**
    * Reads length of the sequence previously written by {@link ZBytesSerializer.writeSequenceLength} and advances the reading position.
    * @returns Number of sequence elements.
@@ -1065,7 +1104,7 @@ export class ZBytesDeserializer {
    */
   public deserializeUint8Array(): Uint8Array {
     let len = this.readSequenceLength();
-    return this.readSlice(len).slice()
+    return this.readSlice(len)
   }
 
   /**
@@ -1074,7 +1113,11 @@ export class ZBytesDeserializer {
   public deserializeUint16Array(): Uint16Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Uint16Array(this.readSlice(len * 2).slice().buffer)
+      let s = this.readSlice(len * 2);
+      if (s.byteOffset % 2 != 0) {
+        s = s.slice();
+      }
+      return new Uint16Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new Uint16Array(len)
       for (let i = 0; i < len; i++) {
@@ -1090,7 +1133,11 @@ export class ZBytesDeserializer {
   public deserializeUint32Array(): Uint32Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Uint32Array(this.readSlice(len * 4).slice().buffer)
+      let s = this.readSlice(len * 4);
+      if (s.byteOffset % 4 != 0) {
+        s = s.slice();
+      }
+      return new Uint32Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new Uint32Array(len)
       for (let i = 0; i < len; i++) {
@@ -1106,7 +1153,11 @@ export class ZBytesDeserializer {
   public deserializeBiguint64Array(): BigUint64Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new BigUint64Array(this.readSlice(len * 8).slice().buffer)
+      let s = this.readSlice(len * 8);
+      if (s.byteOffset % 8 != 0) {
+        s = s.slice();
+      }
+      return new BigUint64Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new BigUint64Array(len)
       for (let i = 0; i < len; i++) {
@@ -1121,7 +1172,8 @@ export class ZBytesDeserializer {
    */
   public deserializeInt8Array(): Int8Array {
     let len = this.readSequenceLength();
-    return  new Int8Array(this.readSlice(len).slice().buffer)
+    const s = this.readSlice(len);
+    return  new Int8Array(s.buffer, s.byteOffset, len)
   }
 
   /**
@@ -1130,7 +1182,11 @@ export class ZBytesDeserializer {
   public deserializeInt16Array(): Int16Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Int16Array(this.readSlice(len * 2).slice().buffer)
+      let s = this.readSlice(len * 2);
+      if (s.byteOffset % 2 != 0) {
+        s = s.slice();
+      }
+      return new Int16Array(s.buffer, s.byteOffset, len)
     } else {
       let out = new Int16Array(len)
       for (let i = 0; i < len; i++) {
@@ -1146,13 +1202,17 @@ export class ZBytesDeserializer {
   public deserializeInt32Array(): Int32Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Int32Array(this.readSlice(len * 4).slice().buffer)
-    } else {
-      let out = new Int32Array(len)
-      for (let i = 0; i < len; i++) {
-        out[i] = this.deserializeNumberInt32()
+      let s = this.readSlice(len * 4);
+      if (s.byteOffset % 4 != 0) {
+        s = s.slice();
       }
-      return out
+      return new Int32Array(s.buffer, s.byteOffset, len);
+    } else {
+      let out = new Int32Array(len);
+      for (let i = 0; i < len; i++) {
+        out[i] = this.deserializeNumberInt32();
+      }
+      return out;
     }
   }
 
@@ -1162,7 +1222,11 @@ export class ZBytesDeserializer {
   public deserializeBigint64Array(): BigInt64Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new BigInt64Array(this.readSlice(len * 8).slice().buffer)
+      let s = this.readSlice(len * 8);
+      if (s.byteOffset % 8 != 0) {
+        s = s.slice();
+      }
+      return new BigInt64Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new BigInt64Array(len)
       for (let i = 0; i < len; i++) {
@@ -1178,7 +1242,11 @@ export class ZBytesDeserializer {
   public deserializeFloat32Array(): Float32Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Float32Array(this.readSlice(len * 4).slice().buffer)
+      let s = this.readSlice(len * 4);
+      if (s.byteOffset % 4 != 0) {
+        s = s.slice();
+      }
+      return new Float32Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new Float32Array(len)
       for (let i = 0; i < len; i++) {
@@ -1194,7 +1262,11 @@ export class ZBytesDeserializer {
   public deserializeFloat64Array(): Float64Array {
     let len = this.readSequenceLength();
     if (isLittleEndian) {
-      return new Float64Array(this.readSlice(len * 8).slice().buffer)
+      let s = this.readSlice(len * 8);
+      if (s.byteOffset % 8 != 0) {
+        s = s.slice();
+      }
+      return new Float64Array(s.buffer, s.byteOffset, len);
     } else {
       let out = new Float64Array(len)
       for (let i = 0; i < len; i++) {
@@ -1204,14 +1276,12 @@ export class ZBytesDeserializer {
     }
   }
 
-
-
   /**
    * Deserializes next portion of data (serialized as 64 bit signed integer) as bigint and advances the reading position.
    */
   public deserializeBigintInt64(): bigint {
-    let data = this.readSlice(8).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(8);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getBigInt64(0, true);
   }
 
@@ -1219,8 +1289,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 64 bit unsigned integer) as bigint and advances the reading position.
    */
   public deserializeBigintUint64(): bigint {
-    let data = this.readSlice(8).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(8);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getBigUint64(0, true);
   }
 
@@ -1228,8 +1298,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 64 bit floating point number) as number and advances the reading position.
    */
   public deserializeNumberFloat64(): number {
-    let data = this.readSlice(8).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(8);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getFloat64(0, true);
   }
 
@@ -1237,8 +1307,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 32 bit floating point number) as number and advances the reading position.
    */
   public deserializeNumberFloat32(): number {
-    let data = this.readSlice(4).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(4);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getFloat32(0, true);
   }
 
@@ -1270,8 +1340,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 32 bit signed integer) as number and advances the reading position.
    */
   public deserializeNumberInt32(): number {
-    let data = this.readSlice(4).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(4);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getInt32(0, true);
   }
 
@@ -1279,8 +1349,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 32 bit unsigned integer) as number and advances the reading position.
    */
   public deserializeNumberUint32(): number {
-    let data = this.readSlice(4).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(4);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getUint32(0, true);
   }
 
@@ -1288,8 +1358,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 16 bit signed integer) as number and advances the reading position.
    */
   public deserializeNumberInt16(): number {
-    let data = this.readSlice(2).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(2);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getInt16(0, true);
   }
 
@@ -1297,8 +1367,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 16 bit unsigned integer) as number and advances the reading position.
    */
   public deserializeNumberUint16(): number {
-    let data = this.readSlice(2).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(2);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getUint16(0, true);
   }
 
@@ -1306,8 +1376,8 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 8 bit signed integer) as number and advances the reading position.
    */
   public deserializeNumberInt8(): number {
-    let data = this.readSlice(1).slice();
-    let view = new DataView(data.buffer);
+    let data = this.readSlice(1);
+    let view = new DataView(data.buffer, data.byteOffset, data.byteLength);
     return view.getInt8(0);
   }
 
@@ -1315,20 +1385,14 @@ export class ZBytesDeserializer {
    * Deserializes next portion of data (serialized as 8 bit unsigned integer) as number and advances the reading position.
    */
   public deserializeNumberUint8(): number {
-    let data = this.readSlice(1).slice();
-    let view = new DataView(data.buffer);
-    return view.getUint8(0);
+    return this.readByte();
   }
 
   /**
    * Deserializes next portion of data as a boolean and advances the reading position.
    */
   public deserializeBoolean(): boolean {
-    if (this.idx_  >= this.buffer_.length) {
-      throw new Error(`Array index is out of bounds: ${this.idx_} / ${this.buffer_.length}`); 
-    }
-    const res = this.buffer_[this.idx_]
-    this.idx_ += 1
+    const res = this.readByte();
     if (res == 1) {
       return true;
     } else if (res == 0) {
