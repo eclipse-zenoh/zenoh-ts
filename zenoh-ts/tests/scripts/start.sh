@@ -27,14 +27,14 @@ else
     deno test -A $COVERAGE_OPTS src/*.ts
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ]; then
-      deno test -A $COVERAGE_OPTS src/bench/*.ts
+      deno bench -A src/bench/*.ts
       EXIT_CODE=$?
     fi
   else
     TEST_PATH="src/$1.ts"
     if [ -f "$TEST_PATH" ]; then
       if [[ "$TEST_PATH" == *"/bench/"* ]]; then
-        deno bench -A $COVERAGE_OPTS "$TEST_PATH"
+        deno bench -A "$TEST_PATH"
       else
         deno test -A $COVERAGE_OPTS "$TEST_PATH"
       fi
