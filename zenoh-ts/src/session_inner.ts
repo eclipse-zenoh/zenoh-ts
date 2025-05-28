@@ -150,16 +150,16 @@ export class SessionInner {
         serializeHeader([msg.outMessageId, msgId], serializer);
 
         msg.serializeWithZSerializer(serializer);
-        const p = new Promise((resolve: OnResponseReceivedCallback, _) => {
-            this.pendingMessageResponses.set(msgId, resolve);
+        const p = new Promise((resolve: OnResponseReceivedCallback, reject) => {
+            let t = setTimeout(() => reject(), this.messageResponseTimeoutMs);
+            this.pendingMessageResponses.set(msgId, (arg: [InRemoteMessageId, ZBytesDeserializer]) => {
+                clearTimeout(t);
+                resolve(arg);
+            });
         });
-
-        const timeout = new Promise<[InRemoteMessageId, ZBytesDeserializer]>((_, reject) =>
-            setTimeout(() => reject(new Error("Request timeout")), this.messageResponseTimeoutMs),
-        );
         await this.link.send(serializer.finish().toBytes());
 
-        return await Promise.race([p, timeout]).then((r: [InRemoteMessageId, ZBytesDeserializer]) => {
+        return await p.then((r: [InRemoteMessageId, ZBytesDeserializer]) => {
             switch (r[0]) {
                 case expectedResponseId: return deserialize(r[1]);
                 case InRemoteMessageId.ResponseError: {
@@ -168,9 +168,9 @@ export class SessionInner {
                 }
                 default: throw new Error(`Unexpected InRemoteMessageId ${r[0]}`);
             };
-        }, (e: Error) => {
+        }, () => {
             this.pendingMessageResponses.delete(msgId);
-            throw e;
+            throw new Error("Remote api request timeout");
         });
     }
 
