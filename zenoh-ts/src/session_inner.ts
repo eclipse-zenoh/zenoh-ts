@@ -76,7 +76,7 @@ export class SessionInner {
                 this.onMessageReceived(msg);
             } catch (e) {
                 console.warn(e);
-            } 
+            }
         });
     }
 

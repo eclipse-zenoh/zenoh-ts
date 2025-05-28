@@ -170,10 +170,14 @@ export class ZBytesSerializer {
      * Serializes a utf-8 encoded string.
      */
     public serializeString(val: string) {
-      const encoder = new TextEncoder();
-      const encoded = encoder.encode(val);
-      this.writeSequenceLength(encoded.length)
-      this.append(encoded)
+      if (val.length == 0) {
+        this.writeSequenceLength(0);
+      } else {
+        const encoder = new TextEncoder();
+        const encoded = encoder.encode(val);
+        this.writeSequenceLength(encoded.length)
+        this.append(encoded)
+      }
     }
 
     /**
@@ -1099,8 +1103,12 @@ export class ZBytesDeserializer {
    */
   public deserializeString(): string {
       let len = this.readSequenceLength()
-      const decoder = new TextDecoder()
-      return decoder.decode(this.readSlice(len))
+      if (len == 0) {
+        return "";
+      } else {
+        const decoder = new TextDecoder()
+        return decoder.decode(this.readSlice(len))
+      }
   }
 
   /**
