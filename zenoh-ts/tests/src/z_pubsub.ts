@@ -21,12 +21,28 @@ import {
   CongestionControl, 
   Priority, 
   ZBytes,
-  SampleKind 
+  SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+interface PutTestCase {
+  description: string;
+  payload: string;
+  options: Record<string, unknown>;
+  expectedEncoding?: Encoding;
+  expectedPriority?: Priority;
+  expectedAttachment?: string;
+}
+
+interface DeleteTestCase {
+  description: string;
+  options: Record<string, unknown>;
+  expectedPriority?: Priority;
+  expectedAttachment?: string;
 }
 
 Deno.test("API - Put/Subscribe with PutOptions", async () => {
@@ -54,82 +70,105 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
     // Delay to ensure subscriber is ready
     await sleep(100);
 
-    // Test 1: Basic put with encoding
-    await session1.put("zenoh/test/options", "message with encoding", {
-      encoding: Encoding.TEXT_PLAIN,
-    });
-
-    // Test 2: Put with priority and congestion control
-    await session1.put("zenoh/test/options", "message with priority", {
-      encoding: Encoding.APPLICATION_JSON,
-      priority: Priority.REAL_TIME,
-      congestionControl: CongestionControl.BLOCK,
-    });
-
-    // Test 3: Put with express flag
-    await session1.put("zenoh/test/options", "express message", {
-      encoding: Encoding.ZENOH_STRING,
-      express: true,
-    });
-
-    // Test 4: Put with attachment
+    // Define test cases
     const attachmentData = new ZBytes("metadata: important");
-    await session1.put("zenoh/test/options", "message with attachment", {
-      encoding: Encoding.TEXT_PLAIN,
-      attachment: attachmentData,
-    });
-
-    // Test 5: Put with timestamp
-    const timestamp = await session1.newTimestamp();
-    await session1.put("zenoh/test/options", "message with timestamp", {
-      encoding: Encoding.APPLICATION_JSON,
-      timestamp: timestamp,
-      priority: Priority.DATA_HIGH,
-    });
-
-    // Test 6: Put with all options combined
     const fullOptionsAttachment = new ZBytes("full-options-metadata");
-    await session1.put("zenoh/test/options", "message with all options", {
-      encoding: Encoding.APPLICATION_CBOR,
-      congestionControl: CongestionControl.DROP,
-      priority: Priority.INTERACTIVE_HIGH,
-      express: false,
-      attachment: fullOptionsAttachment,
-    });
+    const timestamp = await session1.newTimestamp();
+
+    const putTestCases: PutTestCase[] = [
+      {
+        description: "Basic put with encoding",
+        payload: "message with encoding",
+        options: { encoding: Encoding.TEXT_PLAIN },
+        expectedEncoding: Encoding.TEXT_PLAIN,
+      },
+      {
+        description: "Put with priority and congestion control",
+        payload: "message with priority",
+        options: {
+          encoding: Encoding.APPLICATION_JSON,
+          priority: Priority.REAL_TIME,
+          congestionControl: CongestionControl.BLOCK,
+        },
+        expectedEncoding: Encoding.APPLICATION_JSON,
+        expectedPriority: Priority.REAL_TIME,
+      },
+      {
+        description: "Put with express flag",
+        payload: "express message",
+        options: {
+          encoding: Encoding.ZENOH_STRING,
+          express: true,
+        },
+        expectedEncoding: Encoding.ZENOH_STRING,
+      },
+      {
+        description: "Put with attachment",
+        payload: "message with attachment",
+        options: {
+          encoding: Encoding.TEXT_PLAIN,
+          attachment: attachmentData,
+        },
+        expectedEncoding: Encoding.TEXT_PLAIN,
+        expectedAttachment: "metadata: important",
+      },
+      {
+        description: "Put with timestamp",
+        payload: "message with timestamp",
+        options: {
+          encoding: Encoding.APPLICATION_JSON,
+          timestamp: timestamp,
+          priority: Priority.DATA_HIGH,
+        },
+        expectedEncoding: Encoding.APPLICATION_JSON,
+        expectedPriority: Priority.DATA_HIGH,
+      },
+      {
+        description: "Put with all options combined",
+        payload: "message with all options",
+        options: {
+          encoding: Encoding.APPLICATION_CBOR,
+          congestionControl: CongestionControl.DROP,
+          priority: Priority.INTERACTIVE_HIGH,
+          express: false,
+          attachment: fullOptionsAttachment,
+        },
+        expectedEncoding: Encoding.APPLICATION_CBOR,
+        expectedPriority: Priority.INTERACTIVE_HIGH,
+        expectedAttachment: "full-options-metadata",
+      },
+    ];
+
+    // Execute all put operations
+    for (const testCase of putTestCases) {
+      await session1.put("zenoh/test/options", testCase.payload, testCase.options);
+    }
 
     // Delay to ensure all messages are received
     await sleep(200);
 
     // Verify we received all messages
-    assertEquals(samples.length, 6, "Expected 6 messages with different options");
+    assertEquals(samples.length, putTestCases.length, `Expected ${putTestCases.length} messages with different options`);
 
-    // Verify basic encoding option
-    assertEquals(samples[0].encoding(), Encoding.TEXT_PLAIN, "First message should have text/plain encoding");
-    assertEquals(samples[0].payload().toString(), "message with encoding", "First message payload mismatch");
+    // Verify each test case
+    for (let i = 0; i < putTestCases.length; i++) {
+      const testCase = putTestCases[i];
+      const sample = samples[i];
 
-    // Verify priority and congestion control (priority should be reflected in sample)
-    assertEquals(samples[1].encoding(), Encoding.APPLICATION_JSON, "Second message should have application/json encoding");
-    assertEquals(samples[1].payload().toString(), "message with priority", "Second message payload mismatch");
-    assertEquals(samples[1].priority(), Priority.REAL_TIME, "Second message should have REAL_TIME priority");
-
-    // Verify express message
-    assertEquals(samples[2].encoding(), Encoding.ZENOH_STRING, "Third message should have zenoh/string encoding");
-    assertEquals(samples[2].payload().toString(), "express message", "Third message payload mismatch");
-
-    // Verify attachment
-    assertEquals(samples[3].attachment()?.toString(), "metadata: important", "Fourth message should have attachment");
-    assertEquals(samples[3].payload().toString(), "message with attachment", "Fourth message payload mismatch");
-
-    // Verify timestamp message
-    assertEquals(samples[4].encoding(), Encoding.APPLICATION_JSON, "Fifth message should have application/json encoding");
-    assertEquals(samples[4].priority(), Priority.DATA_HIGH, "Fifth message should have DATA_HIGH priority");
-    assertEquals(samples[4].payload().toString(), "message with timestamp", "Fifth message payload mismatch");
-
-    // Verify all options combined
-    assertEquals(samples[5].encoding(), Encoding.APPLICATION_CBOR, "Sixth message should have application/cbor encoding");
-    assertEquals(samples[5].priority(), Priority.INTERACTIVE_HIGH, "Sixth message should have INTERACTIVE_HIGH priority");
-    assertEquals(samples[5].attachment()?.toString(), "full-options-metadata", "Sixth message should have full options attachment");
-    assertEquals(samples[5].payload().toString(), "message with all options", "Sixth message payload mismatch");
+      assertEquals(sample.payload().toString(), testCase.payload, `${testCase.description}: payload mismatch`);
+      
+      if (testCase.expectedEncoding) {
+        assertEquals(sample.encoding(), testCase.expectedEncoding, `${testCase.description}: encoding mismatch`);
+      }
+      
+      if (testCase.expectedPriority) {
+        assertEquals(sample.priority(), testCase.expectedPriority, `${testCase.description}: priority mismatch`);
+      }
+      
+      if (testCase.expectedAttachment) {
+        assertEquals(sample.attachment()?.toString(), testCase.expectedAttachment, `${testCase.description}: attachment mismatch`);
+      }
+    }
 
   } finally {
     // Cleanup in reverse order of creation
@@ -184,75 +223,85 @@ Deno.test("API - Delete with DeleteOptions", async () => {
     assertEquals(samples[0].kind(), SampleKind.PUT, "First sample should be PUT");
     assertEquals(samples[0].payload().toString(), "data to be deleted", "PUT payload mismatch");
 
-    // Test 1: Basic delete without options
-    await session1.delete("zenoh/test/delete", {});
-
-    // Test 2: Delete with priority and congestion control
-    await session1.delete("zenoh/test/delete", {
-      priority: Priority.REAL_TIME,
-      congestionControl: CongestionControl.BLOCK,
-    });
-
-    // Test 3: Delete with express flag
-    await session1.delete("zenoh/test/delete", {
-      express: true,
-    });
-
-    // Test 4: Delete with attachment
+    // Define delete test cases
     const deleteAttachment = new ZBytes("delete metadata");
-    await session1.delete("zenoh/test/delete", {
-      attachment: deleteAttachment,
-    });
-
-    // Test 5: Delete with timestamp
-    const deleteTimestamp = await session1.newTimestamp();
-    await session1.delete("zenoh/test/delete", {
-      timestamp: deleteTimestamp,
-      priority: Priority.DATA_HIGH,
-    });
-
-    // Test 6: Delete with all options combined
     const fullDeleteAttachment = new ZBytes("full-delete-metadata");
-    await session1.delete("zenoh/test/delete", {
-      congestionControl: CongestionControl.DROP,
-      priority: Priority.INTERACTIVE_HIGH,
-      express: false,
-      attachment: fullDeleteAttachment,
-    });
+    const deleteTimestamp = await session1.newTimestamp();
+
+    const deleteTestCases: DeleteTestCase[] = [
+      {
+        description: "Basic delete without options",
+        options: {},
+      },
+      {
+        description: "Delete with priority and congestion control",
+        options: {
+          priority: Priority.REAL_TIME,
+          congestionControl: CongestionControl.BLOCK,
+        },
+        expectedPriority: Priority.REAL_TIME,
+      },
+      {
+        description: "Delete with express flag",
+        options: {
+          express: true,
+        },
+      },
+      {
+        description: "Delete with attachment",
+        options: {
+          attachment: deleteAttachment,
+        },
+        expectedAttachment: "delete metadata",
+      },
+      {
+        description: "Delete with timestamp",
+        options: {
+          timestamp: deleteTimestamp,
+          priority: Priority.DATA_HIGH,
+        },
+        expectedPriority: Priority.DATA_HIGH,
+      },
+      {
+        description: "Delete with all options combined",
+        options: {
+          congestionControl: CongestionControl.DROP,
+          priority: Priority.INTERACTIVE_HIGH,
+          express: false,
+          attachment: fullDeleteAttachment,
+        },
+        expectedPriority: Priority.INTERACTIVE_HIGH,
+        expectedAttachment: "full-delete-metadata",
+      },
+    ];
+
+    // Execute all delete operations
+    for (const testCase of deleteTestCases) {
+      await session1.delete("zenoh/test/delete", testCase.options);
+    }
 
     // Delay to ensure all delete messages are received
     await sleep(200);
 
-    // Verify we received all messages (1 PUT + 6 DELETE)
-    assertEquals(samples.length, 7, "Expected 7 messages total (1 PUT + 6 DELETE)");
+    // Verify we received all messages (1 PUT + deleteTestCases.length DELETE)
+    const expectedTotal = 1 + deleteTestCases.length;
+    assertEquals(samples.length, expectedTotal, `Expected ${expectedTotal} messages total (1 PUT + ${deleteTestCases.length} DELETE)`);
 
-    // Verify all delete operations
+    // Verify all delete operations (skip the initial PUT at index 0)
     for (let i = 1; i < samples.length; i++) {
-      assertEquals(samples[i].kind(), SampleKind.DELETE, `Sample ${i} should be DELETE`);
+      const testCase = deleteTestCases[i - 1];
+      const sample = samples[i];
+
+      assertEquals(sample.kind(), SampleKind.DELETE, `${testCase.description}: should be DELETE`);
+      
+      if (testCase.expectedPriority) {
+        assertEquals(sample.priority(), testCase.expectedPriority, `${testCase.description}: priority mismatch`);
+      }
+      
+      if (testCase.expectedAttachment) {
+        assertEquals(sample.attachment()?.toString(), testCase.expectedAttachment, `${testCase.description}: attachment mismatch`);
+      }
     }
-
-    // Verify basic delete (sample index 1)
-    assertEquals(samples[1].kind(), SampleKind.DELETE, "Second sample should be DELETE");
-
-    // Verify delete with priority and congestion control (sample index 2)
-    assertEquals(samples[2].kind(), SampleKind.DELETE, "Third sample should be DELETE");
-    assertEquals(samples[2].priority(), Priority.REAL_TIME, "Third sample should have REAL_TIME priority");
-
-    // Verify express delete (sample index 3)
-    assertEquals(samples[3].kind(), SampleKind.DELETE, "Fourth sample should be DELETE");
-
-    // Verify delete with attachment (sample index 4)
-    assertEquals(samples[4].kind(), SampleKind.DELETE, "Fifth sample should be DELETE");
-    assertEquals(samples[4].attachment()?.toString(), "delete metadata", "Fifth sample should have attachment");
-
-    // Verify delete with timestamp (sample index 5)
-    assertEquals(samples[5].kind(), SampleKind.DELETE, "Sixth sample should be DELETE");
-    assertEquals(samples[5].priority(), Priority.DATA_HIGH, "Sixth sample should have DATA_HIGH priority");
-
-    // Verify delete with all options (sample index 6)
-    assertEquals(samples[6].kind(), SampleKind.DELETE, "Seventh sample should be DELETE");
-    assertEquals(samples[6].priority(), Priority.INTERACTIVE_HIGH, "Seventh sample should have INTERACTIVE_HIGH priority");
-    assertEquals(samples[6].attachment()?.toString(), "full-delete-metadata", "Seventh sample should have full delete attachment");
 
   } finally {
     // Cleanup in reverse order of creation
