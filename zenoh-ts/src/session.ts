@@ -201,7 +201,7 @@ export class Session {
      */
 
     static async open(config: Config): Promise<Session> {
-        let inner = await SessionInner.open(config.locator);
+        let inner = await SessionInner.open(config.locator, config.messageResponseTimeoutMs);
         return new Session(inner);
     }
 

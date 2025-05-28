@@ -46,7 +46,6 @@ type OnResponseReceivedCallback = (msg: [InRemoteMessageId, ZBytesDeserializer])
 
 
 export class SessionInner {
-    private static TIMEOUT_ERROR = new Error("Timeout");
     private isClosed_: boolean = false;
 
     private link: RemoteLink;
@@ -63,14 +62,13 @@ export class SessionInner {
     private subscribers: Map<number, Closure<Sample>> = new Map<number, Closure<Sample>>();
     private queryables: Map<number, Closure<Query>> = new Map<number, Closure<Query>>();
     private gets: Map<number, Closure<Reply>> = new Map<number, Closure<Reply>>();
-
-    private messageResponseTimeoutMs: number = 100;
-    
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
+    private readonly messageResponseTimeoutMs: number;
     
 
-    private constructor(link: RemoteLink) {
+    private constructor(link: RemoteLink, messageResponseTimeoutMs: number) {
         this.link = link;
+        this.messageResponseTimeoutMs = messageResponseTimeoutMs;
         this.link.onmessage((msg: any) => { 
             try {
                 this.onMessageReceived(msg);
@@ -157,7 +155,7 @@ export class SessionInner {
         });
 
         const timeout = new Promise<[InRemoteMessageId, ZBytesDeserializer]>((_, reject) =>
-            setTimeout(() => reject(SessionInner.TIMEOUT_ERROR), this.messageResponseTimeoutMs),
+            setTimeout(() => reject(new Error("Request timeout")), this.messageResponseTimeoutMs),
         );
         await this.link.send(serializer.finish().toBytes());
 
@@ -180,9 +178,9 @@ export class SessionInner {
         return await this.sendRequest(new Ping, InRemoteMessageId.ResponsePing, ResponsePing.deserialize);
     }
 
-    static async open(locator: string): Promise<SessionInner> {
+    static async open(locator: string, messageResponseTimeoutMs: number): Promise<SessionInner> {
         let link = await RemoteLink.new(locator);
-        let session =  new SessionInner(link);
+        let session =  new SessionInner(link, messageResponseTimeoutMs);
         session.id = (await session.ping()).uuid; // verify connection
         console.log(`Successfully opened session with id: ${session.id}`);
         return session;
