@@ -22,7 +22,6 @@ import { RemoteLink } from "./link.js";
 import { Sample } from "./sample.js";
 import { SessionInfo } from "./session.js";
 import { Timestamp } from "./timestamp.js";
-import { ZBytes } from "./z_bytes.js";
 
 class IdSource {
     private static MAX: number = 1 << 31;
@@ -82,7 +81,7 @@ export class SessionInner {
     }
 
     private onMessageReceived(msg: Uint8Array) {
-        let deserializer = new ZBytesDeserializer(new ZBytes(msg));
+        let deserializer = new ZBytesDeserializer(msg);
         let [messageId, sequenceId] = deserializeHeader(deserializer);
         if (sequenceId != undefined) { // received response to one of the messages
             let res = this.pendingMessageResponses.get(sequenceId);

@@ -525,7 +525,7 @@ export class ZBytesSerializer {
       this.data = new Array();
       this.len = 0;
       this.bufferLen = 0;
-      return new ZBytes(out);
+      return out;
     }
 
      /**
@@ -1051,11 +1051,15 @@ export class ZBytesDeserializer {
   private idx_: number
   /**
    * new function to create a ZBytesDeserializer
-   * @param p payload to deserialize.
+   * @param data payload to deserialize.
    * @returns ZBytesSerializer
    */
-  constructor(zbytes: ZBytes) {
-    this.buffer_ = zbytes.toBytes()
+  constructor(data: ZBytes | Uint8Array) {
+    if (data instanceof ZBytes) {
+      this.buffer_ = data.toBytes()
+    } else {
+      this.buffer_ = data;
+    }
     this.idx_ = 0
   }
 
