@@ -115,16 +115,16 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
     assertEquals(receivedMessages.length, 6, "Expected 6 messages with different options");
 
     // Verify basic encoding option
-    assertEquals(receivedMessages[0].encoding?.toString(), "text/plain", "First message should have text/plain encoding");
+    assertEquals(receivedMessages[0].encoding, Encoding.TEXT_PLAIN, "First message should have text/plain encoding");
     assertEquals(receivedMessages[0].payload.toString(), "message with encoding", "First message payload mismatch");
 
     // Verify priority and congestion control (priority should be reflected in sample)
-    assertEquals(receivedMessages[1].encoding?.toString(), "application/json", "Second message should have application/json encoding");
+    assertEquals(receivedMessages[1].encoding, Encoding.APPLICATION_JSON, "Second message should have application/json encoding");
     assertEquals(receivedMessages[1].payload.toString(), "message with priority", "Second message payload mismatch");
-    assertEquals(receivedMessages[1].priority?.toString(), "REAL_TIME", "Second message should have REAL_TIME priority");
+    assertEquals(receivedMessages[1].priority, Priority.REAL_TIME, "Second message should have REAL_TIME priority");
 
     // Verify express message
-    assertEquals(receivedMessages[2].encoding?.toString(), "zenoh/string", "Third message should have zenoh/string encoding");
+    assertEquals(receivedMessages[2].encoding, Encoding.ZENOH_STRING, "Third message should have zenoh/string encoding");
     assertEquals(receivedMessages[2].payload.toString(), "express message", "Third message payload mismatch");
 
     // Verify attachment
@@ -132,13 +132,13 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
     assertEquals(receivedMessages[3].payload.toString(), "message with attachment", "Fourth message payload mismatch");
 
     // Verify timestamp message
-    assertEquals(receivedMessages[4].encoding?.toString(), "application/json", "Fifth message should have application/json encoding");
-    assertEquals(receivedMessages[4].priority?.toString(), "DATA_HIGH", "Fifth message should have DATA_HIGH priority");
+    assertEquals(receivedMessages[4].encoding, Encoding.APPLICATION_JSON, "Fifth message should have application/json encoding");
+    assertEquals(receivedMessages[4].priority, Priority.DATA_HIGH, "Fifth message should have DATA_HIGH priority");
     assertEquals(receivedMessages[4].payload.toString(), "message with timestamp", "Fifth message payload mismatch");
 
     // Verify all options combined
-    assertEquals(receivedMessages[5].encoding?.toString(), "application/cbor", "Sixth message should have application/cbor encoding");
-    assertEquals(receivedMessages[5].priority?.toString(), "INTERACTIVE_HIGH", "Sixth message should have INTERACTIVE_HIGH priority");
+    assertEquals(receivedMessages[5].encoding, Encoding.APPLICATION_CBOR, "Sixth message should have application/cbor encoding");
+    assertEquals(receivedMessages[5].priority, Priority.INTERACTIVE_HIGH, "Sixth message should have INTERACTIVE_HIGH priority");
     assertEquals(receivedMessages[5].attachment?.toString(), "full-options-metadata", "Sixth message should have full options attachment");
     assertEquals(receivedMessages[5].payload.toString(), "message with all options", "Sixth message payload mismatch");
 
