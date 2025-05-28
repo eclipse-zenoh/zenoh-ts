@@ -6,8 +6,11 @@ cd "$SCRIPTDIR/.."
 
 if [ "$1" = "" ]; then
   echo
-  echo "Arguments: test_name|ALL [COVERAGE]"
-  echo "  test_name: name of the test to run or ALL to run all tests"
+  echo "Arguments: test_name|ALL|TESTS|BENCH [COVERAGE]"
+  echo "  test_name: name of the test to run"
+  echo "  ALL: run all tests and benchmarks"
+  echo "  TESTS: run only tests (no benchmarks)"
+  echo "  BENCH: run only benchmarks (no tests)"
   echo "  COVERAGE: generate coverage report"
   echo
   echo "Available tests:"
@@ -30,6 +33,12 @@ else
       deno bench -A src/bench/*.ts
       EXIT_CODE=$?
     fi
+  elif [ "$1" = "TESTS" ]; then
+    deno test -A $COVERAGE_OPTS src/*.ts
+    EXIT_CODE=$?
+  elif [ "$1" = "BENCH" ]; then
+    deno bench -A src/bench/*.ts
+    EXIT_CODE=$?
   else
     TEST_PATH="src/$1.ts"
     if [ -f "$TEST_PATH" ]; then
