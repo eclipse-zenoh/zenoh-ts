@@ -118,6 +118,7 @@ function isSerializeable(s: any): s is ZSerializeable {
  */
 export class ZBytesSerializer {
     private static readonly DEFAULT_BUFFER_SIZE = 256;
+    private static readonly MAX_SEQUENCE_LENGTH_TO_FIT_IN_SINGLE_BYTE = 127;
     private buffer: Uint8Array;
     private bufferLen: number;
     private data: Uint8Array[];
@@ -159,6 +160,10 @@ export class ZBytesSerializer {
      * Serializes length of the sequence. Can be used when defining serialization for custom containers.
      */
     public writeSequenceLength(len: number) {
+      if (len <= ZBytesSerializer.MAX_SEQUENCE_LENGTH_TO_FIT_IN_SINGLE_BYTE) {
+        this.serializeNumberUint8(len);
+        return;
+      }
       let a = this.ensureBuffer(10);
       let sz = leb.encodeULEB128Into(a, len);
       a = a.subarray(0, sz);
@@ -1051,6 +1056,7 @@ export namespace ZS{
 }
 
 export class ZBytesDeserializer {
+  private static readonly LEB128_CONTINUATION_MASK = 0b10000000;
   private buffer_: Uint8Array;
   private idx_: number
   /**
@@ -1085,11 +1091,21 @@ export class ZBytesDeserializer {
     return b;
   }
 
+  private peekByte(): number | undefined {
+    return this.buffer_[this.idx_]
+  }
+
   /**
    * Reads length of the sequence previously written by {@link ZBytesSerializer.writeSequenceLength} and advances the reading position.
    * @returns Number of sequence elements.
    */
   public readSequenceLength(): number {
+    const b = this.peekByte();
+    if (b != undefined && (b & ZBytesDeserializer.LEB128_CONTINUATION_MASK) == 0) {
+      this.idx_ += 1;
+      return b;
+    }
+
     let [res, bytesRead] = leb.decodeULEB128(this.buffer_, this.idx_)
     this.idx_ += bytesRead
     if (res > Number.MAX_SAFE_INTEGER) {

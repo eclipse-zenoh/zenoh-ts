@@ -42,9 +42,9 @@ export async function main() {
     await publisher.put(payload);
     n++;
 
-    if (n % 100000 == 0) {
+    if (n % 1000000 == 0) {
       const endTime = performance.now();
-      console.log(100000 / (endTime - startTime) * 1000, " msg/s")
+      console.log(1000000 / (endTime - startTime) * 1000, " msg/s")
       startTime = performance.now();
     }
   }
