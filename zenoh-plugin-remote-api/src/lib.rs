@@ -275,7 +275,7 @@ impl AdminSpaceClient {
     }
 
     pub(crate) fn register_subscriber(&mut self, id: u32, key_expr: &str) {
-        self.publishers.insert(id, key_expr.to_string());
+        self.subscribers.insert(id, key_expr.to_string());
     }
 
     pub(crate) fn register_queryable(&mut self, id: u32, key_expr: &str) {
