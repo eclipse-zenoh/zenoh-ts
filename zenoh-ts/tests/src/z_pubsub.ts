@@ -21,7 +21,9 @@ import {
   CongestionControl, 
   Priority, 
   ZBytes,
-  SampleKind
+  SampleKind,
+  PutOptions,
+  DeleteOpts
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
@@ -32,7 +34,7 @@ function sleep(ms: number) {
 interface PutTestCase {
   description: string;
   payload: string;
-  options: Record<string, unknown>;
+  options: PutOptions;
   expectedEncoding?: Encoding;
   expectedPriority?: Priority;
   expectedAttachment?: string;
@@ -40,7 +42,7 @@ interface PutTestCase {
 
 interface DeleteTestCase {
   description: string;
-  options: Record<string, unknown>;
+  options: DeleteOpts;
   expectedPriority?: Priority;
   expectedAttachment?: string;
 }
@@ -230,10 +232,6 @@ Deno.test("API - Delete with DeleteOptions", async () => {
 
     const deleteTestCases: DeleteTestCase[] = [
       {
-        description: "Basic delete without options",
-        options: {},
-      },
-      {
         description: "Delete with priority and congestion control",
         options: {
           priority: Priority.REAL_TIME,
@@ -280,15 +278,19 @@ Deno.test("API - Delete with DeleteOptions", async () => {
       await session1.delete("zenoh/test/delete", testCase.options);
     }
 
+    // Also test delete with empty options
+    await session1.delete("zenoh/test/delete", {});
+
     // Delay to ensure all delete messages are received
     await sleep(200);
 
-    // Verify we received all messages (1 PUT + deleteTestCases.length DELETE)
-    const expectedTotal = 1 + deleteTestCases.length;
-    assertEquals(samples.length, expectedTotal, `Expected ${expectedTotal} messages total (1 PUT + ${deleteTestCases.length} DELETE)`);
+    // Verify we received all messages (1 PUT + deleteTestCases.length DELETE + 1 delete with empty options)
+    const expectedTotal = 1 + deleteTestCases.length + 1;
+    assertEquals(samples.length, expectedTotal, `Expected ${expectedTotal} messages total (1 PUT + ${deleteTestCases.length} DELETE with options + 1 DELETE with empty options)`);
 
     // Verify all delete operations (skip the initial PUT at index 0)
-    for (let i = 1; i < samples.length; i++) {
+    // Test the loop-based deletes first
+    for (let i = 1; i <= deleteTestCases.length; i++) {
       const testCase = deleteTestCases[i - 1];
       const sample = samples[i];
 
@@ -302,6 +304,10 @@ Deno.test("API - Delete with DeleteOptions", async () => {
         assertEquals(sample.attachment()?.toString(), testCase.expectedAttachment, `${testCase.description}: attachment mismatch`);
       }
     }
+
+    // Verify the delete with empty options
+    const lastDeleteSample = samples[samples.length - 1];
+    assertEquals(lastDeleteSample.kind(), SampleKind.DELETE, "Delete with empty options: should be DELETE");
 
   } finally {
     // Cleanup in reverse order of creation
