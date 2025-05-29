@@ -31,20 +31,39 @@ function sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-interface PutTestCase {
-  description: string;
-  payload: string;
-  options?: PutOptions;
-  expectedEncoding?: Encoding;
-  expectedPriority?: Priority;
-  expectedAttachment?: string;
+class PutTestCase {
+  constructor(
+    public description: string,
+    public payload: string,
+    public options?: PutOptions
+  ) {}
+  
+  expectedEncoding(): Encoding | undefined {
+    return this.options?.encoding;
+  }
+  
+  expectedPriority(): Priority | undefined {
+    return this.options?.priority;
+  }
+  
+  expectedAttachment(): string | undefined {
+    return this.options?.attachment?.toString();
+  }
 }
 
-interface DeleteTestCase {
-  description: string;
-  options?: DeleteOpts;
-  expectedPriority?: Priority;
-  expectedAttachment?: string;
+class DeleteTestCase {
+  constructor(
+    public description: string,
+    public options?: DeleteOpts
+  ) {}
+  
+  expectedPriority(): Priority | undefined {
+    return this.options?.priority;
+  }
+  
+  expectedAttachment(): string | undefined {
+    return this.options?.attachment?.toString();
+  }
 }
 
 Deno.test("API - Put/Subscribe with PutOptions", async () => {
@@ -78,71 +97,33 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
     const timestamp = await session1.newTimestamp();
 
     const putTestCases: PutTestCase[] = [
-      {
-        description: "Basic put without options",
-        payload: "message without options",
-      },
-      {
-        description: "Basic put with encoding",
-        payload: "message with encoding",
-        options: { encoding: Encoding.TEXT_PLAIN },
-        expectedEncoding: Encoding.TEXT_PLAIN,
-      },
-      {
-        description: "Put with priority and congestion control",
-        payload: "message with priority",
-        options: {
-          encoding: Encoding.APPLICATION_JSON,
-          priority: Priority.REAL_TIME,
-          congestionControl: CongestionControl.BLOCK,
-        },
-        expectedEncoding: Encoding.APPLICATION_JSON,
-        expectedPriority: Priority.REAL_TIME,
-      },
-      {
-        description: "Put with express flag",
-        payload: "express message",
-        options: {
-          encoding: Encoding.ZENOH_STRING,
-          express: true,
-        },
-        expectedEncoding: Encoding.ZENOH_STRING,
-      },
-      {
-        description: "Put with attachment",
-        payload: "message with attachment",
-        options: {
-          encoding: Encoding.TEXT_PLAIN,
-          attachment: attachmentData,
-        },
-        expectedEncoding: Encoding.TEXT_PLAIN,
-        expectedAttachment: "metadata: important",
-      },
-      {
-        description: "Put with timestamp",
-        payload: "message with timestamp",
-        options: {
-          encoding: Encoding.APPLICATION_JSON,
-          timestamp: timestamp,
-          priority: Priority.DATA_HIGH,
-        },
-        expectedEncoding: Encoding.APPLICATION_JSON,
-        expectedPriority: Priority.DATA_HIGH,
-      },
-      {
-        description: "Put with all options combined",
-        payload: "message with all options",
-        options: {
-          encoding: Encoding.APPLICATION_CBOR,
-          congestionControl: CongestionControl.DROP,
-          priority: Priority.INTERACTIVE_HIGH,
-          express: false,
-          attachment: fullOptionsAttachment,
-        },
-        expectedEncoding: Encoding.APPLICATION_CBOR,
-        expectedPriority: Priority.INTERACTIVE_HIGH,
-        expectedAttachment: "full-options-metadata",
-      },
+      new PutTestCase("Basic put without options", "message without options"),
+      new PutTestCase("Basic put with encoding", "message with encoding", { encoding: Encoding.TEXT_PLAIN }),
+      new PutTestCase("Put with priority and congestion control", "message with priority", {
+        encoding: Encoding.APPLICATION_JSON,
+        priority: Priority.REAL_TIME,
+        congestionControl: CongestionControl.BLOCK,
+      }),
+      new PutTestCase("Put with express flag", "express message", {
+        encoding: Encoding.ZENOH_STRING,
+        express: true,
+      }),
+      new PutTestCase("Put with attachment", "message with attachment", {
+        encoding: Encoding.TEXT_PLAIN,
+        attachment: attachmentData,
+      }),
+      new PutTestCase("Put with timestamp", "message with timestamp", {
+        encoding: Encoding.APPLICATION_JSON,
+        timestamp: timestamp,
+        priority: Priority.DATA_HIGH,
+      }),
+      new PutTestCase("Put with all options combined", "message with all options", {
+        encoding: Encoding.APPLICATION_CBOR,
+        congestionControl: CongestionControl.DROP,
+        priority: Priority.INTERACTIVE_HIGH,
+        express: false,
+        attachment: fullOptionsAttachment,
+      }),
     ];
 
     // Execute all put operations
@@ -167,16 +148,19 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
 
       assertEquals(sample.payload().toString(), testCase.payload, `${testCase.description}: payload mismatch`);
       
-      if (testCase.expectedEncoding) {
-        assertEquals(sample.encoding(), testCase.expectedEncoding, `${testCase.description}: encoding mismatch`);
+      const expectedEncoding = testCase.expectedEncoding();
+      if (expectedEncoding) {
+        assertEquals(sample.encoding(), expectedEncoding, `${testCase.description}: encoding mismatch`);
       }
       
-      if (testCase.expectedPriority) {
-        assertEquals(sample.priority(), testCase.expectedPriority, `${testCase.description}: priority mismatch`);
+      const expectedPriority = testCase.expectedPriority();
+      if (expectedPriority) {
+        assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
       }
       
-      if (testCase.expectedAttachment) {
-        assertEquals(sample.attachment()?.toString(), testCase.expectedAttachment, `${testCase.description}: attachment mismatch`);
+      const expectedAttachment = testCase.expectedAttachment();
+      if (expectedAttachment) {
+        assertEquals(sample.attachment()?.toString(), expectedAttachment, `${testCase.description}: attachment mismatch`);
       }
     }
 
@@ -226,49 +210,27 @@ Deno.test("API - Delete with DeleteOptions", async () => {
     const deleteTimestamp = await session1.newTimestamp();
 
     const deleteTestCases: DeleteTestCase[] = [
-      {
-        description: "Basic delete without options",
-      },
-      {
-        description: "Delete with priority and congestion control",
-        options: {
-          priority: Priority.REAL_TIME,
-          congestionControl: CongestionControl.BLOCK,
-        },
-        expectedPriority: Priority.REAL_TIME,
-      },
-      {
-        description: "Delete with express flag",
-        options: {
-          express: true,
-        },
-      },
-      {
-        description: "Delete with attachment",
-        options: {
-          attachment: deleteAttachment,
-        },
-        expectedAttachment: "delete metadata",
-      },
-      {
-        description: "Delete with timestamp",
-        options: {
-          timestamp: deleteTimestamp,
-          priority: Priority.DATA_HIGH,
-        },
-        expectedPriority: Priority.DATA_HIGH,
-      },
-      {
-        description: "Delete with all options combined",
-        options: {
-          congestionControl: CongestionControl.DROP,
-          priority: Priority.INTERACTIVE_HIGH,
-          express: false,
-          attachment: fullDeleteAttachment,
-        },
-        expectedPriority: Priority.INTERACTIVE_HIGH,
-        expectedAttachment: "full-delete-metadata",
-      },
+      new DeleteTestCase("Basic delete without options"),
+      new DeleteTestCase("Delete with priority and congestion control", {
+        priority: Priority.REAL_TIME,
+        congestionControl: CongestionControl.BLOCK,
+      }),
+      new DeleteTestCase("Delete with express flag", {
+        express: true,
+      }),
+      new DeleteTestCase("Delete with attachment", {
+        attachment: deleteAttachment,
+      }),
+      new DeleteTestCase("Delete with timestamp", {
+        timestamp: deleteTimestamp,
+        priority: Priority.DATA_HIGH,
+      }),
+      new DeleteTestCase("Delete with all options combined", {
+        congestionControl: CongestionControl.DROP,
+        priority: Priority.INTERACTIVE_HIGH,
+        express: false,
+        attachment: fullDeleteAttachment,
+      }),
     ];
 
     // Execute all delete operations
@@ -294,12 +256,14 @@ Deno.test("API - Delete with DeleteOptions", async () => {
 
       assertEquals(sample.kind(), SampleKind.DELETE, `${testCase.description}: should be DELETE`);
       
-      if (testCase.expectedPriority) {
-        assertEquals(sample.priority(), testCase.expectedPriority, `${testCase.description}: priority mismatch`);
+      const expectedPriority = testCase.expectedPriority();
+      if (expectedPriority) {
+        assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
       }
       
-      if (testCase.expectedAttachment) {
-        assertEquals(sample.attachment()?.toString(), testCase.expectedAttachment, `${testCase.description}: attachment mismatch`);
+      const expectedAttachment = testCase.expectedAttachment();
+      if (expectedAttachment) {
+        assertEquals(sample.attachment()?.toString(), expectedAttachment, `${testCase.description}: attachment mismatch`);
       }
     }
 
