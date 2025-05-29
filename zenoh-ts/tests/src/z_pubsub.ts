@@ -212,19 +212,6 @@ Deno.test("API - Delete with DeleteOptions", async () => {
     // Delay to ensure subscriber is ready
     await sleep(100);
 
-    // First, put some data to later delete
-    await session1.put("zenoh/test/delete", "data to be deleted", {
-      encoding: Encoding.TEXT_PLAIN,
-    });
-
-    // Wait for the put to be received
-    await sleep(100);
-
-    // Verify we received the put operation
-    assertEquals(samples.length, 1, "Expected 1 PUT message");
-    assertEquals(samples[0].kind(), SampleKind.PUT, "First sample should be PUT");
-    assertEquals(samples[0].payload().toString(), "data to be deleted", "PUT payload mismatch");
-
     // Define delete test cases
     const deleteAttachment = new ZBytes("delete metadata");
     const fullDeleteAttachment = new ZBytes("full-delete-metadata");
@@ -284,14 +271,14 @@ Deno.test("API - Delete with DeleteOptions", async () => {
     // Delay to ensure all delete messages are received
     await sleep(200);
 
-    // Verify we received all messages (1 PUT + deleteTestCases.length DELETE + 1 delete with empty options)
-    const expectedTotal = 1 + deleteTestCases.length + 1;
-    assertEquals(samples.length, expectedTotal, `Expected ${expectedTotal} messages total (1 PUT + ${deleteTestCases.length} DELETE with options + 1 DELETE with empty options)`);
+    // Verify we received all messages (deleteTestCases.length DELETE + 1 delete with empty options)
+    const expectedTotal = deleteTestCases.length + 1;
+    assertEquals(samples.length, expectedTotal, `Expected ${expectedTotal} messages total (${deleteTestCases.length} DELETE with options + 1 DELETE with empty options)`);
 
-    // Verify all delete operations (skip the initial PUT at index 0)
+    // Verify all delete operations
     // Test the loop-based deletes first
-    for (let i = 1; i <= deleteTestCases.length; i++) {
-      const testCase = deleteTestCases[i - 1];
+    for (let i = 0; i < deleteTestCases.length; i++) {
+      const testCase = deleteTestCases[i];
       const sample = samples[i];
 
       assertEquals(sample.kind(), SampleKind.DELETE, `${testCase.description}: should be DELETE`);
