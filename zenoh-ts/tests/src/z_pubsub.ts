@@ -38,12 +38,12 @@ class PutTestCase {
     public options?: PutOptions
   ) {}
   
-  expectedEncoding(): Encoding | undefined {
-    return this.options?.encoding;
+  expectedEncoding(): Encoding {
+    return this.options?.encoding ?? Encoding.default();
   }
   
-  expectedPriority(): Priority | undefined {
-    return this.options?.priority;
+  expectedPriority(): Priority {
+    return this.options?.priority ?? Priority.DATA;
   }
   
   expectedAttachment(): string | undefined {
@@ -57,8 +57,8 @@ class DeleteTestCase {
     public options?: DeleteOpts
   ) {}
   
-  expectedPriority(): Priority | undefined {
-    return this.options?.priority;
+  expectedPriority(): Priority {
+    return this.options?.priority ?? Priority.DATA;
   }
   
   expectedAttachment(): string | undefined {
@@ -149,18 +149,16 @@ Deno.test("API - Put/Subscribe with PutOptions", async () => {
       assertEquals(sample.payload().toString(), testCase.payload, `${testCase.description}: payload mismatch`);
       
       const expectedEncoding = testCase.expectedEncoding();
-      if (expectedEncoding) {
-        assertEquals(sample.encoding(), expectedEncoding, `${testCase.description}: encoding mismatch`);
-      }
+      assertEquals(sample.encoding(), expectedEncoding, `${testCase.description}: encoding mismatch`);
       
       const expectedPriority = testCase.expectedPriority();
-      if (expectedPriority) {
-        assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
-      }
+      assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
       
       const expectedAttachment = testCase.expectedAttachment();
       if (expectedAttachment) {
         assertEquals(sample.attachment()?.toString(), expectedAttachment, `${testCase.description}: attachment mismatch`);
+      } else {
+        assertEquals(sample.attachment(), undefined, `${testCase.description}: attachment should be undefined`);
       }
     }
 
@@ -257,13 +255,13 @@ Deno.test("API - Delete with DeleteOptions", async () => {
       assertEquals(sample.kind(), SampleKind.DELETE, `${testCase.description}: should be DELETE`);
       
       const expectedPriority = testCase.expectedPriority();
-      if (expectedPriority) {
-        assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
-      }
+      assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
       
       const expectedAttachment = testCase.expectedAttachment();
       if (expectedAttachment) {
         assertEquals(sample.attachment()?.toString(), expectedAttachment, `${testCase.description}: attachment mismatch`);
+      } else {
+        assertEquals(sample.attachment(), undefined, `${testCase.description}: attachment should be undefined`);
       }
     }
 
