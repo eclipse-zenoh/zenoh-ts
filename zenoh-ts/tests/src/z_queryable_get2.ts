@@ -34,7 +34,7 @@ import {
   ZBytes,
   ConsolidationMode,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration } from 'typed-duration';
+import { Duration } from "typed-duration";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 const { milliseconds } = Duration;
@@ -47,28 +47,27 @@ class TestCase {
   constructor(
     public description: string,
     public querierOptions?: QuerierOptions,
-    public querierGetOptions?: QuerierGetOptions,
-    public payload?: string
+    public querierGetOptions?: QuerierGetOptions
   ) {}
 
   // Convert QuerierOptions + QuerierGetOptions to GetOptions for session operations
   toGetOptions(): GetOptions | undefined {
     const getOptions: GetOptions = {
       // Copy from QuerierOptions (for session operations, these are supported)
-      ...this.querierOptions && {
+      ...(this.querierOptions && {
         congestionControl: this.querierOptions.congestionControl,
         consolidation: this.querierOptions.consolidation,
         priority: this.querierOptions.priority,
         express: this.querierOptions.express,
         target: this.querierOptions.target,
         timeout: this.querierOptions.timeout,
-      },
+      }),
       // Copy from QuerierGetOptions (these are supported in both)
-      ...this.querierGetOptions && {
+      ...(this.querierGetOptions && {
         encoding: this.querierGetOptions.encoding,
         attachment: this.querierGetOptions.attachment,
-      },
-      // Note: payload and handler are handled separately in the test execution
+        payload: this.querierGetOptions.payload,
+      }),
     };
 
     // Return undefined if no fields were added to getOptions
@@ -141,44 +140,37 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // Basic test without options
-      new TestCase(
-        "Basic test without options",
-        undefined,
-        undefined,
-        "basic-payload"
-      ),
-      
+      new TestCase("Basic test without options", undefined, {
+        payload: "basic-payload",
+      }),
+
       // Test with encoding only
-      new TestCase(
-        "With encoding",
-        undefined,
-        { encoding: Encoding.TEXT_PLAIN },
-        "encoded-payload"
-      ),
-      
+      new TestCase("With encoding", undefined, {
+        encoding: Encoding.TEXT_PLAIN,
+        payload: "encoded-payload",
+      }),
+
       // Test with querier options (priority, congestion control, etc.)
       new TestCase(
         "With priority and congestion control",
         {
           priority: Priority.REAL_TIME,
           congestionControl: CongestionControl.BLOCK,
-          target: QueryTarget.BestMatching
+          target: QueryTarget.BestMatching,
         },
-        { encoding: Encoding.APPLICATION_JSON },
-        "priority-payload"
+        { encoding: Encoding.APPLICATION_JSON, payload: "priority-payload" }
       ),
-      
+
       // Test with express flag
       new TestCase(
         "With express flag",
         {
           express: true,
-          target: QueryTarget.BestMatching
+          target: QueryTarget.BestMatching,
         },
-        { encoding: Encoding.ZENOH_STRING },
-        "express-payload"
+        { encoding: Encoding.ZENOH_STRING, payload: "express-payload" }
       ),
-      
+
       // Test with attachment
       new TestCase(
         "With attachment",
@@ -186,22 +178,21 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         {
           encoding: Encoding.TEXT_PLAIN,
           attachment: attachmentData,
-        },
-        "attachment-payload"
+          payload: "attachment-payload",
+        }
       ),
-      
+
       // Test with timeout
       new TestCase(
         "With timeout",
         {
           timeout: timeout1000ms,
           priority: Priority.DATA_HIGH,
-          target: QueryTarget.BestMatching
+          target: QueryTarget.BestMatching,
         },
-        { encoding: Encoding.APPLICATION_JSON },
-        "timeout-payload"
+        { encoding: Encoding.APPLICATION_JSON, payload: "timeout-payload" }
       ),
-      
+
       // Test with target
       new TestCase(
         "With target",
@@ -209,22 +200,23 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           target: QueryTarget.All,
           priority: Priority.INTERACTIVE_HIGH,
         },
-        { encoding: Encoding.APPLICATION_CBOR },
-        "target-payload"
+        { encoding: Encoding.APPLICATION_CBOR, payload: "target-payload" }
       ),
-      
+
       // Test with consolidation
       new TestCase(
         "With consolidation",
         {
           consolidation: ConsolidationMode.None,
           priority: Priority.DATA_LOW,
-          target: QueryTarget.BestMatching
+          target: QueryTarget.BestMatching,
         },
-        { encoding: Encoding.APPLICATION_YAML },
-        "consolidation-payload"
+        {
+          encoding: Encoding.APPLICATION_YAML,
+          payload: "consolidation-payload",
+        }
       ),
-      
+
       // Test with all options combined
       new TestCase(
         "With all options combined",
@@ -239,8 +231,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         {
           encoding: Encoding.APPLICATION_XML,
           attachment: fullOptionsAttachment,
-        },
-        "all-options-payload"
+          payload: "all-options-payload",
+        }
       ),
     ];
 
@@ -248,34 +240,50 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     let testCounter = 0;
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
-      
+
       // Define the 4 operation types
       const operations = [
-        { type: "Session Get with Callback", useSession: true, useCallback: true },
-        { type: "Session Get with Channel", useSession: true, useCallback: false },
-        { type: "Querier Get with Callback", useSession: false, useCallback: true },
-        { type: "Querier Get with Channel", useSession: false, useCallback: false },
+        {
+          type: "Session Get with Callback",
+          useSession: true,
+          useCallback: true,
+        },
+        {
+          type: "Session Get with Channel",
+          useSession: true,
+          useCallback: false,
+        },
+        {
+          type: "Querier Get with Callback",
+          useSession: false,
+          useCallback: true,
+        },
+        {
+          type: "Querier Get with Channel",
+          useSession: false,
+          useCallback: false,
+        },
       ];
 
       for (const operation of operations) {
         const testId = `test_${testCounter}`;
         const fullDescription = `${testCase.description} - ${operation.type}`;
         console.log(`Executing: ${fullDescription}`);
-        
+
         const replies: Reply[] = [];
         let receiver: ChannelReceiver<Reply> | undefined;
-        
+
         const handler = (reply: Reply) => {
           replies.push(reply);
         };
 
         const keGet = new KeyExpr(`zenoh/test/options/${testId}`);
-        
+
         // Declare a querier for this specific test if needed
         let testQuerier: Querier | undefined;
         if (!operation.useSession) {
           testQuerier = await session2.declareQuerier(keGet, {
-            target: QueryTarget.BestMatching
+            target: QueryTarget.BestMatching,
           });
         }
 
@@ -283,13 +291,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           if (operation.useSession) {
             // Session-based operation
             const getOptions = testCase.toGetOptions();
-            const finalOptions: GetOptions = {
-              ...getOptions,
-              payload: testCase.payload
-            };
-            
+
             if (operation.useCallback) {
-              finalOptions.handler = handler;
+              const finalOptions = { ...getOptions, handler };
               await session2.get(
                 new Selector(keGet, `ok;test_id=${testId}`),
                 finalOptions
@@ -297,16 +301,15 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             } else {
               receiver = await session2.get(
                 new Selector(keGet, `ok;test_id=${testId}`),
-                finalOptions
+                getOptions
               );
             }
           } else {
             // Querier-based operation
             const querierGetOptions: QuerierGetOptions = {
               ...testCase.querierGetOptions,
-              payload: testCase.payload
             };
-            
+
             if (operation.useCallback) {
               querierGetOptions.handler = handler;
               await testQuerier!.get(
@@ -326,7 +329,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           // Verify the query was received correctly
           const query = queries.get(testId);
-          assertEquals(query !== undefined, true, `Query should be received for ${fullDescription}`);
+          assertEquals(
+            query !== undefined,
+            true,
+            `Query should be received for ${fullDescription}`
+          );
 
           assertEquals(
             query!.keyExpr().toString(),
@@ -342,7 +349,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           assertEquals(
             query!.payload()?.toString(),
-            testCase.payload,
+            testCase.querierGetOptions?.payload,
             `Payload mismatch for ${fullDescription}`
           );
 
@@ -375,7 +382,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (reply.result() instanceof Sample) {
               assertEquals(
                 reply.result().payload().toString(),
-                testCase.payload,
+                testCase.querierGetOptions?.payload,
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
@@ -396,7 +403,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (reply.result() instanceof Sample) {
               assertEquals(
                 reply.result().payload().toString(),
-                testCase.payload,
+                testCase.querierGetOptions?.payload,
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
@@ -422,7 +429,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     const totalTests = testCases.length * 4; // 4 variants per test case
     console.log(`All ${totalTests} test cases completed successfully`);
     assertEquals(queries.size, totalTests, "All queries should be received");
-
   } finally {
     // Cleanup in reverse order of creation
     if (querier) {
