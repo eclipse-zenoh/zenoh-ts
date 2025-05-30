@@ -43,6 +43,7 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+
 class TestCase {
   constructor(
     public description: string,
@@ -94,6 +95,11 @@ class TestCase {
   expectedTarget(): QueryTarget | undefined {
     return this.querierOptions?.target;
   }
+
+  expectedPayload(): ZBytes | undefined {
+    const payload = this.querierGetOptions?.payload;
+    return payload ? new ZBytes(payload) : undefined;
+  }
 }
 
 Deno.test("API - Comprehensive Query Operations with Options", async () => {
@@ -121,10 +127,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           queries.set(testId, query);
         }
         if (query.parameters().toString().includes("ok")) {
-          const payload = query.payload()?.toString();
-          // Echo back the received payload, or empty string if no payload was received
-          const replyPayload = payload !== undefined ? payload : "";
-          query.reply(query.keyExpr(), replyPayload);
+          const payload = query.payload();
+          if (payload !== undefined) {
+            query.reply(query.keyExpr(), payload);
+          } else {
+            query.reply(query.keyExpr(), "");
+          }
         } else {
           query.replyErr("error response");
         }
@@ -392,12 +400,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             `Test ID mismatch for ${fullDescription}`
           );
 
-          const actualQueryPayload = query!.payload()?.toString() ?? "";
-          const expectedQueryPayload = testCase.querierGetOptions?.payload ?? "";
+          // Verify query payload using direct assertEquals
           assertEquals(
-            actualQueryPayload,
-            expectedQueryPayload,
-            `Payload mismatch for ${fullDescription}`
+            query!.payload()?.toString() ?? "",
+            testCase.expectedPayload()?.toString() ?? "",
+            `Query payload mismatch for ${fullDescription}`
           );
 
           // For operations with encoding option, verify encoding
@@ -427,11 +434,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be Sample for ${fullDescription}`
             );
             if (reply.result() instanceof Sample) {
-              const actualPayload = reply.result().payload().toString();
-              const expectedPayload = testCase.querierGetOptions?.payload ?? "";
               assertEquals(
-                actualPayload,
-                expectedPayload,
+                reply.result().payload()?.toString() ?? "",
+                testCase.expectedPayload()?.toString() ?? "",
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
@@ -450,11 +455,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be Sample for ${fullDescription}`
             );
             if (reply.result() instanceof Sample) {
-              const actualPayload = reply.result().payload().toString();
-              const expectedPayload = testCase.querierGetOptions?.payload ?? "";
               assertEquals(
-                actualPayload,
-                expectedPayload,
+                reply.result().payload()?.toString() ?? "",
+                testCase.expectedPayload()?.toString() ?? "",
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
