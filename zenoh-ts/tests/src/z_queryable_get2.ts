@@ -19,7 +19,6 @@ import {
   Reply,
   KeyExpr,
   Selector,
-  ReplyError,
   Parameters,
   Sample,
   QueryTarget,
@@ -28,13 +27,14 @@ import {
   Querier,
   GetOptions,
   QuerierGetOptions,
+  QuerierOptions,
   Encoding,
   Priority,
   CongestionControl,
   ZBytes,
   ConsolidationMode,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration, Milliseconds } from 'typed-duration';
+import { Duration } from 'typed-duration';
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 const { milliseconds } = Duration;
@@ -43,60 +43,77 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-enum OperationType {
-  SESSION_GET_CALLBACK = "Session Get with Callback",
-  SESSION_GET_CHANNEL = "Session Get with Channel", 
-  QUERIER_GET_CALLBACK = "Querier Get with Callback",
-  QUERIER_GET_CHANNEL = "Querier Get with Channel",
-}
-
 class TestCase {
   constructor(
     public description: string,
-    public operationType: OperationType,
-    public options?: GetOptions | QuerierGetOptions,
+    public querierOptions?: QuerierOptions,
+    public querierGetOptions?: QuerierGetOptions,
     public payload?: string
   ) {}
 
-  expectedEncoding(): Encoding {
-    if (this.operationType === OperationType.SESSION_GET_CALLBACK || 
-        this.operationType === OperationType.SESSION_GET_CHANNEL) {
-      return (this.options as GetOptions)?.encoding ?? Encoding.default();
-    } else {
-      return (this.options as QuerierGetOptions)?.encoding ?? Encoding.default();
+  // Convert QuerierOptions + QuerierGetOptions to GetOptions for session operations
+  toGetOptions(): GetOptions | undefined {
+    if (!this.querierOptions && !this.querierGetOptions) {
+      return undefined;
     }
+
+    const getOptions: GetOptions = {};
+
+    // Copy from QuerierOptions (for session operations, these are supported)
+    if (this.querierOptions) {
+      if (this.querierOptions.congestionControl !== undefined) {
+        getOptions.congestionControl = this.querierOptions.congestionControl;
+      }
+      if (this.querierOptions.consolidation !== undefined) {
+        getOptions.consolidation = this.querierOptions.consolidation;
+      }
+      if (this.querierOptions.priority !== undefined) {
+        getOptions.priority = this.querierOptions.priority;
+      }
+      if (this.querierOptions.express !== undefined) {
+        getOptions.express = this.querierOptions.express;
+      }
+      if (this.querierOptions.target !== undefined) {
+        getOptions.target = this.querierOptions.target;
+      }
+      if (this.querierOptions.timeout !== undefined) {
+        getOptions.timeout = this.querierOptions.timeout;
+      }
+    }
+
+    // Copy from QuerierGetOptions (these are supported in both)
+    if (this.querierGetOptions) {
+      if (this.querierGetOptions.encoding !== undefined) {
+        getOptions.encoding = this.querierGetOptions.encoding;
+      }
+      if (this.querierGetOptions.attachment !== undefined) {
+        getOptions.attachment = this.querierGetOptions.attachment;
+      }
+      // Note: payload and handler are handled separately in the test execution
+    }
+
+    return Object.keys(getOptions).length > 0 ? getOptions : undefined;
+  }
+
+  expectedEncoding(): Encoding {
+    return this.querierGetOptions?.encoding ?? Encoding.default();
   }
 
   expectedPriority(): Priority {
-    // Only Session operations support priority in GetOptions
-    if (this.operationType === OperationType.SESSION_GET_CALLBACK || 
-        this.operationType === OperationType.SESSION_GET_CHANNEL) {
-      return (this.options as GetOptions)?.priority ?? Priority.DATA;
-    }
-    return Priority.DATA; // Default for querier operations
+    return this.querierOptions?.priority ?? Priority.DATA;
   }
 
   expectedTimeout(): number | undefined {
-    // Only Session operations support timeout in GetOptions
-    if (this.operationType === OperationType.SESSION_GET_CALLBACK || 
-        this.operationType === OperationType.SESSION_GET_CHANNEL) {
-      const timeout = (this.options as GetOptions)?.timeout;
-      return timeout ? Duration.milliseconds.from(timeout) : undefined;
-    }
-    return undefined; // Querier operations don't support timeout in get options
+    const timeout = this.querierOptions?.timeout;
+    return timeout ? Duration.milliseconds.from(timeout) : undefined;
   }
 
   expectedAttachment(): string | undefined {
-    return this.options?.attachment?.toString();
+    return this.querierGetOptions?.attachment?.toString();
   }
 
   expectedTarget(): QueryTarget | undefined {
-    if (this.operationType === OperationType.SESSION_GET_CALLBACK || 
-        this.operationType === OperationType.SESSION_GET_CHANNEL) {
-      return (this.options as GetOptions)?.target;
-    }
-    // Querier operations don't have target in get options
-    return undefined;
+    return this.querierOptions?.target;
   }
 }
 
@@ -143,350 +160,288 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     const timeout5000ms = milliseconds.of(5000);
 
     const testCases: TestCase[] = [
-      // Session Get with Callback operations
+      // Basic test without options
       new TestCase(
-        "Session Get Callback - Basic without options",
-        OperationType.SESSION_GET_CALLBACK,
+        "Basic test without options",
+        undefined,
         undefined,
         "basic-payload"
       ),
+      
+      // Test with encoding only
       new TestCase(
-        "Session Get Callback - With encoding",
-        OperationType.SESSION_GET_CALLBACK,
+        "With encoding",
+        undefined,
         { encoding: Encoding.TEXT_PLAIN },
         "encoded-payload"
       ),
+      
+      // Test with querier options (priority, congestion control, etc.)
       new TestCase(
-        "Session Get Callback - With priority and congestion control",
-        OperationType.SESSION_GET_CALLBACK,
+        "With priority and congestion control",
         {
-          encoding: Encoding.APPLICATION_JSON,
           priority: Priority.REAL_TIME,
           congestionControl: CongestionControl.BLOCK,
+          target: QueryTarget.BestMatching
         },
+        { encoding: Encoding.APPLICATION_JSON },
         "priority-payload"
       ),
+      
+      // Test with express flag
       new TestCase(
-        "Session Get Callback - With express flag",
-        OperationType.SESSION_GET_CALLBACK,
+        "With express flag",
         {
-          encoding: Encoding.ZENOH_STRING,
           express: true,
+          target: QueryTarget.BestMatching
         },
+        { encoding: Encoding.ZENOH_STRING },
         "express-payload"
       ),
+      
+      // Test with attachment
       new TestCase(
-        "Session Get Callback - With attachment",
-        OperationType.SESSION_GET_CALLBACK,
+        "With attachment",
+        { target: QueryTarget.BestMatching },
         {
           encoding: Encoding.TEXT_PLAIN,
           attachment: attachmentData,
         },
         "attachment-payload"
       ),
+      
+      // Test with timeout
       new TestCase(
-        "Session Get Callback - With timeout",
-        OperationType.SESSION_GET_CALLBACK,
+        "With timeout",
         {
-          encoding: Encoding.APPLICATION_JSON,
           timeout: timeout1000ms,
           priority: Priority.DATA_HIGH,
+          target: QueryTarget.BestMatching
         },
+        { encoding: Encoding.APPLICATION_JSON },
         "timeout-payload"
       ),
+      
+      // Test with target
       new TestCase(
-        "Session Get Callback - With target",
-        OperationType.SESSION_GET_CALLBACK,
+        "With target",
         {
-          encoding: Encoding.APPLICATION_CBOR,
           target: QueryTarget.All,
           priority: Priority.INTERACTIVE_HIGH,
         },
+        { encoding: Encoding.APPLICATION_CBOR },
         "target-payload"
       ),
+      
+      // Test with consolidation
       new TestCase(
-        "Session Get Callback - With consolidation",
-        OperationType.SESSION_GET_CALLBACK,
+        "With consolidation",
         {
-          encoding: Encoding.APPLICATION_YAML,
           consolidation: ConsolidationMode.None,
           priority: Priority.DATA_LOW,
+          target: QueryTarget.BestMatching
         },
+        { encoding: Encoding.APPLICATION_YAML },
         "consolidation-payload"
       ),
+      
+      // Test with all options combined
       new TestCase(
-        "Session Get Callback - With all options combined",
-        OperationType.SESSION_GET_CALLBACK,
+        "With all options combined",
         {
-          encoding: Encoding.APPLICATION_XML,
           congestionControl: CongestionControl.DROP,
           priority: Priority.BACKGROUND,
           express: false,
-          attachment: fullOptionsAttachment,
           timeout: timeout5000ms,
           target: QueryTarget.BestMatching,
           consolidation: ConsolidationMode.Latest,
         },
-        "all-options-payload"
-      ),
-
-      // Session Get with Channel operations
-      new TestCase(
-        "Session Get Channel - Basic without options",
-        OperationType.SESSION_GET_CHANNEL,
-        undefined,
-        "basic-channel-payload"
-      ),
-      new TestCase(
-        "Session Get Channel - With encoding and attachment",
-        OperationType.SESSION_GET_CHANNEL,
         {
-          encoding: Encoding.TEXT_CSV,
-          attachment: attachmentData,
-        },
-        "channel-attachment-payload"
-      ),
-      new TestCase(
-        "Session Get Channel - With timeout and target",
-        OperationType.SESSION_GET_CHANNEL,
-        {
-          encoding: Encoding.APPLICATION_SQL,
-          timeout: timeout5000ms,
-          target: QueryTarget.BestMatching,
-        },
-        "channel-timeout-payload"
-      ),
-
-      // Querier Get with Callback operations
-      new TestCase(
-        "Querier Get Callback - Basic without options",
-        OperationType.QUERIER_GET_CALLBACK,
-        undefined,
-        "querier-basic-payload"
-      ),
-      new TestCase(
-        "Querier Get Callback - With encoding",
-        OperationType.QUERIER_GET_CALLBACK,
-        { encoding: Encoding.TEXT_MARKDOWN },
-        "querier-encoded-payload"
-      ),
-      new TestCase(
-        "Querier Get Callback - With encoding and attachment",
-        OperationType.QUERIER_GET_CALLBACK,
-        {
-          encoding: Encoding.APPLICATION_COAP_PAYLOAD,
-          attachment: attachmentData,
-        },
-        "querier-attachment-payload"
-      ),
-      new TestCase(
-        "Querier Get Callback - With encoding only",
-        OperationType.QUERIER_GET_CALLBACK,
-        {
-          encoding: Encoding.APPLICATION_JWT,
-        },
-        "querier-encoding-payload"
-      ),
-
-      // Querier Get with Channel operations
-      new TestCase(
-        "Querier Get Channel - Basic without options",
-        OperationType.QUERIER_GET_CHANNEL,
-        undefined,
-        "querier-channel-basic-payload"
-      ),
-      new TestCase(
-        "Querier Get Channel - With encoding and attachment",
-        OperationType.QUERIER_GET_CHANNEL,
-        {
-          encoding: Encoding.APPLICATION_MP4,
+          encoding: Encoding.APPLICATION_XML,
           attachment: fullOptionsAttachment,
         },
-        "querier-channel-attachment-payload"
+        "all-options-payload"
       ),
     ];
 
-    // Execute all operations
+    // Execute all operations - run all 4 variants for each test case
+    let testCounter = 0;
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
-      const testId = `test_${i}`;
-      console.log(`Executing: ${testCase.description}`);
       
-      const replies: Reply[] = [];
-      let receiver: ChannelReceiver<Reply> | undefined;
-      
-      const handler = (reply: Reply) => {
-        replies.push(reply);
-      };
+      // Define the 4 operation types
+      const operations = [
+        { type: "Session Get with Callback", useSession: true, useCallback: true },
+        { type: "Session Get with Channel", useSession: true, useCallback: false },
+        { type: "Querier Get with Callback", useSession: false, useCallback: true },
+        { type: "Querier Get with Channel", useSession: false, useCallback: false },
+      ];
 
-      const keGet = new KeyExpr(`zenoh/test/options/${testId}`);
-      
-      // Declare a querier for this specific test if needed
-      let testQuerier: Querier | undefined;
-      if (testCase.operationType === OperationType.QUERIER_GET_CALLBACK || 
-          testCase.operationType === OperationType.QUERIER_GET_CHANNEL) {
-        testQuerier = await session2.declareQuerier(keGet, {
-          target: QueryTarget.BestMatching
-        });
-      }
+      for (const operation of operations) {
+        const testId = `test_${testCounter}`;
+        const fullDescription = `${testCase.description} - ${operation.type}`;
+        console.log(`Executing: ${fullDescription}`);
+        
+        const replies: Reply[] = [];
+        let receiver: ChannelReceiver<Reply> | undefined;
+        
+        const handler = (reply: Reply) => {
+          replies.push(reply);
+        };
 
-      try {
-        switch (testCase.operationType) {
-          case OperationType.SESSION_GET_CALLBACK:
-            if (testCase.options) {
+        const keGet = new KeyExpr(`zenoh/test/options/${testId}`);
+        
+        // Declare a querier for this specific test if needed
+        let testQuerier: Querier | undefined;
+        if (!operation.useSession) {
+          testQuerier = await session2.declareQuerier(keGet, {
+            target: QueryTarget.BestMatching
+          });
+        }
+
+        try {
+          if (operation.useSession) {
+            // Session-based operation
+            const getOptions = testCase.toGetOptions();
+            const finalOptions: GetOptions = {
+              ...getOptions,
+              payload: testCase.payload
+            };
+            
+            if (operation.useCallback) {
+              finalOptions.handler = handler;
               await session2.get(
                 new Selector(keGet, `ok;test_id=${testId}`),
-                { ...testCase.options as GetOptions, payload: testCase.payload, handler }
-              );
-            } else {
-              await session2.get(
-                new Selector(keGet, `ok;test_id=${testId}`),
-                { payload: testCase.payload, handler }
-              );
-            }
-            break;
-
-          case OperationType.SESSION_GET_CHANNEL:
-            if (testCase.options) {
-              receiver = await session2.get(
-                new Selector(keGet, `ok;test_id=${testId}`),
-                { ...testCase.options as GetOptions, payload: testCase.payload }
+                finalOptions
               );
             } else {
               receiver = await session2.get(
                 new Selector(keGet, `ok;test_id=${testId}`),
-                { payload: testCase.payload }
+                finalOptions
               );
             }
-            break;
-
-          case OperationType.QUERIER_GET_CALLBACK:
-            if (testCase.options) {
+          } else {
+            // Querier-based operation
+            const querierGetOptions: QuerierGetOptions = {
+              ...testCase.querierGetOptions,
+              payload: testCase.payload
+            };
+            
+            if (operation.useCallback) {
+              querierGetOptions.handler = handler;
               await testQuerier!.get(
                 new Parameters(`ok;test_id=${testId}`),
-                { ...testCase.options as QuerierGetOptions, payload: testCase.payload, handler }
-              );
-            } else {
-              await testQuerier!.get(
-                new Parameters(`ok;test_id=${testId}`),
-                { payload: testCase.payload, handler }
-              );
-            }
-            break;
-
-          case OperationType.QUERIER_GET_CHANNEL:
-            if (testCase.options) {
-              receiver = await testQuerier!.get(
-                new Parameters(`ok;test_id=${testId}`),
-                { ...testCase.options as QuerierGetOptions, payload: testCase.payload }
+                querierGetOptions
               );
             } else {
               receiver = await testQuerier!.get(
                 new Parameters(`ok;test_id=${testId}`),
-                { payload: testCase.payload }
+                querierGetOptions
               );
             }
-            break;
-        }
-
-        // Wait for query to be processed
-        await sleep(100);
-
-        // Verify the query was received correctly
-        const query = queries.get(testId);
-        assertEquals(query !== undefined, true, `Query should be received for ${testCase.description}`);
-
-        assertEquals(
-          query!.keyExpr().toString(),
-          keGet.toString(),
-          `Key expression mismatch for ${testCase.description}`
-        );
-
-        assertEquals(
-          query!.parameters().get("test_id"),
-          testId,
-          `Test ID mismatch for ${testCase.description}`
-        );
-
-        assertEquals(
-          query!.payload()?.toString(),
-          testCase.payload,
-          `Payload mismatch for ${testCase.description}`
-        );
-
-        // For operations with encoding option, verify encoding
-        if (testCase.options?.encoding) {
-          assertEquals(
-            query!.encoding()?.toString(),
-            testCase.expectedEncoding().toString(),
-            `Encoding mismatch for ${testCase.description}`
-          );
-        }
-
-        // For operations with attachment option, verify attachment
-        if (testCase.options?.attachment) {
-          assertEquals(
-            query!.attachment()?.toString(),
-            testCase.expectedAttachment(),
-            `Attachment mismatch for ${testCase.description}`
-          );
-        }
-
-        // Handle replies for channel-based operations
-        if (receiver) {
-          const reply = await receiver.receive();
-          assertEquals(
-            reply.result() instanceof Sample,
-            true,
-            `Reply should be Sample for ${testCase.description}`
-          );
-          if (reply.result() instanceof Sample) {
-            assertEquals(
-              reply.result().payload().toString(),
-              testCase.payload,
-              `Reply payload mismatch for ${testCase.description}`
-            );
           }
-        } else {
-          // For callback operations, wait for handler to be called
+
+          // Wait for query to be processed
           await sleep(100);
+
+          // Verify the query was received correctly
+          const query = queries.get(testId);
+          assertEquals(query !== undefined, true, `Query should be received for ${fullDescription}`);
+
           assertEquals(
-            replies.length > 0,
-            true,
-            `Reply should be received via handler for ${testCase.description}`
+            query!.keyExpr().toString(),
+            keGet.toString(),
+            `Key expression mismatch for ${fullDescription}`
           );
-          const reply = replies[replies.length - 1];
+
           assertEquals(
-            reply.result() instanceof Sample,
-            true,
-            `Reply should be Sample for ${testCase.description}`
+            query!.parameters().get("test_id"),
+            testId,
+            `Test ID mismatch for ${fullDescription}`
           );
-          if (reply.result() instanceof Sample) {
+
+          assertEquals(
+            query!.payload()?.toString(),
+            testCase.payload,
+            `Payload mismatch for ${fullDescription}`
+          );
+
+          // For operations with encoding option, verify encoding
+          if (testCase.querierGetOptions?.encoding) {
             assertEquals(
-              reply.result().payload().toString(),
-              testCase.payload,
-              `Reply payload mismatch for ${testCase.description}`
+              query!.encoding()?.toString(),
+              testCase.expectedEncoding().toString(),
+              `Encoding mismatch for ${fullDescription}`
             );
+          }
+
+          // For operations with attachment option, verify attachment
+          if (testCase.querierGetOptions?.attachment) {
+            assertEquals(
+              query!.attachment()?.toString(),
+              testCase.expectedAttachment(),
+              `Attachment mismatch for ${fullDescription}`
+            );
+          }
+
+          // Handle replies for channel-based operations
+          if (receiver) {
+            const reply = await receiver.receive();
+            assertEquals(
+              reply.result() instanceof Sample,
+              true,
+              `Reply should be Sample for ${fullDescription}`
+            );
+            if (reply.result() instanceof Sample) {
+              assertEquals(
+                reply.result().payload().toString(),
+                testCase.payload,
+                `Reply payload mismatch for ${fullDescription}`
+              );
+            }
+          } else {
+            // For callback operations, wait for handler to be called
+            await sleep(100);
+            assertEquals(
+              replies.length > 0,
+              true,
+              `Reply should be received via handler for ${fullDescription}`
+            );
+            const reply = replies[replies.length - 1];
+            assertEquals(
+              reply.result() instanceof Sample,
+              true,
+              `Reply should be Sample for ${fullDescription}`
+            );
+            if (reply.result() instanceof Sample) {
+              assertEquals(
+                reply.result().payload().toString(),
+                testCase.payload,
+                `Reply payload mismatch for ${fullDescription}`
+              );
+            }
+          }
+
+          console.log(`✓ Completed: ${fullDescription}`);
+        } catch (error) {
+          console.error(`✗ Failed: ${fullDescription} - ${error}`);
+          throw error;
+        } finally {
+          // Clean up test querier if it was created
+          if (testQuerier) {
+            await testQuerier.undeclare();
           }
         }
 
-        console.log(`✓ Completed: ${testCase.description}`);
-      } catch (error) {
-        console.error(`✗ Failed: ${testCase.description} - ${error}`);
-        throw error;
-      } finally {
-        // Clean up test querier if it was created
-        if (testQuerier) {
-          await testQuerier.undeclare();
-        }
+        // Small delay between test cases
+        await sleep(50);
+        testCounter++;
       }
-
-      // Small delay between test cases
-      await sleep(50);
     }
 
-    console.log(`All ${testCases.length} test cases completed successfully`);
-    assertEquals(queries.size, testCases.length, "All queries should be received");
+    const totalTests = testCases.length * 4; // 4 variants per test case
+    console.log(`All ${totalTests} test cases completed successfully`);
+    assertEquals(queries.size, totalTests, "All queries should be received");
 
   } finally {
     // Cleanup in reverse order of creation
