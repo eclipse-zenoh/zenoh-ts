@@ -12,23 +12,23 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { 
-  Config, 
-  Session, 
-  Subscriber, 
-  Sample, 
-  Encoding, 
-  CongestionControl, 
-  Priority, 
+import {
+  Config,
+  Session,
+  Subscriber,
+  Sample,
+  Encoding,
+  CongestionControl,
+  Priority,
   ZBytes,
   SampleKind,
   PutOptions,
-  DeleteOpts
+  DeleteOpts,
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 function sleep(ms: number) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 class TestCase {
@@ -38,18 +38,18 @@ class TestCase {
     public options?: PutOptions | DeleteOpts,
     public payload?: string
   ) {}
-  
+
   expectedEncoding(): Encoding {
     if (this.sampleKind === SampleKind.PUT) {
       return (this.options as PutOptions)?.encoding ?? Encoding.default();
     }
     return Encoding.default(); // DELETE doesn't have encoding
   }
-  
+
   expectedPriority(): Priority {
     return this.options?.priority ?? Priority.DATA;
   }
-  
+
   expectedAttachment(): string | undefined {
     return this.options?.attachment?.toString();
   }
@@ -90,39 +90,78 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // PUT operations
-      new TestCase("Basic put without options", SampleKind.PUT, undefined, "message without options"),
-      new TestCase("Basic put with encoding", SampleKind.PUT, { encoding: Encoding.TEXT_PLAIN }, "message with encoding"),
-      new TestCase("Put with priority and congestion control", SampleKind.PUT, {
-        encoding: Encoding.APPLICATION_JSON,
-        priority: Priority.REAL_TIME,
-        congestionControl: CongestionControl.BLOCK,
-      }, "message with priority"),
-      new TestCase("Put with express flag", SampleKind.PUT, {
-        encoding: Encoding.ZENOH_STRING,
-        express: true,
-      }, "express message"),
-      new TestCase("Put with attachment", SampleKind.PUT, {
-        encoding: Encoding.TEXT_PLAIN,
-        attachment: attachmentData,
-      }, "message with attachment"),
-      new TestCase("Put with timestamp", SampleKind.PUT, {
-        encoding: Encoding.APPLICATION_JSON,
-        timestamp: putTimestamp,
-        priority: Priority.DATA_HIGH,
-      }, "message with timestamp"),
-      new TestCase("Put with all options combined", SampleKind.PUT, {
-        encoding: Encoding.APPLICATION_CBOR,
-        congestionControl: CongestionControl.DROP,
-        priority: Priority.INTERACTIVE_HIGH,
-        express: false,
-        attachment: fullOptionsAttachment,
-      }, "message with all options"),
+      new TestCase(
+        "Basic put without options",
+        SampleKind.PUT,
+        undefined,
+        "message without options"
+      ),
+      new TestCase(
+        "Basic put with encoding",
+        SampleKind.PUT,
+        { encoding: Encoding.TEXT_PLAIN },
+        "message with encoding"
+      ),
+      new TestCase(
+        "Put with priority and congestion control",
+        SampleKind.PUT,
+        {
+          encoding: Encoding.APPLICATION_JSON,
+          priority: Priority.REAL_TIME,
+          congestionControl: CongestionControl.BLOCK,
+        },
+        "message with priority"
+      ),
+      new TestCase(
+        "Put with express flag",
+        SampleKind.PUT,
+        {
+          encoding: Encoding.ZENOH_STRING,
+          express: true,
+        },
+        "express message"
+      ),
+      new TestCase(
+        "Put with attachment",
+        SampleKind.PUT,
+        {
+          encoding: Encoding.TEXT_PLAIN,
+          attachment: attachmentData,
+        },
+        "message with attachment"
+      ),
+      new TestCase(
+        "Put with timestamp",
+        SampleKind.PUT,
+        {
+          encoding: Encoding.APPLICATION_JSON,
+          timestamp: putTimestamp,
+          priority: Priority.DATA_HIGH,
+        },
+        "message with timestamp"
+      ),
+      new TestCase(
+        "Put with all options combined",
+        SampleKind.PUT,
+        {
+          encoding: Encoding.APPLICATION_CBOR,
+          congestionControl: CongestionControl.DROP,
+          priority: Priority.INTERACTIVE_HIGH,
+          express: false,
+          attachment: fullOptionsAttachment,
+        },
+        "message with all options"
+      ),
       // DELETE operations
       new TestCase("Basic delete without options", SampleKind.DELETE),
-      new TestCase("Delete with priority and congestion control", SampleKind.DELETE, {
-        priority: Priority.REAL_TIME,
-        congestionControl: CongestionControl.BLOCK,
-      }),
+      new TestCase(
+        "Delete with priority and congestion control",
+        SampleKind.DELETE,
+        {
+          priority: Priority.REAL_TIME,
+          congestionControl: CongestionControl.BLOCK,
+        }
+      ),
       new TestCase("Delete with express flag", SampleKind.DELETE, {
         express: true,
       }),
@@ -145,13 +184,20 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
     for (const testCase of testCases) {
       if (testCase.sampleKind === SampleKind.PUT) {
         if (testCase.options) {
-          await session1.put("zenoh/test/operations", testCase.payload!, testCase.options as PutOptions);
+          await session1.put(
+            "zenoh/test/operations",
+            testCase.payload!,
+            testCase.options as PutOptions
+          );
         } else {
           await session1.put("zenoh/test/operations", testCase.payload!);
         }
       } else if (testCase.sampleKind === SampleKind.DELETE) {
         if (testCase.options) {
-          await session1.delete("zenoh/test/operations", testCase.options as DeleteOpts);
+          await session1.delete(
+            "zenoh/test/operations",
+            testCase.options as DeleteOpts
+          );
         } else {
           await session1.delete("zenoh/test/operations", {});
         }
@@ -162,7 +208,11 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
     await sleep(200);
 
     // Verify we received all messages
-    assertEquals(samples.length, testCases.length, `Expected ${testCases.length} messages total`);
+    assertEquals(
+      samples.length,
+      testCases.length,
+      `Expected ${testCases.length} messages total`
+    );
 
     // Verify each test case
     for (let i = 0; i < testCases.length; i++) {
@@ -170,30 +220,42 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
       const sample = samples[i];
 
       // Verify sample kind
-      assertEquals(sample.kind(), testCase.sampleKind, `${testCase.description}: sample kind mismatch`);
-      
+      assertEquals(
+        sample.kind(),
+        testCase.sampleKind,
+        `${testCase.description}: sample kind mismatch`
+      );
+
       // Verify payload for PUT operations
       if (testCase.sampleKind === SampleKind.PUT) {
-        assertEquals(sample.payload().toString(), testCase.payload, `${testCase.description}: payload mismatch`);
-        
-        // Verify encoding for PUT operations
-        const expectedEncoding = testCase.expectedEncoding();
-        assertEquals(sample.encoding(), expectedEncoding, `${testCase.description}: encoding mismatch`);
-      }
-      
-      // Verify priority
-      const expectedPriority = testCase.expectedPriority();
-      assertEquals(sample.priority(), expectedPriority, `${testCase.description}: priority mismatch`);
-      
-      // Verify attachment
-      const expectedAttachment = testCase.expectedAttachment();
-      if (expectedAttachment) {
-        assertEquals(sample.attachment()?.toString(), expectedAttachment, `${testCase.description}: attachment mismatch`);
-      } else {
-        assertEquals(sample.attachment(), undefined, `${testCase.description}: attachment should be undefined`);
-      }
-    }
+        assertEquals(
+          sample.payload().toString(),
+          testCase.payload,
+          `${testCase.description}: payload mismatch`
+        );
 
+        // Verify encoding for PUT operations
+        assertEquals(
+          sample.encoding(),
+          testCase.expectedEncoding(),
+          `${testCase.description}: encoding mismatch`
+        );
+      }
+
+      // Verify priority
+      assertEquals(
+        sample.priority(),
+        testCase.expectedPriority(),
+        `${testCase.description}: priority mismatch`
+      );
+
+      // Verify attachment
+      assertEquals(
+        sample.attachment()?.toString(),
+        testCase.expectedAttachment(),
+        `${testCase.description}: attachment mismatch`
+      );
+    }
   } finally {
     // Cleanup in reverse order of creation
     if (subscriber) {
