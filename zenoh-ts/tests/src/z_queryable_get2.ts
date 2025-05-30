@@ -121,8 +121,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           queries.set(testId, query);
         }
         if (query.parameters().toString().includes("ok")) {
-          const payload = query.payload()?.toString() || "response";
-          query.reply(query.keyExpr(), payload);
+          const payload = query.payload()?.toString();
+          // Echo back the received payload, or empty string if no payload was received
+          const replyPayload = payload !== undefined ? payload : "";
+          query.reply(query.keyExpr(), replyPayload);
         } else {
           query.replyErr("error response");
         }
@@ -140,8 +142,16 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // Basic test without options
-      new TestCase("Basic test without options", undefined, {
-        payload: "basic-payload",
+      new TestCase("Basic test without options"),
+
+      // Test with empty payload
+      new TestCase("With empty payload", undefined, {
+        payload: "",
+      }),
+
+      // Test without payload field
+      new TestCase("Without payload field", undefined, {
+        encoding: Encoding.TEXT_PLAIN,
       }),
 
       // Test with encoding only
@@ -232,6 +242,41 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           encoding: Encoding.APPLICATION_XML,
           attachment: fullOptionsAttachment,
           payload: "all-options-payload",
+        }
+      ),
+
+      // Test with all options but empty payload
+      new TestCase(
+        "With all options but empty payload",
+        {
+          congestionControl: CongestionControl.BLOCK,
+          priority: Priority.REAL_TIME,
+          express: true,
+          timeout: timeout1000ms,
+          target: QueryTarget.All,
+          consolidation: ConsolidationMode.Latest,
+        },
+        {
+          encoding: Encoding.APPLICATION_JSON,
+          attachment: attachmentData,
+          payload: "",
+        }
+      ),
+
+      // Test with all options but no payload
+      new TestCase(
+        "With all options but no payload",
+        {
+          congestionControl: CongestionControl.DROP,
+          priority: Priority.DATA_HIGH,
+          express: false,
+          timeout: timeout5000ms,
+          target: QueryTarget.BestMatching,
+          consolidation: ConsolidationMode.None,
+        },
+        {
+          encoding: Encoding.APPLICATION_CBOR,
+          attachment: fullOptionsAttachment,
         }
       ),
     ];
@@ -347,9 +392,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             `Test ID mismatch for ${fullDescription}`
           );
 
+          const actualQueryPayload = query!.payload()?.toString() ?? "";
+          const expectedQueryPayload = testCase.querierGetOptions?.payload ?? "";
           assertEquals(
-            query!.payload()?.toString(),
-            testCase.querierGetOptions?.payload,
+            actualQueryPayload,
+            expectedQueryPayload,
             `Payload mismatch for ${fullDescription}`
           );
 
@@ -380,9 +427,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be Sample for ${fullDescription}`
             );
             if (reply.result() instanceof Sample) {
+              const actualPayload = reply.result().payload().toString();
+              const expectedPayload = testCase.querierGetOptions?.payload ?? "";
               assertEquals(
-                reply.result().payload().toString(),
-                testCase.querierGetOptions?.payload,
+                actualPayload,
+                expectedPayload,
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
@@ -401,9 +450,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be Sample for ${fullDescription}`
             );
             if (reply.result() instanceof Sample) {
+              const actualPayload = reply.result().payload().toString();
+              const expectedPayload = testCase.querierGetOptions?.payload ?? "";
               assertEquals(
-                reply.result().payload().toString(),
-                testCase.querierGetOptions?.payload,
+                actualPayload,
+                expectedPayload,
                 `Reply payload mismatch for ${fullDescription}`
               );
             }
