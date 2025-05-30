@@ -35,8 +35,8 @@ class TestCase {
   constructor(
     public description: string,
     public sampleKind: SampleKind,
-    public payload?: string,
-    public options?: PutOptions | DeleteOpts
+    public options?: PutOptions | DeleteOpts,
+    public payload?: string
   ) {}
   
   expectedEncoding(): Encoding {
@@ -90,50 +90,50 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // PUT operations
-      new TestCase("Basic put without options", SampleKind.PUT, "message without options"),
-      new TestCase("Basic put with encoding", SampleKind.PUT, "message with encoding", { encoding: Encoding.TEXT_PLAIN }),
-      new TestCase("Put with priority and congestion control", SampleKind.PUT, "message with priority", {
+      new TestCase("Basic put without options", SampleKind.PUT, undefined, "message without options"),
+      new TestCase("Basic put with encoding", SampleKind.PUT, { encoding: Encoding.TEXT_PLAIN }, "message with encoding"),
+      new TestCase("Put with priority and congestion control", SampleKind.PUT, {
         encoding: Encoding.APPLICATION_JSON,
         priority: Priority.REAL_TIME,
         congestionControl: CongestionControl.BLOCK,
-      }),
-      new TestCase("Put with express flag", SampleKind.PUT, "express message", {
+      }, "message with priority"),
+      new TestCase("Put with express flag", SampleKind.PUT, {
         encoding: Encoding.ZENOH_STRING,
         express: true,
-      }),
-      new TestCase("Put with attachment", SampleKind.PUT, "message with attachment", {
+      }, "express message"),
+      new TestCase("Put with attachment", SampleKind.PUT, {
         encoding: Encoding.TEXT_PLAIN,
         attachment: attachmentData,
-      }),
-      new TestCase("Put with timestamp", SampleKind.PUT, "message with timestamp", {
+      }, "message with attachment"),
+      new TestCase("Put with timestamp", SampleKind.PUT, {
         encoding: Encoding.APPLICATION_JSON,
         timestamp: putTimestamp,
         priority: Priority.DATA_HIGH,
-      }),
-      new TestCase("Put with all options combined", SampleKind.PUT, "message with all options", {
+      }, "message with timestamp"),
+      new TestCase("Put with all options combined", SampleKind.PUT, {
         encoding: Encoding.APPLICATION_CBOR,
         congestionControl: CongestionControl.DROP,
         priority: Priority.INTERACTIVE_HIGH,
         express: false,
         attachment: fullOptionsAttachment,
-      }),
+      }, "message with all options"),
       // DELETE operations
-      new TestCase("Basic delete without options", SampleKind.DELETE, undefined, {}),
-      new TestCase("Delete with priority and congestion control", SampleKind.DELETE, undefined, {
+      new TestCase("Basic delete without options", SampleKind.DELETE),
+      new TestCase("Delete with priority and congestion control", SampleKind.DELETE, {
         priority: Priority.REAL_TIME,
         congestionControl: CongestionControl.BLOCK,
       }),
-      new TestCase("Delete with express flag", SampleKind.DELETE, undefined, {
+      new TestCase("Delete with express flag", SampleKind.DELETE, {
         express: true,
       }),
-      new TestCase("Delete with attachment", SampleKind.DELETE, undefined, {
+      new TestCase("Delete with attachment", SampleKind.DELETE, {
         attachment: deleteAttachment,
       }),
-      new TestCase("Delete with timestamp", SampleKind.DELETE, undefined, {
+      new TestCase("Delete with timestamp", SampleKind.DELETE, {
         timestamp: deleteTimestamp,
         priority: Priority.DATA_HIGH,
       }),
-      new TestCase("Delete with all options combined", SampleKind.DELETE, undefined, {
+      new TestCase("Delete with all options combined", SampleKind.DELETE, {
         congestionControl: CongestionControl.DROP,
         priority: Priority.INTERACTIVE_HIGH,
         express: false,
