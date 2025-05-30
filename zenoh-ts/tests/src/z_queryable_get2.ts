@@ -53,45 +53,25 @@ class TestCase {
 
   // Convert QuerierOptions + QuerierGetOptions to GetOptions for session operations
   toGetOptions(): GetOptions | undefined {
-    if (!this.querierOptions && !this.querierGetOptions) {
-      return undefined;
-    }
-
-    const getOptions: GetOptions = {};
-
-    // Copy from QuerierOptions (for session operations, these are supported)
-    if (this.querierOptions) {
-      if (this.querierOptions.congestionControl !== undefined) {
-        getOptions.congestionControl = this.querierOptions.congestionControl;
-      }
-      if (this.querierOptions.consolidation !== undefined) {
-        getOptions.consolidation = this.querierOptions.consolidation;
-      }
-      if (this.querierOptions.priority !== undefined) {
-        getOptions.priority = this.querierOptions.priority;
-      }
-      if (this.querierOptions.express !== undefined) {
-        getOptions.express = this.querierOptions.express;
-      }
-      if (this.querierOptions.target !== undefined) {
-        getOptions.target = this.querierOptions.target;
-      }
-      if (this.querierOptions.timeout !== undefined) {
-        getOptions.timeout = this.querierOptions.timeout;
-      }
-    }
-
-    // Copy from QuerierGetOptions (these are supported in both)
-    if (this.querierGetOptions) {
-      if (this.querierGetOptions.encoding !== undefined) {
-        getOptions.encoding = this.querierGetOptions.encoding;
-      }
-      if (this.querierGetOptions.attachment !== undefined) {
-        getOptions.attachment = this.querierGetOptions.attachment;
-      }
+    const getOptions: GetOptions = {
+      // Copy from QuerierOptions (for session operations, these are supported)
+      ...this.querierOptions && {
+        congestionControl: this.querierOptions.congestionControl,
+        consolidation: this.querierOptions.consolidation,
+        priority: this.querierOptions.priority,
+        express: this.querierOptions.express,
+        target: this.querierOptions.target,
+        timeout: this.querierOptions.timeout,
+      },
+      // Copy from QuerierGetOptions (these are supported in both)
+      ...this.querierGetOptions && {
+        encoding: this.querierGetOptions.encoding,
+        attachment: this.querierGetOptions.attachment,
+      },
       // Note: payload and handler are handled separately in the test execution
-    }
+    };
 
+    // Return undefined if no fields were added to getOptions
     return Object.keys(getOptions).length > 0 ? getOptions : undefined;
   }
 
