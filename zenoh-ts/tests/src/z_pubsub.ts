@@ -36,25 +36,22 @@ class TestCase {
     public description: string,
     public sampleKind: SampleKind,
     public payload?: string,
-    public putOptions?: PutOptions,
-    public deleteOptions?: DeleteOpts
+    public options?: PutOptions | DeleteOpts
   ) {}
   
   expectedEncoding(): Encoding {
     if (this.sampleKind === SampleKind.PUT) {
-      return this.putOptions?.encoding ?? Encoding.default();
+      return (this.options as PutOptions)?.encoding ?? Encoding.default();
     }
     return Encoding.default(); // DELETE doesn't have encoding
   }
   
   expectedPriority(): Priority {
-    const options = this.sampleKind === SampleKind.PUT ? this.putOptions : this.deleteOptions;
-    return options?.priority ?? Priority.DATA;
+    return this.options?.priority ?? Priority.DATA;
   }
   
   expectedAttachment(): string | undefined {
-    const options = this.sampleKind === SampleKind.PUT ? this.putOptions : this.deleteOptions;
-    return options?.attachment?.toString();
+    return this.options?.attachment?.toString();
   }
 }
 
@@ -121,22 +118,22 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
         attachment: fullOptionsAttachment,
       }),
       // DELETE operations
-      new TestCase("Basic delete without options", SampleKind.DELETE, undefined, undefined, {}),
-      new TestCase("Delete with priority and congestion control", SampleKind.DELETE, undefined, undefined, {
+      new TestCase("Basic delete without options", SampleKind.DELETE, undefined, {}),
+      new TestCase("Delete with priority and congestion control", SampleKind.DELETE, undefined, {
         priority: Priority.REAL_TIME,
         congestionControl: CongestionControl.BLOCK,
       }),
-      new TestCase("Delete with express flag", SampleKind.DELETE, undefined, undefined, {
+      new TestCase("Delete with express flag", SampleKind.DELETE, undefined, {
         express: true,
       }),
-      new TestCase("Delete with attachment", SampleKind.DELETE, undefined, undefined, {
+      new TestCase("Delete with attachment", SampleKind.DELETE, undefined, {
         attachment: deleteAttachment,
       }),
-      new TestCase("Delete with timestamp", SampleKind.DELETE, undefined, undefined, {
+      new TestCase("Delete with timestamp", SampleKind.DELETE, undefined, {
         timestamp: deleteTimestamp,
         priority: Priority.DATA_HIGH,
       }),
-      new TestCase("Delete with all options combined", SampleKind.DELETE, undefined, undefined, {
+      new TestCase("Delete with all options combined", SampleKind.DELETE, undefined, {
         congestionControl: CongestionControl.DROP,
         priority: Priority.INTERACTIVE_HIGH,
         express: false,
@@ -147,14 +144,14 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
     // Execute all operations
     for (const testCase of testCases) {
       if (testCase.sampleKind === SampleKind.PUT) {
-        if (testCase.putOptions) {
-          await session1.put("zenoh/test/operations", testCase.payload!, testCase.putOptions);
+        if (testCase.options) {
+          await session1.put("zenoh/test/operations", testCase.payload!, testCase.options as PutOptions);
         } else {
           await session1.put("zenoh/test/operations", testCase.payload!);
         }
       } else if (testCase.sampleKind === SampleKind.DELETE) {
-        if (testCase.deleteOptions) {
-          await session1.delete("zenoh/test/operations", testCase.deleteOptions);
+        if (testCase.options) {
+          await session1.delete("zenoh/test/operations", testCase.options as DeleteOpts);
         } else {
           await session1.delete("zenoh/test/operations", {});
         }
