@@ -50,9 +50,10 @@ interface ExpectedQuery {
 }
 
 /**
- * Represents the expected structure of a Sample in a query response.
+ * Utility class to generate expected Sample objects for query response validation.
  * 
- * This interface includes all fields from the Sample class for complete validation:
+ * This replaces the former ExpectedResponse interface to directly create Sample objects
+ * with all the necessary fields for validation:
  * - keyExpr: The key expression of the response
  * - payload: Optional payload data
  * - kind: The sample kind (typically PUT for responses)
@@ -63,17 +64,6 @@ interface ExpectedQuery {
  * - express: Express flag (defaults to false)
  * - attachment: Optional attachment data
  */
-interface ExpectedResponse {
-  keyExpr: KeyExpr;
-  payload?: ZBytes;
-  kind: SampleKind;
-  encoding: Encoding;
-  timestamp?: string;
-  congestionControl: CongestionControl;
-  priority: Priority;
-  express: boolean;
-  attachment?: ZBytes;
-}
 
 /**
  * Class representing a test case with all parameters that can be used in query operations.
@@ -208,8 +198,8 @@ class TestCase {
     };
   }
 
-  expectedResponse(keyExpr?: KeyExpr): ExpectedResponse {
-    // For the response, we construct expected values based on:
+  expectedSample(keyExpr?: KeyExpr): Sample {
+    // For the response, we construct a Sample object based on:
     // 1. The keyExpr being queried (this will be the response keyExpr)
     // 2. The payload sent in the query (this becomes the response payload)
     // 3. Values specific to the test case for other fields
@@ -217,28 +207,25 @@ class TestCase {
     // Now we're setting explicit reply options for each test case,
     // so we should use the test case's actual values rather than defaults
     
-    return {
-      // Use the provided keyExpr if available, otherwise create a placeholder
-      keyExpr: keyExpr || new KeyExpr(""), 
-      
-      // Payload is preserved from the query
-      payload: this.payload ? new ZBytes(this.payload) : undefined,
-      
-      // Sample kind for query responses is always PUT
-      kind: SampleKind.PUT,
-      
-      // Use the encoding from the test case
-      encoding: this.encoding || Encoding.default(),
-      
-      // Timestamp is not set in test responses
-      timestamp: undefined,
-      
-      // Use values from test case
-      congestionControl: this.congestionControl || CongestionControl.DROP,
-      priority: this.priority || Priority.DATA,
-      express: this.express === undefined ? false : this.express,
-      attachment: this.attachment
-    };
+    // Use the provided keyExpr if available, otherwise create a placeholder
+    const actualKeyExpr = keyExpr || new KeyExpr("");
+    // Payload is preserved from the query
+    const payload = this.payload ? new ZBytes(this.payload) : new ZBytes("");
+    
+    // Create a new Sample object with all the expected properties
+    const sample = new Sample(
+      actualKeyExpr,
+      payload,
+      SampleKind.PUT,  // Sample kind for query responses is always PUT
+      this.encoding || Encoding.default(),
+      this.priority || Priority.DATA,
+      undefined,  // Timestamp is not set in test responses
+      this.congestionControl || CongestionControl.DROP,
+      this.express === undefined ? false : this.express,
+      this.attachment
+    );
+    
+    return sample;
   }
 }
 
@@ -540,47 +527,47 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (reply.result() instanceof Sample) {
               const sample = reply.result() as Sample;
               // Pass the keyExpr directly to expectedResponse
-              const expectedResponse = testCase.expectedResponse(keGet);
+              const expectedSample = testCase.expectedSample(keGet);
               
               // Validate all Sample fields
               assertEquals(
                 sample.keyexpr().toString(),
-                expectedResponse.keyExpr.toString(),
+                expectedSample.keyexpr().toString(),
                 `Reply keyexpr mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.payload()?.toString() ?? "",
-                expectedResponse.payload?.toString() ?? "",
+                expectedSample.payload()?.toString() ?? "",
                 `Reply payload mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.kind(),
-                expectedResponse.kind,
+                expectedSample.kind(),
                 `Reply kind mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.encoding().toString(),
-                expectedResponse.encoding.toString(),
+                expectedSample.encoding().toString(),
                 `Reply encoding mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.congestionControl(),
-                expectedResponse.congestionControl,
+                expectedSample.congestionControl(),
                 `Reply congestionControl mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.priority(),
-                expectedResponse.priority,
+                expectedSample.priority(),
                 `Reply priority mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.express(),
-                expectedResponse.express,
+                expectedSample.express(),
                 `Reply express mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.attachment()?.toString() ?? undefined,
-                expectedResponse.attachment?.toString() ?? undefined,
+                expectedSample.attachment()?.toString() ?? undefined,
                 `Reply attachment mismatch for ${fullDescription}`
               );
               // Note: timestamp is not validated as it's typically undefined in test responses
@@ -601,47 +588,47 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (reply.result() instanceof Sample) {
               const sample = reply.result() as Sample;
-              const expectedResponse = testCase.expectedResponse(keGet);
+              const expectedSample = testCase.expectedSample(keGet);
               
               // Validate all Sample fields against expected response
               assertEquals(
                 sample.keyexpr().toString(),
-                expectedResponse.keyExpr.toString(),
+                expectedSample.keyexpr().toString(),
                 `Reply keyExpr mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.payload()?.toString() ?? "",
-                expectedResponse.payload?.toString() ?? "",
+                expectedSample.payload()?.toString() ?? "",
                 `Reply payload mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.kind(),
-                expectedResponse.kind,
+                expectedSample.kind(),
                 `Reply kind mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.encoding().toString(),
-                expectedResponse.encoding.toString(),
+                expectedSample.encoding().toString(),
                 `Reply encoding mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.congestionControl(),
-                expectedResponse.congestionControl,
+                expectedSample.congestionControl(),
                 `Reply congestionControl mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.priority(),
-                expectedResponse.priority,
+                expectedSample.priority(),
                 `Reply priority mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.express(),
-                expectedResponse.express,
+                expectedSample.express(),
                 `Reply express mismatch for ${fullDescription}`
               );
               assertEquals(
                 sample.attachment()?.toString() ?? undefined,
-                expectedResponse.attachment?.toString() ?? undefined,
+                expectedSample.attachment()?.toString() ?? undefined,
                 `Reply attachment mismatch for ${fullDescription}`
               );
               // Note: timestamp is not validated as it's typically undefined in test responses
