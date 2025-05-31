@@ -400,8 +400,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     // Execute all operations - run all 4 variants for each test case
     let testCounter = 0;
-    // Use a single key expression for all queryables
-    const keQueryable = new KeyExpr(`zenoh/test/options`);
 
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
@@ -437,6 +435,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         let query: Query | undefined;
 
         // Declare a queryable only for the current test
+        const keQueryable = new KeyExpr(`zenoh/test`).join(`${i}`);
         const queryable = await session1.declareQueryable(keQueryable, {
           handler: (q: Query) => {
             // Store the query for validation
@@ -444,7 +443,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             if (q.parameters().toString().includes("ok")) {
               q.reply(
-                q.keyExpr(),
+                // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested
+                // The requested keyExpr in our case is "zenoh/test/*", but we want to reply with the specific keyExpr "zenoh/test/N" where n is the test case
+                keQueryable,
                 q.payload() ?? "",
                 testCase.toReplyOptions()
               );
@@ -459,22 +460,16 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
         const replies: Reply[] = [];
         let receiver: ChannelReceiver<Reply> | undefined;
+        let querier: Querier | undefined;
 
         const handler = (reply: Reply) => {
           replies.push(reply);
         };
 
-        const keGet = keQueryable;
-
         // Declare a querier for this specific test if needed
-        const testQuerier = !operation.useSession
-          ? await session2.declareQuerier(keGet, testCase.toQuerierOptions())
-          : undefined;
-
         try {
+          const keGet = new KeyExpr(`zenoh/test/*`);
           if (operation.useSession) {
-            // Session-based operation
-
             if (operation.useCallback) {
               await session2.get(new Selector(keGet, "ok"), {
                 ...testCase.toGetOptions(),
@@ -487,14 +482,17 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               );
             }
           } else {
-            // Querier-based operation
+            querier = await session2.declareQuerier(
+              keGet,
+              testCase.toQuerierOptions()
+            );
             if (operation.useCallback) {
-              await testQuerier!.get(new Parameters("ok"), {
+              await querier!.get(new Parameters("ok"), {
                 ...testCase.toQuerierGetOptions(),
                 handler,
               });
             } else {
-              receiver = await testQuerier!.get(
+              receiver = await querier!.get(
                 new Parameters("ok"),
                 testCase.toQuerierGetOptions()
               );
@@ -588,8 +586,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           throw error;
         } finally {
           // Clean up test-specific resources
-          if (testQuerier) {
-            await testQuerier.undeclare();
+          if (querier) {
+            await querier.undeclare();
           }
           if (queryable) {
             await queryable.undeclare();
