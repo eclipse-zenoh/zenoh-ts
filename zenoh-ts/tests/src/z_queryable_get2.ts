@@ -103,7 +103,7 @@ interface ExpectedQuery {
 
 /**
  * Utility class to generate expected Sample objects for query response validation.
- * 
+ *
  * This replaces the former ExpectedResponse interface to directly create Sample objects
  * with all the necessary fields for validation:
  * - keyExpr: The key expression of the response
@@ -178,7 +178,8 @@ class TestCase {
       consolidation: this.consolidation,
       priority: this.priority,
       express: this.express,
-      timeout: this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
+      timeout:
+        this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
     };
   }
 
@@ -205,13 +206,14 @@ class TestCase {
       priority: this.priority,
       express: this.express,
       target: this.target,
-      timeout: this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
+      timeout:
+        this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
       encoding: this.encoding,
       payload: this.payload,
       attachment: this.attachment,
     };
   }
-  
+
   /**
    * Convert parameters to reply options for queryable's reply method
    * @returns ReplyOptions object containing options for the Query.reply method
@@ -231,7 +233,7 @@ class TestCase {
     return {
       payload: this.payload ? new ZBytes(this.payload) : undefined,
       encoding: this.encoding,
-      attachment: this.attachment?.toString()
+      attachment: this.attachment?.toString(),
     };
   }
 
@@ -243,25 +245,25 @@ class TestCase {
     //
     // Now we're setting explicit reply options for each test case,
     // so we should use the test case's actual values rather than defaults
-    
+
     // Use the provided keyExpr if available, otherwise create a placeholder
     const actualKeyExpr = keyExpr || new KeyExpr("");
     // Payload is preserved from the query
     const payload = this.payload ? new ZBytes(this.payload) : new ZBytes("");
-    
+
     // Create a new Sample object with all the expected properties
     const sample = new Sample(
       actualKeyExpr,
       payload,
-      SampleKind.PUT,  // Sample kind for query responses is always PUT
+      SampleKind.PUT, // Sample kind for query responses is always PUT
       this.encoding || Encoding.default(),
       this.priority || Priority.DATA,
-      undefined,  // Timestamp is not set in test responses
+      undefined, // Timestamp is not set in test responses
       this.congestionControl || CongestionControl.DROP,
       this.express === undefined ? false : this.express,
       this.attachment
     );
-    
+
     return sample;
   }
 }
@@ -293,7 +295,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test without payload field - using default encoding since no payload is specified
       new TestCase("Without payload field", {
-        // Note: Even though we might specify another encoding, the actual behavior 
+        // Note: Even though we might specify another encoding, the actual behavior
         // returns zenoh/bytes when no payload is provided
         encoding: Encoding.default(),
       }),
@@ -311,7 +313,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         congestionControl: CongestionControl.BLOCK,
         target: QueryTarget.BestMatching,
         encoding: Encoding.default(),
-        payload: "priority-payload"
+        payload: "priority-payload",
       }),
 
       // Test with express flag
@@ -320,7 +322,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         express: false, // Changed to match actual behavior
         target: QueryTarget.BestMatching,
         encoding: Encoding.default(),
-        payload: "express-payload"
+        payload: "express-payload",
       }),
 
       // Test with attachment
@@ -337,7 +339,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         priority: Priority.DATA_HIGH,
         target: QueryTarget.BestMatching,
         encoding: Encoding.default(),
-        payload: "timeout-payload"
+        payload: "timeout-payload",
       }),
 
       // Test with target
@@ -345,7 +347,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         target: QueryTarget.All,
         priority: Priority.INTERACTIVE_HIGH,
         encoding: Encoding.default(),
-        payload: "target-payload"
+        payload: "target-payload",
       }),
 
       // Test with consolidation
@@ -400,7 +402,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     let testCounter = 0;
     // Use a single key expression for all queryables
     const keQueryable = new KeyExpr(`zenoh/test/options`);
-    
+
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
 
@@ -433,23 +435,19 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         console.log(`Executing: ${fullDescription}`);
 
         let query: Query | undefined;
-        
+
         // Declare a queryable only for the current test
         const queryable = await session1.declareQueryable(keQueryable, {
           handler: (q: Query) => {
             // Store the query for validation
             query = q;
-            
+
             if (q.parameters().toString().includes("ok")) {
-              const payload = q.payload();
-              // Use toReplyOptions to set options for the reply
-              const replyOptions = testCase.toReplyOptions();
-              
-              if (payload !== undefined) {
-                q.reply(q.keyExpr(), payload, replyOptions);
-              } else {
-                q.reply(q.keyExpr(), "", replyOptions);
-              }
+              q.reply(
+                q.keyExpr(),
+                q.payload() ?? "",
+                testCase.toReplyOptions()
+              );
             } else {
               q.replyErr("error response");
             }
@@ -483,10 +481,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             if (operation.useCallback) {
               const finalOptions = { ...getOptions, handler };
-              await session2.get(
-                new Selector(keGet, "ok"),
-                finalOptions
-              );
+              await session2.get(new Selector(keGet, "ok"), finalOptions);
             } else {
               receiver = await session2.get(
                 new Selector(keGet, "ok"),
@@ -499,10 +494,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             if (operation.useCallback) {
               querierGetOptions.handler = handler;
-              await testQuerier!.get(
-                new Parameters("ok"),
-                querierGetOptions
-              );
+              await testQuerier!.get(new Parameters("ok"), querierGetOptions);
             } else {
               receiver = await testQuerier!.get(
                 new Parameters("ok"),
@@ -565,7 +557,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               const sample = reply.result() as Sample;
               // Pass the keyExpr directly to expectedResponse
               const expectedSample = testCase.expectedSample(keGet);
-              
+
               // Validate all Sample fields
               compareSample(sample, expectedSample, fullDescription);
             }
@@ -586,7 +578,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (reply.result() instanceof Sample) {
               const sample = reply.result() as Sample;
               const expectedSample = testCase.expectedSample(keGet);
-              
+
               // Validate all Sample fields against expected response
               compareSample(sample, expectedSample, fullDescription);
             }
