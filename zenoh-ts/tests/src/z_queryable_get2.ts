@@ -27,6 +27,7 @@ import {
   GetOptions,
   QuerierGetOptions,
   QuerierOptions,
+  ReplyOptions,
   Encoding,
   Priority,
   CongestionControl,
@@ -227,10 +228,10 @@ class TestCase {
   
   /**
    * Convert parameters to reply options for queryable's reply method
-   * @returns Object containing options for the Query.reply method
+   * @returns ReplyOptions object containing options for the Query.reply method
    */
-  toReplyOptions(): Record<string, unknown> {
-    const options: Record<string, unknown> = {};
+  toReplyOptions(): ReplyOptions {
+    const options: ReplyOptions = {};
     
     if (this.encoding !== undefined) options.encoding = this.encoding;
     if (this.congestionControl !== undefined) options.congestionControl = this.congestionControl;
