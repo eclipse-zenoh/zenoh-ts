@@ -54,42 +54,42 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
   assertEquals(
     actual.keyexpr().toString(),
     expected.keyexpr().toString(),
-    `Reply keyexpr mismatch for ${description}`
+    `Sample keyexpr mismatch for ${description}`
   );
   assertEquals(
     actual.payload()?.toString() ?? "",
     expected.payload()?.toString() ?? "",
-    `Reply payload mismatch for ${description}`
+    `Sample payload mismatch for ${description}`
   );
   assertEquals(
     actual.kind(),
     expected.kind(),
-    `Reply kind mismatch for ${description}`
+    `Sample kind mismatch for ${description}`
   );
   assertEquals(
     actual.encoding().toString(),
     expected.encoding().toString(),
-    `Reply encoding mismatch for ${description}`
+    `Sample encoding mismatch for ${description}`
   );
   assertEquals(
     actual.congestionControl(),
     expected.congestionControl(),
-    `Reply congestionControl mismatch for ${description}`
+    `Sample congestionControl mismatch for ${description}`
   );
   assertEquals(
     actual.priority(),
     expected.priority(),
-    `Reply priority mismatch for ${description}`
+    `Sample priority mismatch for ${description}`
   );
   assertEquals(
     actual.express(),
     expected.express(),
-    `Reply express mismatch for ${description}`
+    `Sample express mismatch for ${description}`
   );
   assertEquals(
     actual.attachment()?.toString() ?? undefined,
     expected.attachment()?.toString() ?? undefined,
-    `Reply attachment mismatch for ${description}`
+    `Sample attachment mismatch for ${description}`
   );
   // Note: timestamp is not validated as it's typically undefined in test responses
 }
