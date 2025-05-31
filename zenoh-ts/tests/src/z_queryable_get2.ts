@@ -95,10 +95,77 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
   // Note: timestamp is not validated as it's typically undefined in test responses
 }
 
-interface ExpectedQuery {
-  payload?: ZBytes;
-  encoding?: Encoding;
-  attachment?: string;
+/**
+ * ExpectedQuery class that mirrors the Query class interface for testing
+ * Provides the same data access methods that Query class provides
+ */
+class ExpectedQuery {
+  private payload_?: ZBytes;
+  private encoding_?: Encoding;
+  private attachment_?: ZBytes;
+
+  constructor(payload?: ZBytes, encoding?: Encoding, attachment?: ZBytes) {
+    this.payload_ = payload;
+    this.encoding_ = encoding;
+    this.attachment_ = attachment;
+  }
+
+  /**
+   * Gets the optional payload of the expected query
+   * @returns ZBytes | undefined
+   */
+  payload(): ZBytes | undefined {
+    return this.payload_;
+  }
+
+  /**
+   * Gets the optional encoding of the expected query
+   * @returns Encoding | undefined
+   */
+  encoding(): Encoding | undefined {
+    return this.encoding_;
+  }
+
+  /**
+   * Gets the optional attachment of the expected query
+   * @returns ZBytes | undefined
+   */
+  attachment(): ZBytes | undefined {
+    return this.attachment_;
+  }
+}
+
+/**
+ * Compare actual Query object with expected Query data
+ * @param actual The actual Query received
+ * @param expected The expected Query data to compare against
+ * @param description Test description to include in error messages
+ */
+function compareQuery(actual: Query, expected: ExpectedQuery, description: string) {
+  // Compare payload
+  assertEquals(
+    actual.payload()?.toString() ?? "",
+    expected.payload()?.toString() ?? "",
+    `Query payload mismatch for ${description}`
+  );
+
+  // Compare encoding if expected
+  if (expected.encoding()) {
+    assertEquals(
+      actual.encoding()?.toString(),
+      expected.encoding()?.toString(),
+      `Query encoding mismatch for ${description}`
+    );
+  }
+
+  // Compare attachment if expected
+  if (expected.attachment()) {
+    assertEquals(
+      actual.attachment()?.toString(),
+      expected.attachment()?.toString(),
+      `Query attachment mismatch for ${description}`
+    );
+  }
 }
 
 /**
@@ -234,11 +301,11 @@ class TestCase {
   }
 
   expectedQuery(): ExpectedQuery {
-    return {
-      payload: this.payload,
-      encoding: this.encoding,
-      attachment: this.attachment?.toString(),
-    };
+    return new ExpectedQuery(
+      this.payload,
+      this.encoding,
+      this.attachment
+    );
   }
 
   expectedSample(): Sample {
@@ -456,7 +523,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             if (q.parameters().toString().includes("ok")) {
               q.reply(
-                // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested
+                // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
                 // The requested keyExpr in our case is "zenoh/test/*", but we want to reply with the specific keyExpr from the test case
                 keQueryable,
                 q.payload() ?? "",
@@ -528,31 +595,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             `Key expression mismatch for ${fullDescription}`
           );
 
-          // Verify query payload using direct assertEquals
+          // Verify the query was received correctly using compareQuery
           const expectedQuery = testCase.expectedQuery();
-          assertEquals(
-            query!.payload()?.toString() ?? "",
-            expectedQuery.payload?.toString() ?? "",
-            `Query payload mismatch for ${fullDescription}`
-          );
-
-          // For operations with encoding option, verify encoding
-          if (expectedQuery.encoding) {
-            assertEquals(
-              query!.encoding()?.toString(),
-              expectedQuery.encoding.toString(),
-              `Encoding mismatch for ${fullDescription}`
-            );
-          }
-
-          // For operations with attachment option, verify attachment
-          if (expectedQuery.attachment) {
-            assertEquals(
-              query!.attachment()?.toString(),
-              expectedQuery.attachment,
-              `Attachment mismatch for ${fullDescription}`
-            );
-          }
+          compareQuery(query!, expectedQuery, fullDescription);
 
           // Handle replies for channel-based operations
           if (receiver) {
