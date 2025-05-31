@@ -172,19 +172,14 @@ class TestCase {
    * @returns QuerierOptions object populated with the TestCase parameters
    */
   toQuerierOptions(): QuerierOptions {
-    // Create options object with required target property
-    const options: QuerierOptions = {
-      target: this.target ?? QueryTarget.BestMatching
+    return {
+      target: this.target ?? QueryTarget.BestMatching,
+      congestionControl: this.congestionControl,
+      consolidation: this.consolidation,
+      priority: this.priority,
+      express: this.express,
+      timeout: this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
     };
-    
-    // Add optional properties only if defined
-    if (this.congestionControl !== undefined) options.congestionControl = this.congestionControl;
-    if (this.consolidation !== undefined) options.consolidation = this.consolidation;
-    if (this.priority !== undefined) options.priority = this.priority;
-    if (this.express !== undefined) options.express = this.express;
-    if (this.timeout !== undefined) options.timeout = milliseconds.of(this.timeout);
-    
-    return options;
   }
 
   /**
@@ -192,14 +187,11 @@ class TestCase {
    * @returns QuerierGetOptions object populated with the TestCase parameters
    */
   toQuerierGetOptions(): QuerierGetOptions {
-    // Use a Record type to avoid any
-    const options: Record<string, unknown> = {};
-    
-    if (this.encoding !== undefined) options.encoding = this.encoding;
-    if (this.payload !== undefined) options.payload = this.payload;
-    if (this.attachment !== undefined) options.attachment = this.attachment;
-    
-    return options as QuerierGetOptions;
+    return {
+      encoding: this.encoding,
+      payload: this.payload,
+      attachment: this.attachment,
+    };
   }
 
   /**
@@ -207,23 +199,17 @@ class TestCase {
    * @returns GetOptions object populated with the TestCase parameters
    */
   toGetOptions(): GetOptions {
-    // Use a Record type to avoid any
-    const getOptions: Record<string, unknown> = {};
-    
-    // Copy from QuerierOptions parameters
-    if (this.congestionControl !== undefined) getOptions.congestionControl = this.congestionControl;
-    if (this.consolidation !== undefined) getOptions.consolidation = this.consolidation;
-    if (this.priority !== undefined) getOptions.priority = this.priority;
-    if (this.express !== undefined) getOptions.express = this.express;
-    if (this.target !== undefined) getOptions.target = this.target;
-    if (this.timeout !== undefined) getOptions.timeout = milliseconds.of(this.timeout);
-    
-    // Copy from QuerierGetOptions parameters
-    if (this.encoding !== undefined) getOptions.encoding = this.encoding;
-    if (this.payload !== undefined) getOptions.payload = this.payload;
-    if (this.attachment !== undefined) getOptions.attachment = this.attachment;
-    
-    return getOptions as GetOptions;
+    return {
+      congestionControl: this.congestionControl,
+      consolidation: this.consolidation,
+      priority: this.priority,
+      express: this.express,
+      target: this.target,
+      timeout: this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
+      encoding: this.encoding,
+      payload: this.payload,
+      attachment: this.attachment,
+    };
   }
   
   /**
@@ -231,15 +217,14 @@ class TestCase {
    * @returns ReplyOptions object containing options for the Query.reply method
    */
   toReplyOptions(): ReplyOptions {
-    const options: ReplyOptions = {};
-    
-    if (this.encoding !== undefined) options.encoding = this.encoding;
-    if (this.congestionControl !== undefined) options.congestionControl = this.congestionControl;
-    if (this.priority !== undefined) options.priority = this.priority;
-    if (this.express !== undefined) options.express = this.express;
-    if (this.attachment !== undefined) options.attachment = this.attachment;
-    
-    return options;
+    // Create options object with named fields
+    return {
+      encoding: this.encoding,
+      congestionControl: this.congestionControl,
+      priority: this.priority,
+      express: this.express,
+      attachment: this.attachment,
+    };
   }
 
   expectedQuery(): ExpectedQuery {
