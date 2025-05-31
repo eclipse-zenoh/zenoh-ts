@@ -250,15 +250,12 @@ class TestCase {
     // Now we're setting explicit reply options for each test case,
     // so we should use the test case's actual values rather than defaults
 
-    // Use the test case's keyexpr directly since it's already a KeyExpr
-    const actualKeyExpr = this.keyexpr;
     // Payload is preserved from the query
-    const payload = this.payload ? new ZBytes(this.payload) : new ZBytes("");
 
     // Create a new Sample object with all the expected properties
     const sample = new Sample(
-      actualKeyExpr,
-      payload,
+      this.keyexpr,
+      this.payload ? new ZBytes(this.payload) : new ZBytes(""),
       SampleKind.PUT, // Sample kind for query responses is always PUT
       this.encoding || Encoding.default(),
       this.priority || Priority.DATA,
@@ -312,13 +309,17 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with querier options (priority, congestion control, etc.)
-      new TestCase("With priority and congestion control", "zenoh/test/priority_congestion", {
-        priority: Priority.REAL_TIME,
-        congestionControl: CongestionControl.BLOCK,
-        target: QueryTarget.BestMatching,
-        encoding: Encoding.default(),
-        payload: "priority-payload",
-      }),
+      new TestCase(
+        "With priority and congestion control",
+        "zenoh/test/priority_congestion",
+        {
+          priority: Priority.REAL_TIME,
+          congestionControl: CongestionControl.BLOCK,
+          target: QueryTarget.BestMatching,
+          encoding: Encoding.default(),
+          payload: "priority-payload",
+        }
+      ),
 
       // Test with express flag
       // Note: express flag is consistently false in responses regardless of what is set
@@ -377,29 +378,37 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options but empty payload
-      new TestCase("With all options but empty payload", "zenoh/test/all_options_empty", {
-        congestionControl: CongestionControl.BLOCK,
-        priority: Priority.REAL_TIME,
-        express: true,
-        timeout: 1000, // use numeric value for milliseconds
-        target: QueryTarget.All,
-        consolidation: ConsolidationMode.Latest,
-        encoding: Encoding.default(),
-        attachment: attachmentData,
-        payload: "",
-      }),
+      new TestCase(
+        "With all options but empty payload",
+        "zenoh/test/all_options_empty",
+        {
+          congestionControl: CongestionControl.BLOCK,
+          priority: Priority.REAL_TIME,
+          express: true,
+          timeout: 1000, // use numeric value for milliseconds
+          target: QueryTarget.All,
+          consolidation: ConsolidationMode.Latest,
+          encoding: Encoding.default(),
+          attachment: attachmentData,
+          payload: "",
+        }
+      ),
 
       // Test with all options but no payload
-      new TestCase("With all options but no payload", "zenoh/test/all_options_no_payload", {
-        congestionControl: CongestionControl.DROP,
-        priority: Priority.DATA_HIGH,
-        express: false,
-        timeout: 5000, // use numeric value for milliseconds
-        target: QueryTarget.BestMatching,
-        consolidation: ConsolidationMode.None,
-        encoding: Encoding.default(),
-        attachment: fullOptionsAttachment,
-      }),
+      new TestCase(
+        "With all options but no payload",
+        "zenoh/test/all_options_no_payload",
+        {
+          congestionControl: CongestionControl.DROP,
+          priority: Priority.DATA_HIGH,
+          express: false,
+          timeout: 5000, // use numeric value for milliseconds
+          target: QueryTarget.BestMatching,
+          consolidation: ConsolidationMode.None,
+          encoding: Encoding.default(),
+          attachment: fullOptionsAttachment,
+        }
+      ),
     ];
 
     // Execute all operations - run all 4 variants for each test case
@@ -554,12 +563,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be Sample for ${fullDescription}`
             );
             if (reply.result() instanceof Sample) {
-              const sample = reply.result() as Sample;
-              // Get expected sample using the test case's keyexpr
-              const expectedSample = testCase.expectedSample();
-
-              // Validate all Sample fields
-              compareSample(sample, expectedSample, fullDescription);
+              compareSample(
+                reply.result() as Sample,
+                testCase.expectedSample(),
+                fullDescription
+              );
             }
           } else {
             // For callback operations, wait for handler to be called
