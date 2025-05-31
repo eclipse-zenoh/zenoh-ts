@@ -22,7 +22,6 @@ import {
   Parameters,
   Sample,
   QueryTarget,
-  Queryable,
   ChannelReceiver,
   Querier,
   GetOptions,
@@ -375,6 +374,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     // Execute all operations - run all 4 variants for each test case
     let testCounter = 0;
+    // Use a single key expression for all queryables
+    const keQueryable = new KeyExpr(`zenoh/test/options`);
+    
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
 
@@ -403,14 +405,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       ];
 
       for (const operation of operations) {
-        const testId = `test_${testCounter}`;
         const fullDescription = `${testCase.description} - ${operation.type}`;
         console.log(`Executing: ${fullDescription}`);
 
-        const keQueryable = new KeyExpr(`zenoh/test/options/${testId}`);
         let query: Query | undefined;
         
-        // Declare a dedicated queryable for this specific test
+        // Declare a queryable only for the current test
         const queryable = await session1.declareQueryable(keQueryable, {
           handler: (q: Query) => {
             // Store the query for validation
@@ -460,12 +460,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (operation.useCallback) {
               const finalOptions = { ...getOptions, handler };
               await session2.get(
-                new Selector(keGet, `ok;test_id=${testId}`),
+                new Selector(keGet, "ok"),
                 finalOptions
               );
             } else {
               receiver = await session2.get(
-                new Selector(keGet, `ok;test_id=${testId}`),
+                new Selector(keGet, "ok"),
                 getOptions
               );
             }
@@ -476,12 +476,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (operation.useCallback) {
               querierGetOptions.handler = handler;
               await testQuerier!.get(
-                new Parameters(`ok;test_id=${testId}`),
+                new Parameters("ok"),
                 querierGetOptions
               );
             } else {
               receiver = await testQuerier!.get(
-                new Parameters(`ok;test_id=${testId}`),
+                new Parameters("ok"),
                 querierGetOptions
               );
             }
