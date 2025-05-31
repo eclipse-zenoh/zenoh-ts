@@ -467,38 +467,36 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         const keGet = keQueryable;
 
         // Declare a querier for this specific test if needed
-        let testQuerier: Querier | undefined;
-        if (!operation.useSession) {
-          // Use the toQuerierOptions method for correct option setup
-          const querierOptions = testCase.toQuerierOptions();
-          testQuerier = await session2.declareQuerier(keGet, querierOptions);
-        }
+        const testQuerier = !operation.useSession
+          ? await session2.declareQuerier(keGet, testCase.toQuerierOptions())
+          : undefined;
 
         try {
           if (operation.useSession) {
             // Session-based operation
-            const getOptions = testCase.toGetOptions();
 
             if (operation.useCallback) {
-              const finalOptions = { ...getOptions, handler };
-              await session2.get(new Selector(keGet, "ok"), finalOptions);
+              await session2.get(new Selector(keGet, "ok"), {
+                ...testCase.toGetOptions(),
+                handler,
+              });
             } else {
               receiver = await session2.get(
                 new Selector(keGet, "ok"),
-                getOptions
+                testCase.toGetOptions()
               );
             }
           } else {
             // Querier-based operation
-            const querierGetOptions = testCase.toQuerierGetOptions();
-
             if (operation.useCallback) {
-              querierGetOptions.handler = handler;
-              await testQuerier!.get(new Parameters("ok"), querierGetOptions);
+              await testQuerier!.get(new Parameters("ok"), {
+                ...testCase.toQuerierGetOptions(),
+                handler,
+              });
             } else {
               receiver = await testQuerier!.get(
                 new Parameters("ok"),
-                querierGetOptions
+                testCase.toQuerierGetOptions()
               );
             }
           }
