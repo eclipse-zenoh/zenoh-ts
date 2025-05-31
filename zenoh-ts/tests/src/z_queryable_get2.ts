@@ -132,7 +132,7 @@ class TestCase {
   public target?: QueryTarget;
   public timeout?: number; // Use number for timeouts (milliseconds)
   public consolidation?: ConsolidationMode;
-  public payload?: string;
+  public payload?: ZBytes;
   public attachment?: ZBytes;
 
   /**
@@ -154,7 +154,7 @@ class TestCase {
       consolidation?: ConsolidationMode;
       // QuerierGetOptions parameters
       encoding?: Encoding;
-      payload?: string;
+      payload?: ZBytes | string;
       attachment?: ZBytes;
     } = {}
   ) {
@@ -167,7 +167,7 @@ class TestCase {
     this.target = params.target;
     this.timeout = params.timeout;
     this.consolidation = params.consolidation;
-    this.payload = params.payload;
+    this.payload = params.payload instanceof ZBytes ? params.payload : (params.payload ? new ZBytes(params.payload) : undefined);
     this.attachment = params.attachment;
   }
 
@@ -235,7 +235,7 @@ class TestCase {
 
   expectedQuery(): ExpectedQuery {
     return {
-      payload: this.payload ? new ZBytes(this.payload) : undefined,
+      payload: this.payload,
       encoding: this.encoding,
       attachment: this.attachment?.toString(),
     };
@@ -255,7 +255,7 @@ class TestCase {
     // Create a new Sample object with all the expected properties
     const sample = new Sample(
       this.keyexpr,
-      this.payload ? new ZBytes(this.payload) : new ZBytes(""),
+      this.payload || new ZBytes(""),
       SampleKind.PUT, // Sample kind for query responses is always PUT
       this.encoding || Encoding.default(),
       this.priority || Priority.DATA,
