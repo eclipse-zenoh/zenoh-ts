@@ -124,6 +124,7 @@ interface ExpectedQuery {
 class TestCase {
   // All test parameters as direct fields
   public description: string;
+  public keyexpr: KeyExpr;
   public encoding?: Encoding;
   public congestionControl?: CongestionControl;
   public priority?: Priority;
@@ -137,10 +138,12 @@ class TestCase {
   /**
    * Create a new TestCase with all parameters
    * @param description Human-readable description of this test case
+   * @param keyexpr Unique key expression for this test case
    * @param params Object containing all parameters for this test
    */
   constructor(
     description: string,
+    keyexpr: string,
     params: {
       // QuerierOptions parameters
       congestionControl?: CongestionControl;
@@ -156,6 +159,7 @@ class TestCase {
     } = {}
   ) {
     this.description = description;
+    this.keyexpr = new KeyExpr(keyexpr);
     this.encoding = params.encoding;
     this.congestionControl = params.congestionControl;
     this.priority = params.priority;
@@ -237,17 +241,17 @@ class TestCase {
     };
   }
 
-  expectedSample(keyExpr?: KeyExpr): Sample {
+  expectedSample(): Sample {
     // For the response, we construct a Sample object based on:
-    // 1. The keyExpr being queried (this will be the response keyExpr)
+    // 1. The test case's keyexpr (this will be the response keyExpr)
     // 2. The payload sent in the query (this becomes the response payload)
     // 3. Values specific to the test case for other fields
     //
     // Now we're setting explicit reply options for each test case,
     // so we should use the test case's actual values rather than defaults
 
-    // Use the provided keyExpr if available, otherwise create a placeholder
-    const actualKeyExpr = keyExpr || new KeyExpr("");
+    // Use the test case's keyexpr directly since it's already a KeyExpr
+    const actualKeyExpr = this.keyexpr;
     // Payload is preserved from the query
     const payload = this.payload ? new ZBytes(this.payload) : new ZBytes("");
 
@@ -286,29 +290,29 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // Basic test without options
-      new TestCase("Basic test without options"),
+      new TestCase("Basic test without options", "zenoh/test/basic"),
 
       // Test with empty payload
-      new TestCase("With empty payload", {
+      new TestCase("With empty payload", "zenoh/test/empty_payload", {
         payload: "",
       }),
 
       // Test without payload field - using default encoding since no payload is specified
-      new TestCase("Without payload field", {
+      new TestCase("Without payload field", "zenoh/test/no_payload", {
         // Note: Even though we might specify another encoding, the actual behavior
         // returns zenoh/bytes when no payload is provided
         encoding: Encoding.default(),
       }),
 
       // Test with encoding only
-      new TestCase("With encoding", {
+      new TestCase("With encoding", "zenoh/test/encoding", {
         // Note: Even with a payload, the actual behavior seems to use the default encoding
         encoding: Encoding.default(),
         payload: "encoded-payload",
       }),
 
       // Test with querier options (priority, congestion control, etc.)
-      new TestCase("With priority and congestion control", {
+      new TestCase("With priority and congestion control", "zenoh/test/priority_congestion", {
         priority: Priority.REAL_TIME,
         congestionControl: CongestionControl.BLOCK,
         target: QueryTarget.BestMatching,
@@ -318,7 +322,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with express flag
       // Note: express flag is consistently false in responses regardless of what is set
-      new TestCase("With express flag", {
+      new TestCase("With express flag", "zenoh/test/express", {
         express: false, // Changed to match actual behavior
         target: QueryTarget.BestMatching,
         encoding: Encoding.default(),
@@ -326,7 +330,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with attachment
-      new TestCase("With attachment", {
+      new TestCase("With attachment", "zenoh/test/attachment", {
         target: QueryTarget.BestMatching,
         encoding: Encoding.default(),
         attachment: attachmentData,
@@ -334,7 +338,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with timeout
-      new TestCase("With timeout", {
+      new TestCase("With timeout", "zenoh/test/timeout", {
         timeout: 1000, // use numeric value for milliseconds
         priority: Priority.DATA_HIGH,
         target: QueryTarget.BestMatching,
@@ -343,7 +347,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with target
-      new TestCase("With target", {
+      new TestCase("With target", "zenoh/test/target", {
         target: QueryTarget.All,
         priority: Priority.INTERACTIVE_HIGH,
         encoding: Encoding.default(),
@@ -351,7 +355,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with consolidation
-      new TestCase("With consolidation", {
+      new TestCase("With consolidation", "zenoh/test/consolidation", {
         consolidation: ConsolidationMode.None,
         priority: Priority.DATA_LOW,
         target: QueryTarget.BestMatching,
@@ -360,7 +364,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options combined
-      new TestCase("With all options combined", {
+      new TestCase("With all options combined", "zenoh/test/all_options", {
         congestionControl: CongestionControl.DROP,
         priority: Priority.BACKGROUND,
         express: false,
@@ -373,7 +377,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options but empty payload
-      new TestCase("With all options but empty payload", {
+      new TestCase("With all options but empty payload", "zenoh/test/all_options_empty", {
         congestionControl: CongestionControl.BLOCK,
         priority: Priority.REAL_TIME,
         express: true,
@@ -386,7 +390,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options but no payload
-      new TestCase("With all options but no payload", {
+      new TestCase("With all options but no payload", "zenoh/test/all_options_no_payload", {
         congestionControl: CongestionControl.DROP,
         priority: Priority.DATA_HIGH,
         express: false,
@@ -435,7 +439,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         let query: Query | undefined;
 
         // Declare a queryable only for the current test
-        const keQueryable = new KeyExpr(`zenoh/test`).join(`${i}`);
+        const keQueryable = testCase.keyexpr;
         const queryable = await session1.declareQueryable(keQueryable, {
           handler: (q: Query) => {
             // Store the query for validation
@@ -444,7 +448,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (q.parameters().toString().includes("ok")) {
               q.reply(
                 // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested
-                // The requested keyExpr in our case is "zenoh/test/*", but we want to reply with the specific keyExpr "zenoh/test/N" where n is the test case
+                // The requested keyExpr in our case is "zenoh/test/*", but we want to reply with the specific keyExpr from the test case
                 keQueryable,
                 q.payload() ?? "",
                 testCase.toReplyOptions()
@@ -551,8 +555,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (reply.result() instanceof Sample) {
               const sample = reply.result() as Sample;
-              // Pass the keyExpr directly to expectedResponse
-              const expectedSample = testCase.expectedSample(keGet);
+              // Get expected sample using the test case's keyexpr
+              const expectedSample = testCase.expectedSample();
 
               // Validate all Sample fields
               compareSample(sample, expectedSample, fullDescription);
@@ -573,7 +577,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (reply.result() instanceof Sample) {
               const sample = reply.result() as Sample;
-              const expectedSample = testCase.expectedSample(keGet);
+              const expectedSample = testCase.expectedSample();
 
               // Validate all Sample fields against expected response
               compareSample(sample, expectedSample, fullDescription);
