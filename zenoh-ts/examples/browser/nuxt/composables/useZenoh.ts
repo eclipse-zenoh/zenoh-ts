@@ -1,9 +1,16 @@
 import type { Ref } from 'vue'
+
+// Import types only for TypeScript type checking
 import type { 
-  ZenohModule, 
-  ZenohSession, 
-  ZenohSubscriber
-} from '~/types/zenoh'
+  Config, 
+  Session, 
+  KeyExpr,
+  ZBytes,
+  Sample,
+  Subscriber,
+  Reply,
+  ReplyError
+} from '@eclipse-zenoh/zenoh-ts'
 
 // Log entry interface
 export interface LogEntry {
@@ -39,8 +46,11 @@ export interface ZenohOperations {
 
 export function useZenoh(): ZenohState & ZenohOperations {
   // Import Zenoh only on client side to avoid SSR issues with WASM
-  let zenohModule: ZenohModule | null = null
-  let Config: any, Session: any, KeyExpr: any, ZBytes: any, Sample: any
+  let zenohModule: typeof import('@eclipse-zenoh/zenoh-ts') | null = null
+  let ConfigClass: new (url: string) => Config
+  let SessionClass: typeof Session
+  let KeyExprClass: new (expr: string) => KeyExpr
+  let ZBytesClass: new (data: string | Uint8Array) => ZBytes
 
   // Reactive state
   const serverUrl = ref('ws://localhost:10000')
@@ -58,15 +68,18 @@ export function useZenoh(): ZenohState & ZenohOperations {
   const logEntries = ref<LogEntry[]>([])
 
   // Zenoh objects
-  let zenohSession: ZenohSession | null = null
-  let subscriber: ZenohSubscriber | null = null
+  let zenohSession: Session | null = null
+  let subscriber: Subscriber | null = null
 
   // Initialize Zenoh module on client side
   const initializeZenoh = async (): Promise<void> => {
     if (process.client && !zenohModule) {
       try {
-        zenohModule = await import('@eclipse-zenoh/zenoh-ts') as ZenohModule
-        ;({ Config, Session, KeyExpr, ZBytes, Sample } = zenohModule)
+        zenohModule = await import('@eclipse-zenoh/zenoh-ts')
+        ConfigClass = zenohModule.Config
+        SessionClass = zenohModule.Session
+        KeyExprClass = zenohModule.KeyExpr
+        ZBytesClass = zenohModule.ZBytes
       } catch (error) {
         console.error('Failed to load Zenoh module:', error)
         addLogEntry('error', `Failed to load Zenoh module: ${error}`)
@@ -96,7 +109,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
     
     await initializeZenoh()
     
-    if (!Config || !Session) {
+    if (!ConfigClass || !SessionClass) {
       addLogEntry('error', 'Zenoh module not available')
       return
     }
@@ -105,9 +118,8 @@ export function useZenoh(): ZenohState & ZenohOperations {
     addLogEntry('info', `Attempting to connect to ${serverUrl.value}`)
     
     try {
-      const config = new Config(serverUrl.value)
-      
-      zenohSession = await Session.open(config)
+      const config = new ConfigClass(serverUrl.value)
+      zenohSession = await SessionClass.open(config)
       isConnected.value = true
       addLogEntry('success', `Successfully connected to ${serverUrl.value}`)
     } catch (error) {
@@ -140,11 +152,11 @@ export function useZenoh(): ZenohState & ZenohOperations {
   }
 
   async function performPut(): Promise<void> {
-    if (!zenohSession || !putKey.value || !putValue.value || !process.client || !KeyExpr || !ZBytes) return
+    if (!zenohSession || !putKey.value || !putValue.value || !process.client || !KeyExprClass || !ZBytesClass) return
     
     try {
-      const keyExpr = new KeyExpr(putKey.value)
-      const bytes = new ZBytes(putValue.value)
+      const keyExpr = new KeyExprClass(putKey.value)
+      const bytes = new ZBytesClass(putValue.value)
       await zenohSession.put(keyExpr, bytes)
       addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`)
     } catch (error) {
@@ -160,25 +172,35 @@ export function useZenoh(): ZenohState & ZenohOperations {
       addLogEntry('info', `GET: Querying ${selector}`)
       
       const receiver = await zenohSession.get(selector)
+      if (!receiver) {
+        addLogEntry('error', 'GET failed: No receiver returned')
+        return
+      }
+      
       let resultCount = 0
       
       while (true) {
-        const reply = await receiver.receive()
+        const reply: Reply | null = await receiver.receive()
         if (!reply) break
         
-        // Use any type for dynamic access since Zenoh types are complex
-        const replyAny = reply as any
-        if (replyAny.result) {
-          const result = replyAny.result()
-          if (result instanceof Sample) {
-            const keyStr = result.keyexpr().toString()
-            const valueStr = result.payload().toString()
+        try {
+          const result = reply.result()
+          
+          // Check if it's a successful sample or an error
+          if ('keyexpr' in result && typeof result.keyexpr === 'function') {
+            // It's a Sample
+            const sample = result as Sample
+            const keyStr = sample.keyexpr().toString()
+            const valueStr = sample.payload().toString()
             addLogEntry('data', `GET result: ${keyStr} = "${valueStr}"`)
             resultCount++
           } else {
-            // result is ReplyError
-            addLogEntry('error', `GET error: ${result.payload().toString()}`)
+            // It's a ReplyError
+            const replyError = result as ReplyError
+            addLogEntry('error', `GET error: ${replyError.payload().toString()}`)
           }
+        } catch (resultError) {
+          addLogEntry('error', `Error processing GET result: ${resultError}`)
         }
       }
       
@@ -189,7 +211,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
   }
 
   async function toggleSubscribe(): Promise<void> {
-    if (!zenohSession || !subscribeKey.value || !process.client || !KeyExpr) return
+    if (!zenohSession || !subscribeKey.value || !process.client || !KeyExprClass) return
     
     if (isSubscribed.value && subscriber) {
       // Unsubscribe
@@ -204,7 +226,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
     } else {
       // Subscribe
       try {
-        const keyExpr = new KeyExpr(subscribeKey.value)
+        const keyExpr = new KeyExprClass(subscribeKey.value)
         
         subscriber = await zenohSession.declareSubscriber(keyExpr)
         isSubscribed.value = true
@@ -218,16 +240,31 @@ export function useZenoh(): ZenohState & ZenohOperations {
           if (!receiver) return
           
           while (true) {
-            const sample = await receiver.receive()
+            const sample: Sample | null = await receiver.receive()
             if (!sample) break
             
-            // Use any type for dynamic access since this is a sample from subscription
-            const sampleAny = sample as any
-            const keyStr = sampleAny.keyexpr().toString()
-            const valueStr = sampleAny.payload().toString()
-            const kindStr = sampleAny.kind() === 0 ? 'PUT' : sampleAny.kind() === 1 ? 'DELETE' : 'UNKNOWN'
-            
-            addLogEntry('data', `SUBSCRIPTION [${kindStr}]: ${keyStr} = "${valueStr}"`)
+            try {
+              const keyStr = sample.keyexpr().toString()
+              const valueStr = sample.payload().toString()
+              const kind = sample.kind()
+              
+              // Map SampleKind enum values to readable strings
+              let kindStr: string
+              switch (kind) {
+                case 0: // SampleKind.PUT
+                  kindStr = 'PUT'
+                  break
+                case 1: // SampleKind.DELETE
+                  kindStr = 'DELETE'
+                  break
+                default:
+                  kindStr = 'UNKNOWN'
+              }
+              
+              addLogEntry('data', `SUBSCRIPTION [${kindStr}]: ${keyStr} = "${valueStr}"`)
+            } catch (sampleError) {
+              addLogEntry('error', `Error processing subscription sample: ${sampleError}`)
+            }
           }
         })().catch(error => {
           addLogEntry('error', `Subscription error: ${error}`)
