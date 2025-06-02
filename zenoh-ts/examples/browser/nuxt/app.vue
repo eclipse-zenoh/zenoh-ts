@@ -103,14 +103,16 @@
           <!-- Active Subscribers List -->
           <div v-if="activeSubscribers.length > 0" class="subscribers-list">
             <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
-            <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.id">
+            <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
               <div class="subscriber-info">
                 <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
-                <span class="subscriber-id">ID: {{ subscriber.id }}</span>
-                <span class="subscriber-time">Since: {{ formatTime(subscriber.createdAt) }}</span>
+                <div class="subscriber-meta">
+                  <span class="subscriber-id">{{ subscriber.displayId }}</span>
+                  <span class="subscriber-time">Since: {{ formatTime(subscriber.createdAt) }}</span>
+                </div>
               </div>
               <button 
-                @click="unsubscribe(subscriber.id)" 
+                @click="unsubscribe(subscriber.displayId)" 
                 class="unsubscribe-btn"
                 :disabled="!isConnected"
               >
@@ -392,10 +394,8 @@ watch(logEntries, () => {
 
 .subscribers-list {
   margin-top: 15px;
-  padding: 10px;
-  background-color: #f9f9f9;
-  border-radius: 4px;
-  border: 1px solid #e0e0e0;
+  padding-top: 15px;
+  border-top: 1px solid #ddd;
 }
 
 .subscribers-list h5 {
@@ -406,57 +406,64 @@ watch(logEntries, () => {
 
 .subscriber-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 8px;
+  justify-content: space-between;
+  padding: 8px 10px;
   margin-bottom: 8px;
-  background-color: white;
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
   border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-.subscriber-item:last-child {
-  margin-bottom: 0;
 }
 
 .subscriber-info {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: space-between;
   flex: 1;
+  margin-right: 10px;
 }
 
 .subscriber-key {
-  font-weight: bold;
-  color: #333;
+  font-family: 'Courier New', monospace;
   font-size: 13px;
+  color: #333;
+  flex: 1;
+}
+
+.subscriber-meta {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  text-align: right;
 }
 
 .subscriber-id {
-  font-size: 11px;
-  color: #666;
   font-family: 'Courier New', monospace;
+  font-size: 12px;
+  color: #666;
+  font-weight: bold;
+  min-width: 40px;
 }
 
 .subscriber-time {
   font-size: 11px;
   color: #888;
+  white-space: nowrap;
 }
 
 .unsubscribe-btn {
   padding: 4px 8px;
-  background-color: #f44336;
+  background-color: #dc3545;
   color: white;
   border: none;
   border-radius: 3px;
   cursor: pointer;
   font-size: 12px;
-  font-weight: bold;
   transition: background-color 0.2s;
 }
 
 .unsubscribe-btn:hover:not(:disabled) {
-  background-color: #da190b;
+  background-color: #c82333;
 }
 
 .unsubscribe-btn:disabled {
@@ -471,18 +478,17 @@ watch(logEntries, () => {
 
 .unsubscribe-all-btn {
   padding: 6px 12px;
-  background-color: #ff5722;
+  background-color: #6c757d;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 12px;
-  font-weight: bold;
   transition: background-color 0.2s;
 }
 
 .unsubscribe-all-btn:hover:not(:disabled) {
-  background-color: #e64a19;
+  background-color: #5a6268;
 }
 
 .unsubscribe-all-btn:disabled {

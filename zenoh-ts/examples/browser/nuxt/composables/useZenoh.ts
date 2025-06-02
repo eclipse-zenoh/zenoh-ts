@@ -20,7 +20,7 @@ export interface LogEntry {
 
 // Subscriber info interface
 export interface SubscriberInfo {
-  id: string
+  displayId: string      // Display ID like "sub0", "sub1", etc.
   keyExpr: string
   subscriber: any // Use any type to avoid strict type checking issues
   createdAt: Date
@@ -73,6 +73,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
 
   // Zenoh objects
   let zenohSession: Session | null = null
+  let subscriberIdCounter = 0
 
   // Methods
   function addLogEntry(type: LogEntry['type'], message: string): void {
@@ -199,63 +200,67 @@ export function useZenoh(): ZenohState & ZenohOperations {
       const keyExpr = new KeyExpr(subscribeKey.value)
       const subscriber = await zenohSession.declareSubscriber(keyExpr)
       
-      // Generate unique ID for this subscriber
-      const subscriberId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      // Generate sequential display ID for this subscriber
+      const displayId = `sub${subscriberIdCounter++}`
       
       const subscriberInfo: SubscriberInfo = {
-        id: subscriberId,
+        displayId: displayId,
         keyExpr: subscribeKey.value,
         subscriber,
         createdAt: new Date()
       }
       
       activeSubscribers.value.push(subscriberInfo)
-      addLogEntry('success', `Subscribed to ${subscribeKey.value} (ID: ${subscriberId})`)
+      addLogEntry('success', `Subscribed to ${subscribeKey.value} (ID: ${displayId})`)
       
       // Handle incoming data
       ;(async () => {
         const receiver = subscriber.receiver()
         if (!receiver) return
         
-        while (true) {
-          const sample: Sample | null = await receiver.receive()
-          if (!sample) break
-          
-          try {
-            const keyStr = sample.keyexpr().toString()
-            const valueStr = sample.payload().toString()
-            const kind = sample.kind()
+        try {
+          while (true) {
+            const sample: Sample | null = await receiver.receive()
+            if (!sample) break  // Normal end of subscription
             
-            // Map SampleKind enum values to readable strings
-            let kindStr: string
-            switch (kind) {
-              case 0: // SampleKind.PUT
-                kindStr = 'PUT'
-                break
-              case 1: // SampleKind.DELETE
-                kindStr = 'DELETE'
-                break
-              default:
-                kindStr = 'UNKNOWN'
+            try {
+              const keyStr = sample.keyexpr().toString()
+              const valueStr = sample.payload().toString()
+              const kind = sample.kind()
+              
+              // Map SampleKind enum values to readable strings
+              let kindStr: string
+              switch (kind) {
+                case 0: // SampleKind.PUT
+                  kindStr = 'PUT'
+                  break
+                case 1: // SampleKind.DELETE
+                  kindStr = 'DELETE'
+                  break
+                default:
+                  kindStr = 'UNKNOWN'
+              }
+              
+              addLogEntry('data', `SUBSCRIPTION [${displayId}] [${kindStr}]: ${keyStr} = "${valueStr}"`)
+            } catch (sampleError) {
+              addLogEntry('error', `Error processing subscription sample: ${sampleError}`)
             }
-            
-            addLogEntry('data', `SUBSCRIPTION [${subscriberId}] [${kindStr}]: ${keyStr} = "${valueStr}"`)
-          } catch (sampleError) {
-            addLogEntry('error', `Error processing subscription sample: ${sampleError}`)
+          }
+          // Normal end of subscription - no error logging needed
+        } catch (subscriptionError) {
+          // Only log actual errors, not normal disconnections
+          if (subscriptionError) {
+            addLogEntry('error', `Subscription error for ${displayId}: ${subscriptionError}`)
           }
         }
-      })().catch(error => {
-        addLogEntry('error', `Subscription error for ${subscriberId}: ${error}`)
-        // Remove the subscriber from the list if it errors out
-        unsubscribe(subscriberId)
-      })
+      })()
     } catch (error) {
       addLogEntry('error', `Subscribe failed: ${error}`)
     }
   }
 
   async function unsubscribe(subscriberId: string): Promise<void> {
-    const subscriberIndex = activeSubscribers.value.findIndex(sub => sub.id === subscriberId)
+    const subscriberIndex = activeSubscribers.value.findIndex(sub => sub.displayId === subscriberId)
     if (subscriberIndex === -1) {
       addLogEntry('error', `Subscriber ${subscriberId} not found`)
       return
@@ -282,9 +287,9 @@ export function useZenoh(): ZenohState & ZenohOperations {
     for (const subscriberInfo of subscribersToRemove) {
       try {
         await subscriberInfo.subscriber.undeclare()
-        addLogEntry('info', `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberInfo.id})`)
+        addLogEntry('info', `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberInfo.displayId})`)
       } catch (error) {
-        addLogEntry('error', `Error unsubscribing from ${subscriberInfo.id}: ${error}`)
+        addLogEntry('error', `Error unsubscribing from ${subscriberInfo.displayId}: ${error}`)
       }
     }
     
