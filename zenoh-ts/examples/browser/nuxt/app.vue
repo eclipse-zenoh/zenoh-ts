@@ -128,212 +128,40 @@
 </template>
 
 <script setup lang="ts">
-// Import Zenoh only on client side to avoid SSR issues with WASM
-let zenohModule: any = null;
-let Config: any, Session: any, KeyExpr: any, Publisher: any, Subscriber: any, ZBytes: any, Sample: any;
-
-if (process.client) {
-  zenohModule = await import('@eclipse-zenoh/zenoh-ts');
-  ({ Config, Session, KeyExpr, Publisher, Subscriber, ZBytes, Sample } = zenohModule);
-}
-
-// Reactive state
-const serverUrl = ref('ws://localhost:10000');
-const isConnected = ref(false);
-const isConnecting = ref(false);
-const isSubscribed = ref(false);
-
-// Operation inputs
-const putKey = ref('demo/example/test');
-const putValue = ref('Hello Zenoh!');
-const getKey = ref('demo/example/*');
-const subscribeKey = ref('demo/example/**');
-
-// Log entries
-interface LogEntry {
-  timestamp: Date;
-  type: 'info' | 'success' | 'error' | 'data';
-  message: string;
-}
-
-const logEntries = ref<LogEntry[]>([]);
-const logContent = ref<HTMLElement>();
-
-// Zenoh objects
-let zenohSession: Session | null = null;
-let subscriber: Subscriber | null = null;
-
-// Methods
-function addLogEntry(type: LogEntry['type'], message: string) {
-  logEntries.value.push({
-    timestamp: new Date(),
-    type,
-    message
-  });
+// Use the Zenoh composable
+const {
+  // State
+  serverUrl,
+  isConnected,
+  isConnecting,
+  isSubscribed,
+  putKey,
+  putValue,
+  getKey,
+  subscribeKey,
+  logEntries,
   
-  // Auto-scroll to bottom
+  // Operations
+  connect,
+  disconnect,
+  performPut,
+  performGet,
+  toggleSubscribe,
+  formatTime,
+  clearLog
+} = useZenoh()
+
+// Template ref for log content
+const logContent = ref<HTMLElement>()
+
+// Auto-scroll to bottom when new log entries are added
+watch(logEntries, () => {
   nextTick(() => {
     if (logContent.value) {
-      logContent.value.scrollTop = logContent.value.scrollHeight;
+      logContent.value.scrollTop = logContent.value.scrollHeight
     }
-  });
-}
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString();
-}
-
-function clearLog() {
-  logEntries.value = [];
-}
-
-async function connect() {
-  if (isConnecting.value || isConnected.value || !process.client || !Config || !Session) return;
-  
-  isConnecting.value = true;
-  addLogEntry('info', `Attempting to connect to ${serverUrl.value}`);
-  
-  try {
-    const config = new Config(serverUrl.value);
-    
-    zenohSession = await Session.open(config);
-    isConnected.value = true;
-    addLogEntry('success', `Successfully connected to ${serverUrl.value}`);
-  } catch (error) {
-    addLogEntry('error', `Failed to connect: ${error}`);
-    zenohSession = null;
-  } finally {
-    isConnecting.value = false;
-  }
-}
-
-async function disconnect() {
-  if (!zenohSession) return;
-  
-  try {
-    // Unsubscribe if active
-    if (subscriber) {
-      await subscriber.undeclare();
-      subscriber = null;
-      isSubscribed.value = false;
-      addLogEntry('info', 'Unsubscribed from all subscriptions');
-    }
-    
-    await zenohSession.close();
-    zenohSession = null;
-    isConnected.value = false;
-    addLogEntry('success', 'Disconnected from Zenoh');
-  } catch (error) {
-    addLogEntry('error', `Error during disconnect: ${error}`);
-  }
-}
-
-async function performPut() {
-  if (!zenohSession || !putKey.value || !putValue.value || !process.client || !KeyExpr || !ZBytes) return;
-  
-  try {
-    const keyExpr = new KeyExpr(putKey.value);
-    const bytes = new ZBytes(putValue.value);
-    await zenohSession.put(keyExpr, bytes);
-    addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`);
-  } catch (error) {
-    addLogEntry('error', `PUT failed: ${error}`);
-  }
-}
-
-async function performGet() {
-  if (!zenohSession || !getKey.value || !process.client) return;
-  
-  try {
-    const selector = getKey.value;
-    addLogEntry('info', `GET: Querying ${selector}`);
-    
-    const receiver = await zenohSession.get(selector);
-    let resultCount = 0;
-    
-    while (true) {
-      const reply = await receiver.receive();
-      if (!reply) break;
-      
-      const result = reply.result();
-      if (result instanceof Sample) {
-        const keyStr = result.keyexpr().toString();
-        const valueStr = result.payload().toString();
-        addLogEntry('data', `GET result: ${keyStr} = "${valueStr}"`);
-        resultCount++;
-      } else {
-        // result is ReplyError
-        addLogEntry('error', `GET error: ${result.payload().toString()}`);
-      }
-    }
-    
-    addLogEntry('success', `GET completed: ${resultCount} results received`);
-  } catch (error) {
-    addLogEntry('error', `GET failed: ${error}`);
-  }
-}
-
-async function toggleSubscribe() {
-  if (!zenohSession || !subscribeKey.value || !process.client || !KeyExpr) return;
-  
-  if (isSubscribed.value && subscriber) {
-    // Unsubscribe
-    try {
-      await subscriber.undeclare();
-      subscriber = null;
-      isSubscribed.value = false;
-      addLogEntry('success', `Unsubscribed from ${subscribeKey.value}`);
-    } catch (error) {
-      addLogEntry('error', `Unsubscribe failed: ${error}`);
-    }
-  } else {
-    // Subscribe
-    try {
-      const keyExpr = new KeyExpr(subscribeKey.value);
-      
-      subscriber = await zenohSession.declareSubscriber(keyExpr);
-      isSubscribed.value = true;
-      addLogEntry('success', `Subscribed to ${subscribeKey.value}`);
-      
-      // Handle incoming data
-      (async () => {
-        if (!subscriber) return;
-        
-        const receiver = subscriber.receiver();
-        if (!receiver) return;
-        
-        while (true) {
-          const sample = await receiver.receive();
-          if (!sample) break;
-          
-          const keyStr = sample.keyexpr().toString();
-          const valueStr = sample.payload().toString();
-          const kindStr = sample.kind() === 0 ? 'PUT' : sample.kind() === 1 ? 'DELETE' : 'UNKNOWN';
-          
-          addLogEntry('data', `SUBSCRIPTION [${kindStr}]: ${keyStr} = "${valueStr}"`);
-        }
-      })().catch(error => {
-        addLogEntry('error', `Subscription error: ${error}`);
-      });
-    } catch (error) {
-      addLogEntry('error', `Subscribe failed: ${error}`);
-    }
-  }
-}
-
-// Cleanup on unmount
-onUnmounted(() => {
-  if (zenohSession) {
-    disconnect();
-  }
-});
-
-// Initial log entry
-onMounted(() => {
-  if (process.client) {
-    addLogEntry('info', 'Zenoh-TS Demo initialized. Connect to a Zenoh router to start.');
-  }
-});
+  })
+}, { deep: true })
 </script>
 
 <style scoped>
