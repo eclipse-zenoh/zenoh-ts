@@ -1,7 +1,8 @@
 <template>
-  <div class="zenoh-container">
-    <!-- Server Connection Panel -->
-    <div class="server-panel">
+  <ClientOnly>
+    <div class="zenoh-container">
+      <!-- Server Connection Panel -->
+      <div class="server-panel">
       <div class="connection-controls">
         <div class="input-group">
           <label for="server-url">Zenoh Server</label>
@@ -125,6 +126,16 @@
       </div>
     </div>
   </div>
+  
+  <template #fallback>
+    <div class="loading-container">
+      <div class="loading-message">
+        <h2>Loading Zenoh Demo...</h2>
+        <p>Initializing WASM modules...</p>
+      </div>
+    </div>
+  </template>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
@@ -442,5 +453,33 @@ watch(logEntries, () => {
   color: #999;
   font-style: italic;
   padding: 40px;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.loading-message {
+  text-align: center;
+  color: white;
+  padding: 2rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loading-message h2 {
+  margin: 0 0 1rem 0;
+  font-size: 1.5rem;
+}
+
+.loading-message p {
+  margin: 0;
+  opacity: 0.8;
 }
 </style>

@@ -1,8 +1,11 @@
 import type { Ref } from 'vue'
 
-// Import types only for TypeScript type checking
-import type { 
+// Static imports - safe since SSR is disabled
+import { 
+  Config,
   Session, 
+  KeyExpr,
+  ZBytes,
   Sample,
   Subscriber,
   Reply,
@@ -42,9 +45,6 @@ export interface ZenohOperations {
 }
 
 export function useZenoh(): ZenohState & ZenohOperations {
-  // Import Zenoh only on client side to avoid SSR issues with WASM
-  let zenohModule: typeof import('@eclipse-zenoh/zenoh-ts') | null = null
-
   // Reactive state
   const serverUrl = ref('ws://localhost:10000')
   const isConnected = ref(false)
@@ -63,18 +63,6 @@ export function useZenoh(): ZenohState & ZenohOperations {
   // Zenoh objects
   let zenohSession: Session | null = null
   let subscriber: Subscriber | null = null
-
-  // Initialize Zenoh module on client side
-  const initializeZenoh = async (): Promise<void> => {
-    if (process.client && !zenohModule) {
-      try {
-        zenohModule = await import('@eclipse-zenoh/zenoh-ts')
-      } catch (error) {
-        console.error('Failed to load Zenoh module:', error)
-        addLogEntry('error', `Failed to load Zenoh module: ${error}`)
-      }
-    }
-  }
 
   // Methods
   function addLogEntry(type: LogEntry['type'], message: string): void {
@@ -96,19 +84,12 @@ export function useZenoh(): ZenohState & ZenohOperations {
   async function connect(): Promise<void> {
     if (isConnecting.value || isConnected.value || !process.client) return
     
-    await initializeZenoh()
-    
-    if (!zenohModule) {
-      addLogEntry('error', 'Zenoh module not available')
-      return
-    }
-    
     isConnecting.value = true
     addLogEntry('info', `Attempting to connect to ${serverUrl.value}`)
     
     try {
-      const config = new zenohModule.Config(serverUrl.value)
-      zenohSession = await zenohModule.Session.open(config)
+      const config = new Config(serverUrl.value)
+      zenohSession = await Session.open(config)
       isConnected.value = true
       addLogEntry('success', `Successfully connected to ${serverUrl.value}`)
     } catch (error) {
@@ -141,11 +122,11 @@ export function useZenoh(): ZenohState & ZenohOperations {
   }
 
   async function performPut(): Promise<void> {
-    if (!zenohSession || !putKey.value || !putValue.value || !process.client || !zenohModule) return
+    if (!zenohSession || !putKey.value || !putValue.value || !process.client) return
     
     try {
-      const keyExpr = new zenohModule.KeyExpr(putKey.value)
-      const bytes = new zenohModule.ZBytes(putValue.value)
+      const keyExpr = new KeyExpr(putKey.value)
+      const bytes = new ZBytes(putValue.value)
       await zenohSession.put(keyExpr, bytes)
       addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`)
     } catch (error) {
@@ -200,7 +181,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
   }
 
   async function toggleSubscribe(): Promise<void> {
-    if (!zenohSession || !subscribeKey.value || !process.client || !zenohModule) return
+    if (!zenohSession || !subscribeKey.value || !process.client) return
     
     if (isSubscribed.value && subscriber) {
       // Unsubscribe
@@ -215,7 +196,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
     } else {
       // Subscribe
       try {
-        const keyExpr = new zenohModule.KeyExpr(subscribeKey.value)
+        const keyExpr = new KeyExpr(subscribeKey.value)
         
         subscriber = await zenohSession.declareSubscriber(keyExpr)
         isSubscribed.value = true

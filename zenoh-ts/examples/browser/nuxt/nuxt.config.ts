@@ -5,7 +5,8 @@ import topLevelAwait from 'vite-plugin-top-level-await'
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
-  ssr: false, // Disable SSR to avoid WASM issues on server side
+  // SSR can be enabled, but we'll use client-only rendering for Zenoh components
+  ssr: true,
   typescript: {
     typeCheck: true,
     strict: true
@@ -19,11 +20,22 @@ export default defineNuxtConfig({
       fs: {
         allow: ['..']
       }
+    },
+    // Exclude Zenoh from SSR bundling
+    ssr: {
+      noExternal: []
+    },
+    optimizeDeps: {
+      exclude: ['@eclipse-zenoh/zenoh-ts']
     }
   },
   nitro: {
     experimental: {
       wasm: true
     }
+  },
+  // Build configuration for better WASM support
+  build: {
+    transpile: []
   }
 })
