@@ -232,13 +232,8 @@ async function performPut() {
   if (!zenohSession || !putKey.value || !putValue.value || !process.client || !KeyExpr || !ZBytes) return;
   
   try {
-    const keyExpr = KeyExpr.tryFrom(putKey.value);
-    if (!keyExpr) {
-      addLogEntry('error', `Invalid key expression: ${putKey.value}`);
-      return;
-    }
-    
-    const bytes = ZBytes.from(putValue.value);
+    const keyExpr = new KeyExpr(putKey.value);
+    const bytes = new ZBytes(putValue.value);
     await zenohSession.put(keyExpr, bytes);
     addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`);
   } catch (error) {
@@ -293,11 +288,7 @@ async function toggleSubscribe() {
   } else {
     // Subscribe
     try {
-      const keyExpr = KeyExpr.tryFrom(subscribeKey.value);
-      if (!keyExpr) {
-        addLogEntry('error', `Invalid key expression: ${subscribeKey.value}`);
-        return;
-      }
+      const keyExpr = new KeyExpr(subscribeKey.value);
       
       subscriber = await zenohSession.subscribe(keyExpr);
       isSubscribed.value = true;
