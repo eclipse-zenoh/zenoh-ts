@@ -13,7 +13,7 @@ import {
   Priority,
   CongestionControl,
   Reliability,
-  Locality
+  Locality,
 } from '@eclipse-zenoh/zenoh-ts'
 import type { PutOptions } from '@eclipse-zenoh/zenoh-ts'
 
@@ -35,13 +35,44 @@ export interface SubscriberInfo {
 // Put options state interface
 export interface PutOptionsState {
   showOptions: boolean
-  encoding: string
-  priority: Priority
-  congestionControl: CongestionControl
-  express: boolean
-  reliability: Reliability
-  allowedDestination: Locality
-  attachment: string
+  encoding?: string
+  priority?: Priority
+  congestionControl?: CongestionControl
+  express?: boolean
+  reliability?: Reliability
+  allowedDestination?: Locality
+  attachment?: string
+}
+
+export function putOptionsStateFrom(options: PutOptions): PutOptionsState {
+  return {
+    showOptions: false,
+    encoding: options.encoding ? options.encoding.toString() : Encoding.default().toString(),
+    priority: options.priority || Priority.DEFAULT,
+    congestionControl: options.congestionControl || CongestionControl.DEFAULT_PUSH,
+    express: options.express || false,
+    reliability: options.reliability || Reliability.DEFAULT,
+    allowedDestination: options.allowedDestination || Locality.DEFAULT,
+    attachment: options.attachment ? options.attachment.toString() : '',
+  }
+}
+
+export function putOptionsStateDefault(): PutOptionsState {
+    return putOptionsStateFrom({});
+}
+
+export function putOptionsStateTo(options: PutOptionsState): PutOptions {
+    let opts: PutOptions = {};
+    if (options.encoding) { opts.encoding = Encoding.fromString(options.encoding); }
+    if (options.priority) { opts.priority = options.priority; }
+    if (options.congestionControl) { opts.congestionControl = options.congestionControl; }
+    if (options.express) { opts.express = options.express; }
+    if (options.reliability) { opts.reliability = options.reliability; }
+    if (options.allowedDestination) { opts.allowedDestination = options.allowedDestination; }
+    if (options.attachment) {
+        opts.attachment = new ZBytes(options.attachment);
+    }
+    return opts;
 }
 
 // Zenoh session state
@@ -83,16 +114,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
   const putValue = ref('Hello Zenoh!')
   
   // PUT options
-  const putOptions = ref<PutOptionsState>({
-    showOptions: false,
-    encoding: 'text/plain',
-    priority: Priority.DATA,
-    congestionControl: CongestionControl.DROP,
-    express: false,
-    reliability: Reliability.RELIABLE,
-    allowedDestination: Locality.ANY,
-    attachment: ''
-  })
+  const putOptions = ref<PutOptionsState>(putOptionsStateDefault())
   
   const getKey = ref('demo/example/*')
   const subscribeKey = ref('demo/example/**')
@@ -167,37 +189,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
       const bytes = new ZBytes(putValue.value)
       
       // Build put options
-      const options: PutOptions = {}
-      
-      // Only set options if they differ from defaults or are explicitly set
-      if (putOptions.value.encoding && putOptions.value.encoding !== 'text/plain') {
-        options.encoding = Encoding.fromString(putOptions.value.encoding)
-      }
-      
-      if (putOptions.value.priority !== Priority.DATA) {
-        options.priority = putOptions.value.priority
-      }
-      
-      if (putOptions.value.congestionControl !== CongestionControl.DROP) {
-        options.congestionControl = putOptions.value.congestionControl
-      }
-      
-      if (putOptions.value.express) {
-        options.express = putOptions.value.express
-      }
-      
-      if (putOptions.value.reliability !== Reliability.RELIABLE) {
-        options.reliability = putOptions.value.reliability
-      }
-      
-      if (putOptions.value.allowedDestination !== Locality.ANY) {
-        options.allowedDestinaton = putOptions.value.allowedDestination // Note: API has typo "allowedDestinaton"
-      }
-      
-      if (putOptions.value.attachment && putOptions.value.attachment.trim()) {
-        options.attachment = new ZBytes(putOptions.value.attachment)
-      }
-      
+      const options = putOptionsStateTo(putOptions.value);
       await zenohSession.put(keyExpr, bytes, options)
       addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`)
     } catch (error) {

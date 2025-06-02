@@ -54,7 +54,7 @@ export interface PutOptions {
     priority?: Priority,
     express?: boolean,
     reliability?: Reliability,
-    allowedDestinaton?: Locality,
+    allowedDestination?: Locality,
     attachment?: IntoZBytes
     timestamp?: Timestamp,
 }
@@ -74,7 +74,7 @@ export interface DeleteOptions {
     priority?: Priority,
     express?: boolean,
     reliability?: Reliability,
-    allowedDestinaton?: Locality,
+    allowedDestination?: Locality,
     attachment?: IntoZBytes
     timestamp?: Timestamp
 }
@@ -98,7 +98,7 @@ export interface GetOptions {
     congestionControl?: CongestionControl,
     priority?: Priority,
     express?: boolean,
-    allowedDestinaton?: Locality,
+    allowedDestination?: Locality,
     encoding?: IntoEncoding,
     payload?: IntoZBytes,
     attachment?: IntoZBytes
@@ -242,7 +242,7 @@ export class Session {
                     putOpts?.congestionControl ?? CongestionControl.DEFAULT_PUSH,
                     putOpts?.express ?? false,
                     putOpts?.reliability ?? Reliability.DEFAULT,
-                    putOpts?.allowedDestinaton ?? Locality.DEFAULT
+                    putOpts?.allowedDestination ?? Locality.DEFAULT
                 )
             )
         );
@@ -288,7 +288,7 @@ export class Session {
                     deleteOpts?.congestionControl ?? CongestionControl.DEFAULT_PUSH,
                     deleteOpts?.express ?? false,
                     deleteOpts?.reliability ?? Reliability.DEFAULT,
-                    deleteOpts?.allowedDestinaton ?? Locality.DEFAULT
+                    deleteOpts?.allowedDestination ?? Locality.DEFAULT
                 )
             )
         );
@@ -321,7 +321,7 @@ export class Session {
                     getOpts?.congestionControl ?? CongestionControl.DEFAULT_REQUEST,
                     getOpts?.express ?? false,
                     Reliability.DEFAULT,
-                    getOpts?.allowedDestinaton ?? Locality.DEFAULT
+                    getOpts?.allowedDestination ?? Locality.DEFAULT
                 ),
                 querySettings: new QuerySettings(
                     getOpts?.target ?? QueryTarget.DEFAULT,
