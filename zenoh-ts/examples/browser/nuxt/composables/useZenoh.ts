@@ -7,7 +7,6 @@ import {
   KeyExpr,
   ZBytes,
   Sample,
-  Subscriber,
   Reply,
   ReplyError
 } from '@eclipse-zenoh/zenoh-ts'
@@ -19,17 +18,25 @@ export interface LogEntry {
   message: string
 }
 
+// Subscriber info interface
+export interface SubscriberInfo {
+  id: string
+  keyExpr: string
+  subscriber: any // Use any type to avoid strict type checking issues
+  createdAt: Date
+}
+
 // Zenoh session state
 export interface ZenohState {
   serverUrl: Ref<string>
   isConnected: Ref<boolean>
   isConnecting: Ref<boolean>
-  isSubscribed: Ref<boolean>
   putKey: Ref<string>
   putValue: Ref<string>
   getKey: Ref<string>
   subscribeKey: Ref<string>
   logEntries: Ref<LogEntry[]>
+  activeSubscribers: Ref<SubscriberInfo[]>
 }
 
 // Zenoh operations interface
@@ -38,7 +45,9 @@ export interface ZenohOperations {
   disconnect: () => Promise<void>
   performPut: () => Promise<void>
   performGet: () => Promise<void>
-  toggleSubscribe: () => Promise<void>
+  subscribe: () => Promise<void>
+  unsubscribe: (subscriberId: string) => Promise<void>
+  unsubscribeAll: () => Promise<void>
   addLogEntry: (type: LogEntry['type'], message: string) => void
   formatTime: (date: Date) => string
   clearLog: () => void
@@ -49,7 +58,6 @@ export function useZenoh(): ZenohState & ZenohOperations {
   const serverUrl = ref('ws://localhost:10000')
   const isConnected = ref(false)
   const isConnecting = ref(false)
-  const isSubscribed = ref(false)
 
   // Operation inputs
   const putKey = ref('demo/example/test')
@@ -60,9 +68,11 @@ export function useZenoh(): ZenohState & ZenohOperations {
   // Log entries
   const logEntries = ref<LogEntry[]>([])
 
+  // Active subscribers
+  const activeSubscribers = ref<SubscriberInfo[]>([])
+
   // Zenoh objects
   let zenohSession: Session | null = null
-  let subscriber: Subscriber | null = null
 
   // Methods
   function addLogEntry(type: LogEntry['type'], message: string): void {
@@ -104,13 +114,8 @@ export function useZenoh(): ZenohState & ZenohOperations {
     if (!zenohSession) return
     
     try {
-      // Unsubscribe if active
-      if (subscriber) {
-        await subscriber.undeclare()
-        subscriber = null
-        isSubscribed.value = false
-        addLogEntry('info', 'Unsubscribed from all subscriptions')
-      }
+      // Unsubscribe from all active subscriptions
+      await unsubscribeAll()
       
       await zenohSession.close()
       zenohSession = null
@@ -180,69 +185,111 @@ export function useZenoh(): ZenohState & ZenohOperations {
     }
   }
 
-  async function toggleSubscribe(): Promise<void> {
+  async function subscribe(): Promise<void> {
     if (!zenohSession || !subscribeKey.value || !process.client) return
     
-    if (isSubscribed.value && subscriber) {
-      // Unsubscribe
-      try {
-        await subscriber.undeclare()
-        subscriber = null
-        isSubscribed.value = false
-        addLogEntry('success', `Unsubscribed from ${subscribeKey.value}`)
-      } catch (error) {
-        addLogEntry('error', `Unsubscribe failed: ${error}`)
+    // Check if already subscribed to this key expression
+    const existingSubscriber = activeSubscribers.value.find(sub => sub.keyExpr === subscribeKey.value)
+    if (existingSubscriber) {
+      addLogEntry('info', `Already subscribed to ${subscribeKey.value}`)
+      return
+    }
+
+    try {
+      const keyExpr = new KeyExpr(subscribeKey.value)
+      const subscriber = await zenohSession.declareSubscriber(keyExpr)
+      
+      // Generate unique ID for this subscriber
+      const subscriberId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      const subscriberInfo: SubscriberInfo = {
+        id: subscriberId,
+        keyExpr: subscribeKey.value,
+        subscriber,
+        createdAt: new Date()
       }
-    } else {
-      // Subscribe
-      try {
-        const keyExpr = new KeyExpr(subscribeKey.value)
+      
+      activeSubscribers.value.push(subscriberInfo)
+      addLogEntry('success', `Subscribed to ${subscribeKey.value} (ID: ${subscriberId})`)
+      
+      // Handle incoming data
+      ;(async () => {
+        const receiver = subscriber.receiver()
+        if (!receiver) return
         
-        subscriber = await zenohSession.declareSubscriber(keyExpr)
-        isSubscribed.value = true
-        addLogEntry('success', `Subscribed to ${subscribeKey.value}`)
-        
-        // Handle incoming data
-        ;(async () => {
-          if (!subscriber) return
+        while (true) {
+          const sample: Sample | null = await receiver.receive()
+          if (!sample) break
           
-          const receiver = subscriber.receiver()
-          if (!receiver) return
-          
-          while (true) {
-            const sample: Sample | null = await receiver.receive()
-            if (!sample) break
+          try {
+            const keyStr = sample.keyexpr().toString()
+            const valueStr = sample.payload().toString()
+            const kind = sample.kind()
             
-            try {
-              const keyStr = sample.keyexpr().toString()
-              const valueStr = sample.payload().toString()
-              const kind = sample.kind()
-              
-              // Map SampleKind enum values to readable strings
-              let kindStr: string
-              switch (kind) {
-                case 0: // SampleKind.PUT
-                  kindStr = 'PUT'
-                  break
-                case 1: // SampleKind.DELETE
-                  kindStr = 'DELETE'
-                  break
-                default:
-                  kindStr = 'UNKNOWN'
-              }
-              
-              addLogEntry('data', `SUBSCRIPTION [${kindStr}]: ${keyStr} = "${valueStr}"`)
-            } catch (sampleError) {
-              addLogEntry('error', `Error processing subscription sample: ${sampleError}`)
+            // Map SampleKind enum values to readable strings
+            let kindStr: string
+            switch (kind) {
+              case 0: // SampleKind.PUT
+                kindStr = 'PUT'
+                break
+              case 1: // SampleKind.DELETE
+                kindStr = 'DELETE'
+                break
+              default:
+                kindStr = 'UNKNOWN'
             }
+            
+            addLogEntry('data', `SUBSCRIPTION [${subscriberId}] [${kindStr}]: ${keyStr} = "${valueStr}"`)
+          } catch (sampleError) {
+            addLogEntry('error', `Error processing subscription sample: ${sampleError}`)
           }
-        })().catch(error => {
-          addLogEntry('error', `Subscription error: ${error}`)
-        })
+        }
+      })().catch(error => {
+        addLogEntry('error', `Subscription error for ${subscriberId}: ${error}`)
+        // Remove the subscriber from the list if it errors out
+        unsubscribe(subscriberId)
+      })
+    } catch (error) {
+      addLogEntry('error', `Subscribe failed: ${error}`)
+    }
+  }
+
+  async function unsubscribe(subscriberId: string): Promise<void> {
+    const subscriberIndex = activeSubscribers.value.findIndex(sub => sub.id === subscriberId)
+    if (subscriberIndex === -1) {
+      addLogEntry('error', `Subscriber ${subscriberId} not found`)
+      return
+    }
+
+    const subscriberInfo = activeSubscribers.value[subscriberIndex]
+    if (!subscriberInfo) {
+      addLogEntry('error', `Subscriber info for ${subscriberId} is invalid`)
+      return
+    }
+    
+    try {
+      await subscriberInfo.subscriber.undeclare()
+      activeSubscribers.value.splice(subscriberIndex, 1)
+      addLogEntry('success', `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberId})`)
+    } catch (error) {
+      addLogEntry('error', `Unsubscribe failed for ${subscriberId}: ${error}`)
+    }
+  }
+
+  async function unsubscribeAll(): Promise<void> {
+    const subscribersToRemove = [...activeSubscribers.value]
+    
+    for (const subscriberInfo of subscribersToRemove) {
+      try {
+        await subscriberInfo.subscriber.undeclare()
+        addLogEntry('info', `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberInfo.id})`)
       } catch (error) {
-        addLogEntry('error', `Subscribe failed: ${error}`)
+        addLogEntry('error', `Error unsubscribing from ${subscriberInfo.id}: ${error}`)
       }
     }
+    
+    activeSubscribers.value = []
+    addLogEntry('success', 'All subscriptions cleared')
   }
 
   // Cleanup function
@@ -269,19 +316,21 @@ export function useZenoh(): ZenohState & ZenohOperations {
     serverUrl,
     isConnected,
     isConnecting,
-    isSubscribed,
     putKey,
     putValue,
     getKey,
     subscribeKey,
     logEntries,
+    activeSubscribers,
     
     // Operations
     connect,
     disconnect,
     performPut,
     performGet,
-    toggleSubscribe,
+    subscribe,
+    unsubscribe,
+    unsubscribeAll,
     addLogEntry,
     formatTime,
     clearLog

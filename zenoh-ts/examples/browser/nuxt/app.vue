@@ -95,9 +95,37 @@
               placeholder="Key expression (e.g., demo/example/**)"
               :disabled="!isConnected"
             >
-            <button @click="toggleSubscribe" :disabled="!isConnected || !subscribeKey">
-              {{ isSubscribed ? 'Unsubscribe' : 'Subscribe' }}
+            <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
+              Subscribe
             </button>
+          </div>
+          
+          <!-- Active Subscribers List -->
+          <div v-if="activeSubscribers.length > 0" class="subscribers-list">
+            <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
+            <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.id">
+              <div class="subscriber-info">
+                <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
+                <span class="subscriber-id">ID: {{ subscriber.id }}</span>
+                <span class="subscriber-time">Since: {{ formatTime(subscriber.createdAt) }}</span>
+              </div>
+              <button 
+                @click="unsubscribe(subscriber.id)" 
+                class="unsubscribe-btn"
+                :disabled="!isConnected"
+              >
+                Unsubscribe
+              </button>
+            </div>
+            <div class="subscribers-actions">
+              <button 
+                @click="unsubscribeAll" 
+                class="unsubscribe-all-btn"
+                :disabled="!isConnected"
+              >
+                Unsubscribe All
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -145,19 +173,21 @@ const {
   serverUrl,
   isConnected,
   isConnecting,
-  isSubscribed,
   putKey,
   putValue,
   getKey,
   subscribeKey,
   logEntries,
+  activeSubscribers,
   
   // Operations
   connect,
   disconnect,
   performPut,
   performGet,
-  toggleSubscribe,
+  subscribe,
+  unsubscribe,
+  unsubscribeAll,
   formatTime,
   clearLog
 } = useZenoh()
@@ -356,6 +386,106 @@ watch(logEntries, () => {
 }
 
 .input-row button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.subscribers-list {
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.subscribers-list h5 {
+  margin: 0 0 10px 0;
+  color: #555;
+  font-size: 14px;
+}
+
+.subscriber-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  background-color: white;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.subscriber-item:last-child {
+  margin-bottom: 0;
+}
+
+.subscriber-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.subscriber-key {
+  font-weight: bold;
+  color: #333;
+  font-size: 13px;
+}
+
+.subscriber-id {
+  font-size: 11px;
+  color: #666;
+  font-family: 'Courier New', monospace;
+}
+
+.subscriber-time {
+  font-size: 11px;
+  color: #888;
+}
+
+.unsubscribe-btn {
+  padding: 4px 8px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.unsubscribe-btn:hover:not(:disabled) {
+  background-color: #da190b;
+}
+
+.unsubscribe-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.subscribers-actions {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.unsubscribe-all-btn {
+  padding: 6px 12px;
+  background-color: #ff5722;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.unsubscribe-all-btn:hover:not(:disabled) {
+  background-color: #e64a19;
+}
+
+.unsubscribe-all-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
