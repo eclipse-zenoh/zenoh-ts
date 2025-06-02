@@ -73,6 +73,7 @@ uuid = { workspace=true, default-features = false, features = [
     "serde",
 ] }
 uhlc = { workspace=true, default-features = false } # Default features are disabled due to usage in no_std crates
+lru = { workspace = true }
 
 [build-dependencies]
 rustc_version = "0.4.0"

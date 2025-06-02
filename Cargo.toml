@@ -31,6 +31,7 @@ ts-rs = { version = "9.0", features = [
     "no-serde-warnings",
     "import-esm",
 ] }
+lru = "0.14.0"
 tracing = "0.1"
 schemars = { version = "0.8.21", features = ["either"] }
 serde = { version = "1.0.210", default-features = false, features = [

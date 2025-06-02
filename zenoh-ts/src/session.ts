@@ -11,144 +11,164 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-// Remote API interface
-import {
-  RemoteSession,
-  TimestampIface as TimestampIface,
-} from "./remote_api/session.js";
-import { ReplyWS } from "./remote_api/interface/ReplyWS.js";
-import { RemotePublisher, RemoteSubscriber } from "./remote_api/pubsub.js";
-import { SampleWS } from "./remote_api/interface/SampleWS.js";
-import { QueryWS } from "./remote_api/interface/QueryWS.js";
-// API interface
 import { IntoKeyExpr, KeyExpr } from "./key_expr.js";
 import { IntoZBytes, ZBytes } from "./z_bytes.js";
 import { Liveliness } from "./liveliness.js";
 import {
-  IntoSelector,
-  Parameters,
-  Query,
-  queryFromQueryWS,
-  Queryable,
-  Reply,
-  replyFromReplyWS,
-  Selector,
+    IntoSelector,
+    Query,
+    Queryable,
+    Reply,
+    Selector,
 } from "./query.js";
 import { Publisher, Subscriber } from "./pubsub.js";
-import {
-  priorityToInt,
-  congestionControlToInt,
-  CongestionControl,
-  Priority,
-  Sample,
-  sampleFromSampleWS,
-  consolidationModeToInt,
-  ConsolidationMode,
-  Reliability,
-  reliabilityToInt,
-} from "./sample.js";
 import { Config } from "./config.js";
-import { Encoding } from "./encoding.js";
-import { SessionInfo as SessionInfoIface } from "./remote_api/interface/SessionInfo.js";
+import { Encoding, IntoEncoding } from "./encoding.js";
 // External deps
 import { Duration, TimeDuration } from 'typed-duration'
-import { localityToInt, Querier, QuerierOptions, queryTargetToInt, QueryTarget, replyKeyExprToInt, ReplyKeyExpr } from "./querier.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./remote_api/channels.js";
+import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./channels.js";
+import { ZenohId } from "./zid.js";
+import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr } from "./enums.js";
+import { Sample } from "./sample.js";
+import { SessionInner } from "./session_inner.js";
+import { Delete, Put, Qos, QuerierProperties, QuerySettings } from "./message.js";
+import { Querier } from "./querier.js";
 
+export const DEFAULT_QUERY_TIMEOUT_MS = 10000;
 /**
- * Options for a Put function 
- * @prop {Encoding=} encoding - encoding type 
- * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
- * @prop {Priority=} priority - priority of the written data
- * @prop {boolean=} express  - express 
- * @prop {IntoZBytes=} attachment - Additional Data sent with the request
+ * Options for a Put operation 
+ * @prop {Encoding=} encoding - Encoding type 
+ * @prop {CongestionControl=} congestionControl - Congestion control applied when routing the data
+ * @prop {Priority=} priority - Priority of the written data
+ * @prop {boolean=} express  - Express: if set to `true`, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
+ * @prop {Reliability=} reliability  - Reliability to apply to data transport,
+ * @prop {Locality=} allowedDestination - Allowed destination for the data, 
+ * @prop {IntoZBytes=} attachment - Additional Data to send with the request
  * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 
 export interface PutOptions {
-  encoding?: Encoding,
-  congestionControl?: CongestionControl,
-  priority?: Priority,
-  express?: boolean,
-  attachment?: IntoZBytes
-  timestamp?: Timestamp,
+    encoding?: IntoEncoding,
+    congestionControl?: CongestionControl,
+    priority?: Priority,
+    express?: boolean,
+    reliability?: Reliability,
+    allowedDestinaton?: Locality,
+    attachment?: IntoZBytes
+    timestamp?: Timestamp,
 }
 
 /**
- * Options for a Delete function 
- * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
- * @prop {Priority=} priority - priority of the written data
- * @prop {boolean=} express  - Express 
+ * Options for a Delete operation 
+ * @prop {CongestionControl=} congestion_control - Congestion control applied when routing the data
+ * @prop {Priority=} priority - Prriority of the written data
+ * @prop {boolean=} express  - Express: if set to `true`, this message will not be batched. This usually has a positive impact on latency but negative impact on throughput.
+ * @prop {Reliability=} reliability  - Reliability to apply to data transport
+ * @prop {Locality=} allowedDestination - Allowed destination for the data
  * @prop {IntoZBytes=} attachment - Additional Data sent with the request
  * @prop {Timestamp=} timestamp - Timestamp of the message
 */
 export interface DeleteOptions {
-  congestionControl?: CongestionControl,
-  priority?: Priority,
-  express?: boolean,
-  attachment?: IntoZBytes
-  timestamp?: Timestamp
+    congestionControl?: CongestionControl,
+    priority?: Priority,
+    express?: boolean,
+    reliability?: Reliability,
+    allowedDestinaton?: Locality,
+    attachment?: IntoZBytes
+    timestamp?: Timestamp
 }
 
 /**
- * Options for a Get function 
- * @prop {ConsolidationMode=} consolidation - consolidation mode
- * @prop {CongestionControl=} congestion_control - congestion_control applied when routing the data
- * @prop {Priority=} priority - priority of the written data
- * @prop {boolean=} express  - Express 
- * @prop {Encoding=} encoding - Encoding type of payload 
- * @prop {IntoZBytes=} payload - Payload associated with getrequest
- * @prop {IntoZBytes=} attachment - Additional Data sent with the request
- * @prop {TimeDuration=} timeout - Timeout value for a get request
- * @prop {Handler<Reply>} handler - A reply handler
+ * Options for a Get operation 
+ * @prop {CongestionControl=} congestion_control - Congestion control applied when routing the data
+ * @prop {Priority=} priority - Priority of the query
+ * @prop {boolean=} express  - Express: if set to `true`, this query will not be batched. This usually has a positive impact on latency but negative impact on throughput.
+ * @prop {Locality=} allowedDestination - Allowed destination for the query 
+ * @prop {IntoEncoding=} encoding - Encoding type of payload 
+ * @prop {IntoZBytes=} payload - Payload associated with the query
+ * @prop {IntoZBytes=} attachment - Additional Data sent with the query
+ * @prop {TimeDuration=} timeout - Timeout value for a query
+ * @prop {ConsolidationMode=} consolidation - Consolidation mode
+ * @prop {QueryTarget=} target - Queryables this query should target
+ * @prop {ReplyKeyExpr=} acceptReplies - Replies this query accepts
+ * @prop {Handler<Reply>=} handler - A reply handler
 */
 export interface GetOptions {
-  consolidation?: ConsolidationMode,
-  congestionControl?: CongestionControl,
-  priority?: Priority,
-  express?: boolean,
-  encoding?: Encoding,
-  payload?: IntoZBytes,
-  attachment?: IntoZBytes
-  timeout?: TimeDuration,
-  target?: QueryTarget,
-  handler?: Handler<Reply>,
+    congestionControl?: CongestionControl,
+    priority?: Priority,
+    express?: boolean,
+    allowedDestinaton?: Locality,
+    encoding?: IntoEncoding,
+    payload?: IntoZBytes,
+    attachment?: IntoZBytes
+    timeout?: TimeDuration,
+    target?: QueryTarget,
+    consolidation?: ConsolidationMode,
+    acceptReplies?: ReplyKeyExpr,
+    handler?: Handler<Reply>,
 }
 
 /**
  * Options for a Queryable
- * @prop complete - Change queryable completeness.
- * @prop callback - Callback function for this queryable
+ * @prop {boolean?} complete - Queryable completness.
+ * @prop {Locality=} allowedOrigin - Origin of queries, this queryable should reply to 
+ * @prop {Handler<Query>=} handler - A query handler
 */
 export interface QueryableOptions {
-  complete?: boolean,
-  handler?: Handler<Query>
+    complete?: boolean,
+    allowedOrigin?: Locality,
+    handler?: Handler<Query>
 }
 
 /**
- *  Set of options used when declaring a publisher
- * @prop {Encoding} encoding - Optional, Type of Encoding data to be sent over
- * @prop {CongestionControl} congestion_control - Optional, Type of Congestion control to be used (BLOCK / DROP)
- * @prop {Priority} priority - Optional, The Priority of zenoh messages
- * @prop {boolean} express - Optional, The Priority of zenoh messages
- * @prop {Reliability} reliability - Optional, The Priority of zenoh messages : Note This is unstable in Zenoh
+ * Options for a Publisher
+ * @prop {Encoding=} encoding - Default publisher encoding, that will be applied if no encoding is specified when sending individual messages.
+ * @prop {CongestionControl=} congestionControl - Congestion control to be applied to messages sent with this publisher
+ * @prop {Priority=} priority - The Priority of messages sent with this publisher
+ * @prop {boolean=} express - Express setting for messages sent with this publisher. If set to `true`, the messages will not be batched. This usually has a positive impact on latency but negative impact on throughput.
+ * @prop {Reliability=} reliability - Reliability of messages sent with this publisher
+ * @prop {Locality=} allowedDestination - Allowed destination for the messages sent with this publisher
  */
 export interface PublisherOptions {
-  encoding?: Encoding,
-  congestionControl?: CongestionControl,
-  priority?: Priority,
-  express?: boolean,
-  // Note realiability is unstable in Zenoh
-  reliability?: Reliability,
+    encoding?: IntoEncoding,
+    congestionControl?: CongestionControl,
+    priority?: Priority,
+    express?: boolean,
+    reliability?: Reliability,
+    allowedDestination?: Locality
 }
 
 /**
  * Options for a Subscriber
- * @prop handler - Handler for this subscriber
+ * @prop {Locality=} allowedOrigin - Origin of messages this subscriber can receive
+ * @prop {Handler<Sample=>} handler - Handler for this subscriber
  */
 export interface SubscriberOptions {
-  handler?: Handler<Sample>,
+    allowedOrigin?: Locality,
+    handler?: Handler<Sample>,
+}
+
+/**
+ * Options for a Querier
+ * @prop {CongestionControl=} congestion_control - Congestion control applied when routing this Querier queries
+ * @prop {Priority=} priority - Priority of this Querier's queries
+ * @prop {boolean=} express  - Express: If set to `true`, this query will not be batched. This usually has a positive impact on latency but negative impact on throughput.
+ * @prop {Locality=} allowedDestination - Allowed destination for this Querier queries 
+ * @prop {TimeDuration=} timeout - Timeout value for this Querier queries
+ * @prop {QueryTarget=} target - Queryables this Querier queries should target
+ * @prop {ConsolidationMode=} consolidation - Consolidation mode for this Querier queries
+ * @prop {ReplyKeyExpr=} acceptReplies - Replies this Querier queries accept
+ */
+export interface QuerierOptions {
+    congestionControl?: CongestionControl,
+    priority?: Priority,
+    express?: boolean,
+    consolidation?: ConsolidationMode,
+    target: QueryTarget
+    timeout?: TimeDuration,
+    allowedDestination?: Locality
+    acceptReplies?: ReplyKeyExpr
 }
 
 // ███████ ███████ ███████ ███████ ██  ██████  ███    ██
@@ -161,503 +181,325 @@ export interface SubscriberOptions {
  * Zenoh Session
  */
 export class Session {
-  async [Symbol.asyncDispose]() {
-    await this.close();
-  }
-
-  private constructor(
-    // WebSocket Backend
-    private remoteSession: RemoteSession
-  ) {}
-
-  /**
-   * Creates a new Session instance
-   *
-   * @remarks
-   *  Opens A Zenoh Session
-   *
-   * @param config - Config for session
-   * @returns Typescript instance of a Session
-   *
-   */
-
-  static async open(config: Config): Promise<Session> {
-    let remoteSession = await RemoteSession.new(config.locator);
-    return new Session(remoteSession);
-  }
-
-  /**
-   * Closes a session, cleaning up the resource in Zenoh
-   *
-   * @returns Nothing
-   */
-  async close() {
-    this.remoteSession.close();
-  }
-
-  isClosed() {
-    return this.remoteSession.isClosed();
-  }
-  /**
-   * Puts a value on the session, on a specific key expression KeyExpr
-   *
-   * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
-   * @param {IntoZBytes} intoZBytes - something that implements intoValue
-   * @param {PutOptions=} putOpts - an interface for the options settings on puts 
-   * @returns void
-   */
-  put(
-    intoKeyExpr: IntoKeyExpr,
-    intoZBytes: IntoZBytes,
-    putOpts?: PutOptions,
-  ): void {
-    let keyExpr = new KeyExpr(intoKeyExpr);
-    let zBytes = new ZBytes(intoZBytes);
-
-    let priority;
-    let express;
-    let attachment;
-    let encoding = putOpts?.encoding?.toString()
-    let congestionControl = congestionControlToInt(putOpts?.congestionControl);
-    let timestamp;
-
-    if (putOpts?.timestamp != undefined) {
-      timestamp = putOpts?.timestamp.getResourceUuid() as string;
-    }
-    if (putOpts?.priority != undefined) {
-      priority = priorityToInt(putOpts?.priority);
-    }
-    express = putOpts?.express?.valueOf();
-
-    if (putOpts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(putOpts?.attachment).toBytes())
+    async [Symbol.asyncDispose]() {
+        await this.close();
     }
 
-    this.remoteSession.put(
-      keyExpr.toString(),
-      Array.from(zBytes.toBytes()),
-      encoding,
-      congestionControl,
-      priority,
-      express,
-      attachment,
-      timestamp,
-    );
-  }
+    private constructor(
+        private inner: SessionInner
+    ) { }
 
-  /**
-   * Creates a Key Expression
-   *
-   * @returns KeyExpr
-   */
-  declareKeyexpr(intoKeyExpr: IntoKeyExpr): KeyExpr {
-    return new KeyExpr(intoKeyExpr)
-  }
+    /**
+     * Creates a new Session instance
+     *
+     * @remarks
+     *  Opens A Zenoh Session
+     *
+     * @param config - Config for session
+     * @returns Typescript instance of a Session
+     *
+     */
 
-  /**
-   * Returns the Zenoh SessionInfo Object
-   *
-   * @returns SessionInfo
-   */
-  async info(): Promise<SessionInfo> {
-    let sessionInfoIface: SessionInfoIface = await this.remoteSession.info();
-
-    let zid = new ZenohId(sessionInfoIface.zid);
-    let zPeers = sessionInfoIface.z_peers.map(x => new ZenohId(x));
-    let zRouters = sessionInfoIface.z_routers.map(x => new ZenohId(x));
-
-    let sessionInfo = new SessionInfo(zid, zPeers, zRouters);
-
-    return sessionInfo;
-  }
-
-  /**
-   * Executes a Delete on a session, for a specific key expression KeyExpr
-   *
-   * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
-   * @param {DeleteOptions} deleteOpts - optional additional parameters to go with a delete function
-   *
-   * @returns void
-   */
-  delete(
-    intoKeyExpr: IntoKeyExpr,
-    deleteOpts?: DeleteOptions
-  ): void {
-    let keyExpr = new KeyExpr(intoKeyExpr);
-    let congestionControl = congestionControlToInt(deleteOpts?.congestionControl);
-    let priority = priorityToInt(deleteOpts?.priority);
-    let express = deleteOpts?.express;
-    let attachment;
-    let timestamp;
-
-    if (deleteOpts?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(deleteOpts?.attachment).toBytes())
+    static async open(config: Config): Promise<Session> {
+        let inner = await SessionInner.open(config.locator, config.messageResponseTimeoutMs);
+        return new Session(inner);
     }
 
-    if (deleteOpts?.timestamp != undefined) {
-      timestamp = deleteOpts?.timestamp.getResourceUuid() as string;
+    /**
+     * Closes a session, cleaning up the resource in Zenoh
+     *
+     * @returns Nothing
+     */
+    async close() {
+        this.inner.close();
     }
 
-    this.remoteSession.delete(
-      keyExpr.toString(),
-      congestionControl,
-      priority,
-      express,
-      attachment,
-      timestamp
-    );
-  }
-
-  /**
-   * Issues a get query on a Zenoh session
-   *
-   * @param intoSelector - representing a KeyExpr and Parameters
-   *
-   * @returns Receiver
-   */
-  async get(
-    intoSelector: IntoSelector,
-    getOptions?: GetOptions
-  ): Promise<ChannelReceiver<Reply> | undefined> {
-
-    let selector: Selector;
-    let keyExpr: KeyExpr;
-
-    if (typeof intoSelector === "string" || intoSelector instanceof String) {
-      let splitString = intoSelector.split("?")
-      if (splitString.length == 1) {
-        keyExpr = new KeyExpr(intoSelector);
-        selector = new Selector(keyExpr);
-      } else if (splitString.length == 2 && splitString[0] != undefined && splitString[1] != undefined) {
-        keyExpr = new KeyExpr(splitString[0]);
-        let parameters: Parameters = new Parameters(splitString[1]);
-        selector = new Selector(keyExpr, parameters);
-      } else {
-        throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
-      }
-    } else {
-      selector = new Selector(intoSelector);
+    isClosed() {
+        return this.inner.isClosed();
+    }
+    /**
+     * Puts a value on the session, on a specific key expression
+     *
+     * @param {IntoKeyExpr} intoKeyExpr - key expression to publish to
+     * @param {IntoZBytes} intoZBytes - payload to publish
+     * @param {PutOptions=} putOpts - optional additional parameters to pass to delete operation
+     * @returns void
+     */
+    async put(
+        intoKeyExpr: IntoKeyExpr,
+        intoZBytes: IntoZBytes,
+        putOpts?: PutOptions,
+    ) {
+        await this.inner.put(
+            new Put(
+                new KeyExpr(intoKeyExpr),
+                new ZBytes(intoZBytes),
+                putOpts?.encoding ? Encoding.from(putOpts.encoding) : Encoding.default(),
+                putOpts?.attachment ? new ZBytes(putOpts.attachment) : undefined,
+                putOpts?.timestamp,
+                new Qos(
+                    putOpts?.priority ?? Priority.DEFAULT,
+                    putOpts?.congestionControl ?? CongestionControl.DEFAULT_PUSH,
+                    putOpts?.express ?? false,
+                    putOpts?.reliability ?? Reliability.DEFAULT,
+                    putOpts?.allowedDestinaton ?? Locality.DEFAULT
+                )
+            )
+        );
     }
 
-    let handler = getOptions?.handler ?? new FifoChannel<Reply>(256);
-    let [calback, drop, receiver] = intoCbDropReceiver(handler);
-    
-    let callbackWS = (replyWS: ReplyWS): void => {
-      let reply: Reply = replyFromReplyWS(replyWS);
-      calback(reply);
-    }
-    // Optional Parameters 
-
-    let consolidation = consolidationModeToInt(getOptions?.consolidation)
-    let encoding = getOptions?.encoding?.toString();
-    let congestionControl = congestionControlToInt(getOptions?.congestionControl);
-    let priority = priorityToInt(getOptions?.priority);
-    let express = getOptions?.express;
-    let target = queryTargetToInt(getOptions?.target);
-    let attachment;
-    let payload;
-    let timeoutMillis: number | undefined = undefined;
-
-    if (getOptions?.timeout !== undefined) {
-      timeoutMillis = Duration.milliseconds.from(getOptions?.timeout);
-    }
-    if (getOptions?.attachment != undefined) {
-      attachment = Array.from(new ZBytes(getOptions?.attachment).toBytes())
-    }
-    if (getOptions?.payload != undefined) {
-      payload = Array.from(new ZBytes(getOptions?.payload).toBytes())
+    /**
+     * Creates a Key Expression
+     *
+     * @returns KeyExpr
+     */
+    declareKeyexpr(intoKeyExpr: IntoKeyExpr): KeyExpr {
+        return new KeyExpr(intoKeyExpr)
     }
 
-    await this.remoteSession.get(
-      selector.keyExpr().toString(),
-      selector.parameters().toString(),
-      callbackWS,
-      drop,
-      consolidation,
-      congestionControl,
-      priority,
-      express,
-      target,
-      encoding,
-      payload,
-      attachment,
-      timeoutMillis
-    );
-
-    return receiver;
-  }
-
-  /**
-   * Declares a new subscriber
-   *
-   * @remarks
-   *  If a Subscriber is created with a callback, it cannot be simultaneously polled for new values
-   * 
-   * @param {IntoKeyExpr} intoKeyExpr - key expression as a string or KeyExpr instance
-   * @param {SubscriberOptions} subscriberOpts - Options for the subscriber, including a handler
-   *
-   * @returns Subscriber
-   */
-  // Handler size : This is to match the API_DATA_RECEPTION_CHANNEL_SIZE of zenoh internally
-  async declareSubscriber(
-    intoKeyExpr: IntoKeyExpr,
-    subscriberOpts?: SubscriberOptions
-  ): Promise<Subscriber> {
-    let keyExpr = new KeyExpr(intoKeyExpr);
-    let remoteSubscriber: RemoteSubscriber;
-
-    let handler = subscriberOpts?.handler ?? new FifoChannel<Sample>(256);
-    let [callback, drop, receiver] = intoCbDropReceiver(handler);
-
-    let callbackWS = (sampleWS: SampleWS): void => {
-      let sample: Sample = sampleFromSampleWS(sampleWS);
-      callback(sample);
+    /**
+     * Returns the Zenoh SessionInfo Object
+     *
+     * @returns SessionInfo
+     */
+    async info(): Promise<SessionInfo> {
+        return await this.inner.getSessionInfo();
     }
 
-    remoteSubscriber = await this.remoteSession.declareRemoteSubscriber(
-      intoKeyExpr.toString(),
-      callbackWS,
-      drop
-    );
-
-    let subscriber = new Subscriber(
-      remoteSubscriber,
-      keyExpr,
-      receiver,
-    );
-
-    return subscriber;
-  }
-
-  /**
-   * Obtain a Liveliness struct tied to this Zenoh Session.
-   * 
-   * @returns Liveliness
-   */
-  liveliness(): Liveliness {
-    return new Liveliness(this.remoteSession)
-  }
-
-  /**
-   * Creates a new Timestamp instance
-   * 
-   * @returns Timestamp
-   */
-  async newTimestamp(): Promise<Timestamp> {
-
-    let tsIface: TimestampIface = await this.remoteSession.newTimestamp();
-
-    return new Timestamp(tsIface.id, tsIface.string_rep, tsIface.millis_since_epoch);
-  }
-
-  /**
-  * Declares a new Queryable
-  * 
-  * @param {IntoKeyExpr} intoKeyExpr - Queryable key expression
-  * @param {QueryableOptions} queryableOpts - Optional additional settings for a Queryable [QueryableOptions]
-  *
-  * @returns Queryable
-  */
-  async declareQueryable(
-    intoKeyExpr: IntoKeyExpr,
-    queryableOpts?: QueryableOptions
-  ): Promise<Queryable> {
-    let keyExpr = new KeyExpr(intoKeyExpr);
-
-    let complete = false;
-    if (queryableOpts?.complete != undefined) {
-      complete = queryableOpts?.complete;
-    };
-
-    let handler = queryableOpts?.handler ?? new FifoChannel<Query>(256);
-    let [callback, drop, receiver] = intoCbDropReceiver(handler);
-    
-    let callbackWS = (queryWS: QueryWS): void => {
-      let query = queryFromQueryWS(queryWS, this.remoteSession);
-      callback(query);
+    /**
+     * Executes a Delete on a session, for a specific key expression KeyExpr
+     *
+     * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
+     * @param {DeleteOptions} deleteOpts - optional additional parameters to pass to delete operation
+     *
+     * @returns void
+     */
+    async delete(
+        intoKeyExpr: IntoKeyExpr,
+        deleteOpts?: DeleteOptions
+    ) {
+        await this.inner.delete(
+            new Delete(
+                new KeyExpr(intoKeyExpr),
+                deleteOpts?.attachment ? new ZBytes(deleteOpts.attachment) : undefined,
+                deleteOpts?.timestamp,
+                new Qos(
+                    deleteOpts?.priority ?? Priority.DEFAULT,
+                    deleteOpts?.congestionControl ?? CongestionControl.DEFAULT_PUSH,
+                    deleteOpts?.express ?? false,
+                    deleteOpts?.reliability ?? Reliability.DEFAULT,
+                    deleteOpts?.allowedDestinaton ?? Locality.DEFAULT
+                )
+            )
+        );
     }
 
-    let remoteQueryable = await this.remoteSession.declareRemoteQueryable(
-      keyExpr.toString(),
-      complete,
-      callbackWS,
-      drop
-    );
+    /**
+     * Issues a get query on a Zenoh session
+     *
+     * @param intoSelector - representing a KeyExpr and Parameters
+     * @param {GetOptions=} getOpts - optional additional parameters to pass to get operation
+     * 
+     * @returns Receiver
+     */
+    async get(
+        intoSelector: IntoSelector,
+        getOpts?: GetOptions
+    ): Promise<ChannelReceiver<Reply> | undefined> {
+        let handler = getOpts?.handler ?? new FifoChannel<Reply>(256);
+        let [callback, drop, receiver] = intoCbDropReceiver(handler);
+        let selector = Selector.from(intoSelector);
+        await this.inner.get(
+            {
+                keyexpr: selector.keyExpr(),
+                parameters: selector.parameters().toString(),
+                payload: getOpts?.payload ? new ZBytes(getOpts.payload) : undefined,
+                encoding: getOpts?.encoding ? Encoding.from(getOpts.encoding) : undefined,
+                attachment: getOpts?.attachment ? new ZBytes(getOpts.attachment) : undefined,
+                qos: new Qos(
+                    getOpts?.priority ?? Priority.DEFAULT,
+                    getOpts?.congestionControl ?? CongestionControl.DEFAULT_REQUEST,
+                    getOpts?.express ?? false,
+                    Reliability.DEFAULT,
+                    getOpts?.allowedDestinaton ?? Locality.DEFAULT
+                ),
+                querySettings: new QuerySettings(
+                    getOpts?.target ?? QueryTarget.DEFAULT,
+                    getOpts?.consolidation ?? ConsolidationMode.DEFAULT,
+                    getOpts?.acceptReplies ?? ReplyKeyExpr.DEFAULT
+                ),
+                timeoutMs: getOpts?.timeout ? Duration.milliseconds.from(getOpts.timeout) : DEFAULT_QUERY_TIMEOUT_MS,
+            },
+            { callback, drop }
+        );
 
-    let queryable = new Queryable(remoteQueryable, receiver);
-    return queryable;
-  }
-
-  /**
-  * Declares a new Publisher
-  *
-  * @remarks
-  *  If a Queryable is created with a callback, it cannot be simultaneously polled for new Query's
-  * 
-  * @param {IntoKeyExpr} intoKeyExpr - string of key_expression
-  * @param {PublisherOptions=} publisherOpts - Optional, set of options to be used when declaring a publisher
-  * @returns Publisher
-  */
-  async declarePublisher(
-    intoKeyExpr: IntoKeyExpr,
-    publisherOpts?: PublisherOptions
-  ): Promise<Publisher> {
-    let keyExpr: KeyExpr = new KeyExpr(intoKeyExpr);
-
-    let express = publisherOpts?.express;
-
-    let priorityRemote;
-    let priority = Priority.DATA;
-    if (publisherOpts?.priority != null) {
-      priorityRemote = priorityToInt(publisherOpts?.priority);
-      priority = publisherOpts?.priority;
+        return receiver;
     }
 
-    let congestionControlRemote;
-    let congestionControl = CongestionControl.DROP;
-    if (publisherOpts?.congestionControl != null) {
-      congestionControlRemote = congestionControlToInt(publisherOpts?.congestionControl);
-      congestionControl = publisherOpts?.congestionControl;
+    /**
+     * Declares a new subscriber
+     *
+     * @remarks
+     *  If a Subscriber is created with a callback, it cannot be simultaneously polled for new values
+     * 
+     * @param {IntoKeyExpr} intoKeyExpr - the key expression to subscribe to
+     * @param {SubscriberOptions} subscriberOpts - optional additional parameters to pass to subscriber declaration
+     *
+     * @returns Subscriber
+     */
+    async declareSubscriber(
+        intoKeyExpr: IntoKeyExpr,
+        subscriberOpts?: SubscriberOptions
+    ): Promise<Subscriber> {
+        const handler = subscriberOpts?.handler ?? new FifoChannel<Sample>(256);
+        const keyexpr = new KeyExpr(intoKeyExpr);
+        let [callback, drop, receiver] = intoCbDropReceiver(handler);
+
+        const subscriberId = await this.inner.declareSubscriber(
+            {
+                keyexpr,
+                allowedOrigin: subscriberOpts?.allowedOrigin ?? Locality.DEFAULT
+            },
+            { callback, drop }
+        );
+        return new Subscriber(this.inner, subscriberId, keyexpr, receiver);
     }
 
-    let reliabilityRemote = 0; // Default Reliable
-    let reliability = Reliability.RELIABLE;
-    if (publisherOpts?.reliability != null) {
-      reliabilityRemote = reliabilityToInt(publisherOpts?.reliability);
+    /**
+     * Obtain a Liveliness struct tied to this Zenoh Session.
+     * 
+     * @returns Liveliness
+     */
+    liveliness(): Liveliness {
+        return new Liveliness(this.inner)
     }
 
-    let encodingRemote = "";
-    let encoding = Encoding.default();
-    if (publisherOpts?.encoding != null) {
-      encodingRemote = publisherOpts?.encoding.toString();
-      encoding = publisherOpts?.encoding;
+    /**
+     * Creates a new Timestamp instance
+     * 
+     * @returns Timestamp
+     */
+    async newTimestamp(): Promise<Timestamp> {
+        return await this.inner.getTimestamp();
     }
 
-    let remotePublisher: RemotePublisher =
-      await this.remoteSession.declareRemotePublisher(
-        keyExpr.toString(),
-        encodingRemote,
-        congestionControlRemote,
-        priorityRemote,
-        express,
-        reliabilityRemote
-      );
+    /**
+    * Declares a new Queryable
+    * 
+    * @param {IntoKeyExpr} intoKeyExpr - Queryable key expression
+    * @param {QueryableOptions=} queryableOpts - Optional additional settings for a Queryable [QueryableOptions]
+    *
+    * @returns Queryable
+    */
+    async declareQueryable(
+        intoKeyExpr: IntoKeyExpr,
+        queryableOpts?: QueryableOptions
+    ): Promise<Queryable> {
+        const keyexpr = new KeyExpr(intoKeyExpr);
+        const handler = queryableOpts?.handler ?? new FifoChannel<Query>(256);
+        const [callback, drop, receiver] = intoCbDropReceiver(handler);
+        const queryableId = await this.inner.declareQueryable(
+            {
+                keyexpr,
+                complete: queryableOpts?.complete ?? false,
+                allowedOrigin: queryableOpts?.allowedOrigin ?? Locality.DEFAULT,
+            },
+            { callback, drop }
+        );
 
-    let publisher: Publisher = new Publisher(
-      remotePublisher,
-      keyExpr,
-      congestionControl,
-      priority,
-      reliability,
-      encoding
-    );
-    return publisher;
-  }
-
-  /**
-  * Declares a Querier 
-  * 
-  * @param {IntoKeyExpr} keyexpr - string of key_expression
-  * @param {QuerierOptions} publisher_opts - Optional, set of options to be used when declaring a publisher
-  * @returns Publisher
-  */
-  async declareQuerier(
-    intoKeyexpr: IntoKeyExpr,
-    querierOpts: QuerierOptions,
-  ): Promise<Querier> {
-    const keyExpr = new KeyExpr(intoKeyexpr);
-
-    // Optional Parameters 
-    let priorityRemote;
-    let priority = Priority.DATA;
-    if (querierOpts?.priority != null) {
-      priorityRemote = priorityToInt(querierOpts?.priority);
-      priority = querierOpts?.priority;
+        return new Queryable(this.inner, queryableId, keyexpr, receiver);
     }
 
-    let congestionControlRemote;
-    let congestionControl = CongestionControl.DROP;
-    if (querierOpts?.congestionControl != null) {
-      congestionControlRemote = congestionControlToInt(querierOpts?.congestionControl);
-      congestionControl = querierOpts?.congestionControl;
+    /**
+    * Declares a new Publisher
+    *
+    * @param {IntoKeyExpr} intoKeyExpr - Publisher's key expression
+    * @param {PublisherOptions=} publisherOpts - Optional additional settings for a Publisher [PublisherOptions]
+    * @returns Publisher
+    */
+    async declarePublisher(
+        intoKeyExpr: IntoKeyExpr,
+        publisherOpts?: PublisherOptions
+    ): Promise<Publisher> {
+        let publisherProperties = {
+            keyexpr: new KeyExpr(intoKeyExpr),
+            encoding: publisherOpts?.encoding ? Encoding.from(publisherOpts.encoding) : Encoding.default(),
+            qos: new Qos(
+                publisherOpts?.priority ?? Priority.DEFAULT,
+                publisherOpts?.congestionControl ?? CongestionControl.DEFAULT_PUSH,
+                publisherOpts?.express ?? false,
+                publisherOpts?.reliability ?? Reliability.DEFAULT,
+                publisherOpts?.allowedDestination ?? Locality.DEFAULT
+            )
+        };
+        const publisherId = await this.inner.declarePublisher(publisherProperties);
+        return new Publisher(this.inner, publisherId, publisherProperties);
     }
 
-    let acceptRepliesRemote;
-    let acceptReplies = ReplyKeyExpr.Any;
-    if (querierOpts?.acceptReplies != null) {
-      acceptRepliesRemote = replyKeyExprToInt(querierOpts?.acceptReplies);
-      acceptReplies = querierOpts?.acceptReplies;
+    /**
+    * Declares a Querier 
+    * 
+    * @param {IntoKeyExpr} intoKeyexpr - Querier's key expression
+    * @param {QuerierOptions=} querierOpts - Optional additional settings for a Querier [QuerierOptions]
+    * @returns Publisher
+    */
+    async declareQuerier(
+        intoKeyexpr: IntoKeyExpr,
+        querierOpts?: QuerierOptions,
+    ): Promise<Querier> {
+        const properties: QuerierProperties = {
+            keyexpr: new KeyExpr(intoKeyexpr),
+            qos: new Qos(
+                querierOpts?.priority ?? Priority.DEFAULT,
+                querierOpts?.congestionControl ?? CongestionControl.DEFAULT_REQUEST,
+                querierOpts?.express ?? false,
+                Reliability.DEFAULT,
+                querierOpts?.allowedDestination ?? Locality.DEFAULT
+            ),
+            querySettings: new QuerySettings(
+                querierOpts?.target ?? QueryTarget.DEFAULT,
+                querierOpts?.consolidation ?? ConsolidationMode.DEFAULT,
+                querierOpts?.acceptReplies ?? ReplyKeyExpr.DEFAULT
+            ),
+            timeoutMs: querierOpts?.timeout ? Duration.milliseconds.from(querierOpts.timeout) : DEFAULT_QUERY_TIMEOUT_MS,
+        }
+
+        let querierId = await this.inner.declareQuerier(properties);
+        return new Querier(
+            this.inner,
+            querierId,
+            properties.keyexpr,
+            properties.qos.congestionControl,
+            properties.qos.priority,
+            properties.querySettings.replyKeyExpr
+        );
     }
-
-    let consolidation = consolidationModeToInt(querierOpts?.consolidation);
-    let target = queryTargetToInt(querierOpts?.target);
-    let allowedDestination = localityToInt(querierOpts?.allowedDestination);
-    let express = querierOpts?.express;
-    let timeoutMillis: number | undefined = undefined;
-
-    if (querierOpts?.timeout !== undefined) {
-      timeoutMillis = Duration.milliseconds.from(querierOpts?.timeout);
-    }
-
-    let remoteQuerier = await this.remoteSession.declareRemoteQuerier(
-      keyExpr.toString(),
-      consolidation,
-      congestionControlRemote,
-      priorityRemote,
-      express,
-      target,
-      allowedDestination,
-      acceptRepliesRemote,
-      timeoutMillis,
-    );
-
-    return new Querier(
-      remoteQuerier,
-      keyExpr,
-      congestionControl,
-      priority,
-      acceptReplies,
-    );
-  }
-}
-
-export enum RecvErr {
-  Disconnected,
-  MalformedReply,
 }
 
 /**
  *  Function to open a Zenoh session
  */
-export function open(config: Config): Promise<Session> {
-  return Session.open(config);
+export async function open(config: Config): Promise<Session> {
+    return await Session.open(config);
 }
 
 /**
- *  Struct to expose Info for your Zenoh Session
+ *  Struct to expose Info for Zenoh Session
  */
 export class SessionInfo {
-  constructor(
-    private zid_: ZenohId,
-    private peers_: ZenohId[],
-    private routers_: ZenohId[],
-  ) {}
+    constructor(
+        private zid_: ZenohId,
+        private peers_: ZenohId[],
+        private routers_: ZenohId[],
+    ) { }
 
-  zid(): ZenohId {
-    return this.zid_;
-  }
-  routersZid(): ZenohId[] {
-    return this.routers_;
-  }
-  peersZid(): ZenohId[] {
-    return this.peers_;
-  }
-}
-
-export class ZenohId {
-  constructor(private zid: string) {}
-
-  toString(): string {
-    return this.zid;
-  }
+    zid(): ZenohId {
+        return this.zid_;
+    }
+    routersZid(): ZenohId[] {
+        return this.routers_;
+    }
+    peersZid(): ZenohId[] {
+        return this.peers_;
+    }
 }

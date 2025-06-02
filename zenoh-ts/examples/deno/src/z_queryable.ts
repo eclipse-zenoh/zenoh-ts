@@ -43,6 +43,7 @@ export async function main() {
   //     `>> [Queryable ] Responding ${key_expr.toString()} with payload '${response}'`,
   //   );
   //   query.reply(key_expr, response);
+  //   query.finalize();
   // }
 
   // let queryable_cb: Queryable = await session.declare_queryable(key_expr, {
@@ -61,20 +62,21 @@ export async function main() {
   });
 
   for await (const query of queryable.receiver() as ChannelReceiver<Query>) {
+    await using scopedQuery = query;
     const zbytes: ZBytes | undefined = query.payload();
 
     if (zbytes == undefined) {
-      console.warn!(`>> [Queryable ] Received Query ${query.selector().toString()}`);
+      console.warn!(`>> [Queryable ] Received Query ${scopedQuery.selector().toString()}`);
     } else {
       console.warn!(
-        `>> [Queryable ] Received Query ${query.selector().toString()} with payload '${zbytes.toString()}'`,
+        `>> [Queryable ] Received Query ${scopedQuery.selector().toString()} with payload '${zbytes.toString()}'`,
       );
     }
 
     console.warn(
       `>> [Queryable ] Responding ${keyExpr.toString()} with payload '${response}'`,
     );
-    await query.reply(keyExpr, response);
+    await scopedQuery.reply(keyExpr, response);
   }
 }
 

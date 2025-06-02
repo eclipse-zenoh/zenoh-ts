@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { Config, Session, Query, Reply, KeyExpr, Selector, ReplyError, Parameters, Sample, QueryTarget, Queryable, ChannelReceiver, Querier } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, Query, Reply, KeyExpr, Selector, ReplyError, Parameters, Sample, QueryTarget, Queryable, ChannelReceiver, Querier, ConsolidationMode } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 function sleep(ms: number) {
@@ -42,6 +42,7 @@ Deno.test("API - Session Get with Callback", async () => {
                 } else {
                     query.replyErr("err");
                 }
+                query.finalize();
             },
         });
 
@@ -128,6 +129,7 @@ Deno.test("API - Session Get with Channel", async () => {
         assertEquals(query.parameters().toString(), "ok", "Parameters mismatch");
         assertEquals(query.payload()?.toString(), "1", "Payload mismatch");
         query.reply(query.keyExpr(), "1");
+        query.finalize();
 
         let reply = await receiver1.receive();
         const result = reply.result();
@@ -149,6 +151,7 @@ Deno.test("API - Session Get with Channel", async () => {
         assertEquals(query2.parameters().toString(), "err", "Parameters mismatch");
         assertEquals(query2.payload()?.toString(), "3", "Payload mismatch");
         query2.replyErr("err");
+        query2.finalize();
 
         reply = await receiver2.receive();
         const result2 = reply.result();
@@ -192,11 +195,11 @@ Deno.test("API - Querier Get with Channel", async () => {
         await sleep(1000);
         
         querier = await session2.declareQuerier(selector, {
-            target: QueryTarget.BestMatching
+            target: QueryTarget.BEST_MATCHING
         });
 
         // First query with ok parameters
-        receiver1 = await querier.get(new Parameters("ok"), { payload: "1" });
+        receiver1 = await querier.get({ parameters: new Parameters("ok"), payload: "1" });
         if (!receiver1) {
             throw new Error("Failed to get receiver");
         }
@@ -210,6 +213,7 @@ Deno.test("API - Querier Get with Channel", async () => {
         assertEquals(query.parameters().toString(), "ok", "Parameters mismatch");
         assertEquals(query.payload()?.toString(), "1", "Payload mismatch");
         query.reply(query.keyExpr(), "1");
+        query.finalize();
 
         // sleep to ensure the reply is processed
         await sleep(100);
@@ -222,7 +226,7 @@ Deno.test("API - Querier Get with Channel", async () => {
         }
 
         // Second query using the same querier with error parameters
-        receiver2 = await querier.get(new Parameters("err"), { payload: "2" });
+        receiver2 = await querier.get({ parameters: new Parameters("err"), payload: "2" });
         if (!receiver2) {
             throw new Error("Failed to get receiver");
         }
@@ -236,6 +240,7 @@ Deno.test("API - Querier Get with Channel", async () => {
         assertEquals(query2.parameters().toString(), "err", "Parameters mismatch");
         assertEquals(query2.payload()?.toString(), "2", "Payload mismatch");
         query2.replyErr("err");
+        query2.finalize();
         
         // sleep to ensure the reply is processed
         await sleep(100);
@@ -283,7 +288,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         await sleep(1000);
         
         querier = await session2.declareQuerier(selector, {
-            target: QueryTarget.BestMatching
+            target: QueryTarget.BEST_MATCHING
         });
 
         // First query with ok parameters
@@ -292,7 +297,7 @@ Deno.test("API - Querier Get with Callback", async () => {
             replies.push(reply);
         };
 
-        const receiver1 = await querier.get(new Parameters("ok"), { payload: "1", handler });
+        const receiver1 = await querier.get({ parameters: new Parameters("ok"), payload: "1", handler });
         assertEquals(receiver1, undefined, "Receiver should be undefined when handler is provided");
 
 
@@ -307,6 +312,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         assertEquals(query.parameters().toString(), "ok", "Parameters mismatch");
         assertEquals(query.payload()?.toString(), "1", "Payload mismatch");
         query.reply(query.keyExpr(), "1");
+        query.finalize();
         
         // sleep to ensure the reply is sent
         await sleep(200);
@@ -318,7 +324,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         }
 
         // Second query using the same querier with error parameters
-        const receiver2 = await querier.get(new Parameters("err"), { payload: "2", handler });
+        const receiver2 = await querier.get({ parameters: new Parameters("err"), payload: "2", handler });
         assertEquals(receiver2, undefined, "Receiver should be undefined when handler is provided");
 
         const query2 = await queryable.receiver()?.receive();
@@ -330,6 +336,7 @@ Deno.test("API - Querier Get with Callback", async () => {
         assertEquals(query2.parameters().toString(), "err", "Parameters mismatch");
         assertEquals(query2.payload()?.toString(), "2", "Payload mismatch");
         query2.replyErr("err");
+        query2.finalize();
 
         // sleep to ensure the reply is processed
         await sleep(100);
@@ -344,6 +351,91 @@ Deno.test("API - Querier Get with Callback", async () => {
         if (querier) {
             await querier.undeclare();
         }
+        if (queryable) {
+            await queryable.undeclare();
+        }
+        if (session2) {
+            await session2.close();
+        }
+        if (session1) {
+            await session1.close();
+        }
+        await sleep(100);
+    }
+});
+
+Deno.test("API - Session Get with multiple responses", async () => {
+    const ke = new KeyExpr("zenoh/test/*");
+    const selector = new KeyExpr("zenoh/test/1");
+
+    let session1: Session | undefined;
+    let session2: Session | undefined;
+    let queryable: Queryable | undefined;
+    let receiver1: ChannelReceiver<Reply> | undefined;
+    let receiver2: ChannelReceiver<Reply> | undefined;
+
+    try {
+        session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
+        session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
+
+        queryable = await session1.declareQueryable(ke, { complete: true });
+
+        receiver1 = await session2.get(new Selector(selector, "ok"), { payload: "1", consolidation: ConsolidationMode.NONE });
+        if (!receiver1) {
+            throw new Error("Failed to get receiver");
+        }
+
+        const query = await queryable.receiver()?.receive();
+        if (!query) {
+            throw new Error("Failed to get query");
+        }
+
+        assertEquals(query.keyExpr().toString(), selector.toString(), "Key mismatch");
+        assertEquals(query.parameters().toString(), "ok", "Parameters mismatch");
+        assertEquals(query.payload()?.toString(), "1", "Payload mismatch");
+        query.reply(query.keyExpr(), "1");
+        query.reply(query.keyExpr(), "2");
+        query.replyErr("3");
+        query.finalize();
+
+        let replies = new Array<Reply>();
+        for await (const reply of receiver1) {
+            replies.push(reply);
+        }
+        assertEquals(replies.length, 3, "Should receive 3 replies");
+
+        let result = replies[0].result();
+        assertEquals(result instanceof ReplyError, false, "Reply should be OK");
+        assertEquals(result.payload().toString(), "1", "Reply payload mismatch");
+
+        result = replies[1].result();
+        assertEquals(result instanceof ReplyError, false, "Reply should be OK");
+        assertEquals(result.payload().toString(), "2", "Reply payload mismatch");
+
+        result = replies[2].result();
+        assertEquals(result instanceof ReplyError, true, "Reply should be ERROR");
+        assertEquals(result.payload().toString(), "3", "Reply payload mismatch");
+
+
+        receiver2 = await session2.get(new Selector(selector, "ok"), { payload: "1", consolidation: ConsolidationMode.NONE });
+        if (!receiver2) {
+            throw new Error("Failed to get receiver");
+        }
+
+        const query2 = await queryable.receiver()?.receive();
+        if (!query2) {
+            throw new Error("Failed to get query");
+        }
+        query2.finalize();
+
+        let replies2 = new Array<Reply>();
+        for await (const reply of receiver2) {
+            replies2.push(reply);
+        }
+        assertEquals(replies2.length, 0, "Should receive 0 replies");
+
+    } finally {
+        // Cleanup in reverse order of creation
         if (queryable) {
             await queryable.undeclare();
         }

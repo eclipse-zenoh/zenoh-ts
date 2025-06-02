@@ -35,10 +35,9 @@ export async function main() {
 
   for (let idx = 0; idx < Number.MAX_VALUE; idx++) {
     const buf = `[${idx}] ${args.payload}`;
-
-    console.warn("Block statement execution no : " + idx);
     console.warn(`Putting Data ('${keyExpr}': '${buf}')...`);
-    await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment: args.attach });
+    let attachment = args.attach.length == 0 ? undefined : args.attach
+    await publisher.put(buf, { encoding: Encoding.TEXT_PLAIN, attachment });
     await sleep(1000);
   }
 }

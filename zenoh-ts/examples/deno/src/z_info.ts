@@ -23,17 +23,11 @@ export async function main() {
   console.log!("Get Info...");
   const info: SessionInfo = await session.info();
 
-  console.log!("zid: {}", info.zid());
+  console.log!("zid: ", info.zid().toString());
 
-  console.log!(
-    "routers zid: {:?}",
-    info.routersZid()
-  );
+  console.log!(`routers zid: ${info.routersZid()}`);
 
-  console.log!(
-    "peers zid: {:?}",
-    info.peersZid()
-  );
+  console.log!(`peers zid: ${info.peersZid()}`);
 
 }
 
