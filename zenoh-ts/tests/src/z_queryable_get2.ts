@@ -34,6 +34,7 @@ import {
   ZBytes,
   ConsolidationMode,
   SampleKind,
+  IntoZBytes,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from "typed-duration";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
@@ -141,31 +142,28 @@ class ExpectedQuery {
  * @param expected The expected Query data to compare against
  * @param description Test description to include in error messages
  */
-function compareQuery(actual: Query, expected: ExpectedQuery, description: string) {
-  // Compare payload
+function compareQuery(
+  actual: Query,
+  expected: ExpectedQuery,
+  description: string
+) {
   assertEquals(
-    actual.payload()?.toString() ?? "",
-    expected.payload()?.toString() ?? "",
+    actual.payload(),
+    expected.payload(),
     `Query payload mismatch for ${description}`
   );
 
-  // Compare encoding if expected
-  if (expected.encoding()) {
-    assertEquals(
-      actual.encoding()?.toString(),
-      expected.encoding()?.toString(),
-      `Query encoding mismatch for ${description}`
-    );
-  }
+  assertEquals(
+    actual.encoding(),
+    expected.encoding(),
+    `Query encoding mismatch for ${description}`
+  );
 
-  // Compare attachment if expected
-  if (expected.attachment()) {
-    assertEquals(
-      actual.attachment()?.toString(),
-      expected.attachment()?.toString(),
-      `Query attachment mismatch for ${description}`
-    );
-  }
+  assertEquals(
+    actual.attachment(),
+    expected.attachment(),
+    `Query attachment mismatch for ${description}`
+  );
 }
 
 /**
@@ -221,7 +219,7 @@ class TestCase {
       consolidation?: ConsolidationMode;
       // QuerierGetOptions parameters
       encoding?: Encoding;
-      payload?: ZBytes | string;
+      payload?: IntoZBytes;
       attachment?: ZBytes;
     } = {}
   ) {
@@ -234,7 +232,7 @@ class TestCase {
     this.target = params.target;
     this.timeout = params.timeout;
     this.consolidation = params.consolidation;
-    this.payload = params.payload instanceof ZBytes ? params.payload : (params.payload ? new ZBytes(params.payload) : undefined);
+    this.payload = params.payload ? new ZBytes(params.payload) : undefined;
     this.attachment = params.attachment;
   }
 
@@ -301,11 +299,7 @@ class TestCase {
   }
 
   expectedQuery(): ExpectedQuery {
-    return new ExpectedQuery(
-      this.payload,
-      this.encoding,
-      this.attachment
-    );
+    return new ExpectedQuery(this.payload, this.encoding, this.attachment);
   }
 
   expectedSample(): Sample {
