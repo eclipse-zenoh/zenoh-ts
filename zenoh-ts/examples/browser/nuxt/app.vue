@@ -130,11 +130,11 @@
 <script setup lang="ts">
 // Import Zenoh only on client side to avoid SSR issues with WASM
 let zenohModule: any = null;
-let Config: any, Session: any, KeyExpr: any, Publisher: any, Subscriber: any, ZBytes: any;
+let Config: any, Session: any, KeyExpr: any, Publisher: any, Subscriber: any, ZBytes: any, Sample: any;
 
 if (process.client) {
   zenohModule = await import('@eclipse-zenoh/zenoh-ts');
-  ({ Config, Session, KeyExpr, Publisher, Subscriber, ZBytes } = zenohModule);
+  ({ Config, Session, KeyExpr, Publisher, Subscriber, ZBytes, Sample } = zenohModule);
 }
 
 // Reactive state
@@ -252,17 +252,18 @@ async function performGet() {
     let resultCount = 0;
     
     while (true) {
-      const reply = await receiver.recv();
+      const reply = await receiver.receive();
       if (!reply) break;
       
-      if (reply.result.tag === 'Sample') {
-        const sample = reply.result.value;
-        const keyStr = sample.keyExpr.toString();
-        const valueStr = sample.payload.toString();
+      const result = reply.result();
+      if (result instanceof Sample) {
+        const keyStr = result.keyexpr().toString();
+        const valueStr = result.payload().toString();
         addLogEntry('data', `GET result: ${keyStr} = "${valueStr}"`);
         resultCount++;
       } else {
-        addLogEntry('error', `GET error: ${reply.result.value}`);
+        // result is ReplyError
+        addLogEntry('error', `GET error: ${result.payload().toString()}`);
       }
     }
     
@@ -290,7 +291,7 @@ async function toggleSubscribe() {
     try {
       const keyExpr = new KeyExpr(subscribeKey.value);
       
-      subscriber = await zenohSession.subscribe(keyExpr);
+      subscriber = await zenohSession.declareSubscriber(keyExpr);
       isSubscribed.value = true;
       addLogEntry('success', `Subscribed to ${subscribeKey.value}`);
       
@@ -298,13 +299,16 @@ async function toggleSubscribe() {
       (async () => {
         if (!subscriber) return;
         
+        const receiver = subscriber.receiver();
+        if (!receiver) return;
+        
         while (true) {
-          const sample = await subscriber.recv();
+          const sample = await receiver.receive();
           if (!sample) break;
           
-          const keyStr = sample.keyExpr.toString();
-          const valueStr = sample.payload.toString();
-          const kindStr = sample.kind === 0 ? 'PUT' : sample.kind === 1 ? 'DELETE' : 'UNKNOWN';
+          const keyStr = sample.keyexpr().toString();
+          const valueStr = sample.payload().toString();
+          const kindStr = sample.kind() === 0 ? 'PUT' : sample.kind() === 1 ? 'DELETE' : 'UNKNOWN';
           
           addLogEntry('data', `SUBSCRIPTION [${kindStr}]: ${keyStr} = "${valueStr}"`);
         }
