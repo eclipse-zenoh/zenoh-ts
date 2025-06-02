@@ -67,6 +67,93 @@
               Put
             </button>
           </div>
+          
+          <!-- Put Options Toggle -->
+          <div class="options-toggle">
+            <button 
+              @click="putOptions.showOptions = !putOptions.showOptions" 
+              class="options-toggle-btn"
+              :class="{ active: putOptions.showOptions }"
+            >
+              {{ putOptions.showOptions ? '▼' : '▶' }} Advanced Options
+            </button>
+          </div>
+          
+          <!-- Put Options Panel -->
+          <div v-if="putOptions.showOptions" class="options-panel">
+            <div class="options-grid">
+              <div class="option-group">
+                <label>Encoding:</label>
+                <select v-model="putOptions.encoding" :disabled="!isConnected">
+                  <option value="text/plain">text/plain</option>
+                  <option value="application/json">application/json</option>
+                  <option value="application/xml">application/xml</option>
+                  <option value="zenoh/string">zenoh/string</option>
+                  <option value="zenoh/bytes">zenoh/bytes</option>
+                  <option value="application/octet-stream">application/octet-stream</option>
+                </select>
+              </div>
+              
+              <div class="option-group">
+                <label>Priority:</label>
+                <select v-model.number="putOptions.priority" :disabled="!isConnected">
+                  <option :value="1">Real Time (1)</option>
+                  <option :value="2">Interactive High (2)</option>
+                  <option :value="3">Interactive Low (3)</option>
+                  <option :value="4">Data High (4)</option>
+                  <option :value="5">Data (5) - Default</option>
+                  <option :value="6">Data Low (6)</option>
+                  <option :value="7">Background (7)</option>
+                </select>
+              </div>
+              
+              <div class="option-group">
+                <label>Congestion Control:</label>
+                <select v-model.number="putOptions.congestionControl" :disabled="!isConnected">
+                  <option :value="0">Drop (0) - Default</option>
+                  <option :value="1">Block (1)</option>
+                </select>
+              </div>
+              
+              <div class="option-group">
+                <label>Reliability:</label>
+                <select v-model.number="putOptions.reliability" :disabled="!isConnected">
+                  <option :value="0">Best Effort (0)</option>
+                  <option :value="1">Reliable (1) - Default</option>
+                </select>
+              </div>
+              
+              <div class="option-group">
+                <label>Allowed Destination:</label>
+                <select v-model.number="putOptions.allowedDestination" :disabled="!isConnected">
+                  <option :value="0">Session Local (0)</option>
+                  <option :value="1">Remote (1)</option>
+                  <option :value="2">Any (2) - Default</option>
+                </select>
+              </div>
+              
+              <div class="option-group">
+                <label class="checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    v-model="putOptions.express" 
+                    :disabled="!isConnected"
+                  >
+                  Express (no batching)
+                </label>
+              </div>
+              
+              <div class="option-group attachment-group">
+                <label>Attachment:</label>
+                <input 
+                  type="text" 
+                  v-model="putOptions.attachment" 
+                  placeholder="Optional attachment data"
+                  :disabled="!isConnected"
+                >
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Get Operation -->
@@ -181,6 +268,7 @@ const {
   subscribeKey,
   logEntries,
   activeSubscribers,
+  putOptions,
   
   // Operations
   connect,
@@ -617,5 +705,99 @@ watch(logEntries, () => {
 .loading-message p {
   margin: 0;
   opacity: 0.8;
+}
+
+/* PUT Options Styling */
+.options-toggle {
+  margin: 10px 0;
+}
+
+.options-toggle-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.options-toggle-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.options-toggle-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.options-panel {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 15px;
+  margin-top: 10px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.option-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.option-group select,
+.option-group input[type="text"] {
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+}
+
+.option-group select:disabled,
+.option-group input[type="text"]:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600 !important;
+  color: #495057 !important;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.attachment-group {
+  grid-column: 1 / -1; /* Span full width */
+}
+
+.attachment-group input[type="text"] {
+  width: 100%;
 }
 </style>

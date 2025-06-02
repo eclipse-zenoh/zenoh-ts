@@ -8,8 +8,14 @@ import {
   ZBytes,
   Sample,
   Reply,
-  ReplyError
+  ReplyError,
+  Encoding,
+  Priority,
+  CongestionControl,
+  Reliability,
+  Locality
 } from '@eclipse-zenoh/zenoh-ts'
+import type { PutOptions } from '@eclipse-zenoh/zenoh-ts'
 
 // Log entry interface
 export interface LogEntry {
@@ -26,6 +32,18 @@ export interface SubscriberInfo {
   createdAt: Date
 }
 
+// Put options state interface
+export interface PutOptionsState {
+  showOptions: boolean
+  encoding: string
+  priority: Priority
+  congestionControl: CongestionControl
+  express: boolean
+  reliability: Reliability
+  allowedDestination: Locality
+  attachment: string
+}
+
 // Zenoh session state
 export interface ZenohState {
   serverUrl: Ref<string>
@@ -33,6 +51,7 @@ export interface ZenohState {
   isConnecting: Ref<boolean>
   putKey: Ref<string>
   putValue: Ref<string>
+  putOptions: Ref<PutOptionsState>
   getKey: Ref<string>
   subscribeKey: Ref<string>
   logEntries: Ref<LogEntry[]>
@@ -62,6 +81,19 @@ export function useZenoh(): ZenohState & ZenohOperations {
   // Operation inputs
   const putKey = ref('demo/example/test')
   const putValue = ref('Hello Zenoh!')
+  
+  // PUT options
+  const putOptions = ref<PutOptionsState>({
+    showOptions: false,
+    encoding: 'text/plain',
+    priority: Priority.DATA,
+    congestionControl: CongestionControl.DROP,
+    express: false,
+    reliability: Reliability.RELIABLE,
+    allowedDestination: Locality.ANY,
+    attachment: ''
+  })
+  
   const getKey = ref('demo/example/*')
   const subscribeKey = ref('demo/example/**')
 
@@ -133,7 +165,40 @@ export function useZenoh(): ZenohState & ZenohOperations {
     try {
       const keyExpr = new KeyExpr(putKey.value)
       const bytes = new ZBytes(putValue.value)
-      await zenohSession.put(keyExpr, bytes)
+      
+      // Build put options
+      const options: PutOptions = {}
+      
+      // Only set options if they differ from defaults or are explicitly set
+      if (putOptions.value.encoding && putOptions.value.encoding !== 'text/plain') {
+        options.encoding = Encoding.fromString(putOptions.value.encoding)
+      }
+      
+      if (putOptions.value.priority !== Priority.DATA) {
+        options.priority = putOptions.value.priority
+      }
+      
+      if (putOptions.value.congestionControl !== CongestionControl.DROP) {
+        options.congestionControl = putOptions.value.congestionControl
+      }
+      
+      if (putOptions.value.express) {
+        options.express = putOptions.value.express
+      }
+      
+      if (putOptions.value.reliability !== Reliability.RELIABLE) {
+        options.reliability = putOptions.value.reliability
+      }
+      
+      if (putOptions.value.allowedDestination !== Locality.ANY) {
+        options.allowedDestinaton = putOptions.value.allowedDestination // Note: API has typo "allowedDestinaton"
+      }
+      
+      if (putOptions.value.attachment && putOptions.value.attachment.trim()) {
+        options.attachment = new ZBytes(putOptions.value.attachment)
+      }
+      
+      await zenohSession.put(keyExpr, bytes, options)
       addLogEntry('success', `PUT: ${putKey.value} = "${putValue.value}"`)
     } catch (error) {
       addLogEntry('error', `PUT failed: ${error}`)
@@ -323,6 +388,7 @@ export function useZenoh(): ZenohState & ZenohOperations {
     isConnecting,
     putKey,
     putValue,
+    putOptions,
     getKey,
     subscribeKey,
     logEntries,
