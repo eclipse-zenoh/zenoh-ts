@@ -5,10 +5,21 @@ import topLevelAwait from 'vite-plugin-top-level-await'
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
+  ssr: false, // Disable SSR to avoid WASM issues on server side
   vite: {
     plugins: [
       wasm(),
       topLevelAwait()
-    ]
+    ],
+    server: {
+      fs: {
+        allow: ['..']
+      }
+    }
+  },
+  nitro: {
+    experimental: {
+      wasm: true
+    }
   }
 })

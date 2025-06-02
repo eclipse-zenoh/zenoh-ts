@@ -128,7 +128,14 @@
 </template>
 
 <script setup lang="ts">
-import { Config, Session, KeyExpr, Publisher, Subscriber, ZBytes } from '@eclipse-zenoh/zenoh-ts';
+// Import Zenoh only on client side to avoid SSR issues with WASM
+let zenohModule: any = null;
+let Config: any, Session: any, KeyExpr: any, Publisher: any, Subscriber: any, ZBytes: any;
+
+if (process.client) {
+  zenohModule = await import('@eclipse-zenoh/zenoh-ts');
+  ({ Config, Session, KeyExpr, Publisher, Subscriber, ZBytes } = zenohModule);
+}
 
 // Reactive state
 const serverUrl = ref('ws://localhost:10000');
@@ -181,7 +188,7 @@ function clearLog() {
 }
 
 async function connect() {
-  if (isConnecting.value || isConnected.value) return;
+  if (isConnecting.value || isConnected.value || !process.client || !Config || !Session) return;
   
   isConnecting.value = true;
   addLogEntry('info', `Attempting to connect to ${serverUrl.value}`);
@@ -222,7 +229,7 @@ async function disconnect() {
 }
 
 async function performPut() {
-  if (!zenohSession || !putKey.value || !putValue.value) return;
+  if (!zenohSession || !putKey.value || !putValue.value || !process.client || !KeyExpr || !ZBytes) return;
   
   try {
     const keyExpr = KeyExpr.tryFrom(putKey.value);
@@ -240,7 +247,7 @@ async function performPut() {
 }
 
 async function performGet() {
-  if (!zenohSession || !getKey.value) return;
+  if (!zenohSession || !getKey.value || !process.client) return;
   
   try {
     const selector = getKey.value;
@@ -271,7 +278,7 @@ async function performGet() {
 }
 
 async function toggleSubscribe() {
-  if (!zenohSession || !subscribeKey.value) return;
+  if (!zenohSession || !subscribeKey.value || !process.client || !KeyExpr) return;
   
   if (isSubscribed.value && subscriber) {
     // Unsubscribe
@@ -328,7 +335,9 @@ onUnmounted(() => {
 
 // Initial log entry
 onMounted(() => {
-  addLogEntry('info', 'Zenoh-TS Demo initialized. Connect to a Zenoh router to start.');
+  if (process.client) {
+    addLogEntry('info', 'Zenoh-TS Demo initialized. Connect to a Zenoh router to start.');
+  }
 });
 </script>
 
