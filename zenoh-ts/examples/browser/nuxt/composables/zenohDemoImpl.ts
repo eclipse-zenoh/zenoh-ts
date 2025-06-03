@@ -21,7 +21,15 @@ import type {
   SubscriberInfo,
 } from "./zenohDemo";
 
-import { addLogEntry, initializeOptionArrays } from "./zenohDemo";
+import { addLogEntry } from "./zenohDemo";
+
+// Import the global option arrays to populate them
+import {
+  priorityOptions,
+  congestionControlOptions,
+  reliabilityOptions,
+  localityOptions,
+} from "./zenohDemo";
 
 // Helper functions to get enum options for UI
 export function getPriorityOptions() {
@@ -101,13 +109,18 @@ export function putOptionsStateTo(options: PutOptionsState): PutOptions {
 }
 
 export function useZenohImpl(state: AppState): ZenohOperations {
-  // Initialize global option arrays now that zenoh-ts is loaded
-  initializeOptionArrays(
-    getPriorityOptions(),
-    getCongestionControlOptions(),
-    getReliabilityOptions(),
-    getLocalityOptions()
-  );
+  // Populate global option arrays now that zenoh-ts is loaded
+  priorityOptions.length = 0;
+  priorityOptions.push(...getPriorityOptions());
+  
+  congestionControlOptions.length = 0;
+  congestionControlOptions.push(...getCongestionControlOptions());
+  
+  reliabilityOptions.length = 0;
+  reliabilityOptions.push(...getReliabilityOptions());
+  
+  localityOptions.length = 0;
+  localityOptions.push(...getLocalityOptions());
 
   // Zenoh objects
   let zenohSession: Session | null = null;

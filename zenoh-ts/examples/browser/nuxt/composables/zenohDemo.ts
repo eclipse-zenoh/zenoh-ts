@@ -47,19 +47,6 @@ export let congestionControlOptions: OptionItem[] = [];
 export let reliabilityOptions: OptionItem[] = [];
 export let localityOptions: OptionItem[] = [];
 
-// Function to initialize option arrays (called from zenohDemoImpl)
-export function initializeOptionArrays(
-  priority: OptionItem[],
-  congestionControl: OptionItem[],
-  reliability: OptionItem[],
-  locality: OptionItem[]
-): void {
-  priorityOptions = priority;
-  congestionControlOptions = congestionControl;
-  reliabilityOptions = reliability;
-  localityOptions = locality;
-}
-
 // Application state
 export interface AppState {
   serverUrl: Ref<string>;
