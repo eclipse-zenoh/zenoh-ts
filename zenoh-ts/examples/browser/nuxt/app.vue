@@ -278,8 +278,10 @@ const {
   subscribe,
   unsubscribe,
   unsubscribeAll,
-  clearLog
-} = useZenoh()
+
+  // App operations
+  clearLog,
+} = await useZenoh()
 
 // Template ref for log content
 const logContent = ref<HTMLElement>()
