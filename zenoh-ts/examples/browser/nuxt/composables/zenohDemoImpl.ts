@@ -101,6 +101,12 @@ export function putOptionsStateTo(options: PutOptionsState): PutOptions {
 }
 
 export function useZenohImpl(state: AppState): ZenohOperations {
+  // Populate option arrays now that zenoh-ts is loaded
+  state.priorityOptions.value = getPriorityOptions();
+  state.congestionControlOptions.value = getCongestionControlOptions();
+  state.reliabilityOptions.value = getReliabilityOptions();
+  state.localityOptions.value = getLocalityOptions();
+
   // Zenoh objects
   let zenohSession: Session | null = null;
   let subscriberIdCounter = 0;
