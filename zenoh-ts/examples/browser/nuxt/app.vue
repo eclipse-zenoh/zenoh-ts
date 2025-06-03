@@ -195,7 +195,7 @@
                 <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
                 <div class="subscriber-meta">
                   <span class="subscriber-id">{{ subscriber.displayId }}</span>
-                  <span class="subscriber-time">Since: {{ formatTime(subscriber.createdAt) }}</span>
+                  <span class="subscriber-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
                 </div>
               </div>
               <button 
@@ -232,7 +232,7 @@
             class="log-entry"
             :class="entry.type"
           >
-            <span class="timestamp">{{ formatTime(entry.timestamp) }}</span>
+            <span class="timestamp">{{ entry.timestamp.toLocaleTimeString() }}</span>
             <span class="log-type">[{{ entry.type.toUpperCase() }}]</span>
             <span class="log-message">{{ entry.message }}</span>
           </div>
@@ -278,7 +278,6 @@ const {
   subscribe,
   unsubscribe,
   unsubscribeAll,
-  formatTime,
   clearLog
 } = useZenoh()
 

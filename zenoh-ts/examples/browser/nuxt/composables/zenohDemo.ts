@@ -76,11 +76,6 @@ export function putOptionsStateDefault(): PutOptionsState {
   }
 }
 
-// Format time utility function
-export function formatTime(date: Date): string {
-  return date.toLocaleTimeString()
-}
-
 // Dummy operations for SSR
 function createDummyOperations(): ZenohOperations {
   const noop = async () => {}
