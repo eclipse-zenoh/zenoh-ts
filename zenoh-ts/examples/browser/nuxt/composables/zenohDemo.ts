@@ -41,6 +41,25 @@ export interface OptionItem {
   label: string;
 }
 
+// Global option arrays - initialized when zenoh-ts loads
+export let priorityOptions: OptionItem[] = [];
+export let congestionControlOptions: OptionItem[] = [];
+export let reliabilityOptions: OptionItem[] = [];
+export let localityOptions: OptionItem[] = [];
+
+// Function to initialize option arrays (called from zenohDemoImpl)
+export function initializeOptionArrays(
+  priority: OptionItem[],
+  congestionControl: OptionItem[],
+  reliability: OptionItem[],
+  locality: OptionItem[]
+): void {
+  priorityOptions = priority;
+  congestionControlOptions = congestionControl;
+  reliabilityOptions = reliability;
+  localityOptions = locality;
+}
+
 // Application state
 export interface AppState {
   serverUrl: Ref<string>;
@@ -53,11 +72,6 @@ export interface AppState {
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
-  // Option arrays for UI dropdowns
-  priorityOptions: Ref<OptionItem[]>;
-  congestionControlOptions: Ref<OptionItem[]>;
-  reliabilityOptions: Ref<OptionItem[]>;
-  localityOptions: Ref<OptionItem[]>;
 }
 // Helper functions
 export function addLogEntry(
@@ -152,11 +166,6 @@ export async function useZenoh(): Promise<
     subscribeKey: ref("demo/example/**"),
     logEntries: ref<LogEntry[]>([]),
     activeSubscribers: ref<SubscriberInfo[]>([]),
-    // Initialize option arrays as empty - will be populated when zenoh-ts loads
-    priorityOptions: ref<OptionItem[]>([]),
-    congestionControlOptions: ref<OptionItem[]>([]),
-    reliabilityOptions: ref<OptionItem[]>([]),
-    localityOptions: ref<OptionItem[]>([]),
   };
 
   const appOperations = createAppOperations(state);
