@@ -2,7 +2,6 @@ import type { Ref } from 'vue'
 
 // Type-only imports - safe for SSR
 import type { 
-  PutOptions,
   Priority,
   CongestionControl,
   Reliability,
@@ -76,17 +75,6 @@ export function putOptionsStateDefault(): PutOptionsState {
     allowedDestination: undefined,
     attachment: '',
   }
-}
-
-// Helper functions for put options (implementations will be in zenohDemoImpl.ts)
-export function putOptionsStateFrom(_options: PutOptions): PutOptionsState {
-  // This is a placeholder - real implementation is in zenohDemoImpl.ts
-  return putOptionsStateDefault()
-}
-
-export function putOptionsStateTo(_options: PutOptionsState): PutOptions {
-  // This is a placeholder - real implementation is in zenohDemoImpl.ts
-  return {}
 }
 
 // Dummy operations for SSR
