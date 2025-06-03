@@ -59,7 +59,6 @@ export interface ZenohOperations {
   unsubscribe: (subscriberId: string) => Promise<void>
   unsubscribeAll: () => Promise<void>
   addLogEntry: (type: LogEntry['type'], message: string) => void
-  formatTime: (date: Date) => string
   clearLog: () => void
 }
 
@@ -77,12 +76,16 @@ export function putOptionsStateDefault(): PutOptionsState {
   }
 }
 
+// Format time utility function
+export function formatTime(date: Date): string {
+  return date.toLocaleTimeString()
+}
+
 // Dummy operations for SSR
 function createDummyOperations(): ZenohOperations {
   const noop = async () => {}
   const noopWithParam = async (_: string) => {}
   const noopLog = (_type: LogEntry['type'], _message: string) => {}
-  const formatTime = (date: Date) => date.toLocaleTimeString()
   
   return {
     connect: noop,
@@ -93,7 +96,6 @@ function createDummyOperations(): ZenohOperations {
     unsubscribe: noopWithParam,
     unsubscribeAll: noop,
     addLogEntry: noopLog,
-    formatTime,
     clearLog: () => {}
   }
 }
@@ -176,7 +178,6 @@ export function useZenoh(): ZenohState & ZenohOperations {
           message
         })
       },
-      formatTime: (date: Date) => date.toLocaleTimeString(),
       clearLog: () => {
         logEntries.value = []
       }

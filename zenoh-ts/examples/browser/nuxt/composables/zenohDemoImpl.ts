@@ -64,10 +64,6 @@ export function useZenohImpl(state: ZenohState): ZenohOperations {
     })
   }
 
-  function formatTime(date: Date): string {
-    return date.toLocaleTimeString()
-  }
-
   function clearLog(): void {
     state.logEntries.value = []
   }
@@ -289,7 +285,6 @@ export function useZenohImpl(state: ZenohState): ZenohOperations {
     unsubscribe,
     unsubscribeAll,
     addLogEntry,
-    formatTime,
     clearLog
   }
 }
