@@ -85,6 +85,33 @@ export interface ZenohOperations {
   unsubscribeAll: () => Promise<void>;
 }
 
+// Static option definitions for SSR compatibility
+export const priorityOptions = [
+  { value: 1, label: "Real Time (1)" },
+  { value: 2, label: "Interactive High (2)" },
+  { value: 3, label: "Interactive Low (3)" },
+  { value: 4, label: "Data High (4)" },
+  { value: 5, label: "Data (5) - Default" },
+  { value: 6, label: "Data Low (6)" },
+  { value: 7, label: "Background (7)" },
+];
+
+export const congestionControlOptions = [
+  { value: 0, label: "Drop (0) - Default" },
+  { value: 1, label: "Block (1)" },
+];
+
+export const reliabilityOptions = [
+  { value: 0, label: "Best Effort (0)" },
+  { value: 1, label: "Reliable (1) - Default" },
+];
+
+export const localityOptions = [
+  { value: 0, label: "Session Local (0)" },
+  { value: 1, label: "Remote (1)" },
+  { value: 2, label: "Any (2) - Default" },
+];
+
 // Default put options state
 export function putOptionsStateDefault(): PutOptionsState {
   return {

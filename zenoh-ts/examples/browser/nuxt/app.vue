@@ -97,38 +97,52 @@
               <div class="option-group">
                 <label>Priority:</label>
                 <select v-model.number="putOptions.priority" :disabled="!isConnected">
-                  <option :value="1">Real Time (1)</option>
-                  <option :value="2">Interactive High (2)</option>
-                  <option :value="3">Interactive Low (3)</option>
-                  <option :value="4">Data High (4)</option>
-                  <option :value="5">Data (5) - Default</option>
-                  <option :value="6">Data Low (6)</option>
-                  <option :value="7">Background (7)</option>
+                  <option 
+                    v-for="option in priorityOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
               </div>
               
               <div class="option-group">
                 <label>Congestion Control:</label>
                 <select v-model.number="putOptions.congestionControl" :disabled="!isConnected">
-                  <option :value="0">Drop (0) - Default</option>
-                  <option :value="1">Block (1)</option>
+                  <option 
+                    v-for="option in congestionControlOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
               </div>
               
               <div class="option-group">
                 <label>Reliability:</label>
                 <select v-model.number="putOptions.reliability" :disabled="!isConnected">
-                  <option :value="0">Best Effort (0)</option>
-                  <option :value="1">Reliable (1) - Default</option>
+                  <option 
+                    v-for="option in reliabilityOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
               </div>
               
               <div class="option-group">
                 <label>Allowed Destination:</label>
                 <select v-model.number="putOptions.allowedDestination" :disabled="!isConnected">
-                  <option :value="0">Session Local (0)</option>
-                  <option :value="1">Remote (1)</option>
-                  <option :value="2">Any (2) - Default</option>
+                  <option 
+                    v-for="option in localityOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
               </div>
               
@@ -256,6 +270,14 @@
 </template>
 
 <script setup lang="ts">
+// Import option arrays
+import { 
+  priorityOptions, 
+  congestionControlOptions, 
+  reliabilityOptions, 
+  localityOptions 
+} from "./composables/zenohDemo"
+
 // Use the Zenoh composable
 const {
   // State

@@ -23,6 +23,41 @@ import type {
 
 import { addLogEntry } from "./zenohDemo";
 
+// Helper functions to get enum options for UI
+export function getPriorityOptions() {
+  return [
+    { value: Priority.REAL_TIME, label: "Real Time (1)" },
+    { value: Priority.INTERACTIVE_HIGH, label: "Interactive High (2)" },
+    { value: Priority.INTERACTIVE_LOW, label: "Interactive Low (3)" },
+    { value: Priority.DATA_HIGH, label: "Data High (4)" },
+    { value: Priority.DATA, label: "Data (5) - Default" },
+    { value: Priority.DATA_LOW, label: "Data Low (6)" },
+    { value: Priority.BACKGROUND, label: "Background (7)" },
+  ];
+}
+
+export function getCongestionControlOptions() {
+  return [
+    { value: CongestionControl.DROP, label: "Drop (0) - Default" },
+    { value: CongestionControl.BLOCK, label: "Block (1)" },
+  ];
+}
+
+export function getReliabilityOptions() {
+  return [
+    { value: Reliability.BEST_EFFORT, label: "Best Effort (0)" },
+    { value: Reliability.RELIABLE, label: "Reliable (1) - Default" },
+  ];
+}
+
+export function getLocalityOptions() {
+  return [
+    { value: Locality.SESSION_LOCAL, label: "Session Local (0)" },
+    { value: Locality.REMOTE, label: "Remote (1)" },
+    { value: Locality.ANY, label: "Any (2) - Default" },
+  ];
+}
+
 export function putOptionsStateFrom(options: PutOptions): PutOptionsState {
   return {
     showOptions: false,
