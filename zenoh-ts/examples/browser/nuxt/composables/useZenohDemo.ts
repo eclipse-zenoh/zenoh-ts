@@ -52,6 +52,7 @@ export interface ZenohDemoState {
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
   localityOptions: OptionItem[];
+  encodingOptions: OptionItem[];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   performPut: () => Promise<void>;
@@ -104,6 +105,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
   localityOptions: OptionItem[] = [];
+  encodingOptions: OptionItem[] = [];
   async connect() {}
   async disconnect() {}
   async performPut() {}
@@ -117,7 +119,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
 
 // Option interface for select dropdowns
 export interface OptionItem {
-  value: number;
+  value: number | string;
   label: string;
 }
 

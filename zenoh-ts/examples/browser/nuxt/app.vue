@@ -85,12 +85,13 @@
               <div class="option-group">
                 <label>Encoding:</label>
                 <select v-model="putOptions.encoding" :disabled="!isConnected">
-                  <option value="text/plain">text/plain</option>
-                  <option value="application/json">application/json</option>
-                  <option value="application/xml">application/xml</option>
-                  <option value="zenoh/string">zenoh/string</option>
-                  <option value="zenoh/bytes">zenoh/bytes</option>
-                  <option value="application/octet-stream">application/octet-stream</option>
+                  <option 
+                    v-for="option in encodingOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
                 </select>
               </div>
               
@@ -289,6 +290,7 @@ const {
   congestionControlOptions,
   reliabilityOptions,
   localityOptions,
+  encodingOptions,
   
   // Operations
   connect,

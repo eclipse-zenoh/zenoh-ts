@@ -8,6 +8,10 @@ import {
   Reply,
   ReplyError,
   Encoding,
+  Priority,
+  CongestionControl,
+  Reliability,
+  Locality,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
 
@@ -40,6 +44,46 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
 class ZenohDemo extends ZenohDemoEmpty {
   private zenohSession: Session | null = null;
   private subscriberIdCounter = 0;
+
+  constructor() {
+    super();
+    
+    // Populate option arrays with actual Zenoh enum values
+    this.priorityOptions = [
+      { value: Priority.REAL_TIME, label: "Real Time" },
+      { value: Priority.INTERACTIVE_HIGH, label: "Interactive High" },
+      { value: Priority.INTERACTIVE_LOW, label: "Interactive Low" },
+      { value: Priority.DATA_HIGH, label: "Data High" },
+      { value: Priority.DATA, label: "Data (Default)" },
+      { value: Priority.DATA_LOW, label: "Data Low" },
+      { value: Priority.BACKGROUND, label: "Background" },
+    ];
+
+    this.congestionControlOptions = [
+      { value: CongestionControl.DROP, label: "Drop" },
+      { value: CongestionControl.BLOCK, label: "Block" },
+    ];
+
+    this.reliabilityOptions = [
+      { value: Reliability.BEST_EFFORT, label: "Best Effort" },
+      { value: Reliability.RELIABLE, label: "Reliable (Default)" },
+    ];
+
+    this.localityOptions = [
+      { value: Locality.SESSION_LOCAL, label: "Session Local" },
+      { value: Locality.REMOTE, label: "Remote" },
+      { value: Locality.ANY, label: "Any (Default)" },
+    ];
+
+    this.encodingOptions = [
+      { value: Encoding.TEXT_PLAIN.toString(), label: "text/plain" },
+      { value: Encoding.APPLICATION_JSON.toString(), label: "application/json" },
+      { value: Encoding.APPLICATION_OCTET_STREAM.toString(), label: "application/octet-stream" },
+      { value: Encoding.ZENOH_STRING.toString(), label: "zenoh/string" },
+      { value: Encoding.ZENOH_BYTES.toString(), label: "zenoh/bytes" },
+      { value: "application/xml", label: "application/xml" },
+    ];
+  }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
     console.log(`[${type.toUpperCase()}] ${message}`);
