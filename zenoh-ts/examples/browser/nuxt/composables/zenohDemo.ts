@@ -160,12 +160,12 @@ export async function useZenoh(): Promise<
   let zenohOperations: ZenohOperations;
 
   // Check if we're in a browser environment
-  if (process.client) {
+  if (import.meta.client) {
     // Dynamic import of the implementation - only loads in browser
     let implPromise: Promise<ZenohOperations> | null = null;
     const getImpl = async (): Promise<ZenohOperations> => {
       if (!implPromise) {
-        implPromise = import("./zenohDemoImpl.js").then((module) =>
+        implPromise = import("./zenohDemo/zenohDemoImpl").then((module) =>
           module.useZenohImpl(state)
         );
       }

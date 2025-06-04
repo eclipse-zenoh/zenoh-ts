@@ -19,9 +19,9 @@ import type {
   ZenohOperations,
   PutOptionsState,
   SubscriberInfo,
-} from "./zenohDemo";
+} from "../zenohDemo";
 
-import { addLogEntry } from "./zenohDemo";
+import { addLogEntry } from "../zenohDemo";
 
 // Import the global option arrays to populate them
 import {
@@ -29,7 +29,7 @@ import {
   congestionControlOptions,
   reliabilityOptions,
   localityOptions,
-} from "./zenohDemo";
+} from "../zenohDemo";
 
 // Helper functions to get enum options for UI
 export function getPriorityOptions() {
