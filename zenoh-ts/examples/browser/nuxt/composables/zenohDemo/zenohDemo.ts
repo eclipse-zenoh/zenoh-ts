@@ -48,41 +48,65 @@ class ZenohDemo extends ZenohDemoEmpty {
   constructor() {
     super();
     
-    // Populate option arrays with actual Zenoh enum values
-    this.priorityOptions = [
-      { value: Priority.REAL_TIME, label: "Real Time" },
-      { value: Priority.INTERACTIVE_HIGH, label: "Interactive High" },
-      { value: Priority.INTERACTIVE_LOW, label: "Interactive Low" },
-      { value: Priority.DATA_HIGH, label: "Data High" },
-      { value: Priority.DATA, label: "Data (Default)" },
-      { value: Priority.DATA_LOW, label: "Data Low" },
-      { value: Priority.BACKGROUND, label: "Background" },
-    ];
+    // Helper function to convert enum keys to readable labels
+    const enumKeyToLabel = (key: string): string => {
+      return key
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    };
 
-    this.congestionControlOptions = [
-      { value: CongestionControl.DROP, label: "Drop" },
-      { value: CongestionControl.BLOCK, label: "Block" },
-    ];
+    // Helper function to populate options from numeric enum, excluding defaults
+    const createOptionsFromEnum = <T extends Record<string, string | number>>(
+      enumObj: T, 
+      excludeKeys: string[] = []
+    ): Array<{ value: number; label: string }> => {
+      return Object.entries(enumObj)
+        .filter(([key, value]) => 
+          typeof value === 'number' && 
+          !excludeKeys.includes(key)
+        )
+        .map(([key, value]) => ({
+          value: value as number,
+          label: enumKeyToLabel(key)
+        }))
+        .sort((a, b) => a.value - b.value); // Sort by numeric value
+    };
 
-    this.reliabilityOptions = [
-      { value: Reliability.BEST_EFFORT, label: "Best Effort" },
-      { value: Reliability.RELIABLE, label: "Reliable (Default)" },
-    ];
+    // Helper function to get common encoding options from Encoding static properties
+    const createEncodingOptions = (): Array<{ value: string; label: string }> => {
+      const commonEncodings = [
+        { prop: 'TEXT_PLAIN', label: 'text/plain' },
+        { prop: 'APPLICATION_JSON', label: 'application/json' },
+        { prop: 'APPLICATION_OCTET_STREAM', label: 'application/octet-stream' },
+        { prop: 'ZENOH_STRING', label: 'zenoh/string' },
+        { prop: 'ZENOH_BYTES', label: 'zenoh/bytes' },
+        { prop: 'APPLICATION_XML', label: 'application/xml' },
+        { prop: 'TEXT_YAML', label: 'text/yaml' },
+        { prop: 'APPLICATION_CBOR', label: 'application/cbor' },
+      ];
 
-    this.localityOptions = [
-      { value: Locality.SESSION_LOCAL, label: "Session Local" },
-      { value: Locality.REMOTE, label: "Remote" },
-      { value: Locality.ANY, label: "Any (Default)" },
-    ];
+      return commonEncodings
+        .filter(({ prop }) => (Encoding as any)[prop]) // Check if property exists
+        .map(({ prop, label }) => ({
+          value: ((Encoding as any)[prop] as Encoding).toString(),
+          label
+        }));
+    };
 
-    this.encodingOptions = [
-      { value: Encoding.TEXT_PLAIN.toString(), label: "text/plain" },
-      { value: Encoding.APPLICATION_JSON.toString(), label: "application/json" },
-      { value: Encoding.APPLICATION_OCTET_STREAM.toString(), label: "application/octet-stream" },
-      { value: Encoding.ZENOH_STRING.toString(), label: "zenoh/string" },
-      { value: Encoding.ZENOH_BYTES.toString(), label: "zenoh/bytes" },
-      { value: "application/xml", label: "application/xml" },
-    ];
+    // Populate option arrays using enum iteration
+    this.priorityOptions = createOptionsFromEnum(Priority, ['DEFAULT']);
+    
+    this.congestionControlOptions = createOptionsFromEnum(CongestionControl, [
+      'DEFAULT_PUSH', 'DEFAULT_REQUEST', 'DEFAULT_RESPONSE'
+    ]);
+    
+    this.reliabilityOptions = createOptionsFromEnum(Reliability, ['DEFAULT']);
+    
+    this.localityOptions = createOptionsFromEnum(Locality, ['DEFAULT']);
+
+    // Encoding options - dynamically populated from Encoding static properties
+    this.encodingOptions = createEncodingOptions();
   }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
