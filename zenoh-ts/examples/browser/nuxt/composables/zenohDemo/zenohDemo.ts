@@ -14,6 +14,7 @@ import {
   Locality,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
+import { createOptionsFromEnum, createEncodingOptions } from "./utils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -48,53 +49,7 @@ class ZenohDemo extends ZenohDemoEmpty {
   constructor() {
     super();
     
-    // Helper function to convert enum keys to readable labels
-    const enumKeyToLabel = (key: string): string => {
-      return key
-        .split('_')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    };
-
-    // Helper function to populate options from numeric enum, excluding defaults
-    const createOptionsFromEnum = <T extends Record<string, string | number>>(
-      enumObj: T, 
-      excludeKeys: string[] = []
-    ): Array<{ value: number; label: string }> => {
-      return Object.entries(enumObj)
-        .filter(([key, value]) => 
-          typeof value === 'number' && 
-          !excludeKeys.includes(key)
-        )
-        .map(([key, value]) => ({
-          value: value as number,
-          label: enumKeyToLabel(key)
-        }))
-        .sort((a, b) => a.value - b.value); // Sort by numeric value
-    };
-
-    // Helper function to get common encoding options from Encoding static properties
-    const createEncodingOptions = (): Array<{ value: string; label: string }> => {
-      const commonEncodings = [
-        { prop: 'TEXT_PLAIN', label: 'text/plain' },
-        { prop: 'APPLICATION_JSON', label: 'application/json' },
-        { prop: 'APPLICATION_OCTET_STREAM', label: 'application/octet-stream' },
-        { prop: 'ZENOH_STRING', label: 'zenoh/string' },
-        { prop: 'ZENOH_BYTES', label: 'zenoh/bytes' },
-        { prop: 'APPLICATION_XML', label: 'application/xml' },
-        { prop: 'TEXT_YAML', label: 'text/yaml' },
-        { prop: 'APPLICATION_CBOR', label: 'application/cbor' },
-      ];
-
-      return commonEncodings
-        .filter(({ prop }) => (Encoding as any)[prop]) // Check if property exists
-        .map(({ prop, label }) => ({
-          value: ((Encoding as any)[prop] as Encoding).toString(),
-          label
-        }));
-    };
-
-    // Populate option arrays using enum iteration
+    // Populate option arrays using utility functions from utils.ts
     this.priorityOptions = createOptionsFromEnum(Priority, ['DEFAULT']);
     
     this.congestionControlOptions = createOptionsFromEnum(CongestionControl, [
@@ -106,7 +61,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.localityOptions = createOptionsFromEnum(Locality, ['DEFAULT']);
 
     // Encoding options - dynamically populated from Encoding static properties
-    this.encodingOptions = createEncodingOptions();
+    this.encodingOptions = createEncodingOptions(Encoding);
   }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
