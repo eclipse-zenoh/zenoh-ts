@@ -71,7 +71,7 @@
           <!-- Put Options Toggle -->
           <div class="options-toggle">
             <button 
-              @click="putOptions.showOptions = !putOptions.showOptions" 
+              @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
               class="options-toggle-btn"
               :class="{ active: putOptions.showOptions }"
             >
@@ -276,7 +276,7 @@ import {
   congestionControlOptions, 
   reliabilityOptions, 
   localityOptions 
-} from "./composables/zenohDemo"
+} from "./composables/useZenohDemo"
 
 // Use the Zenoh composable
 const {
@@ -303,7 +303,7 @@ const {
 
   // App operations
   clearLog,
-} = await useZenoh()
+} = await useZenohDemo();
 
 // Template ref for log content
 const logContent = ref<HTMLElement>()
