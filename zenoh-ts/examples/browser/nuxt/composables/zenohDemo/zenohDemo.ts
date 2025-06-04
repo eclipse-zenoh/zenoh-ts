@@ -61,7 +61,8 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.localityOptions = createOptionsFromEnum(Locality, ['DEFAULT']);
 
     // Encoding options - dynamically populated from Encoding static properties
-    this.encodingOptions = createOptionsFromStaticConstants(Encoding);
+    // Exclude private static properties that might be exposed
+    this.encodingOptions = createOptionsFromStaticConstants(Encoding, ['ID_TO_ENCODING', 'ENCODING_TO_ID', 'SEP']);
   }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {

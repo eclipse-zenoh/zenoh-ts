@@ -59,9 +59,10 @@ export function createOptionsFromEnum<T extends Record<string, string | number>>
 /**
  * Creates option items from static constants of a class using reflection
  * @param classRef - The class reference containing static constants
+ * @param excludeKeys - Array of property names to exclude from the options
  * @returns Array of option items with labels generated from toString()
  */
-export function createOptionsFromStaticConstants(classRef: any): OptionItem[] {
+export function createOptionsFromStaticConstants(classRef: any, excludeKeys: string[] = []): OptionItem[] {
   return Object.getOwnPropertyNames(classRef)
     .filter(prop => {
       const value = classRef[prop];
@@ -70,7 +71,8 @@ export function createOptionsFromStaticConstants(classRef: any): OptionItem[] {
       const isObject = typeof value === 'object';
       
       // Filter for static constants (uppercase properties that are object instances with toString)
-      return isUpperCase && value && isObject && hasToString;
+      // and exclude any keys specified in excludeKeys
+      return isUpperCase && value && isObject && hasToString && !excludeKeys.includes(prop);
     })
     .map(prop => {
       const constant = classRef[prop];
