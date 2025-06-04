@@ -1,5 +1,6 @@
 import type { Ref } from "vue";
 import { ref } from "vue";
+import type { OptionItem } from "./zenohDemo/utils";
 
 // Type-only imports - safe for SSR
 import type {
@@ -115,12 +116,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async unsubscribeAll() {}
   addLogEntry(_: LogEntry["type"], __: string) {}
   clearLog() {}
-}
-
-// Option interface for select dropdowns
-export interface OptionItem {
-  value: number | string;
-  label: string;
 }
 
 export async function useZenohDemo(): Promise<ZenohDemoState> {
