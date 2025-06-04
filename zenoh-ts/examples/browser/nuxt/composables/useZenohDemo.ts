@@ -62,8 +62,33 @@ export interface ZenohDemoOperations {
   clearLog: () => void;
 }
 
+// Operations-only base class for SSR compatibility
+export class ZenohDemoEmptyOperations implements ZenohDemoOperations {
+  constructor() {
+    const proto = Object.getPrototypeOf(this);
+    for (const name of Object.getOwnPropertyNames(proto)) {
+      if (name === 'constructor') continue;
+      const fn = (this as any)[name];
+      if (typeof fn === 'function') {
+        (this as any)[name] = fn.bind(this);
+      }
+    }
+  }
+
+  async connect() {}
+  async disconnect() {}
+  async performPut() {}
+  async performGet() {}
+  async subscribe() {}
+  async unsubscribe(_: string) {}
+  async unsubscribeAll() {}
+  addLogEntry(_: LogEntry["type"], __: string) {}
+  clearLog() {}
+}
+
 // Empty implementation class for SSR compatibility
-export class ZenohDemoEmpty implements ZenohDemoState, ZenohDemoOperations {
+export class ZenohDemoEmpty extends ZenohDemoEmptyOperations implements ZenohDemoState {
+  // state fields only; operations are bound in the super constructor
   serverUrl = ref('ws://localhost:10000');
   isConnected = ref(false);
   isConnecting = ref(false);
@@ -83,27 +108,6 @@ export class ZenohDemoEmpty implements ZenohDemoState, ZenohDemoOperations {
   subscribeKey = ref('demo/example/**');
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);
-
-  constructor() {
-    const methodsToBind: Array<keyof ZenohDemoOperations> = [
-      'connect', 'disconnect', 'performPut', 'performGet',
-      'subscribe', 'unsubscribe', 'unsubscribeAll', 'addLogEntry', 'clearLog'
-    ];
-    methodsToBind.forEach(name => {
-      // @ts-ignore
-      (this as any)[name] = (this as any)[name].bind(this);
-    });
-  }
-
-  async connect() {}
-  async disconnect() {}
-  async performPut() {}
-  async performGet() {}
-  async subscribe() {}
-  async unsubscribe(_: string) {}
-  async unsubscribeAll() {}
-  addLogEntry(_: LogEntry["type"], __: string) {}
-  clearLog() {}
 }
 
 // Option interface for select dropdowns
