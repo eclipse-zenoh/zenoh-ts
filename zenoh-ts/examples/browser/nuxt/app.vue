@@ -84,15 +84,44 @@
             <div class="options-grid">
               <div class="option-group">
                 <label>Encoding:</label>
-                <select v-model="putOptions.encoding" :disabled="!isConnected">
-                  <option 
-                    v-for="option in encodingOptions" 
-                    :key="option.value" 
-                    :value="option.value"
+                <div class="encoding-input-container">
+                  <input 
+                    type="text" 
+                    v-model="putOptions.encoding.value" 
+                    :disabled="!isConnected"
+                    placeholder="e.g., application/json, text/plain, or custom encoding"
+                    class="encoding-text-input"
+                    list="encoding-options"
+                    title="Type a custom encoding or select from the dropdown. Examples: application/json, text/plain, application/octet-stream"
                   >
-                    {{ option.label }}
-                  </option>
-                </select>
+                  <datalist id="encoding-options">
+                    <option 
+                      v-for="option in encodingOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </datalist>
+                  <select 
+                    v-model="putOptions.encoding.value" 
+                    :disabled="!isConnected"
+                    class="encoding-dropdown"
+                    title="Select a predefined encoding or type a custom one in the text field"
+                  >
+                    <option value="">-- Select Encoding --</option>
+                    <option 
+                      v-for="option in encodingOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                <small class="encoding-help-text">
+                  💡 You can type a custom encoding (e.g., "application/json") or select from predefined options
+                </small>
               </div>
               
               <div class="option-group">
@@ -801,6 +830,78 @@ watch(logEntries, () => {
   color: #6c757d;
 }
 
+/* Encoding Input Container Styling */
+.encoding-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.encoding-text-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  min-width: 0; /* Allow shrinking */
+}
+
+.encoding-text-input:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.encoding-text-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.encoding-dropdown {
+  flex-shrink: 0;
+  width: 180px;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+}
+
+.encoding-dropdown:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.encoding-dropdown:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Responsive design for encoding container */
+@media (max-width: 768px) {
+  .encoding-input-container {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .encoding-dropdown {
+    width: 100%;
+  }
+}
+
+/* Encoding help text styling */
+.encoding-help-text {
+  font-size: 12px;
+  color: #6c757d;
+  font-style: italic;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
 .checkbox-label {
   display: flex !important;
   flex-direction: row !important;
@@ -822,5 +923,10 @@ watch(logEntries, () => {
 
 .attachment-group input[type="text"] {
   width: 100%;
+}
+
+/* Special grid layout for encoding field to give it more space */
+.option-group:has(.encoding-input-container) {
+  grid-column: 1 / -1; /* Span full width for better UX */
 }
 </style>
