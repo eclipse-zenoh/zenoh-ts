@@ -17,30 +17,32 @@ import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
 import { createOptionsFromEnum, type OptionItem } from "./utils";
 
 /**
- * Creates encoding options from Zenoh Encoding static properties
+ * Creates encoding options from all Zenoh Encoding static properties
  * @param encodingClass - The Encoding class reference
- * @param commonEncodings - Array of encoding configurations to include
- * @returns Array of encoding options
+ * @returns Array of encoding options with labels generated from toString()
  */
-function createEncodingOptions(
-  encodingClass: any,
-  commonEncodings: Array<{ prop: string; label: string }> = [
-    { prop: 'TEXT_PLAIN', label: 'text/plain' },
-    { prop: 'APPLICATION_JSON', label: 'application/json' },
-    { prop: 'APPLICATION_OCTET_STREAM', label: 'application/octet-stream' },
-    { prop: 'ZENOH_STRING', label: 'zenoh/string' },
-    { prop: 'ZENOH_BYTES', label: 'zenoh/bytes' },
-    { prop: 'APPLICATION_XML', label: 'application/xml' },
-    { prop: 'TEXT_YAML', label: 'text/yaml' },
-    { prop: 'APPLICATION_CBOR', label: 'application/cbor' },
-  ]
-): OptionItem[] {
-  return commonEncodings
-    .filter(({ prop }) => encodingClass[prop]) // Check if property exists
-    .map(({ prop, label }) => ({
-      value: encodingClass[prop].toString(),
-      label
-    }));
+function createEncodingOptions(encodingClass: any): OptionItem[] {
+  const options = Object.getOwnPropertyNames(encodingClass)
+    .filter(prop => {
+      const value = encodingClass[prop];
+      const isUpperCase = prop === prop.toUpperCase();
+      const hasToString = value && typeof value.toString === 'function';
+      const isObject = typeof value === 'object';
+      
+      // Filter for static Encoding constants (uppercase properties that are Encoding instances)
+      return isUpperCase && value && isObject && hasToString;
+    })
+    .map(prop => {
+      const encoding = encodingClass[prop];
+      const stringValue = encoding.toString();
+      return {
+        value: stringValue,
+        label: stringValue
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically by label
+  
+  return options;
 }
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {

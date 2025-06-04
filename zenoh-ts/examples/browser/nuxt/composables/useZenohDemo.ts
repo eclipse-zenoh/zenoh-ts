@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import { ref } from "vue";
-import type { OptionItem } from "./zenohDemo/utils";
+import { Deconstructable, type OptionItem } from "./zenohDemo/utils";
 
 // Type-only imports - safe for SSR
 import type {
@@ -63,22 +63,6 @@ export interface ZenohDemoState {
   unsubscribeAll: () => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string) => void;
   clearLog: () => void;
-}
-
-// This class is used to ensure that the methods of the derived class
-// are bound to the correct `this` context when the instance is deconstructed.
-// It is not intended to be instantiated directly.
-export class Deconstructable {
-  constructor() {
-    const proto = Object.getPrototypeOf(this);
-    for (const name of Object.getOwnPropertyNames(proto)) {
-      if (name === "constructor") continue;
-      const fn = (this as any)[name];
-      if (typeof fn === "function") {
-        (this as any)[name] = fn.bind(this);
-      }
-    }
-  }
 }
 
 export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
