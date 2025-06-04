@@ -26,7 +26,6 @@ export default defineNuxtConfig({
       noExternal: []
     },
     optimizeDeps: {
-      exclude: ['@eclipse-zenoh/zenoh-ts']
     }
   },
   nitro: {

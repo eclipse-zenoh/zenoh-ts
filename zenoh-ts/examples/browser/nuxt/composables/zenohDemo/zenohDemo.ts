@@ -42,6 +42,7 @@ class ZenohDemo extends ZenohDemoEmpty {
   private subscriberIdCounter = 0;
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
+    console.log(`[${type.toUpperCase()}] ${message}`);
     this.logEntries.value.push({ type, message, timestamp: new Date() });
   }
 
