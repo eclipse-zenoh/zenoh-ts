@@ -83,45 +83,47 @@
           <div v-if="putOptions.showOptions" class="options-panel">
             <div class="options-grid">
               <div class="option-group">
-                <label>Encoding:</label>
-                <div class="encoding-input-container">
-                  <input 
-                    type="text" 
-                    v-model="putOptions.encoding.value" 
-                    :disabled="!isConnected"
-                    placeholder="e.g., application/json, text/plain, or custom encoding"
-                    class="encoding-text-input"
-                    list="encoding-options"
-                    title="Type a custom encoding or select from the dropdown. Examples: application/json, text/plain, application/octet-stream"
-                  >
-                  <datalist id="encoding-options">
-                    <option 
-                      v-for="option in encodingOptions" 
-                      :key="option.value" 
-                      :value="option.value"
+                <div class="encoding-header">
+                  <label>Encoding:</label>
+                  <label class="custom-checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      v-model="putOptions.customEncoding.value" 
+                      :disabled="!isConnected"
+                      class="custom-encoding-checkbox"
                     >
-                      {{ option.label }}
-                    </option>
-                  </datalist>
-                  <select 
-                    v-model="putOptions.encoding.value" 
-                    :disabled="!isConnected"
-                    class="encoding-dropdown"
-                    title="Select a predefined encoding or type a custom one in the text field"
-                  >
-                    <option value="">-- Select Encoding --</option>
-                    <option 
-                      v-for="option in encodingOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
+                    Custom
+                  </label>
                 </div>
-                <small class="encoding-help-text">
-                  💡 You can type a custom encoding (e.g., "application/json") or select from predefined options
-                </small>
+                
+                <!-- Predefined Encoding Dropdown -->
+                <select 
+                  v-if="!putOptions.customEncoding.value"
+                  v-model="putOptions.encoding.value" 
+                  :disabled="!isConnected"
+                  class="encoding-select"
+                  title="Select a predefined encoding"
+                >
+                  <option value="">-- Select Encoding --</option>
+                  <option 
+                    v-for="option in encodingOptions" 
+                    :key="option.value" 
+                    :value="option.value"
+                  >
+                    {{ option.label }}
+                  </option>
+                </select>
+                
+                <!-- Custom Encoding Input -->
+                <input 
+                  v-else
+                  type="text" 
+                  v-model="putOptions.encoding.value" 
+                  :disabled="!isConnected"
+                  placeholder="e.g., application/json, text/plain, my-custom-format"
+                  class="encoding-text-input"
+                  title="Enter a custom encoding string"
+                >
               </div>
               
               <div class="option-group">
@@ -345,6 +347,17 @@ watch(logEntries, () => {
     }
   })
 }, { deep: true })
+
+// Clear encoding field when switching between custom and predefined modes
+watch(putOptions.customEncoding, (isCustom) => {
+  if (isCustom) {
+    // Switching to custom mode - clear the field for user input
+    putOptions.encoding.value = '';
+  } else {
+    // Switching to predefined mode - clear the field so user can select from dropdown
+    putOptions.encoding.value = '';
+  }
+}, { immediate: false })
 </script>
 
 <style scoped>
@@ -830,76 +843,71 @@ watch(logEntries, () => {
   color: #6c757d;
 }
 
-/* Encoding Input Container Styling */
-.encoding-input-container {
+/* Compact Encoding Field Styling */
+.encoding-header {
   display: flex;
-  gap: 8px;
-  align-items: stretch;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
 }
 
+.encoding-header label:first-child {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  color: #6c757d;
+  cursor: pointer;
+  user-select: none;
+}
+
+.custom-encoding-checkbox {
+  margin: 0;
+  cursor: pointer;
+}
+
+.encoding-select,
 .encoding-text-input {
-  flex: 1;
+  width: 100%;
   padding: 6px 10px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
   background: white;
-  min-width: 0; /* Allow shrinking */
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+.encoding-select:disabled,
 .encoding-text-input:disabled {
   background: #f8f9fa;
   color: #6c757d;
+  cursor: not-allowed;
 }
 
+.encoding-select:focus,
 .encoding-text-input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
+/* Remove old encoding container styles */
+.encoding-input-container {
+  display: none;
+}
+
 .encoding-dropdown {
-  flex-shrink: 0;
-  width: 180px;
-  padding: 6px 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background: white;
-  cursor: pointer;
+  display: none;
 }
 
-.encoding-dropdown:disabled {
-  background: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
-.encoding-dropdown:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-/* Responsive design for encoding container */
-@media (max-width: 768px) {
-  .encoding-input-container {
-    flex-direction: column;
-    gap: 5px;
-  }
-  
-  .encoding-dropdown {
-    width: 100%;
-  }
-}
-
-/* Encoding help text styling */
 .encoding-help-text {
-  font-size: 12px;
-  color: #6c757d;
-  font-style: italic;
-  margin-top: 3px;
-  line-height: 1.3;
+  display: none;
 }
 
 .checkbox-label {
@@ -925,8 +933,5 @@ watch(logEntries, () => {
   width: 100%;
 }
 
-/* Special grid layout for encoding field to give it more space */
-.option-group:has(.encoding-input-container) {
-  grid-column: 1 / -1; /* Span full width for better UX */
-}
+
 </style>

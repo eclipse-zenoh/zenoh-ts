@@ -29,6 +29,7 @@ export interface SubscriberInfo {
 export interface PutOptionsState {
   showOptions: Ref<boolean>;
   encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
   priority: Ref<Priority>;
   congestionControl: Ref<CongestionControl>;
   express: Ref<boolean>;
@@ -75,6 +76,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   putOptions = {
     showOptions: ref(false),
     encoding: ref(""),
+    customEncoding: ref(false),
     priority: ref(0 as Priority),
     congestionControl: ref(0 as CongestionControl),
     express: ref(false),
