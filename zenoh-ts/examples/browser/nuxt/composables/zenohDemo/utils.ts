@@ -39,30 +39,3 @@ export function createOptionsFromEnum<T extends Record<string, string | number>>
     }))
     .sort((a, b) => (a.value as number) - (b.value as number)); // Sort by numeric value
 }
-
-/**
- * Creates encoding options from Zenoh Encoding static properties
- * @param encodingClass - The Encoding class reference
- * @param commonEncodings - Array of encoding configurations to include
- * @returns Array of encoding options
- */
-export function createEncodingOptions(
-  encodingClass: any,
-  commonEncodings: Array<{ prop: string; label: string }> = [
-    { prop: 'TEXT_PLAIN', label: 'text/plain' },
-    { prop: 'APPLICATION_JSON', label: 'application/json' },
-    { prop: 'APPLICATION_OCTET_STREAM', label: 'application/octet-stream' },
-    { prop: 'ZENOH_STRING', label: 'zenoh/string' },
-    { prop: 'ZENOH_BYTES', label: 'zenoh/bytes' },
-    { prop: 'APPLICATION_XML', label: 'application/xml' },
-    { prop: 'TEXT_YAML', label: 'text/yaml' },
-    { prop: 'APPLICATION_CBOR', label: 'application/cbor' },
-  ]
-): OptionItem[] {
-  return commonEncodings
-    .filter(({ prop }) => encodingClass[prop]) // Check if property exists
-    .map(({ prop, label }) => ({
-      value: encodingClass[prop].toString(),
-      label
-    }));
-}

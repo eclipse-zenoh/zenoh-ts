@@ -14,7 +14,34 @@ import {
   Locality,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
-import { createOptionsFromEnum, createEncodingOptions } from "./utils";
+import { createOptionsFromEnum, type OptionItem } from "./utils";
+
+/**
+ * Creates encoding options from Zenoh Encoding static properties
+ * @param encodingClass - The Encoding class reference
+ * @param commonEncodings - Array of encoding configurations to include
+ * @returns Array of encoding options
+ */
+function createEncodingOptions(
+  encodingClass: any,
+  commonEncodings: Array<{ prop: string; label: string }> = [
+    { prop: 'TEXT_PLAIN', label: 'text/plain' },
+    { prop: 'APPLICATION_JSON', label: 'application/json' },
+    { prop: 'APPLICATION_OCTET_STREAM', label: 'application/octet-stream' },
+    { prop: 'ZENOH_STRING', label: 'zenoh/string' },
+    { prop: 'ZENOH_BYTES', label: 'zenoh/bytes' },
+    { prop: 'APPLICATION_XML', label: 'application/xml' },
+    { prop: 'TEXT_YAML', label: 'text/yaml' },
+    { prop: 'APPLICATION_CBOR', label: 'application/cbor' },
+  ]
+): OptionItem[] {
+  return commonEncodings
+    .filter(({ prop }) => encodingClass[prop]) // Check if property exists
+    .map(({ prop, label }) => ({
+      value: encodingClass[prop].toString(),
+      label
+    }));
+}
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
