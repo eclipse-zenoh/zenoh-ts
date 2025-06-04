@@ -311,6 +311,6 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 }
 
-export async function useZenohDemo(): Promise<ZenohDemoState> {
+export async function useZenohDemo(): Promise<ZenohDemoState & ZenohDemoOperations> {
   return new ZenohDemo();
 }

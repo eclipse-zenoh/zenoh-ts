@@ -48,6 +48,9 @@ export interface ZenohDemoState {
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
+}
+
+export interface ZenohDemoOperations {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   performPut: () => Promise<void>;
@@ -60,7 +63,7 @@ export interface ZenohDemoState {
 }
 
 // Empty implementation class for SSR compatibility
-export class ZenohDemoEmpty implements ZenohDemoState {
+export class ZenohDemoEmpty implements ZenohDemoState, ZenohDemoOperations {
   serverUrl = ref('ws://localhost:10000');
   isConnected = ref(false);
   isConnecting = ref(false);
@@ -80,6 +83,17 @@ export class ZenohDemoEmpty implements ZenohDemoState {
   subscribeKey = ref('demo/example/**');
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);
+
+  constructor() {
+    const methodsToBind: Array<keyof ZenohDemoOperations> = [
+      'connect', 'disconnect', 'performPut', 'performGet',
+      'subscribe', 'unsubscribe', 'unsubscribeAll', 'addLogEntry', 'clearLog'
+    ];
+    methodsToBind.forEach(name => {
+      // @ts-ignore
+      (this as any)[name] = (this as any)[name].bind(this);
+    });
+  }
 
   async connect() {}
   async disconnect() {}
@@ -104,7 +118,7 @@ export let congestionControlOptions: OptionItem[] = [];
 export let reliabilityOptions: OptionItem[] = [];
 export let localityOptions: OptionItem[] = [];
 
-export async function useZenohDemo(): Promise<ZenohDemoState> {
+export async function useZenohDemo(): Promise<ZenohDemoState & ZenohDemoOperations> {
   // Check if we're in a browser environment
   if (import.meta.client) {
     // Dynamic import of the implementation - only loads in browser
