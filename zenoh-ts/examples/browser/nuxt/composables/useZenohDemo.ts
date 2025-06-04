@@ -48,6 +48,10 @@ export interface ZenohDemoState {
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
+  priorityOptions: OptionItem[];
+  congestionControlOptions: OptionItem[];
+  reliabilityOptions: OptionItem[];
+  localityOptions: OptionItem[];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   performPut: () => Promise<void>;
@@ -95,6 +99,11 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   getKey = ref("demo/example/*");
   subscribeKey = ref("demo/example/**");
   logEntries = ref<LogEntry[]>([]);
+  activeSubscribers = ref<SubscriberInfo[]>([]);
+  priorityOptions: OptionItem[] = [];
+  congestionControlOptions: OptionItem[] = [];
+  reliabilityOptions: OptionItem[] = [];
+  localityOptions: OptionItem[] = [];
   async connect() {}
   async disconnect() {}
   async performPut() {}
@@ -104,7 +113,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async unsubscribeAll() {}
   addLogEntry(_: LogEntry["type"], __: string) {}
   clearLog() {}
-  activeSubscribers = ref<SubscriberInfo[]>([]);
 }
 
 // Option interface for select dropdowns
@@ -112,12 +120,6 @@ export interface OptionItem {
   value: number;
   label: string;
 }
-
-// Global option arrays - initialized when zenoh-ts loads
-export let priorityOptions: OptionItem[] = [];
-export let congestionControlOptions: OptionItem[] = [];
-export let reliabilityOptions: OptionItem[] = [];
-export let localityOptions: OptionItem[] = [];
 
 export async function useZenohDemo(): Promise<ZenohDemoState> {
   // Check if we're in a browser environment

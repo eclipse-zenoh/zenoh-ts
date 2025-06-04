@@ -270,14 +270,6 @@
 </template>
 
 <script setup lang="ts">
-// Import option arrays as global variables
-import { 
-  priorityOptions, 
-  congestionControlOptions, 
-  reliabilityOptions, 
-  localityOptions 
-} from "./composables/useZenohDemo"
-
 // Use the Zenoh composable
 const {
   // State
@@ -291,6 +283,12 @@ const {
   logEntries,
   activeSubscribers,
   putOptions,
+  
+  // Option arrays (now part of the state)
+  priorityOptions,
+  congestionControlOptions,
+  reliabilityOptions,
+  localityOptions,
   
   // Operations
   connect,
