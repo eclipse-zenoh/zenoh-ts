@@ -55,3 +55,30 @@ export function createOptionsFromEnum<T extends Record<string, string | number>>
     }))
     .sort((a, b) => (a.value as number) - (b.value as number)); // Sort by numeric value
 }
+
+/**
+ * Creates option items from static constants of a class using reflection
+ * @param classRef - The class reference containing static constants
+ * @returns Array of option items with labels generated from toString()
+ */
+export function createOptionsFromStaticConstants(classRef: any): OptionItem[] {
+  return Object.getOwnPropertyNames(classRef)
+    .filter(prop => {
+      const value = classRef[prop];
+      const isUpperCase = prop === prop.toUpperCase();
+      const hasToString = value && typeof value.toString === 'function';
+      const isObject = typeof value === 'object';
+      
+      // Filter for static constants (uppercase properties that are object instances with toString)
+      return isUpperCase && value && isObject && hasToString;
+    })
+    .map(prop => {
+      const constant = classRef[prop];
+      const stringValue = constant.toString();
+      return {
+        value: stringValue,
+        label: stringValue
+      };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically by label
+}

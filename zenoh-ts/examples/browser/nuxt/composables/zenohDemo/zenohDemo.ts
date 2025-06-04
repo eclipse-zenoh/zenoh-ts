@@ -14,36 +14,7 @@ import {
   Locality,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
-import { createOptionsFromEnum, type OptionItem } from "./utils";
-
-/**
- * Creates encoding options from all Zenoh Encoding static properties
- * @param encodingClass - The Encoding class reference
- * @returns Array of encoding options with labels generated from toString()
- */
-function createEncodingOptions(encodingClass: any): OptionItem[] {
-  const options = Object.getOwnPropertyNames(encodingClass)
-    .filter(prop => {
-      const value = encodingClass[prop];
-      const isUpperCase = prop === prop.toUpperCase();
-      const hasToString = value && typeof value.toString === 'function';
-      const isObject = typeof value === 'object';
-      
-      // Filter for static Encoding constants (uppercase properties that are Encoding instances)
-      return isUpperCase && value && isObject && hasToString;
-    })
-    .map(prop => {
-      const encoding = encodingClass[prop];
-      const stringValue = encoding.toString();
-      return {
-        value: stringValue,
-        label: stringValue
-      };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically by label
-  
-  return options;
-}
+import { createOptionsFromEnum, createOptionsFromStaticConstants } from "./utils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -90,7 +61,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.localityOptions = createOptionsFromEnum(Locality, ['DEFAULT']);
 
     // Encoding options - dynamically populated from Encoding static properties
-    this.encodingOptions = createEncodingOptions(Encoding);
+    this.encodingOptions = createOptionsFromStaticConstants(Encoding);
   }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
