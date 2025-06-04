@@ -1,4 +1,10 @@
-import { type ZenohDemoState, ZenohDemoEmpty, type LogEntry, type SubscriberInfo, type PutOptionsState } from "../useZenohDemo";
+import {
+  type ZenohDemoState,
+  ZenohDemoEmpty,
+  type LogEntry,
+  type SubscriberInfo,
+  type PutOptionsState,
+} from "../useZenohDemo";
 import {
   Config,
   Session,
@@ -12,9 +18,114 @@ import {
   CongestionControl,
   Reliability,
   Locality,
+  SampleKind,
+  Timestamp,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
-import { createOptionsFromEnum, createOptionsFromStaticConstants } from "./utils";
+import {
+  createOptionsFromEnum,
+  createOptionsFromStaticConstants,
+} from "./utils";
+
+// Sample field conversion functions
+function sampleKindToString(kind: SampleKind): string {
+  switch (kind) {
+    case SampleKind.PUT:
+      return "PUT";
+    case SampleKind.DELETE:
+      return "DELETE";
+    default:
+      return `UNKNOWN(${kind})`;
+  }
+}
+
+function priorityToString(priority: Priority): string {
+  switch (priority) {
+    case Priority.REAL_TIME:
+      return "REAL_TIME";
+    case Priority.INTERACTIVE_HIGH:
+      return "INTERACTIVE_HIGH";
+    case Priority.INTERACTIVE_LOW:
+      return "INTERACTIVE_LOW";
+    case Priority.DATA_HIGH:
+      return "DATA_HIGH";
+    case Priority.DATA:
+      return "DATA";
+    case Priority.DATA_LOW:
+      return "DATA_LOW";
+    case Priority.BACKGROUND:
+      return "BACKGROUND";
+    default:
+      return `UNKNOWN(${priority})`;
+  }
+}
+
+function congestionControlToString(congestionControl: CongestionControl): string {
+  switch (congestionControl) {
+    case CongestionControl.DROP:
+      return "DROP";
+    case CongestionControl.BLOCK:
+      return "BLOCK";
+    default:
+      return `UNKNOWN(${congestionControl})`;
+  }
+}
+
+function timestampToString(timestamp: Timestamp | undefined): string {
+  return timestamp ? timestamp.asDate().toISOString() : "none";
+}
+
+function attachmentToString(attachment: ZBytes | undefined): string {
+  return attachment ? `"${attachment.toString()}"` : "none";
+}
+
+function encodingToString(encoding: Encoding): string {
+  return encoding.toString() || "none";
+}
+
+function expressToString(express: boolean): string {
+  return express.toString();
+}
+
+// Pretty-print sample function
+function sampleToPrettyString(sample: Sample, subscriberId?: string): string {
+  // Extract all sample properties
+  const keyStr = sample.keyexpr().toString();
+  const valueStr = sample.payload().toString();
+  const kind = sample.kind();
+  const encoding = sample.encoding();
+  const priority = sample.priority();
+  const congestionControl = sample.congestionControl();
+  const express = sample.express();
+  const timestamp = sample.timestamp();
+  const attachment = sample.attachment();
+
+  // Convert each field to string using dedicated functions
+  const kindStr = sampleKindToString(kind);
+  const priorityStr = priorityToString(priority);
+  const congestionControlStr = congestionControlToString(congestionControl);
+  const timestampStr = timestampToString(timestamp);
+  const attachmentStr = attachmentToString(attachment);
+  const encodingStr = encodingToString(encoding);
+  const expressStr = expressToString(express);
+
+  // Create comprehensive sample information
+  const sampleInfo = [
+    `Key: ${keyStr}`,
+    `Value: "${valueStr}"`,
+    `Kind: ${kindStr}`,
+    `Encoding: ${encodingStr}`,
+    `Priority: ${priorityStr}`,
+    `CongestionControl: ${congestionControlStr}`,
+    `Express: ${expressStr}`,
+    `Timestamp: ${timestampStr}`,
+    `Attachment: ${attachmentStr}`,
+  ].join(", ");
+
+  // Return formatted string with optional subscriber ID
+  const prefix = subscriberId ? `SUBSCRIPTION [${subscriberId}]` : "SAMPLE";
+  return `${prefix} ${sampleInfo}`;
+}
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -48,26 +159,64 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   constructor() {
     super();
-    
+
     // Populate option arrays using utility functions from utils.ts
-    this.priorityOptions = createOptionsFromEnum(Priority, ['DEFAULT']);
-    
+    this.priorityOptions = createOptionsFromEnum(Priority, ["DEFAULT"]);
+
     this.congestionControlOptions = createOptionsFromEnum(CongestionControl, [
-      'DEFAULT_PUSH', 'DEFAULT_REQUEST', 'DEFAULT_RESPONSE'
+      "DEFAULT_PUSH",
+      "DEFAULT_REQUEST",
+      "DEFAULT_RESPONSE",
     ]);
-    
-    this.reliabilityOptions = createOptionsFromEnum(Reliability, ['DEFAULT']);
-    
-    this.localityOptions = createOptionsFromEnum(Locality, ['DEFAULT']);
+
+    this.reliabilityOptions = createOptionsFromEnum(Reliability, ["DEFAULT"]);
+
+    this.localityOptions = createOptionsFromEnum(Locality, ["DEFAULT"]);
 
     // Encoding options - dynamically populated from Encoding static properties
     // Exclude private static properties that might be exposed
-    this.encodingOptions = createOptionsFromStaticConstants(Encoding, ['ID_TO_ENCODING', 'ENCODING_TO_ID', 'SEP']);
+    this.encodingOptions = createOptionsFromStaticConstants(Encoding, [
+      "ID_TO_ENCODING",
+      "ENCODING_TO_ID",
+      "SEP",
+    ]);
   }
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
     console.log(`[${type.toUpperCase()}] ${message}`);
+
+    // If it's an error type and contains stack trace, also log to console.error for better visibility
+    if (type === "error" && message.includes("Stack trace:")) {
+      console.error(`[ERROR] ${message}`);
+    }
+
     this.logEntries.value.push({ type, message, timestamp: new Date() });
+  }
+
+  // Common method for logging errors with stack traces
+  private addErrorlogEntry(message: string, error: unknown): void {
+    const stack = error instanceof Error ? error.stack : new Error().stack;
+    
+    // Parse stack trace to extract source location
+    let sourceLocation = "";
+    if (stack) {
+      const stackLines = stack.split('\n');
+      for (const line of stackLines) {
+        // Look for lines that contain file paths (not node_modules or internal)
+        const match = line.match(/\s+at\s+.*?\(?(.*?):(\d+):(\d+)\)?/);
+        if (match) {
+          const [, filePath, lineNumber, columnNumber] = match;
+          // Filter out node_modules and internal files, show only application code
+          if (filePath && !filePath.includes('node_modules') && !filePath.includes('internal/') && filePath.includes('.')) {
+            const fileName = filePath.split('/').pop() || filePath;
+            sourceLocation = ` [${fileName}:${lineNumber}:${columnNumber}]`;
+            break;
+          }
+        }
+      }
+    }
+    
+    this.addLogEntry("error", `${message}${sourceLocation}: ${error}\nStack trace:\n${stack}`);
   }
 
   override clearLog(): void {
@@ -92,7 +241,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Successfully connected to ${this.serverUrl.value}`
       );
     } catch (error) {
-      this.addLogEntry("error", `Failed to connect: ${error}`);
+      this.addErrorlogEntry("Failed to connect", error);
       this.zenohSession = null;
     } finally {
       this.isConnecting.value = false;
@@ -111,12 +260,13 @@ class ZenohDemo extends ZenohDemoEmpty {
       this.isConnected.value = false;
       this.addLogEntry("success", "Disconnected from Zenoh");
     } catch (error) {
-      this.addLogEntry("error", `Error during disconnect: ${error}`);
+      this.addErrorlogEntry("Error during disconnect", error);
     }
   }
 
   override async performPut(): Promise<void> {
-    if (!this.zenohSession || !this.putKey.value || !this.putValue.value) return;
+    if (!this.zenohSession || !this.putKey.value || !this.putValue.value)
+      return;
 
     try {
       const keyExpr = new KeyExpr(this.putKey.value);
@@ -130,7 +280,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         `PUT: ${this.putKey.value} = "${this.putValue.value}"`
       );
     } catch (error) {
-      this.addLogEntry("error", `PUT failed: ${error}`);
+      this.addErrorlogEntry("PUT failed", error);
     }
   }
 
@@ -158,11 +308,13 @@ class ZenohDemo extends ZenohDemoEmpty {
 
           // Check if it's a successful sample or an error
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
-            // It's a Sample
+            // It's a Sample - use pretty-printing function
             const sample = result as Sample;
-            const keyStr = sample.keyexpr().toString();
-            const valueStr = sample.payload().toString();
-            this.addLogEntry("data", `GET result: ${keyStr} = "${valueStr}"`);
+            const sampleInfoStr = sampleToPrettyString(sample);
+            this.addLogEntry(
+              "data",
+              `GET result: ${sampleInfoStr.replace("SAMPLE ", "")}`
+            );
             resultCount++;
           } else {
             // It's a ReplyError
@@ -173,10 +325,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             );
           }
         } catch (resultError) {
-          this.addLogEntry(
-            "error",
-            `Error processing GET result: ${resultError}`
-          );
+          this.addErrorlogEntry("Error processing GET result", resultError);
         }
       }
 
@@ -185,7 +334,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         `GET completed: ${resultCount} results received`
       );
     } catch (error) {
-      this.addLogEntry("error", `GET failed: ${error}`);
+      this.addErrorlogEntry("GET failed", error);
     }
   }
 
@@ -235,31 +384,13 @@ class ZenohDemo extends ZenohDemoEmpty {
             if (!sample) break; // Normal end of subscription
 
             try {
-              const keyStr = sample.keyexpr().toString();
-              const valueStr = sample.payload().toString();
-              const kind = sample.kind();
-
-              // Map SampleKind enum values to readable strings
-              let kindStr: string;
-              switch (kind) {
-                case 0: // SampleKind.PUT
-                  kindStr = "PUT";
-                  break;
-                case 1: // SampleKind.DELETE
-                  kindStr = "DELETE";
-                  break;
-                default:
-                  kindStr = "UNKNOWN";
-              }
-
-              this.addLogEntry(
-                "data",
-                `SUBSCRIPTION [${displayId}] [${kindStr}]: ${keyStr} = "${valueStr}"`
-              );
+              // Use the pretty-printing function to format sample information
+              const sampleInfoStr = sampleToPrettyString(sample, displayId);
+              this.addLogEntry("data", sampleInfoStr);
             } catch (sampleError) {
-              this.addLogEntry(
-                "error",
-                `Error processing subscription sample: ${sampleError}`
+              this.addErrorlogEntry(
+                "Error processing subscription sample",
+                sampleError
               );
             }
           }
@@ -267,15 +398,15 @@ class ZenohDemo extends ZenohDemoEmpty {
         } catch (subscriptionError) {
           // Only log actual errors, not normal disconnections
           if (subscriptionError) {
-            this.addLogEntry(
-              "error",
-              `Subscription error for ${displayId}: ${subscriptionError}`
+            this.addErrorlogEntry(
+              `Subscription error for ${displayId}`,
+              subscriptionError
             );
           }
         }
       })();
     } catch (error) {
-      this.addLogEntry("error", `Subscribe failed: ${error}`);
+      this.addErrorlogEntry("Subscribe failed", error);
     }
   }
 
@@ -305,10 +436,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberId})`
       );
     } catch (error) {
-      this.addLogEntry(
-        "error",
-        `Unsubscribe failed for ${subscriberId}: ${error}`
-      );
+      this.addErrorlogEntry(`Unsubscribe failed for ${subscriberId}`, error);
     }
   }
 
@@ -323,9 +451,9 @@ class ZenohDemo extends ZenohDemoEmpty {
           `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberInfo.displayId})`
         );
       } catch (error) {
-        this.addLogEntry(
-          "error",
-          `Error unsubscribing from ${subscriberInfo.displayId}: ${error}`
+        this.addErrorlogEntry(
+          `Error unsubscribing from ${subscriberInfo.displayId}`,
+          error
         );
       }
     }
