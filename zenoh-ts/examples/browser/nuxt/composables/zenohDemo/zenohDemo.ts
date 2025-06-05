@@ -316,7 +316,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             try {
               // Use JSON formatting for sample display
               const sampleData = sampleToJSON(sample);
-              this.addLogEntry("data", `Subscription ${displayId} received data from ${sample.keyexpr()}`, sampleData);
+              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, sampleData);
             } catch (sampleError) {
               this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }

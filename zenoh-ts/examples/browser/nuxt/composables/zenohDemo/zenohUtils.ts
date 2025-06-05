@@ -3,9 +3,6 @@ import {
   SampleKind,
   Priority,
   CongestionControl,
-  Encoding,
-  Timestamp,
-  ZBytes,
 } from "@eclipse-zenoh/zenoh-ts";
 
 // Sample field conversion functions
@@ -52,33 +49,17 @@ function congestionControlToString(congestionControl: CongestionControl): string
   }
 }
 
-function timestampToString(timestamp: Timestamp | undefined): string {
-  return timestamp ? timestamp.asDate().toISOString() : "none";
-}
-
-function attachmentToString(attachment: ZBytes | undefined): string {
-  return attachment ? `"${attachment.toString()}"` : "none";
-}
-
-function encodingToString(encoding: Encoding): string {
-  return encoding.toString() || "none";
-}
-
-function expressToString(express: boolean): string {
-  return express.toString();
-}
-
 // Interface for the sample JSON representation
 export interface SampleJSON {
-  key: string;
-  value: string;
+  keyexpr: string;
+  payload: string;
   kind: string;
   encoding: string;
   priority: string;
   congestionControl: string;
   express: string;
-  timestamp: string;
-  attachment: string;
+  timestamp: string | undefined;
+  attachment: string | undefined;
 }
 
 /**
@@ -88,14 +69,14 @@ export interface SampleJSON {
  */
 export function sampleToJSON(sample: Sample): SampleJSON {
   return {
-    key: sample.keyexpr().toString(),
-    value: sample.payload().toString(),
+    keyexpr: sample.keyexpr().toString(),
+    payload: sample.payload().toString(),
     kind: sampleKindToString(sample.kind()),
-    encoding: encodingToString(sample.encoding()),
+    encoding: sample.encoding().toString(),
     priority: priorityToString(sample.priority()),
     congestionControl: congestionControlToString(sample.congestionControl()),
-    express: expressToString(sample.express()),
-    timestamp: timestampToString(sample.timestamp()),
-    attachment: attachmentToString(sample.attachment()),
+    express: sample.express().toString(),
+    timestamp: sample.timestamp()?.asDate().toISOString(),
+    attachment: sample.attachment()?.toString(),
   };
 }
