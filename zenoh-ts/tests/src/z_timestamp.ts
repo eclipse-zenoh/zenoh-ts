@@ -52,6 +52,7 @@ Deno.test("Timestamp - Basic functionality", async () => {
     } finally {
         if (session) {
             await session.close();
+            await sleep(100);
         }
     }
 });
@@ -103,6 +104,7 @@ Deno.test("Timestamp - Multiple timestamps with delays", async () => {
     } finally {
         if (session) {
             await session.close();
+            await sleep(100);
         }
     }
 });
@@ -152,6 +154,7 @@ Deno.test("Timestamp - System time accuracy", async () => {
     } finally {
         if (session) {
             await session.close();
+            await sleep(100);
         }
     }
 });
@@ -191,6 +194,7 @@ Deno.test("Timestamp - ZenohId consistency", async () => {
     } finally {
         if (session) {
             await session.close();
+            await sleep(100);
         }
     }
 });
