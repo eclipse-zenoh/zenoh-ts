@@ -620,10 +620,12 @@ function formatJSONData(type: string, jsonData: object): string {
   display: flex;
   gap: 8px;
   align-items: center;
+  width: 100%;
 }
 
 .attachment-input-row input[type="text"] {
   flex: 1;
+  min-width: 0; /* Allows input to shrink below its content width */
 }
 
 .inline-checkbox {
@@ -1151,6 +1153,11 @@ function formatJSONData(type: string, jsonData: object): string {
   flex-direction: column;
   gap: 5px;
   box-sizing: border-box;
+}
+
+/* Make attachment field span full width of grid */
+.option-group:has(.attachment-input-row) {
+  grid-column: 1 / -1;
 }
 
 .option-group label {
