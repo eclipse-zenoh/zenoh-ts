@@ -49,7 +49,17 @@
         
         <!-- Put Operation -->
         <div class="operation-group">
-          <h4>Put Operation</h4>
+          <div class="operation-header">
+            <h4>Put Operation</h4>
+            <button 
+              @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
+              class="options-arrow-btn"
+              :class="{ active: putOptions.showOptions.value }"
+              title="Toggle advanced options"
+            >
+              {{ putOptions.showOptions.value ? '▲' : '▼' }}
+            </button>
+          </div>
           <div class="input-row">
             <input 
               type="text" 
@@ -65,17 +75,6 @@
             >
             <button @click="performPut" :disabled="!isConnected || !putKey || !putValue">
               Put
-            </button>
-          </div>
-          
-          <!-- Put Options Toggle -->
-          <div class="options-toggle">
-            <button 
-              @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
-              class="options-toggle-btn"
-              :class="{ active: putOptions.showOptions.value }"
-            >
-              {{ putOptions.showOptions.value ? '▼' : '▶' }} Advanced Options
             </button>
           </div>
           
@@ -917,6 +916,44 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 /* PUT Options Styling */
+.operation-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.operation-header h4 {
+  margin: 0;
+}
+
+.options-arrow-btn {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-size: 12px;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.options-arrow-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.options-arrow-btn.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
 .options-toggle {
   margin: 10px 0;
 }
