@@ -26,9 +26,6 @@ export interface SubscriberInfo {
   createdAt: Date;
 }
 
-// Triple checkbox state for express option
-export type TriCheckboxState = 'default' | 'true' | 'false';
-
 // Put options state
 export interface PutOptionsState {
   showOptions: Ref<boolean>;
@@ -36,7 +33,7 @@ export interface PutOptionsState {
   customEncoding: Ref<boolean>;
   priority: Ref<Priority | undefined>;
   congestionControl: Ref<CongestionControl | undefined>;
-  express: Ref<TriCheckboxState>;
+  express: Ref<boolean | undefined>;
   reliability: Ref<Reliability | undefined>;
   allowedDestination: Ref<Locality | undefined>;
   attachment: Ref<string>;
@@ -86,7 +83,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     customEncoding: ref(false),
     priority: ref(undefined as Priority | undefined),
     congestionControl: ref(undefined as CongestionControl | undefined),
-    express: ref('default' as TriCheckboxState),
+    express: ref(undefined as boolean | undefined),
     reliability: ref(undefined as Reliability | undefined),
     allowedDestination: ref(undefined as Locality | undefined),
     attachment: ref(""),

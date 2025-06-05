@@ -236,7 +236,7 @@
                     <label class="radio-label">
                       <input 
                         type="radio" 
-                        value="default" 
+                        :value="undefined" 
                         v-model="putOptions.express.value" 
                         :disabled="!isConnected"
                       >
@@ -245,7 +245,7 @@
                     <label class="radio-label">
                       <input 
                         type="radio" 
-                        value="true" 
+                        :value="true" 
                         v-model="putOptions.express.value" 
                         :disabled="!isConnected"
                       >
@@ -254,7 +254,7 @@
                     <label class="radio-label">
                       <input 
                         type="radio" 
-                        value="false" 
+                        :value="false" 
                         v-model="putOptions.express.value" 
                         :disabled="!isConnected"
                       >

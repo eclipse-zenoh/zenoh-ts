@@ -37,8 +37,8 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
   if (options.congestionControl.value !== undefined) {
     opts.congestionControl = options.congestionControl.value;
   }
-  if (options.express.value !== 'default') {
-    opts.express = options.express.value === 'true';
+  if (options.express.value !== undefined) {
+    opts.express = options.express.value;
   }
   if (options.reliability.value !== undefined) {
     opts.reliability = options.reliability.value;
