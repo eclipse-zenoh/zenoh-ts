@@ -31,7 +31,7 @@ Deno.test("Timestamp - Basic functionality", async () => {
         
         // Verify timestamp has required methods
         assert(timestamp1.getId() !== undefined, "Timestamp should have a ZenohId");
-        assert(typeof timestamp1.getMsSinceUnixEpoch() === "bigint", "Timestamp should return bigint for ms since epoch");
+        assert(typeof timestamp1.getMsSinceUnixEpoch() === "number", "Timestamp should return number for ms since epoch");
         assert(timestamp1.asDate() instanceof Date, "Timestamp should convert to Date");
 
         // Wait for a small delay to ensure time difference
