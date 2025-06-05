@@ -1087,7 +1087,7 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 .options-arrow-btn {
-  background: #f8f9fa;
+  background: white;
   border: 1px solid #dee2e6;
   border-radius: 4px;
   padding: 6px 8px;
@@ -1108,9 +1108,9 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 .options-arrow-btn.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #dee2e6;
 }
 
 .options-toggle {
