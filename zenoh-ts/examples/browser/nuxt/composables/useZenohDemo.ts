@@ -40,6 +40,12 @@ export interface PutOptionsState {
   attachmentEmpty: Ref<boolean>;
 }
 
+// Subscriber options state
+export interface SubscriberOptionsState {
+  showOptions: Ref<boolean>;
+  allowedOrigin: Ref<Locality | undefined>;
+}
+
 // Zenoh Demo state interface combining UI state and operations
 export interface ZenohDemoState {
   serverUrl: Ref<string>;
@@ -48,6 +54,7 @@ export interface ZenohDemoState {
   putKey: Ref<string>;
   putValue: Ref<string>;
   putOptions: PutOptionsState;
+  subscriberOptions: SubscriberOptionsState;
   getKey: Ref<string>;
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
@@ -87,6 +94,10 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     allowedDestination: ref(undefined as Locality | undefined),
     attachment: ref(""),
     attachmentEmpty: ref(true),
+  };
+  subscriberOptions = {
+    showOptions: ref(false),
+    allowedOrigin: ref(undefined as Locality | undefined),
   };
   getKey = ref("demo/example/*");
   subscribeKey = ref("demo/example/**");

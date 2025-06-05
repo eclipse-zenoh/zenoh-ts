@@ -52,7 +52,17 @@
           
           <!-- Declare Subscriber Operation -->
           <div class="operation-group">
-            <h4>Declare Subscriber</h4>
+            <div class="operation-header">
+              <h4>Declare Subscriber</h4>
+              <button 
+                @click="subscriberOptions.showOptions.value = !subscriberOptions.showOptions.value" 
+                class="options-arrow-btn"
+                :class="{ active: subscriberOptions.showOptions.value }"
+                title="Toggle advanced options"
+              >
+                {{ subscriberOptions.showOptions.value ? '▲' : '▼' }}
+              </button>
+            </div>
             <div class="input-row">
               <input 
                 type="text" 
@@ -63,6 +73,25 @@
               <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
                 Subscribe
               </button>
+            </div>
+            
+            <!-- Subscriber Options Panel -->
+            <div v-if="subscriberOptions.showOptions.value" class="options-panel">
+              <div class="options-grid">
+                <div class="option-group">
+                  <label>Allowed Origin:</label>
+                  <select v-model="subscriberOptions.allowedOrigin.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option 
+                      v-for="option in localityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
             </div>
             
             <!-- Active Subscribers List -->
@@ -364,6 +393,7 @@ const {
   logEntries,
   activeSubscribers,
   putOptions,
+  subscriberOptions,
   
   // Option arrays (now part of the state)
   priorityOptions,

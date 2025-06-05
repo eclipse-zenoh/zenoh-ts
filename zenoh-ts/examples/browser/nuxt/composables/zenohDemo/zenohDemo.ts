@@ -4,6 +4,7 @@ import {
   type LogEntry,
   type SubscriberInfo,
   type PutOptionsState,
+  type SubscriberOptionsState,
 } from "../useZenohDemo";
 import {
   Config,
@@ -19,7 +20,7 @@ import {
   Reliability,
   Locality,
 } from "@eclipse-zenoh/zenoh-ts";
-import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
+import type { PutOptions, SubscriberOptions } from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
@@ -48,6 +49,14 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
   }
   if (!options.attachmentEmpty.value) {
     opts.attachment = new ZBytes(options.attachment.value);
+  }
+  return opts;
+}
+
+function subscriberOptionsStateTo(options: SubscriberOptionsState): SubscriberOptions {
+  let opts: SubscriberOptions = {};
+  if (options.allowedOrigin.value !== undefined) {
+    opts.allowedOrigin = options.allowedOrigin.value;
   }
   return opts;
 }
@@ -255,7 +264,8 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const keyExpr = new KeyExpr(this.subscribeKey.value);
-      const subscriber = await this.zenohSession.declareSubscriber(keyExpr);
+      const subscriberOptions = subscriberOptionsStateTo(this.subscriberOptions);
+      const subscriber = await this.zenohSession.declareSubscriber(keyExpr, subscriberOptions);
 
       // Generate sequential display ID for this subscriber
       const displayId = `sub${this.subscriberIdCounter++}`;
