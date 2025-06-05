@@ -45,219 +45,244 @@
     <div class="main-panel">
       <!-- Operations Controls -->
       <div class="operations-panel" :class="{ disabled: !isConnected }">
-        <h3>Zenoh Operations</h3>
         
-        <!-- Put Operation -->
-        <div class="operation-group">
-          <div class="operation-header">
-            <h4>Put Operation</h4>
-            <button 
-              @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
-              class="options-arrow-btn"
-              :class="{ active: putOptions.showOptions.value }"
-              title="Toggle advanced options"
-            >
-              {{ putOptions.showOptions.value ? '▲' : '▼' }}
-            </button>
-          </div>
-          <div class="input-row">
-            <input 
-              type="text" 
-              v-model="putKey" 
-              placeholder="Key expression (e.g., demo/example/test)"
-              :disabled="!isConnected"
-            >
-            <input 
-              type="text" 
-              v-model="putValue" 
-              placeholder="Value"
-              :disabled="!isConnected"
-            >
-            <button @click="performPut" :disabled="!isConnected || !putKey || !putValue">
-              Put
-            </button>
-          </div>
+        <!-- Publish / Subscribe Block -->
+        <div class="operation-block">
+          <h3 class="block-title">Publish / Subscribe Operations</h3>
           
-          <!-- Put Options Panel -->
-          <div v-if="putOptions.showOptions.value" class="options-panel">
-            <div class="options-grid">
-              <div class="option-group">
-                <div class="encoding-header">
-                  <label>Encoding:</label>
-                  <label class="custom-checkbox-label">
+          <!-- Declare Subscriber Operation -->
+          <div class="operation-group">
+            <h4>Declare Subscriber</h4>
+            <div class="input-row">
+              <input 
+                type="text" 
+                v-model="subscribeKey" 
+                placeholder="Key expression (e.g., demo/example/**)"
+                :disabled="!isConnected"
+              >
+              <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
+                Subscribe
+              </button>
+            </div>
+            
+            <!-- Active Subscribers List -->
+            <div v-if="activeSubscribers.length > 0" class="subscribers-list">
+              <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
+              <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
+                <div class="subscriber-info">
+                  <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
+                  <div class="subscriber-meta">
+                    <span class="subscriber-id">{{ subscriber.displayId }}</span>
+                    <span class="subscriber-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
+                  </div>
+                </div>
+                <button 
+                  @click="unsubscribe(subscriber.displayId)" 
+                  class="unsubscribe-btn"
+                  :disabled="!isConnected"
+                >
+                  Unsubscribe
+                </button>
+              </div>
+              <div class="subscribers-actions">
+                <button 
+                  @click="unsubscribeAll" 
+                  class="unsubscribe-all-btn"
+                  :disabled="!isConnected"
+                >
+                  Unsubscribe All
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Put Operation -->
+          <div class="operation-group">
+            <div class="operation-header">
+              <h4>Put</h4>
+              <button 
+                @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
+                class="options-arrow-btn"
+                :class="{ active: putOptions.showOptions.value }"
+                title="Toggle advanced options"
+              >
+                {{ putOptions.showOptions.value ? '▲' : '▼' }}
+              </button>
+            </div>
+            <div class="input-row">
+              <input 
+                type="text" 
+                v-model="putKey" 
+                placeholder="Key expression (e.g., demo/example/test)"
+                :disabled="!isConnected"
+              >
+              <input 
+                type="text" 
+                v-model="putValue" 
+                placeholder="Value"
+                :disabled="!isConnected"
+              >
+              <button @click="performPut" :disabled="!isConnected || !putKey || !putValue">
+                Put
+              </button>
+            </div>
+            
+            <!-- Put Options Panel -->
+            <div v-if="putOptions.showOptions.value" class="options-panel">
+              <div class="options-grid">
+                <div class="option-group">
+                  <div class="encoding-header">
+                    <label>Encoding:</label>
+                    <label class="custom-checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        v-model="putOptions.customEncoding.value" 
+                        :disabled="!isConnected"
+                        class="custom-encoding-checkbox"
+                      >
+                      Custom
+                    </label>
+                  </div>
+                  
+                  <!-- Predefined Encoding Dropdown -->
+                  <select 
+                    v-if="!putOptions.customEncoding.value"
+                    v-model="putOptions.encoding.value" 
+                    :disabled="!isConnected"
+                    class="encoding-select"
+                    title="Select a predefined encoding"
+                  >
+                    <option value="">-- Select Encoding --</option>
+                    <option 
+                      v-for="option in encodingOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                  
+                  <!-- Custom Encoding Input -->
+                  <input 
+                    v-else
+                    type="text" 
+                    v-model="putOptions.encoding.value" 
+                    :disabled="!isConnected"
+                    placeholder="e.g., application/json, text/plain, my-custom-format"
+                    class="encoding-text-input"
+                    title="Enter a custom encoding string"
+                  >
+                </div>
+                
+                <div class="option-group">
+                  <label>Priority:</label>
+                  <select v-model.number="putOptions.priority.value" :disabled="!isConnected">
+                    <option 
+                      v-for="option in priorityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Congestion Control:</label>
+                  <select v-model.number="putOptions.congestionControl.value" :disabled="!isConnected">
+                    <option 
+                      v-for="option in congestionControlOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Reliability:</label>
+                  <select v-model.number="putOptions.reliability.value" :disabled="!isConnected">
+                    <option 
+                      v-for="option in reliabilityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Allowed Destination:</label>
+                  <select v-model.number="putOptions.allowedDestination.value" :disabled="!isConnected">
+                    <option 
+                      v-for="option in localityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label class="checkbox-label">
                     <input 
                       type="checkbox" 
-                      v-model="putOptions.customEncoding.value" 
+                      v-model="putOptions.express.value" 
                       :disabled="!isConnected"
-                      class="custom-encoding-checkbox"
                     >
-                    Custom
+                    Express (no batching)
                   </label>
                 </div>
                 
-                <!-- Predefined Encoding Dropdown -->
-                <select 
-                  v-if="!putOptions.customEncoding.value"
-                  v-model="putOptions.encoding.value" 
-                  :disabled="!isConnected"
-                  class="encoding-select"
-                  title="Select a predefined encoding"
-                >
-                  <option value="">-- Select Encoding --</option>
-                  <option 
-                    v-for="option in encodingOptions" 
-                    :key="option.value" 
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-                
-                <!-- Custom Encoding Input -->
-                <input 
-                  v-else
-                  type="text" 
-                  v-model="putOptions.encoding.value" 
-                  :disabled="!isConnected"
-                  placeholder="e.g., application/json, text/plain, my-custom-format"
-                  class="encoding-text-input"
-                  title="Enter a custom encoding string"
-                >
-              </div>
-              
-              <div class="option-group">
-                <label>Priority:</label>
-                <select v-model.number="putOptions.priority.value" :disabled="!isConnected">
-                  <option 
-                    v-for="option in priorityOptions" 
-                    :key="option.value" 
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="option-group">
-                <label>Congestion Control:</label>
-                <select v-model.number="putOptions.congestionControl.value" :disabled="!isConnected">
-                  <option 
-                    v-for="option in congestionControlOptions" 
-                    :key="option.value" 
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="option-group">
-                <label>Reliability:</label>
-                <select v-model.number="putOptions.reliability.value" :disabled="!isConnected">
-                  <option 
-                    v-for="option in reliabilityOptions" 
-                    :key="option.value" 
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="option-group">
-                <label>Allowed Destination:</label>
-                <select v-model.number="putOptions.allowedDestination.value" :disabled="!isConnected">
-                  <option 
-                    v-for="option in localityOptions" 
-                    :key="option.value" 
-                    :value="option.value"
-                  >
-                    {{ option.label }}
-                  </option>
-                </select>
-              </div>
-              
-              <div class="option-group">
-                <label class="checkbox-label">
+                <div class="option-group attachment-group">
+                  <label>Attachment:</label>
                   <input 
-                    type="checkbox" 
-                    v-model="putOptions.express.value" 
+                    type="text" 
+                    v-model="putOptions.attachment.value" 
+                    placeholder="Optional attachment data"
                     :disabled="!isConnected"
                   >
-                  Express (no batching)
-                </label>
-              </div>
-              
-              <div class="option-group attachment-group">
-                <label>Attachment:</label>
-                <input 
-                  type="text" 
-                  v-model="putOptions.attachment.value" 
-                  placeholder="Optional attachment data"
-                  :disabled="!isConnected"
-                >
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Get Operation -->
-        <div class="operation-group">
-          <h4>Get Operation</h4>
-          <div class="input-row">
-            <input 
-              type="text" 
-              v-model="getKey" 
-              placeholder="Selector (e.g., demo/example/*)"
-              :disabled="!isConnected"
-            >
-            <button @click="performGet" :disabled="!isConnected || !getKey">
-              Get
-            </button>
-          </div>
-        </div>
-
-        <!-- Subscribe Operation -->
-        <div class="operation-group">
-          <h4>Subscribe Operation</h4>
-          <div class="input-row">
-            <input 
-              type="text" 
-              v-model="subscribeKey" 
-              placeholder="Key expression (e.g., demo/example/**)"
-              :disabled="!isConnected"
-            >
-            <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
-              Subscribe
-            </button>
-          </div>
-          
-          <!-- Active Subscribers List -->
-          <div v-if="activeSubscribers.length > 0" class="subscribers-list">
-            <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
-            <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
-              <div class="subscriber-info">
-                <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
-                <div class="subscriber-meta">
-                  <span class="subscriber-id">{{ subscriber.displayId }}</span>
-                  <span class="subscriber-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
                 </div>
               </div>
-              <button 
-                @click="unsubscribe(subscriber.displayId)" 
-                class="unsubscribe-btn"
-                :disabled="!isConnected"
+            </div>
+          </div>
+        </div>
+
+        <!-- Query / Reply Block -->
+        <div class="operation-block">
+          <h3 class="block-title">Query / Reply Operations</h3>
+          
+          <!-- Declare Queryable Operation (Placeholder) -->
+          <div class="operation-group">
+            <h4>Declare Queryable</h4>
+            <div class="input-row">
+              <input 
+                type="text" 
+                placeholder="Key expression (e.g., demo/example/computation/**)"
+                :disabled="true"
               >
-                Unsubscribe
+              <button :disabled="true">
+                Create Queryable
               </button>
             </div>
-            <div class="subscribers-actions">
-              <button 
-                @click="unsubscribeAll" 
-                class="unsubscribe-all-btn"
+            <p class="placeholder-note">Coming soon...</p>
+          </div>
+
+          <!-- Get Operation -->
+          <div class="operation-group">
+            <h4>Get</h4>
+            <div class="input-row">
+              <input 
+                type="text" 
+                v-model="getKey" 
+                placeholder="Selector (e.g., demo/example/*)"
                 :disabled="!isConnected"
               >
-                Unsubscribe All
+              <button @click="performGet" :disabled="!isConnected || !getKey">
+                Get
               </button>
             </div>
           </div>
@@ -610,6 +635,30 @@ function formatJSONData(type: string, jsonData: object): string {
   background-color: white;
   border-radius: 6px;
   border: 1px solid #ddd;
+}
+
+.operation-block {
+  margin-bottom: 24px;
+  padding: 0;
+  background: transparent;
+}
+
+.block-title {
+  color: #495057;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+  letter-spacing: 0.5px;
+}
+
+.placeholder-note {
+  font-size: 13px;
+  color: #6c757d;
+  font-style: italic;
+  margin: 8px 0 0 0;
+  text-align: center;
 }
 
 .operation-group h4 {
