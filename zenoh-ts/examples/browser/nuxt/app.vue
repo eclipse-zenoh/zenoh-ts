@@ -231,36 +231,16 @@
                 </div>
                 
                 <div class="option-group">
-                  <label>Express (no batching):</label>
-                  <div class="triple-checkbox">
-                    <label class="radio-label">
-                      <input 
-                        type="radio" 
-                        :value="undefined" 
-                        v-model="putOptions.express.value" 
-                        :disabled="!isConnected"
-                      >
-                      (default)
-                    </label>
-                    <label class="radio-label">
-                      <input 
-                        type="radio" 
-                        :value="true" 
-                        v-model="putOptions.express.value" 
-                        :disabled="!isConnected"
-                      >
-                      True
-                    </label>
-                    <label class="radio-label">
-                      <input 
-                        type="radio" 
-                        :value="false" 
-                        v-model="putOptions.express.value" 
-                        :disabled="!isConnected"
-                      >
-                      False
-                    </label>
-                  </div>
+                  <label class="tri-state-label">
+                    <input 
+                      type="checkbox" 
+                      ref="expressCheckbox"
+                      :disabled="!isConnected"
+                      @click="handleExpressCheckboxClick"
+                      class="tri-state-checkbox"
+                    >
+                    Express (no batching): {{ getExpressStateLabel() }}
+                  </label>
                 </div>
                 
                 <div class="option-group attachment-group">
@@ -424,6 +404,55 @@ const {
 
 // Template ref for log content
 const logContent = ref<HTMLElement>()
+const expressCheckbox = ref<HTMLInputElement>()
+
+// Update express checkbox state when the value changes
+function updateExpressCheckboxState() {
+  if (expressCheckbox.value) {
+    const value = putOptions.express.value;
+    if (value === undefined) {
+      expressCheckbox.value.indeterminate = true;
+      expressCheckbox.value.checked = false;
+    } else if (value === true) {
+      expressCheckbox.value.indeterminate = false;
+      expressCheckbox.value.checked = true;
+    } else { // false
+      expressCheckbox.value.indeterminate = false;
+      expressCheckbox.value.checked = false;
+    }
+  }
+}
+
+// Initialize checkbox state when mounted
+onMounted(() => {
+  updateExpressCheckboxState();
+});
+
+// Watch for changes and update checkbox state
+watch(() => putOptions.express.value, () => {
+  nextTick(updateExpressCheckboxState);
+})
+
+// Handle three-state checkbox clicks
+function handleExpressCheckboxClick() {
+  if (putOptions.express.value === undefined) {
+    // From default (indeterminate) to true (checked)
+    putOptions.express.value = true;
+  } else if (putOptions.express.value === true) {
+    // From true (checked) to false (unchecked)
+    putOptions.express.value = false;
+  } else {
+    // From false (unchecked) to default (indeterminate)
+    putOptions.express.value = undefined;
+  }
+}
+
+// Get display label for express state
+function getExpressStateLabel() {
+  if (putOptions.express.value === undefined) return '(default)';
+  if (putOptions.express.value === true) return 'True';
+  return 'False';
+}
 
 // Auto-scroll to bottom when new log entries are added
 watch(logEntries, () => {
@@ -1205,26 +1234,41 @@ function formatJSONData(type: string, jsonData: object): string {
   max-width: 100%;
 }
 
-/* Triple checkbox styles for express option */
-.triple-checkbox {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.radio-label {
+/* Triple state checkbox styles for express option */
+.tri-state-label {
   display: flex;
   align-items: center;
-  gap: 4px;
-  font-size: 13px;
+  gap: 8px;
+  font-weight: 600;
   color: #495057;
+  font-size: 14px;
   cursor: pointer;
   user-select: none;
 }
 
-.radio-label input[type="radio"] {
+.tri-state-checkbox {
   margin: 0;
   cursor: pointer;
+  transform: scale(1.1);
+}
+
+.tri-state-checkbox:disabled {
+  cursor: not-allowed;
+}
+
+/* Style for indeterminate state */
+.tri-state-checkbox:indeterminate {
+  background-color: #7b7b7b;
+  border-color: #7b7b7b;
+}
+
+.tri-state-checkbox:indeterminate:after {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 2px;
+  background: white;
+  margin: 4px auto;
 }
 
 /* Attachment controls */
