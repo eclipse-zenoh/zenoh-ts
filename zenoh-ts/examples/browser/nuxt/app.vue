@@ -710,15 +710,15 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 .operation-group {
-  margin-bottom: 20px;
-  padding: 15px;
+  margin-bottom: 12px;
+  padding: 8px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid #ddd;
 }
 
 .operation-block {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   padding: 0;
   background: transparent;
 }
@@ -727,8 +727,8 @@ function formatJSONData(type: string, jsonData: object): string {
   color: #495057;
   font-size: 1.1em;
   font-weight: 600;
-  margin: 0 0 16px 0;
-  padding-bottom: 8px;
+  margin: 0 0 10px 0;
+  padding-bottom: 6px;
   border-bottom: 2px solid #e9ecef;
   letter-spacing: 0.5px;
 }
@@ -1049,7 +1049,7 @@ function formatJSONData(type: string, jsonData: object): string {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .operation-header h4 {
@@ -1091,14 +1091,14 @@ function formatJSONData(type: string, jsonData: object): string {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 6px;
-  padding: 8px 12px;
+  padding: 4px 8px;
   font-size: 14px;
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
 }
 
 .options-toggle-btn:hover {
@@ -1116,23 +1116,23 @@ function formatJSONData(type: string, jsonData: object): string {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 6px;
-  padding: 15px;
-  margin-top: 10px;
+  padding: 8px;
+  margin-top: 6px;
   box-sizing: border-box;
   overflow: hidden;
 }
 
 .options-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
+  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr);
+  gap: 8px;
   box-sizing: border-box;
 }
 
 .option-group {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 3px;
   box-sizing: border-box;
 }
 
@@ -1149,7 +1149,7 @@ function formatJSONData(type: string, jsonData: object): string {
 
 .option-group select,
 .option-group input[type="text"] {
-  padding: 6px 10px;
+  padding: 4px 6px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
@@ -1166,7 +1166,7 @@ function formatJSONData(type: string, jsonData: object): string {
 .encoding-control {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   position: relative;
 }
 
@@ -1174,7 +1174,7 @@ function formatJSONData(type: string, jsonData: object): string {
 .encoding-control .encoding-text-input {
   flex: 1;
   min-width: 0;
-  padding: 6px 10px;
+  padding: 4px 6px;
   border: 1px solid #ced4da;
   border-radius: 4px;
   font-size: 14px;
