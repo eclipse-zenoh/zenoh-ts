@@ -4,50 +4,7 @@ import {
   Priority,
   CongestionControl,
 } from "@eclipse-zenoh/zenoh-ts";
-
-// Sample field conversion functions
-function sampleKindToString(kind: SampleKind): string {
-  switch (kind) {
-    case SampleKind.PUT:
-      return "PUT";
-    case SampleKind.DELETE:
-      return "DELETE";
-    default:
-      return `UNKNOWN(${kind})`;
-  }
-}
-
-function priorityToString(priority: Priority): string {
-  switch (priority) {
-    case Priority.REAL_TIME:
-      return "REAL_TIME";
-    case Priority.INTERACTIVE_HIGH:
-      return "INTERACTIVE_HIGH";
-    case Priority.INTERACTIVE_LOW:
-      return "INTERACTIVE_LOW";
-    case Priority.DATA_HIGH:
-      return "DATA_HIGH";
-    case Priority.DATA:
-      return "DATA";
-    case Priority.DATA_LOW:
-      return "DATA_LOW";
-    case Priority.BACKGROUND:
-      return "BACKGROUND";
-    default:
-      return `UNKNOWN(${priority})`;
-  }
-}
-
-function congestionControlToString(congestionControl: CongestionControl): string {
-  switch (congestionControl) {
-    case CongestionControl.DROP:
-      return "DROP";
-    case CongestionControl.BLOCK:
-      return "BLOCK";
-    default:
-      return `UNKNOWN(${congestionControl})`;
-  }
-}
+import { getEnumLabel } from "./utils";
 
 // Interface for the sample JSON representation
 export interface SampleJSON {
@@ -71,10 +28,10 @@ export function sampleToJSON(sample: Sample): SampleJSON {
   return {
     keyexpr: sample.keyexpr().toString(),
     payload: sample.payload().toString(),
-    kind: sampleKindToString(sample.kind()),
+    kind: getEnumLabel(SampleKind, sample.kind()) || `UNKNOWN(${sample.kind()})`,
     encoding: sample.encoding().toString(),
-    priority: priorityToString(sample.priority()),
-    congestionControl: congestionControlToString(sample.congestionControl()),
+    priority: getEnumLabel(Priority, sample.priority()) || `UNKNOWN(${sample.priority()})`,
+    congestionControl: getEnumLabel(CongestionControl, sample.congestionControl()) || `UNKNOWN(${sample.congestionControl()})`,
     express: sample.express().toString(),
     timestamp: sample.timestamp()?.asDate().toISOString(),
     attachment: sample.attachment()?.toString(),

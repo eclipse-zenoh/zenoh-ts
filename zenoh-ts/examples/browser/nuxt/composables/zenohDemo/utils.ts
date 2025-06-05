@@ -57,6 +57,24 @@ export function createOptionsFromEnum<T extends Record<string, string | number>>
 }
 
 /**
+ * Creates a single option item from a typed enum value
+ * @param enumObj - The enum object to look up the key from
+ * @param value - The enum value to create an option for
+ * @returns Enum text label or undefined if the value is not found in the enum
+ */
+export function getEnumLabel<T extends Record<string, string | number>>(
+  enumObj: T,
+  value: T[keyof T],
+): string | undefined {
+  // Find the key that corresponds to this value
+  const entry = Object.entries(enumObj).find(([_, enumValue]) => enumValue === value);
+  if (!entry) {
+    return undefined;
+  }
+  return enumKeyToLabel(entry[0]);
+}
+
+/**
  * Creates option items from static constants of a class using reflection
  * @param classRef - The class reference containing static constants
  * @param excludeKeys - Array of property names to exclude from the options
