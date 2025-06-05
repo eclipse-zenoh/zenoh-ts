@@ -6,29 +6,29 @@
       <div class="connection-controls">
         <div class="input-group">
           <label for="server-url">Zenoh Server</label>
-          <input 
-            type="text" 
-            id="server-url" 
-            v-model="serverUrl" 
-            :disabled="isConnected"
-            placeholder="ws://localhost:10000"
-          >
-        </div>
-        <div class="button-group">
-          <button 
-            @click="connect" 
-            :disabled="isConnecting || isConnected"
-            class="connect-btn"
-          >
-            {{ isConnecting ? 'Connecting...' : 'Connect' }}
-          </button>
-          <button 
-            @click="disconnect" 
-            :disabled="!isConnected"
-            class="disconnect-btn"
-          >
-            Disconnect
-          </button>
+          <div class="input-row">
+            <input 
+              type="text" 
+              id="server-url" 
+              v-model="serverUrl" 
+              :disabled="isConnected"
+              placeholder="ws://localhost:10000"
+            >
+            <button 
+              @click="connect" 
+              :disabled="isConnecting || isConnected"
+              class="connect-btn"
+            >
+              {{ isConnecting ? 'Connecting...' : 'Connect' }}
+            </button>
+            <button 
+              @click="disconnect" 
+              :disabled="!isConnected"
+              class="disconnect-btn"
+            >
+              Disconnect
+            </button>
+          </div>
         </div>
       </div>
       
@@ -131,8 +131,38 @@
             <div v-if="putOptions.showOptions.value" class="options-panel">
               <div class="options-grid">
                 <div class="option-group">
-                  <div class="encoding-header">
-                    <label>Encoding:</label>
+                  <label>Encoding:</label>
+                  <div class="encoding-control">
+                    <!-- Predefined Encoding Dropdown -->
+                    <select 
+                      v-if="!putOptions.customEncoding.value"
+                      v-model="putOptions.encoding.value" 
+                      :disabled="!isConnected"
+                      class="encoding-select"
+                      title="Select a predefined encoding"
+                    >
+                      <option value="">(default)</option>
+                      <option 
+                        v-for="option in encodingOptions" 
+                        :key="option.value" 
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    
+                    <!-- Custom Encoding Input -->
+                    <input 
+                      v-else
+                      type="text" 
+                      v-model="putOptions.encoding.value" 
+                      :disabled="!isConnected"
+                      placeholder="e.g., application/json, text/plain"
+                      class="encoding-text-input"
+                      title="Enter a custom encoding string"
+                    >
+                    
+                    <!-- Custom Checkbox -->
                     <label class="custom-checkbox-label">
                       <input 
                         type="checkbox" 
@@ -143,35 +173,6 @@
                       Custom
                     </label>
                   </div>
-                  
-                  <!-- Predefined Encoding Dropdown -->
-                  <select 
-                    v-if="!putOptions.customEncoding.value"
-                    v-model="putOptions.encoding.value" 
-                    :disabled="!isConnected"
-                    class="encoding-select"
-                    title="Select a predefined encoding"
-                  >
-                    <option value="">(default)</option>
-                    <option 
-                      v-for="option in encodingOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                  
-                  <!-- Custom Encoding Input -->
-                  <input 
-                    v-else
-                    type="text" 
-                    v-model="putOptions.encoding.value" 
-                    :disabled="!isConnected"
-                    placeholder="e.g., application/json, text/plain, my-custom-format"
-                    class="encoding-text-input"
-                    title="Enter a custom encoding string"
-                  >
                 </div>
                 
                 <div class="option-group">
@@ -231,7 +232,8 @@
                 </div>
                 
                 <div class="option-group">
-                  <label class="tri-state-label">
+                  <label>Express (no batching):</label>
+                  <div class="express-control" :class="{ disabled: !isConnected }">
                     <input 
                       type="checkbox" 
                       ref="expressCheckbox"
@@ -239,14 +241,20 @@
                       @click="handleExpressCheckboxClick"
                       class="tri-state-checkbox"
                     >
-                    Express (no batching): {{ getExpressStateLabel() }}
-                  </label>
+                    <span class="express-state-label">{{ getExpressStateLabel() }}</span>
+                  </div>
                 </div>
                 
-                <div class="option-group attachment-group">
+                <div class="option-group">
                   <label>Attachment:</label>
-                  <div class="attachment-controls">
-                    <label class="checkbox-label">
+                  <div class="attachment-input-row">
+                    <input 
+                      type="text" 
+                      v-model="putOptions.attachment.value" 
+                      placeholder="Optional attachment data"
+                      :disabled="!isConnected || putOptions.attachmentEmpty.value"
+                    >
+                    <label class="checkbox-label inline-checkbox">
                       <input 
                         type="checkbox" 
                         v-model="putOptions.attachmentEmpty.value" 
@@ -254,12 +262,6 @@
                       >
                       (empty)
                     </label>
-                    <input 
-                      type="text" 
-                      v-model="putOptions.attachment.value" 
-                      placeholder="Optional attachment data"
-                      :disabled="!isConnected || putOptions.attachmentEmpty.value"
-                    >
                   </div>
                 </div>
               </div>
@@ -613,6 +615,22 @@ function formatJSONData(type: string, jsonData: object): string {
   font-size: 14px;
 }
 
+/* Attachment input row styling */
+.attachment-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.attachment-input-row input[type="text"] {
+  flex: 1;
+}
+
+.inline-checkbox {
+  white-space: nowrap;
+  font-size: 13px !important;
+}
+
 .button-group {
   display: flex;
   gap: 10px;
@@ -625,6 +643,7 @@ function formatJSONData(type: string, jsonData: object): string {
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s;
+  white-space: nowrap;
 }
 
 .connect-btn {
@@ -1156,17 +1175,28 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 /* Compact Encoding Field Styling */
-.encoding-header {
+.encoding-control {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 5px;
+  gap: 8px;
+  position: relative;
 }
 
-.encoding-header label:first-child {
-  font-weight: 600;
-  color: #495057;
+.encoding-control .encoding-select,
+.encoding-control .encoding-text-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
   font-size: 14px;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.encoding-control .custom-checkbox-label {
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .custom-checkbox-label {
@@ -1184,26 +1214,15 @@ function formatJSONData(type: string, jsonData: object): string {
   cursor: pointer;
 }
 
-.encoding-select,
-.encoding-text-input {
-  width: 100%;
-  padding: 6px 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.encoding-select:disabled,
-.encoding-text-input:disabled {
+.encoding-control .encoding-select:disabled,
+.encoding-control .encoding-text-input:disabled {
   background: #f8f9fa;
   color: #6c757d;
   cursor: not-allowed;
 }
 
-.encoding-select:focus,
-.encoding-text-input:focus {
+.encoding-control .encoding-select:focus,
+.encoding-control .encoding-text-input:focus {
   outline: none;
   border-color: #007bff;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
@@ -1237,17 +1256,28 @@ function formatJSONData(type: string, jsonData: object): string {
   cursor: pointer;
 }
 
-.attachment-group {
-  grid-column: 1 / -1; /* Span full width */
-}
-
-.attachment-group input[type="text"] {
-  width: 100%;
-  box-sizing: border-box;
-  max-width: 100%;
-}
-
 /* Triple state checkbox styles for express option */
+.express-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background: white;
+  min-height: 20px;
+}
+
+.express-control.disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.express-state-label {
+  font-size: 14px;
+  color: #495057;
+}
+
 .tri-state-label {
   display: flex;
   align-items: center;
@@ -1318,22 +1348,6 @@ function formatJSONData(type: string, jsonData: object): string {
 .tri-state-checkbox:checked::before {
   content: '✓';
   font-size: 12px;
-}
-
-/* Attachment controls */
-.attachment-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.attachment-controls .checkbox-label {
-  font-size: 13px;
-  margin-bottom: 0;
-}
-
-.attachment-controls input[type="text"] {
-  width: 100%;
 }
 
 /* Test section styles */
