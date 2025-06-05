@@ -67,7 +67,6 @@ export interface ZenohDemoState {
   addLogEntry: (type: LogEntry["type"], message: string, jsonData?: object) => void;
   addErrorLogEntry: (message: string, errorDetails?: any) => void;
   clearLog: () => void;
-  testJSONLogging?: () => void; // Optional test method for development
 }
 
 export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {

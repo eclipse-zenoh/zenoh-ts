@@ -134,39 +134,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     }
   }
 
-  // Test method to demonstrate JSON formatting capabilities
-  testJSONLogging(): void {
-    // Test string logging for regular operations
-    this.addLogEntry("info", "This is a simple string log message");
-    this.addLogEntry("success", "Operation completed successfully");
-    
-    // Test error logging with details (JSON formatted)
-    this.addErrorLogEntry("Example error with detailed information", {
-      errorCode: "DEMO_ERROR",
-      details: {
-        operation: "test_operation",
-        parameters: { key: "demo/test", value: "test_value" },
-        timestamp: new Date().toISOString()
-      }
-    });
-    
-    // Test simple error logging (string only)
-    this.addErrorLogEntry("Simple error message without details");
-    
-    // Test sample data logging (JSON formatted) - message describes context, JSON shows raw sample
-    const sampleData = {
-      key: "demo/sensor/temperature", 
-      value: "23.5°C",
-      kind: "PUT",
-      encoding: "text/plain",
-      priority: "DATA_HIGH",
-      congestionControl: "DROP",
-      express: "false",
-      timestamp: "2025-06-05T10:30:00Z",
-      attachment: "sensor-001:room-A"
-    };
-    this.addLogEntry("data", "Test sample data from demo sensor", sampleData);
-  }
+
 
   override clearLog(): void {
     this.logEntries.value = [];

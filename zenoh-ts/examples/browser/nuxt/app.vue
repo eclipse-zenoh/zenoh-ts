@@ -306,22 +306,6 @@
           </div>
         </div>
         
-        <!-- Test Section -->
-        <div class="operation-group test-section">
-          <h4>Development & Testing</h4>
-          <div class="test-controls">
-            <button 
-              @click="testJSONLogging && testJSONLogging()" 
-              class="test-btn"
-              title="Test HTML-formatted JSON logging display"
-            >
-              🧪 Test JSON Logging
-            </button>
-            <p class="test-description">
-              Shows clean JSON samples with contextual info in string messages
-            </p>
-          </div>
-        </div>
       </div>
 
       <!-- Log Panel -->
@@ -399,9 +383,6 @@ const {
 
   // App operations
   clearLog,
-  
-  // Development/Testing
-  testJSONLogging,
 } = await useZenohDemo();
 
 // Template ref for log content
