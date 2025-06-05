@@ -24,30 +24,7 @@ import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
-import { sampleToJSON } from "./zenohUtils";
-
-// Pretty-print sample function using zenohUtils
-function sampleToPrettyString(sample: Sample, subscriberId?: string): string {
-  // Use the utility function to get structured sample data
-  const sampleData = sampleToJSON(sample);
-
-  // Create comprehensive sample information from the structured data
-  const sampleInfo = [
-    `Key: ${sampleData.key}`,
-    `Value: "${sampleData.value}"`,
-    `Kind: ${sampleData.kind}`,
-    `Encoding: ${sampleData.encoding}`,
-    `Priority: ${sampleData.priority}`,
-    `CongestionControl: ${sampleData.congestionControl}`,
-    `Express: ${sampleData.express}`,
-    `Timestamp: ${sampleData.timestamp}`,
-    `Attachment: ${sampleData.attachment}`,
-  ].join(", ");
-
-  // Return formatted string with optional subscriber ID
-  const prefix = subscriberId ? `SUBSCRIPTION [${subscriberId}]` : "SAMPLE";
-  return `${prefix} ${sampleInfo}`;
-}
+import { sampleToJSON, formatLogMessage } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -104,35 +81,90 @@ class ZenohDemo extends ZenohDemoEmpty {
     ]);
   }
 
-  override addLogEntry(type: LogEntry["type"], message: string): void {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    this.logEntries.value.push({ type, message, timestamp: new Date() });
+  // Standard logging method for string messages
+  override addLogEntry(type: LogEntry["type"], message: string | object): void {
+    if (typeof message === "string") {
+      console.log(`[${type.toUpperCase()}] ${message}`);
+      this.logEntries.value.push({ type, message, timestamp: new Date() });
+    } else {
+      // For JSON objects (primarily samples), use the HTML-formatted log message
+      const htmlFormattedMessage = formatLogMessage(type, message);
+      console.log(`[${type.toUpperCase()}] JSON Data:`, message);
+      
+      // Store the HTML-formatted message for display in the UI
+      this.logEntries.value.push({ 
+        type, 
+        message: htmlFormattedMessage, 
+        timestamp: new Date() 
+      });
+    }
   }
 
-  // Common method for logging errors with stack traces
-  private addErrorlogEntry(message: string, error: unknown): void {
-    const stack = error instanceof Error ? error.stack : new Error().stack;
-    
-    // Parse stack trace to extract source location
-    let sourceLocation = "";
-    if (stack) {
-      const stackLines = stack.split('\n');
-      for (const line of stackLines) {
-        // Look for lines that contain file paths (not node_modules or internal)
-        const match = line.match(/\s+at\s+.*?\(?(.*?):(\d+):(\d+)\)?/);
-        if (match) {
-          const [, filePath, lineNumber, columnNumber] = match;
-          // Filter out node_modules and internal files, show only application code
-          if (filePath && !filePath.includes('node_modules') && !filePath.includes('internal/') && filePath.includes('.')) {
-            const fileName = filePath.split('/').pop() || filePath;
-            sourceLocation = ` [${fileName}:${lineNumber}:${columnNumber}]`;
-            break;
-          }
-        }
-      }
+  // Error logging method with JSON formatting for error details
+  override addErrorLogEntry(message: string, errorDetails?: any): void {
+    if (errorDetails) {
+      // Create formatted error object
+      const errorObject = {
+        type: "ERROR",
+        message: message,
+        details: errorDetails,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Use JSON formatting for errors with details
+      const htmlFormattedMessage = formatLogMessage("error", errorObject);
+      console.error(`[ERROR] ${message}`, errorDetails);
+      
+      this.logEntries.value.push({ 
+        type: "error", 
+        message: htmlFormattedMessage, 
+        timestamp: new Date() 
+      });
+    } else {
+      // Simple string error logging
+      console.error(`[ERROR] ${message}`);
+      this.logEntries.value.push({ 
+        type: "error", 
+        message, 
+        timestamp: new Date() 
+      });
     }
+  }
+
+  // Test method to demonstrate JSON formatting capabilities
+  testJSONLogging(): void {
+    // Test string logging for regular operations
+    this.addLogEntry("info", "This is a simple string log message");
+    this.addLogEntry("success", "Operation completed successfully");
     
-    this.addLogEntry("error", `${message}${sourceLocation}: ${error}\nStack trace:\n${stack}`);
+    // Test error logging with details (JSON formatted)
+    this.addErrorLogEntry("Example error with detailed information", {
+      errorCode: "DEMO_ERROR",
+      details: {
+        operation: "test_operation",
+        parameters: { key: "demo/test", value: "test_value" },
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    // Test simple error logging (string only)
+    this.addErrorLogEntry("Simple error message without details");
+    
+    // Test sample data logging (JSON formatted)
+    const sampleData = {
+      type: "SAMPLE_DATA",
+      key: "demo/sensor/temperature", 
+      value: "23.5°C",
+      kind: "PUT",
+      encoding: "text/plain",
+      timestamp: "2025-06-05T10:30:00Z",
+      metadata: {
+        source: "sensor-001",
+        location: "room-A",
+        priority: "DATA_HIGH"
+      }
+    };
+    this.addLogEntry("data", sampleData);
   }
 
   override clearLog(): void {
@@ -143,21 +175,15 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (this.isConnecting.value || this.isConnected.value) return;
 
     this.isConnecting.value = true;
-    this.addLogEntry(
-      "info",
-      `Attempting to connect to ${this.serverUrl.value}`
-    );
+    this.addLogEntry("info", `Attempting to connect to ${this.serverUrl.value}...`);
 
     try {
       const config = new Config(this.serverUrl.value);
       this.zenohSession = await Session.open(config);
       this.isConnected.value = true;
-      this.addLogEntry(
-        "success",
-        `Successfully connected to ${this.serverUrl.value}`
-      );
+      this.addLogEntry("success", `Successfully connected to ${this.serverUrl.value}`);
     } catch (error) {
-      this.addErrorlogEntry("Failed to connect", error);
+      this.addErrorLogEntry(`Failed to connect to ${this.serverUrl.value}`, error);
       this.zenohSession = null;
     } finally {
       this.isConnecting.value = false;
@@ -174,9 +200,9 @@ class ZenohDemo extends ZenohDemoEmpty {
       await this.zenohSession.close();
       this.zenohSession = null;
       this.isConnected.value = false;
-      this.addLogEntry("success", "Disconnected from Zenoh");
+      this.addLogEntry("success", "Disconnected from Zenoh session");
     } catch (error) {
-      this.addErrorlogEntry("Error during disconnect", error);
+      this.addErrorLogEntry("Error during disconnect", error);
     }
   }
 
@@ -191,12 +217,10 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Build put options
       const options = putOptionsStateTo(this.putOptions);
       await this.zenohSession.put(keyExpr, bytes, options);
-      this.addLogEntry(
-        "success",
-        `PUT: ${this.putKey.value} = "${this.putValue.value}"`
-      );
+      
+      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`);
     } catch (error) {
-      this.addErrorlogEntry("PUT failed", error);
+      this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
     }
   }
 
@@ -205,11 +229,11 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const selector = this.getKey.value;
-      this.addLogEntry("info", `GET: Querying ${selector}`);
+      this.addLogEntry("info", `Starting GET query for selector: ${selector}`);
 
       const receiver = await this.zenohSession.get(selector);
       if (!receiver) {
-        this.addLogEntry("error", "GET failed: No receiver returned");
+        this.addErrorLogEntry("GET failed: No receiver returned");
         return;
       }
 
@@ -224,33 +248,27 @@ class ZenohDemo extends ZenohDemoEmpty {
 
           // Check if it's a successful sample or an error
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
-            // It's a Sample - use pretty-printing function
+            // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
-            const sampleInfoStr = sampleToPrettyString(sample);
-            this.addLogEntry(
-              "data",
-              `GET result: ${sampleInfoStr.replace("SAMPLE ", "")}`
-            );
+            const sampleData = sampleToJSON(sample);
+            this.addLogEntry("data", { type: "GET_RESULT", ...sampleData });
             resultCount++;
           } else {
-            // It's a ReplyError
+            // It's a ReplyError - log with error formatting
             const replyError = result as ReplyError;
-            this.addLogEntry(
-              "error",
-              `GET error: ${replyError.payload().toString()}`
-            );
+            this.addErrorLogEntry(`GET query error for ${selector}`, {
+              error: replyError.payload().toString(),
+              encoding: replyError.encoding().toString()
+            });
           }
         } catch (resultError) {
-          this.addErrorlogEntry("Error processing GET result", resultError);
+          this.addErrorLogEntry("Error processing GET result", resultError);
         }
       }
 
-      this.addLogEntry(
-        "success",
-        `GET completed: ${resultCount} results received`
-      );
+      this.addLogEntry("success", `GET query completed for ${selector}. Found ${resultCount} results.`);
     } catch (error) {
-      this.addErrorlogEntry("GET failed", error);
+      this.addErrorLogEntry(`GET failed for selector "${this.getKey.value}"`, error);
     }
   }
 
@@ -284,10 +302,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
-      this.addLogEntry(
-        "success",
-        `Subscribed to ${this.subscribeKey.value} (ID: ${displayId})`
-      );
+      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`);
 
       // Handle incoming data
       (async () => {
@@ -300,29 +315,28 @@ class ZenohDemo extends ZenohDemoEmpty {
             if (!sample) break; // Normal end of subscription
 
             try {
-              // Use the pretty-printing function to format sample information
-              const sampleInfoStr = sampleToPrettyString(sample, displayId);
-              this.addLogEntry("data", sampleInfoStr);
+              // Use JSON formatting for sample display
+              const sampleData = sampleToJSON(sample);
+              const contextualData = { 
+                type: "SUBSCRIPTION_DATA", 
+                subscriberId: displayId, 
+                ...sampleData 
+              };
+              this.addLogEntry("data", contextualData);
             } catch (sampleError) {
-              this.addErrorlogEntry(
-                "Error processing subscription sample",
-                sampleError
-              );
+              this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }
           }
           // Normal end of subscription - no error logging needed
         } catch (subscriptionError) {
           // Only log actual errors, not normal disconnections
           if (subscriptionError) {
-            this.addErrorlogEntry(
-              `Subscription error for ${displayId}`,
-              subscriptionError
-            );
+            this.addErrorLogEntry(`Subscription error for ${displayId}`, subscriptionError);
           }
         }
       })();
     } catch (error) {
-      this.addErrorlogEntry("Subscribe failed", error);
+      this.addErrorLogEntry(`Subscribe failed for "${this.subscribeKey.value}"`, error);
     }
   }
 
@@ -331,51 +345,53 @@ class ZenohDemo extends ZenohDemoEmpty {
       (sub) => sub.displayId === subscriberId
     );
     if (subscriberIndex === -1) {
-      this.addLogEntry("error", `Subscriber ${subscriberId} not found`);
+      this.addErrorLogEntry(`Subscriber ${subscriberId} not found`);
       return;
     }
 
     const subscriberInfo = this.activeSubscribers.value[subscriberIndex];
     if (!subscriberInfo) {
-      this.addLogEntry(
-        "error",
-        `Subscriber info for ${subscriberId} is invalid`
-      );
+      this.addErrorLogEntry(`Subscriber info for ${subscriberId} is invalid`);
       return;
     }
 
     try {
       await subscriberInfo.subscriber.undeclare();
       this.activeSubscribers.value.splice(subscriberIndex, 1);
-      this.addLogEntry(
-        "success",
-        `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberId})`
-      );
+      this.addLogEntry("success", `Unsubscribed from "${subscriberInfo.keyExpr}" (${subscriberId})`);
     } catch (error) {
-      this.addErrorlogEntry(`Unsubscribe failed for ${subscriberId}`, error);
+      this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
     }
   }
 
   override async unsubscribeAll(): Promise<void> {
     const subscribersToRemove = [...this.activeSubscribers.value];
+    
+    if (subscribersToRemove.length === 0) {
+      this.addLogEntry("info", "No active subscriptions to remove");
+      return;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
 
     for (const subscriberInfo of subscribersToRemove) {
       try {
         await subscriberInfo.subscriber.undeclare();
-        this.addLogEntry(
-          "info",
-          `Unsubscribed from ${subscriberInfo.keyExpr} (ID: ${subscriberInfo.displayId})`
-        );
+        successCount++;
       } catch (error) {
-        this.addErrorlogEntry(
-          `Error unsubscribing from ${subscriberInfo.displayId}`,
-          error
-        );
+        errorCount++;
+        this.addErrorLogEntry(`Failed to unsubscribe ${subscriberInfo.displayId}`, error);
       }
     }
 
     this.activeSubscribers.value = [];
-    this.addLogEntry("success", "All subscriptions cleared");
+    
+    if (errorCount === 0) {
+      this.addLogEntry("success", `Successfully unsubscribed from all ${successCount} subscriptions`);
+    } else {
+      this.addLogEntry("info", `Unsubscribed from ${successCount} subscriptions, ${errorCount} failed`);
+    }
   }
 }
 

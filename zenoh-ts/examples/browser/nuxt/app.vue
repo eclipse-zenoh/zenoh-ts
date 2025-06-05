@@ -263,6 +263,23 @@
             </div>
           </div>
         </div>
+        
+        <!-- Test Section -->
+        <div class="operation-group test-section">
+          <h4>Development & Testing</h4>
+          <div class="test-controls">
+            <button 
+              @click="testJSONLogging && testJSONLogging()" 
+              class="test-btn"
+              title="Test HTML-formatted JSON logging display"
+            >
+              🧪 Test JSON Logging
+            </button>
+            <p class="test-description">
+              Demonstrates string logging for operations and JSON formatting for samples & errors
+            </p>
+          </div>
+        </div>
       </div>
 
       <!-- Log Panel -->
@@ -280,7 +297,15 @@
           >
             <span class="timestamp">{{ entry.timestamp.toLocaleTimeString() }}</span>
             <span class="log-type">[{{ entry.type.toUpperCase() }}]</span>
-            <span class="log-message">{{ entry.message }}</span>
+            <div 
+              class="log-message" 
+              v-if="entry.message.includes('<div style=') || entry.message.includes('<pre style=')"
+              v-html="entry.message"
+            ></div>
+            <span 
+              class="log-message" 
+              v-else
+            >{{ entry.message }}</span>
           </div>
           <div v-if="logEntries.length === 0" class="empty-log">
             No operations logged yet. Connect to Zenoh and try some operations!
@@ -334,6 +359,9 @@ const {
 
   // App operations
   clearLog,
+  
+  // Development/Testing
+  testJSONLogging,
 } = await useZenohDemo();
 
 // Template ref for log content
@@ -737,6 +765,42 @@ watch(putOptions.customEncoding, (isCustom) => {
   word-break: break-word;
 }
 
+/* Styles for HTML-formatted JSON log messages */
+.log-message div[style*="margin: 4px 0"] {
+  margin: 0 !important;
+  padding: 0;
+}
+
+.log-message pre {
+  margin: 8px 0 !important;
+  padding: 12px !important;
+  background: #f8f9fa !important;
+  border-radius: 6px !important;
+  border-left: 3px solid var(--log-color, #ccc) !important;
+  font-family: 'Courier New', Consolas, monospace !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  overflow-x: auto !important;
+  white-space: pre-wrap !important;
+}
+
+/* Set CSS variables for log type colors */
+.log-entry.info .log-message pre {
+  --log-color: #2563eb;
+}
+
+.log-entry.success .log-message pre {
+  --log-color: #16a34a;
+}
+
+.log-entry.error .log-message pre {
+  --log-color: #dc2626;
+}
+
+.log-entry.data .log-message pre {
+  --log-color: #7c3aed;
+}
+
 .empty-log {
   text-align: center;
   color: #999;
@@ -931,6 +995,61 @@ watch(putOptions.customEncoding, (isCustom) => {
 
 .attachment-group input[type="text"] {
   width: 100%;
+}
+
+/* Test section styles */
+.test-section {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  margin-top: 16px;
+}
+
+.test-section h4 {
+  color: #6c757d;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.test-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-btn {
+  background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.test-btn:hover {
+  background: linear-gradient(135deg, #5a2d91, #7c3aed);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.test-btn:active {
+  transform: translateY(0);
+}
+
+.test-description {
+  font-size: 12px;
+  color: #6c757d;
+  margin: 0;
+  font-style: italic;
 }
 
 
