@@ -174,7 +174,7 @@ function serializeZid(zid: ZenohId, serializer: ZBytesSerializer) {
 }
 
 function serializeTimestamp(timestamp: Timestamp, serializer: ZBytesSerializer) {
-    serializer.serializeBigintUint64(timestamp.getMsSinceUnixEpoch());
+    serializer.serializeBigintUint64(timestamp.getNtp64());
     serializeZid(timestamp.getId(), serializer);
 }
 
