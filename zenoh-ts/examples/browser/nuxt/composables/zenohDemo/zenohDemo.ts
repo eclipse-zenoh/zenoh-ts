@@ -18,108 +18,30 @@ import {
   CongestionControl,
   Reliability,
   Locality,
-  SampleKind,
-  Timestamp,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { PutOptions } from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
+import { sampleToJSON } from "./zenohUtils";
 
-// Sample field conversion functions
-function sampleKindToString(kind: SampleKind): string {
-  switch (kind) {
-    case SampleKind.PUT:
-      return "PUT";
-    case SampleKind.DELETE:
-      return "DELETE";
-    default:
-      return `UNKNOWN(${kind})`;
-  }
-}
-
-function priorityToString(priority: Priority): string {
-  switch (priority) {
-    case Priority.REAL_TIME:
-      return "REAL_TIME";
-    case Priority.INTERACTIVE_HIGH:
-      return "INTERACTIVE_HIGH";
-    case Priority.INTERACTIVE_LOW:
-      return "INTERACTIVE_LOW";
-    case Priority.DATA_HIGH:
-      return "DATA_HIGH";
-    case Priority.DATA:
-      return "DATA";
-    case Priority.DATA_LOW:
-      return "DATA_LOW";
-    case Priority.BACKGROUND:
-      return "BACKGROUND";
-    default:
-      return `UNKNOWN(${priority})`;
-  }
-}
-
-function congestionControlToString(congestionControl: CongestionControl): string {
-  switch (congestionControl) {
-    case CongestionControl.DROP:
-      return "DROP";
-    case CongestionControl.BLOCK:
-      return "BLOCK";
-    default:
-      return `UNKNOWN(${congestionControl})`;
-  }
-}
-
-function timestampToString(timestamp: Timestamp | undefined): string {
-  return timestamp ? timestamp.asDate().toISOString() : "none";
-}
-
-function attachmentToString(attachment: ZBytes | undefined): string {
-  return attachment ? `"${attachment.toString()}"` : "none";
-}
-
-function encodingToString(encoding: Encoding): string {
-  return encoding.toString() || "none";
-}
-
-function expressToString(express: boolean): string {
-  return express.toString();
-}
-
-// Pretty-print sample function
+// Pretty-print sample function using zenohUtils
 function sampleToPrettyString(sample: Sample, subscriberId?: string): string {
-  // Extract all sample properties
-  const keyStr = sample.keyexpr().toString();
-  const valueStr = sample.payload().toString();
-  const kind = sample.kind();
-  const encoding = sample.encoding();
-  const priority = sample.priority();
-  const congestionControl = sample.congestionControl();
-  const express = sample.express();
-  const timestamp = sample.timestamp();
-  const attachment = sample.attachment();
+  // Use the utility function to get structured sample data
+  const sampleData = sampleToJSON(sample);
 
-  // Convert each field to string using dedicated functions
-  const kindStr = sampleKindToString(kind);
-  const priorityStr = priorityToString(priority);
-  const congestionControlStr = congestionControlToString(congestionControl);
-  const timestampStr = timestampToString(timestamp);
-  const attachmentStr = attachmentToString(attachment);
-  const encodingStr = encodingToString(encoding);
-  const expressStr = expressToString(express);
-
-  // Create comprehensive sample information
+  // Create comprehensive sample information from the structured data
   const sampleInfo = [
-    `Key: ${keyStr}`,
-    `Value: "${valueStr}"`,
-    `Kind: ${kindStr}`,
-    `Encoding: ${encodingStr}`,
-    `Priority: ${priorityStr}`,
-    `CongestionControl: ${congestionControlStr}`,
-    `Express: ${expressStr}`,
-    `Timestamp: ${timestampStr}`,
-    `Attachment: ${attachmentStr}`,
+    `Key: ${sampleData.key}`,
+    `Value: "${sampleData.value}"`,
+    `Kind: ${sampleData.kind}`,
+    `Encoding: ${sampleData.encoding}`,
+    `Priority: ${sampleData.priority}`,
+    `CongestionControl: ${sampleData.congestionControl}`,
+    `Express: ${sampleData.express}`,
+    `Timestamp: ${sampleData.timestamp}`,
+    `Attachment: ${sampleData.attachment}`,
   ].join(", ");
 
   // Return formatted string with optional subscriber ID
@@ -184,12 +106,6 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override addLogEntry(type: LogEntry["type"], message: string): void {
     console.log(`[${type.toUpperCase()}] ${message}`);
-
-    // If it's an error type and contains stack trace, also log to console.error for better visibility
-    if (type === "error" && message.includes("Stack trace:")) {
-      console.error(`[ERROR] ${message}`);
-    }
-
     this.logEntries.value.push({ type, message, timestamp: new Date() });
   }
 
