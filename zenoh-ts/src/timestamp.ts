@@ -7,12 +7,34 @@ export class Timestamp {
         return this.zid;
     }
 
-    getMsSinceUnixEpoch(): bigint {
+    /**
+     * Gets the NTP64 timestamp value as received from Zenoh
+     */
+    getNtp64(): bigint {
         return this.ntp64;
     }
 
+    /**
+     * Converts NTP64 timestamp to milliseconds since Unix epoch
+     * NTP64 format: upper 32 bits = seconds since Unix epoch, lower 32 bits = fractional seconds
+     */
+    getMsSinceUnixEpoch(): bigint {
+        // Extract upper 32 bits (seconds since Unix epoch)
+        const seconds = this.ntp64 >> 32n;
+        
+        // Extract lower 32 bits (fractional part in 2^32 units)
+        const fraction = this.ntp64 & 0xFFFFFFFFn;
+        
+        // Convert fractional part to milliseconds
+        // fraction / 2^32 * 1000 = fraction * 1000 / 2^32
+        const millisecondFraction = (fraction * 1000n) >> 32n;
+        
+        return seconds * 1000n + millisecondFraction;
+    }
+
     asDate(): Date {
-        // Note: Values produced by this Bigint should fit into a number as they are ms since Unix Epoch
-        return new Date(this.ntp64 as unknown as number);
+        const msUnixEpoch = this.getMsSinceUnixEpoch();
+        // Convert BigInt to number safely
+        return new Date(Number(msUnixEpoch));
     }
 }
