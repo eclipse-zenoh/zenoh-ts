@@ -1259,29 +1259,65 @@ function formatJSONData(type: string, jsonData: object): string {
   user-select: none;
 }
 
+/* Three-state checkbox styling */
 .tri-state-checkbox {
+  /* Remove browser defaults */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  
+  /* Layout and sizing */
+  width: 16px;
+  height: 16px;
   margin: 0;
-  cursor: pointer;
   transform: scale(1.1);
+  
+  /* Visual styling */
+  border: 2px solid #ccc;
+  border-radius: 3px;
+  background: white;
+  position: relative;
+  cursor: pointer;
 }
 
+/* Common styling for all pseudo-element indicators */
+.tri-state-checkbox::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* Disabled state */
 .tri-state-checkbox:disabled {
   cursor: not-allowed;
+  opacity: 0.5;
 }
 
-/* Style for indeterminate state */
+/* Indeterminate state (undefined) */
 .tri-state-checkbox:indeterminate {
-  background-color: #7b7b7b;
-  border-color: #7b7b7b;
+  background-color: #7f7f7f !important;
+  border-color: #7f7f7f !important;
+  accent-color: #7f7f7f !important;
 }
 
-.tri-state-checkbox:indeterminate:after {
-  content: '';
-  display: block;
-  width: 6px;
-  height: 2px;
-  background: white;
-  margin: 4px auto;
+.tri-state-checkbox:indeterminate::before {
+  content: '−';
+  font-size: 14px;
+}
+
+/* Checked state (true) */
+.tri-state-checkbox:checked {
+  background-color: #007bff !important;
+  border-color: #007bff !important;
+}
+
+.tri-state-checkbox:checked::before {
+  content: '✓';
+  font-size: 12px;
 }
 
 /* Attachment controls */
