@@ -31,22 +31,24 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
   if (options.encoding.value) {
     opts.encoding = Encoding.fromString(options.encoding.value);
   }
-  if (options.priority.value) {
+  if (options.priority.value !== undefined) {
     opts.priority = options.priority.value;
   }
-  if (options.congestionControl.value) {
+  if (options.congestionControl.value !== undefined) {
     opts.congestionControl = options.congestionControl.value;
   }
-  if (options.express.value) {
-    opts.express = options.express.value;
+  if (options.express.value !== 'default') {
+    opts.express = options.express.value === 'true';
   }
-  if (options.reliability.value) {
+  if (options.reliability.value !== undefined) {
     opts.reliability = options.reliability.value;
   }
-  if (options.allowedDestination.value) {
+  if (options.allowedDestination.value !== undefined) {
     opts.allowedDestination = options.allowedDestination.value;
   }
-  if (options.attachment.value) {
+  if (options.attachmentEmpty.value) {
+    opts.attachment = new ZBytes("");
+  } else if (options.attachment.value) {
     opts.attachment = new ZBytes(options.attachment.value);
   }
   return opts;

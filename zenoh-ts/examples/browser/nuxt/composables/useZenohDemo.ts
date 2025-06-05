@@ -26,17 +26,21 @@ export interface SubscriberInfo {
   createdAt: Date;
 }
 
+// Triple checkbox state for express option
+export type TriCheckboxState = 'default' | 'true' | 'false';
+
 // Put options state
 export interface PutOptionsState {
   showOptions: Ref<boolean>;
   encoding: Ref<string>;
   customEncoding: Ref<boolean>;
-  priority: Ref<Priority>;
-  congestionControl: Ref<CongestionControl>;
-  express: Ref<boolean>;
-  reliability: Ref<Reliability>;
-  allowedDestination: Ref<Locality>;
+  priority: Ref<Priority | undefined>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  express: Ref<TriCheckboxState>;
+  reliability: Ref<Reliability | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
   attachment: Ref<string>;
+  attachmentEmpty: Ref<boolean>;
 }
 
 // Zenoh Demo state interface combining UI state and operations
@@ -80,12 +84,13 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     showOptions: ref(false),
     encoding: ref(""),
     customEncoding: ref(false),
-    priority: ref(0 as Priority),
-    congestionControl: ref(0 as CongestionControl),
-    express: ref(false),
-    reliability: ref(0 as Reliability),
-    allowedDestination: ref(0 as Locality),
+    priority: ref(undefined as Priority | undefined),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    express: ref('default' as TriCheckboxState),
+    reliability: ref(undefined as Reliability | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
     attachment: ref(""),
+    attachmentEmpty: ref(true),
   };
   getKey = ref("demo/example/*");
   subscribeKey = ref("demo/example/**");

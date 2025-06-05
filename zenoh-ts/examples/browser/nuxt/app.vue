@@ -152,7 +152,7 @@
                     class="encoding-select"
                     title="Select a predefined encoding"
                   >
-                    <option value="">-- Select Encoding --</option>
+                    <option value="">(default)</option>
                     <option 
                       v-for="option in encodingOptions" 
                       :key="option.value" 
@@ -176,7 +176,8 @@
                 
                 <div class="option-group">
                   <label>Priority:</label>
-                  <select v-model.number="putOptions.priority.value" :disabled="!isConnected">
+                  <select v-model="putOptions.priority.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in priorityOptions" 
                       :key="option.value" 
@@ -189,7 +190,8 @@
                 
                 <div class="option-group">
                   <label>Congestion Control:</label>
-                  <select v-model.number="putOptions.congestionControl.value" :disabled="!isConnected">
+                  <select v-model="putOptions.congestionControl.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in congestionControlOptions" 
                       :key="option.value" 
@@ -202,7 +204,8 @@
                 
                 <div class="option-group">
                   <label>Reliability:</label>
-                  <select v-model.number="putOptions.reliability.value" :disabled="!isConnected">
+                  <select v-model="putOptions.reliability.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in reliabilityOptions" 
                       :key="option.value" 
@@ -215,7 +218,8 @@
                 
                 <div class="option-group">
                   <label>Allowed Destination:</label>
-                  <select v-model.number="putOptions.allowedDestination.value" :disabled="!isConnected">
+                  <select v-model="putOptions.allowedDestination.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in localityOptions" 
                       :key="option.value" 
@@ -227,24 +231,56 @@
                 </div>
                 
                 <div class="option-group">
-                  <label class="checkbox-label">
-                    <input 
-                      type="checkbox" 
-                      v-model="putOptions.express.value" 
-                      :disabled="!isConnected"
-                    >
-                    Express (no batching)
-                  </label>
+                  <label>Express (no batching):</label>
+                  <div class="triple-checkbox">
+                    <label class="radio-label">
+                      <input 
+                        type="radio" 
+                        value="default" 
+                        v-model="putOptions.express.value" 
+                        :disabled="!isConnected"
+                      >
+                      (default)
+                    </label>
+                    <label class="radio-label">
+                      <input 
+                        type="radio" 
+                        value="true" 
+                        v-model="putOptions.express.value" 
+                        :disabled="!isConnected"
+                      >
+                      True
+                    </label>
+                    <label class="radio-label">
+                      <input 
+                        type="radio" 
+                        value="false" 
+                        v-model="putOptions.express.value" 
+                        :disabled="!isConnected"
+                      >
+                      False
+                    </label>
+                  </div>
                 </div>
                 
                 <div class="option-group attachment-group">
                   <label>Attachment:</label>
-                  <input 
-                    type="text" 
-                    v-model="putOptions.attachment.value" 
-                    placeholder="Optional attachment data"
-                    :disabled="!isConnected"
-                  >
+                  <div class="attachment-controls">
+                    <label class="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        v-model="putOptions.attachmentEmpty.value" 
+                        :disabled="!isConnected"
+                      >
+                      (empty)
+                    </label>
+                    <input 
+                      type="text" 
+                      v-model="putOptions.attachment.value" 
+                      placeholder="Optional attachment data"
+                      :disabled="!isConnected || putOptions.attachmentEmpty.value"
+                    >
+                  </div>
                 </div>
               </div>
             </div>
@@ -1167,6 +1203,44 @@ function formatJSONData(type: string, jsonData: object): string {
   width: 100%;
   box-sizing: border-box;
   max-width: 100%;
+}
+
+/* Triple checkbox styles for express option */
+.triple-checkbox {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  color: #495057;
+  cursor: pointer;
+  user-select: none;
+}
+
+.radio-label input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Attachment controls */
+.attachment-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-controls .checkbox-label {
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.attachment-controls input[type="text"] {
+  width: 100%;
 }
 
 /* Test section styles */
