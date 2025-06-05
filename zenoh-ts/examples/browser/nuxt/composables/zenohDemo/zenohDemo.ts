@@ -24,7 +24,7 @@ import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
-import { sampleToJSON } from "./zenohUtils";
+import { sampleToJSON, putOptionsToJSON } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -187,7 +187,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       const options = putOptionsStateTo(this.putOptions);
       await this.zenohSession.put(keyExpr, bytes, options);
       
-      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`);
+      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`, putOptionsToJSON(options));
     } catch (error) {
       this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
     }
@@ -219,8 +219,7 @@ class ZenohDemo extends ZenohDemoEmpty {
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
-            const sampleData = sampleToJSON(sample);
-            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, sampleData);
+            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, sampleToJSON(sample));
             resultCount++;
           } else {
             // It's a ReplyError - log with error formatting
@@ -285,8 +284,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             try {
               // Use JSON formatting for sample display
-              const sampleData = sampleToJSON(sample);
-              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, sampleData);
+              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, sampleToJSON(sample));
             } catch (sampleError) {
               this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }
