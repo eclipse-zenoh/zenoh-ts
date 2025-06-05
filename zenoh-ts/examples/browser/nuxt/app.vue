@@ -1038,18 +1038,22 @@ function formatJSONData(type: string, jsonData: object): string {
   border-radius: 6px;
   padding: 15px;
   margin-top: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .options-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 15px;
+  box-sizing: border-box;
 }
 
 .option-group {
   display: flex;
   flex-direction: column;
   gap: 5px;
+  box-sizing: border-box;
 }
 
 .option-group label {
@@ -1161,6 +1165,8 @@ function formatJSONData(type: string, jsonData: object): string {
 
 .attachment-group input[type="text"] {
   width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
 }
 
 /* Test section styles */
