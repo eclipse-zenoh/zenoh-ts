@@ -276,7 +276,7 @@
               🧪 Test JSON Logging
             </button>
             <p class="test-description">
-              Demonstrates string logging for operations and JSON formatting for samples & errors
+              Shows clean JSON samples with contextual info in string messages
             </p>
           </div>
         </div>
@@ -297,15 +297,13 @@
           >
             <span class="timestamp">{{ entry.timestamp.toLocaleTimeString() }}</span>
             <span class="log-type">[{{ entry.type.toUpperCase() }}]</span>
-            <div 
-              class="log-message" 
-              v-if="entry.message.includes('<div style=') || entry.message.includes('<pre style=')"
-              v-html="entry.message"
-            ></div>
-            <span 
-              class="log-message" 
-              v-else
-            >{{ entry.message }}</span>
+            <div class="log-message">
+              <span>{{ entry.message }}</span>
+              <div 
+                v-if="entry.jsonData"
+                v-html="formatJSONData(entry.type, entry.jsonData)"
+              ></div>
+            </div>
           </div>
           <div v-if="logEntries.length === 0" class="empty-log">
             No operations logged yet. Connect to Zenoh and try some operations!
@@ -386,6 +384,88 @@ watch(putOptions.customEncoding, (isCustom) => {
     putOptions.encoding.value = '';
   }
 }, { immediate: false })
+
+// JSON formatting functions moved from zenohUtils
+const LOG_COLORS: Record<string, string> = {
+  info: "#2563eb",      // blue
+  success: "#16a34a",   // green
+  error: "#dc2626",     // red
+  data: "#7c3aed",      // purple
+  warning: "#ea580c",   // orange
+};
+
+const JSON_COLORS = {
+  key: "#059669",       // emerald
+  string: "#dc2626",    // red
+  number: "#2563eb",    // blue
+  boolean: "#7c3aed",   // purple
+  null: "#6b7280",      // gray
+  bracket: "#374151",   // dark gray
+};
+
+/**
+ * Pretty formats JSON with syntax highlighting for browser display
+ */
+function formatJSONWithColors(obj: any, indent: number = 0): string {
+  const indentStr = "  ".repeat(indent);
+  const nextIndentStr = "  ".repeat(indent + 1);
+
+  if (obj === null) {
+    return `<span style="color: ${JSON_COLORS.null}">null</span>`;
+  }
+
+  if (typeof obj === "string") {
+    return `<span style="color: ${JSON_COLORS.string}">"${obj}"</span>`;
+  }
+
+  if (typeof obj === "number") {
+    return `<span style="color: ${JSON_COLORS.number}">${obj}</span>`;
+  }
+
+  if (typeof obj === "boolean") {
+    return `<span style="color: ${JSON_COLORS.boolean}">${obj}</span>`;
+  }
+
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) {
+      return `<span style="color: ${JSON_COLORS.bracket}">[]</span>`;
+    }
+
+    const items = obj.map((item, index) => {
+      const formattedItem = formatJSONWithColors(item, indent + 1);
+      const comma = index < obj.length - 1 ? "," : "";
+      return `${nextIndentStr}${formattedItem}${comma}`;
+    }).join('\n');
+
+    return `<span style="color: ${JSON_COLORS.bracket}">[</span>\n${items}\n${indentStr}<span style="color: ${JSON_COLORS.bracket}">]</span>`;
+  }
+
+  if (typeof obj === "object") {
+    const keys = Object.keys(obj);
+    if (keys.length === 0) {
+      return `<span style="color: ${JSON_COLORS.bracket}">{}</span>`;
+    }
+
+    const items = keys.map((key, index) => {
+      const formattedKey = `<span style="color: ${JSON_COLORS.key}">"${key}"</span>`;
+      const formattedValue = formatJSONWithColors(obj[key], indent + 1);
+      const comma = index < keys.length - 1 ? "," : "";
+      return `${nextIndentStr}${formattedKey}: ${formattedValue}${comma}`;
+    }).join('\n');
+
+    return `<span style="color: ${JSON_COLORS.bracket}">{</span>\n${items}\n${indentStr}<span style="color: ${JSON_COLORS.bracket}">}</span>`;
+  }
+
+  return String(obj);
+}
+
+/**
+ * Formats JSON data with syntax highlighting for display
+ */
+function formatJSONData(type: string, jsonData: object): string {
+  const typeColor = LOG_COLORS[type] || LOG_COLORS["info"];
+  return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>`;
+}
 </script>
 
 <style scoped>

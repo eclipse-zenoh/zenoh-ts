@@ -15,6 +15,7 @@ export interface LogEntry {
   timestamp: Date;
   type: "info" | "success" | "error" | "data";
   message: string;
+  jsonData?: object; // Optional JSON data to be formatted by Vue
 }
 
 // Subscriber info interface
@@ -62,7 +63,7 @@ export interface ZenohDemoState {
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
   unsubscribeAll: () => Promise<void>;
-  addLogEntry: (type: LogEntry["type"], message: string | object) => void;
+  addLogEntry: (type: LogEntry["type"], message: string, jsonData?: object) => void;
   addErrorLogEntry: (message: string, errorDetails?: any) => void;
   clearLog: () => void;
   testJSONLogging?: () => void; // Optional test method for development
@@ -102,7 +103,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async subscribe() {}
   async unsubscribe(_: string) {}
   async unsubscribeAll() {}
-  addLogEntry(_: LogEntry["type"], __: string | object) {}
+  addLogEntry(_: LogEntry["type"], __: string, ___?: object) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}
 }

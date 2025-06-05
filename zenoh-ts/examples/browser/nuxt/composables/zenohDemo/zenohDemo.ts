@@ -24,7 +24,7 @@ import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
-import { sampleToJSON, formatLogMessage } from "./zenohUtils";
+import { sampleToJSON } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -81,22 +81,23 @@ class ZenohDemo extends ZenohDemoEmpty {
     ]);
   }
 
-  // Standard logging method for string messages
-  override addLogEntry(type: LogEntry["type"], message: string | object): void {
-    if (typeof message === "string") {
-      console.log(`[${type.toUpperCase()}] ${message}`);
-      this.logEntries.value.push({ type, message, timestamp: new Date() });
-    } else {
-      // For JSON objects (primarily samples), use the HTML-formatted log message
-      const htmlFormattedMessage = formatLogMessage(type, message);
-      console.log(`[${type.toUpperCase()}] JSON Data:`, message);
+  // Standard logging method - accepts required string message and optional JSON data
+  override addLogEntry(type: LogEntry["type"], message: string, jsonData?: object): void {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    
+    if (jsonData) {
+      console.log(`[${type.toUpperCase()}] JSON Data:`, jsonData);
       
-      // Store the HTML-formatted message for display in the UI
+      // Store the message and JSON data separately for Vue to format
       this.logEntries.value.push({ 
         type, 
-        message: htmlFormattedMessage, 
+        message, 
+        jsonData,
         timestamp: new Date() 
       });
+    } else {
+      // Simple string logging
+      this.logEntries.value.push({ type, message, timestamp: new Date() });
     }
   }
 
@@ -111,13 +112,13 @@ class ZenohDemo extends ZenohDemoEmpty {
         timestamp: new Date().toISOString()
       };
       
-      // Use JSON formatting for errors with details
-      const htmlFormattedMessage = formatLogMessage("error", errorObject);
       console.error(`[ERROR] ${message}`, errorDetails);
       
+      // Store the message and error object separately for Vue to format
       this.logEntries.value.push({ 
         type: "error", 
-        message: htmlFormattedMessage, 
+        message, 
+        jsonData: errorObject,
         timestamp: new Date() 
       });
     } else {
@@ -150,21 +151,19 @@ class ZenohDemo extends ZenohDemoEmpty {
     // Test simple error logging (string only)
     this.addErrorLogEntry("Simple error message without details");
     
-    // Test sample data logging (JSON formatted)
+    // Test sample data logging (JSON formatted) - message describes context, JSON shows raw sample
     const sampleData = {
-      type: "SAMPLE_DATA",
       key: "demo/sensor/temperature", 
       value: "23.5°C",
       kind: "PUT",
       encoding: "text/plain",
+      priority: "DATA_HIGH",
+      congestionControl: "DROP",
+      express: "false",
       timestamp: "2025-06-05T10:30:00Z",
-      metadata: {
-        source: "sensor-001",
-        location: "room-A",
-        priority: "DATA_HIGH"
-      }
+      attachment: "sensor-001:room-A"
     };
-    this.addLogEntry("data", sampleData);
+    this.addLogEntry("data", "Test sample data from demo sensor", sampleData);
   }
 
   override clearLog(): void {
@@ -251,7 +250,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
             const sampleData = sampleToJSON(sample);
-            this.addLogEntry("data", { type: "GET_RESULT", ...sampleData });
+            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, sampleData);
             resultCount++;
           } else {
             // It's a ReplyError - log with error formatting
@@ -317,12 +316,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             try {
               // Use JSON formatting for sample display
               const sampleData = sampleToJSON(sample);
-              const contextualData = { 
-                type: "SUBSCRIPTION_DATA", 
-                subscriberId: displayId, 
-                ...sampleData 
-              };
-              this.addLogEntry("data", contextualData);
+              this.addLogEntry("data", `Subscription ${displayId} received data from ${sample.keyexpr()}`, sampleData);
             } catch (sampleError) {
               this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }
