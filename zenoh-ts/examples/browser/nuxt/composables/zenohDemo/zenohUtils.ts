@@ -6,6 +6,7 @@ import {
   Reliability,
   Locality,
   type PutOptions,
+  type SubscriberOptions,
 } from "@eclipse-zenoh/zenoh-ts";
 import { getEnumLabel } from "./utils";
 
@@ -31,6 +32,11 @@ export interface PutOptionsJSON {
   reliability: string | undefined;
   allowedDestination: string | undefined;
   attachment: string | undefined;
+}
+
+// Interface for the subscriber options JSON representation
+export interface SubscriberOptionsJSON {
+  allowedOrigin: string | undefined;
 }
 
 /**
@@ -82,4 +88,22 @@ export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
   return Object.fromEntries(
     Object.entries(result).filter(([_, value]) => value !== undefined)
   ) as PutOptionsJSON;
+}
+
+/**
+ * Converts SubscriberOptions object to a structured JSON object for logging
+ * @param options The SubscriberOptions object to convert
+ * @returns A structured object containing all subscriber options as strings
+ */
+export function subscriberOptionsToJSON(options: SubscriberOptions): SubscriberOptionsJSON {
+  const result: SubscriberOptionsJSON = {
+    allowedOrigin: options.allowedOrigin !== undefined
+      ? getEnumLabel(Locality, options.allowedOrigin) || `UNKNOWN(${options.allowedOrigin})`
+      : undefined,
+  };
+
+  // Remove undefined values to keep the JSON clean
+  return Object.fromEntries(
+    Object.entries(result).filter(([_, value]) => value !== undefined)
+  ) as SubscriberOptionsJSON;
 }

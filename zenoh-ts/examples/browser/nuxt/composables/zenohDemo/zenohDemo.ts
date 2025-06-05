@@ -25,7 +25,7 @@ import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
-import { sampleToJSON, putOptionsToJSON } from "./zenohUtils";
+import { sampleToJSON, putOptionsToJSON, subscriberOptionsToJSON } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -278,7 +278,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
-      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`);
+      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`, subscriberOptionsToJSON(subscriberOptions));
 
       // Handle incoming data
       (async () => {
