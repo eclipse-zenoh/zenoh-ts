@@ -95,7 +95,7 @@
             </div>
             
             <!-- Active Subscribers List -->
-            <div v-if="activeSubscribers.length > 0" class="subscribers-list">
+            <div v-if="subscriberOptions.showOptions.value && activeSubscribers.length > 0" class="subscribers-list">
               <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
               <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
                 <div class="subscriber-info">
