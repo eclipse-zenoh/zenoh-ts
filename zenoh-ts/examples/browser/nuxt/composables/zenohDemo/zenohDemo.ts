@@ -46,9 +46,7 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
   if (options.allowedDestination.value !== undefined) {
     opts.allowedDestination = options.allowedDestination.value;
   }
-  if (options.attachmentEmpty.value) {
-    opts.attachment = new ZBytes("");
-  } else if (options.attachment.value) {
+  if (!options.attachmentEmpty.value) {
     opts.attachment = new ZBytes(options.attachment.value);
   }
   return opts;
