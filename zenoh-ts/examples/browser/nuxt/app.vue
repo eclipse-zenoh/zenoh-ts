@@ -425,7 +425,20 @@ function updateExpressCheckboxState() {
 
 // Initialize checkbox state when mounted
 onMounted(() => {
-  updateExpressCheckboxState();
+  // Use setTimeout to ensure DOM is fully rendered
+  setTimeout(() => {
+    updateExpressCheckboxState();
+  }, 0);
+});
+
+// Watch for changes to showOptions and update checkbox state when options panel is shown
+watch(() => putOptions.showOptions.value, (isShown) => {
+  if (isShown) {
+    // When options panel is shown, initialize the checkbox state
+    nextTick(() => {
+      updateExpressCheckboxState();
+    });
+  }
 });
 
 // Watch for changes and update checkbox state
