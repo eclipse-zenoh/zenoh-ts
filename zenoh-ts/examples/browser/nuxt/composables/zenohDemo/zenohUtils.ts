@@ -39,6 +39,34 @@ export interface SubscriberOptionsJSON {
   allowedOrigin: string | undefined;
 }
 
+// Wrapper function for getEnumLabel which returns
+// a string label of the enum value or a default "UNKNOWN" and the value in round brackets
+function label<
+  T extends Record<string, string | number>
+>(enumObj: T, value: T[keyof T]): string {
+  const label = getEnumLabel(enumObj, value);
+  if (label !== undefined) {
+    return `${label}(${value})`;
+  } else {
+    return `UNKNOWN(${value})`;
+  }
+}
+
+function labelOrUndefined<
+  T extends Record<string, string | number>
+>(enumObj: T, value: T[keyof T] | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return label(enumObj, value);
+}
+
+function claenUndefineds<T extends Record<string, any>>(obj: T): T {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([_, value]) => value !== undefined)
+  ) as T;
+}
+
 /**
  * Converts a Zenoh Sample to a structured JSON object
  * @param sample The Zenoh Sample to convert
@@ -48,10 +76,13 @@ export function sampleToJSON(sample: Sample): SampleJSON {
   return {
     keyexpr: sample.keyexpr().toString(),
     payload: sample.payload().toString(),
-    kind: getEnumLabel(SampleKind, sample.kind()) || `UNKNOWN(${sample.kind()})`,
+    kind:
+      label(SampleKind, sample.kind()),
     encoding: sample.encoding().toString(),
-    priority: getEnumLabel(Priority, sample.priority()) || `UNKNOWN(${sample.priority()})`,
-    congestionControl: getEnumLabel(CongestionControl, sample.congestionControl()) || `UNKNOWN(${sample.congestionControl()})`,
+    priority:
+      label(Priority, sample.priority()),
+    congestionControl:
+      label(CongestionControl, sample.congestionControl()),
     express: sample.express().toString(),
     timestamp: sample.timestamp()?.asDate().toISOString(),
     attachment: sample.attachment()?.toString(),
@@ -66,28 +97,15 @@ export function sampleToJSON(sample: Sample): SampleJSON {
 export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
   const result: PutOptionsJSON = {
     encoding: options.encoding?.toString(),
-    priority: options.priority !== undefined 
-      ? getEnumLabel(Priority, options.priority) || `UNKNOWN(${options.priority})`
-      : undefined,
-    congestionControl: options.congestionControl !== undefined
-      ? getEnumLabel(CongestionControl, options.congestionControl) || `UNKNOWN(${options.congestionControl})`
-      : undefined,
-    express: options.express !== undefined 
-      ? options.express.toString()
-      : undefined,
-    reliability: options.reliability !== undefined
-      ? getEnumLabel(Reliability, options.reliability) || `UNKNOWN(${options.reliability})`
-      : undefined,
-    allowedDestination: options.allowedDestination !== undefined
-      ? getEnumLabel(Locality, options.allowedDestination) || `UNKNOWN(${options.allowedDestination})`
-      : undefined,
-    attachment: options.attachment?.toString()
+    priority: labelOrUndefined(Priority, options.priority),
+    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    reliability: labelOrUndefined(Reliability, options.reliability),
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    attachment: options.attachment?.toString(),
   };
-
-  // Remove undefined values to keep the JSON clean
-  return Object.fromEntries(
-    Object.entries(result).filter(([_, value]) => value !== undefined)
-  ) as PutOptionsJSON;
+  return claenUndefineds(result);
 }
 
 /**
@@ -95,15 +113,11 @@ export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
  * @param options The SubscriberOptions object to convert
  * @returns A structured object containing all subscriber options as strings
  */
-export function subscriberOptionsToJSON(options: SubscriberOptions): SubscriberOptionsJSON {
+export function subscriberOptionsToJSON(
+  options: SubscriberOptions
+): SubscriberOptionsJSON {
   const result: SubscriberOptionsJSON = {
-    allowedOrigin: options.allowedOrigin !== undefined
-      ? getEnumLabel(Locality, options.allowedOrigin) || `UNKNOWN(${options.allowedOrigin})`
-      : undefined,
+    allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
   };
-
-  // Remove undefined values to keep the JSON clean
-  return Object.fromEntries(
-    Object.entries(result).filter(([_, value]) => value !== undefined)
-  ) as SubscriberOptionsJSON;
+  return claenUndefineds(result);
 }
