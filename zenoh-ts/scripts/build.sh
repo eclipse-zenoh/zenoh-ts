@@ -6,8 +6,11 @@ cd "$SCRIPTDIR/.."
 
 # Print usage info
 print_usage() {
-    echo "Usage: yarn build <component> [subcomponent]"
-    echo "Components:"
+    echo "Usage: yarn build [component] [subcomponent]"
+    echo "Options:"
+    echo "  --help     - Show this help message"
+    echo ""
+    echo "Components (default: library):"
     echo "  library    - Build only library (WASM module and TypeScript)"
     echo "  tests      - Build only tests"
     echo "  examples   - Build only examples"
@@ -15,6 +18,8 @@ print_usage() {
     echo "    deno     - Build only Deno examples"
     echo "    browser  - Build only browser examples"
     echo "  ALL        - Build everything"
+    echo ""
+    echo "If no component is specified, builds the library by default."
 }
 
 # Install common dependencies
@@ -94,10 +99,15 @@ build_examples() {
 # Process command line arguments
 component="$1"
 
-# If no parameters passed, show help
-if [ -z "$component" ]; then
+# Check for help flag
+if [ "$component" = "--help" ] || [ "$component" = "-h" ]; then
     print_usage
     exit 0
+fi
+
+# If no parameters passed, build library by default
+if [ -z "$component" ]; then
+    component="library"
 fi
 
 subcomponent="$2"
