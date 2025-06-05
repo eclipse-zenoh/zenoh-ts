@@ -73,14 +73,14 @@
             <button 
               @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
               class="options-toggle-btn"
-              :class="{ active: putOptions.showOptions }"
+              :class="{ active: putOptions.showOptions.value }"
             >
-              {{ putOptions.showOptions ? '▼' : '▶' }} Advanced Options
+              {{ putOptions.showOptions.value ? '▼' : '▶' }} Advanced Options
             </button>
           </div>
           
           <!-- Put Options Panel -->
-          <div v-if="putOptions.showOptions" class="options-panel">
+          <div v-if="putOptions.showOptions.value" class="options-panel">
             <div class="options-grid">
               <div class="option-group">
                 <div class="encoding-header">
@@ -128,7 +128,7 @@
               
               <div class="option-group">
                 <label>Priority:</label>
-                <select v-model.number="putOptions.priority" :disabled="!isConnected">
+                <select v-model.number="putOptions.priority.value" :disabled="!isConnected">
                   <option 
                     v-for="option in priorityOptions" 
                     :key="option.value" 
@@ -141,7 +141,7 @@
               
               <div class="option-group">
                 <label>Congestion Control:</label>
-                <select v-model.number="putOptions.congestionControl" :disabled="!isConnected">
+                <select v-model.number="putOptions.congestionControl.value" :disabled="!isConnected">
                   <option 
                     v-for="option in congestionControlOptions" 
                     :key="option.value" 
@@ -154,7 +154,7 @@
               
               <div class="option-group">
                 <label>Reliability:</label>
-                <select v-model.number="putOptions.reliability" :disabled="!isConnected">
+                <select v-model.number="putOptions.reliability.value" :disabled="!isConnected">
                   <option 
                     v-for="option in reliabilityOptions" 
                     :key="option.value" 
@@ -167,7 +167,7 @@
               
               <div class="option-group">
                 <label>Allowed Destination:</label>
-                <select v-model.number="putOptions.allowedDestination" :disabled="!isConnected">
+                <select v-model.number="putOptions.allowedDestination.value" :disabled="!isConnected">
                   <option 
                     v-for="option in localityOptions" 
                     :key="option.value" 
@@ -182,7 +182,7 @@
                 <label class="checkbox-label">
                   <input 
                     type="checkbox" 
-                    v-model="putOptions.express" 
+                    v-model="putOptions.express.value" 
                     :disabled="!isConnected"
                   >
                   Express (no batching)
@@ -193,7 +193,7 @@
                 <label>Attachment:</label>
                 <input 
                   type="text" 
-                  v-model="putOptions.attachment" 
+                  v-model="putOptions.attachment.value" 
                   placeholder="Optional attachment data"
                   :disabled="!isConnected"
                 >
