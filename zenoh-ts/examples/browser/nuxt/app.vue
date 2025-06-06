@@ -293,7 +293,7 @@
                     <KeyExprInput 
                       v-model="queryableParameters.replyKeyExpr.value"
                       label="Key Expression"
-                      placeholder="Key expression for reply (e.g., demo/example/result)"
+                      placeholder="Normally the queryable keyexpr (e.g. demo/example/queryable)"
                       :disabled="!isConnected"
                     />
                   </div>
