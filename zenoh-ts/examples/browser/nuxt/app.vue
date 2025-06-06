@@ -78,19 +78,12 @@
                   placeholder="Key expression (e.g., demo/example/**)"
                   :disabled="!isConnected"
                 />
-                <div class="option-group">
-                  <label>Allowed Origin:</label>
-                  <select v-model="subscriberParameters.allowedOrigin.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in localityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <AllowedDestinationSelect
+                  v-model="subscriberParameters.allowedOrigin.value"
+                  :disabled="!isConnected"
+                  :options="localityOptions"
+                  label="Allowed Origin"
+                />
               </div>
             </div>
             
@@ -251,28 +244,18 @@
                   placeholder="Key expression (e.g., demo/example/computation/**)"
                   :disabled="!isConnected"
                 />
-                <div class="option-group">
-                  <label>Complete:</label>
-                  <select v-model="queryableParameters.complete.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option :value="true">true</option>
-                    <option :value="false">false</option>
-                  </select>
-                </div>
+                <TriStateCheckbox
+                  v-model="queryableParameters.complete.value"
+                  label="Complete"
+                  :disabled="!isConnected"
+                />
                 
-                <div class="option-group">
-                  <label>Allowed Origin:</label>
-                  <select v-model="queryableParameters.allowedOrigin.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in localityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <AllowedDestinationSelect
+                  v-model="queryableParameters.allowedOrigin.value"
+                  :disabled="!isConnected"
+                  :options="localityOptions"
+                  label="Allowed Origin"
+                />
               </div>
               
               <!-- Reply Configuration Section -->

@@ -8,7 +8,9 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "type-check": "nuxt typecheck"
+    "type-check": "nuxt typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@eclipse-zenoh/zenoh-ts": "file:../../..",
@@ -20,6 +22,12 @@
   },
   "devDependencies": {
     "@nuxt/typescript-build": "^3.0.0",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "@vue/typescript-plugin": "^2.2.10",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^10.2.0",
     "typescript": "^5.0.0",
     "vue-tsc": "^2.2.10"
   }

@@ -3,8 +3,8 @@
     :model-value="modelValue"
     :disabled="disabled ?? false"
     :options="options"
-    label="Allowed Destination"
-    @update:model-value="$emit('update:modelValue', $event)"
+    :label="label ?? 'Allowed Destination'"
+     @update:model-value="$emit('update:modelValue', $event)"
   />
 </template>
 
@@ -17,6 +17,7 @@ interface Props {
   modelValue: Locality | undefined
   disabled?: boolean
   options: OptionItem[]
+  label?: string
 }
 
 interface Emits {
