@@ -124,15 +124,10 @@
                 
                 <!-- Expanded Details Section -->
                 <div v-if="expandedSubscriberDetails.has(subscriber.displayId)" class="item-details">
-                  <div class="details-header">Subscriber Details</div>
                   <div class="details-content">
                     <ParameterDisplay 
-                      type="SubscriberOptions" 
-                      :data="subscriber.options" 
-                    />
-                    <ParameterDisplay 
-                      type="Creation Time" 
-                      :data="{ 'timestamp': subscriber.createdAt.toISOString() }" 
+                      type="neutral" 
+                      :data="{ 'SubscriberOptions': subscriber.options }"
                     />
                   </div>
                 </div>
@@ -400,15 +395,10 @@
                 
                 <!-- Expanded Details Section -->
                 <div v-if="expandedQueryableDetails.has(queryable.displayId)" class="item-details">
-                  <div class="details-header">Queryable Details</div>
                   <div class="details-content">
                     <ParameterDisplay 
-                      type="QueryableOptions" 
-                      :data="queryable.options" 
-                    />
-                    <ParameterDisplay 
-                      type="Creation Time" 
-                      :data="{ 'timestamp': queryable.createdAt.toISOString() }" 
+                      type="neutral" 
+                      :data="{ 'QueryableOptions': queryable.options }"
                     />
                   </div>
                 </div>

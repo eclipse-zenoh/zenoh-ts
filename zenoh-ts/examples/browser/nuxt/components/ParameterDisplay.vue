@@ -21,6 +21,7 @@ const LOG_COLORS: Record<string, string> = {
   error: "#dc2626",     // red
   data: "#7c3aed",      // purple
   warning: "#ea580c",   // orange
+  neutral: "#6b7280",   // gray
 };
 
 // Color constants for JSON syntax highlighting
