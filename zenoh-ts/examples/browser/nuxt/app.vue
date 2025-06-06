@@ -71,7 +71,7 @@
                 :disabled="!isConnected"
               >
               <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
-                Subscribe
+                Declare Subscriber
               </button>
             </div>
             
@@ -95,21 +95,22 @@
             </div>
             
             <!-- Active Subscribers List -->
-            <div v-if="subscriberOptions.showOptions.value && activeSubscribers.length > 0" class="subscribers-list">
-              <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
-                <div class="subscriber-info">
-                  <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
-                  <div class="subscriber-meta">
-                    <span class="subscriber-id">{{ subscriber.displayId }}</span>
-                    <span class="subscriber-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
+            <div v-if="subscriberOptions.showOptions.value && activeSubscribers.length > 0" class="active-items-list">
+              <h5>Active Subscribers:</h5>
+              <div class="item-entry" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
+                <div class="item-info">
+                  <span class="item-key">{{ subscriber.keyExpr }}</span>
+                  <div class="item-meta">
+                    <span class="item-id">{{ subscriber.displayId }}</span>
+                    <span class="item-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
                   </div>
                 </div>
                 <button 
                   @click="unsubscribe(subscriber.displayId)" 
-                  class="unsubscribe-btn"
+                  class="item-action-btn undeclare"
                   :disabled="!isConnected"
                 >
-                  Unsubscribe
+                  Undeclare
                 </button>
               </div>
             </div>
@@ -346,19 +347,19 @@
             </div>
             
             <!-- Active Queryables List -->
-            <div v-if="queryableOptions.showOptions.value && activeQueryables.length > 0" class="queryables-list">
+            <div v-if="queryableOptions.showOptions.value && activeQueryables.length > 0" class="active-items-list">
               <h5>Active Queryables:</h5>
-              <div class="queryable-item" v-for="queryable in activeQueryables" :key="queryable.displayId">
-                <div class="queryable-info">
-                  <span class="queryable-key">{{ queryable.keyExpr }}</span>
-                  <div class="queryable-meta">
-                    <span class="queryable-id">{{ queryable.displayId }}</span>
-                    <span class="queryable-time">Since: {{ queryable.createdAt.toLocaleTimeString() }}</span>
+              <div class="item-entry" v-for="queryable in activeQueryables" :key="queryable.displayId">
+                <div class="item-info">
+                  <span class="item-key">{{ queryable.keyExpr }}</span>
+                  <div class="item-meta">
+                    <span class="item-id">{{ queryable.displayId }}</span>
+                    <span class="item-time">Since: {{ queryable.createdAt.toLocaleTimeString() }}</span>
                   </div>
                 </div>
                 <button 
                   @click="undeclareQueryable(queryable.displayId)" 
-                  class="undeclare-btn"
+                  class="item-action-btn undeclare"
                   :disabled="!isConnected"
                 >
                   Undeclare
@@ -1175,83 +1176,104 @@ function formatData(type: string, data: Record<string, any>): string {
   cursor: not-allowed;
 }
 
-.subscribers-list {
+/* Active Items List - unified styling for subscribers and queryables */
+.active-items-list {
   margin-top: 15px;
   padding-top: 15px;
   border-top: 1px solid #ddd;
 }
 
-.subscribers-list h5 {
+.active-items-list h5 {
   margin: 0 0 10px 0;
   color: #555;
   font-size: 14px;
+  font-weight: 600;
 }
 
-.subscriber-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 10px;
-  margin-bottom: 8px;
-  background-color: #f8f9fa;
+.item-entry {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border: 1px solid #e9ecef;
-  border-radius: 4px;
-}
-
-.subscriber-info {
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  flex: 1;
-  margin-right: 10px;
+  align-items: center;
+  transition: all 0.2s ease;
 }
 
-.subscriber-key {
+.item-entry:hover {
+  background: linear-gradient(135deg, #f1f3f4, #f8f9fa);
+  border-color: #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-key {
   font-family: 'Courier New', monospace;
   font-size: 13px;
-  color: #333;
-  flex: 1;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
 }
 
-.subscriber-meta {
+.item-meta {
   display: flex;
   align-items: center;
-  gap: 15px;
-  text-align: right;
+  gap: 12px;
+  font-size: 12px;
+  color: #6c757d;
 }
 
-.subscriber-id {
+.item-id {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
   font-family: 'Courier New', monospace;
-  font-size: 12px;
-  color: #666;
-  font-weight: bold;
-  min-width: 40px;
+  font-weight: 500;
 }
 
-.subscriber-time {
-  font-size: 11px;
-  color: #888;
-  white-space: nowrap;
+.item-time {
+  font-style: italic;
 }
 
-.unsubscribe-btn {
-  padding: 4px 8px;
-  background-color: #dc3545;
-  color: white;
+.item-action-btn {
   border: none;
-  border-radius: 3px;
-  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
   font-size: 12px;
-  transition: background-color 0.2s;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.unsubscribe-btn:hover:not(:disabled) {
-  background-color: #c82333;
+.item-action-btn.undeclare {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
 }
 
-.unsubscribe-btn:disabled {
-  background-color: #cccccc;
+.item-action-btn.undeclare:hover {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+}
+
+.item-action-btn:active {
+  transform: translateY(0);
+}
+
+.item-action-btn:disabled {
+  background: #cccccc !important;
   cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .log-panel {
@@ -1760,88 +1782,6 @@ function formatData(type: string, data: Record<string, any>): string {
   color: #6c757d;
   margin: 0;
   font-style: italic;
-}
-
-/* Queryable-specific styles */
-.queryables-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.queryable-item {
-  background: linear-gradient(135deg, #f8f9fa, #ffffff);
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.queryable-item:hover {
-  background: linear-gradient(135deg, #f1f3f4, #f8f9fa);
-  border-color: #dee2e6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.queryable-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.queryable-key {
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  font-weight: 600;
-  color: #495057;
-  margin: 0;
-}
-
-.queryable-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #6c757d;
-}
-
-.queryable-id {
-  background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-weight: 500;
-}
-
-.queryable-time {
-  font-style: italic;
-}
-
-.undeclare-btn {
-  background: linear-gradient(135deg, #dc3545, #e74c3c);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.undeclare-btn:hover {
-  background: linear-gradient(135deg, #c82333, #dc3545);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
-}
-
-.undeclare-btn:active {
-  transform: translateY(0);
 }
 
 
