@@ -64,12 +64,6 @@
               </button>
             </div>
             <div class="input-row">
-              <input 
-                type="text" 
-                v-model="subscriberParameters.key.value" 
-                placeholder="Key expression (e.g., demo/example/**)"
-                :disabled="!isConnected"
-              >
               <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value">
                 Declare Subscriber
               </button>
@@ -78,6 +72,12 @@
             <!-- Subscriber Options Panel -->
             <div v-if="subscriberParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
+                <KeyExprInput 
+                  v-model="subscriberParameters.key.value" 
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/**)"
+                  :disabled="!isConnected"
+                />
                 <div class="option-group">
                   <label>Allowed Origin:</label>
                   <select v-model="subscriberParameters.allowedOrigin.value" :disabled="!isConnected">
@@ -149,12 +149,6 @@
               </button>
             </div>
             <div class="input-row">
-              <input 
-                type="text" 
-                v-model="putParameters.key.value" 
-                placeholder="Key expression (e.g., demo/example/test)"
-                :disabled="!isConnected"
-              >
               <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value">
                 Put
               </button>
@@ -162,6 +156,12 @@
             
             <!-- Put Options Panel -->
             <div v-if="putParameters.showOptions.value" class="options-panel">
+              <KeyExprInput 
+                v-model="putParameters.key.value" 
+                label="Key Expression"
+                placeholder="Key expression (e.g., demo/example/test)"
+                :disabled="!isConnected"
+              />
               <div class="options-grid">
                 <PayloadInput
                   v-model="putParameters.value.value"
@@ -237,12 +237,6 @@
               </button>
             </div>
             <div class="input-row">
-              <input 
-                type="text" 
-                v-model="queryableParameters.key.value" 
-                placeholder="Key expression (e.g., demo/example/computation/**)"
-                :disabled="!isConnected"
-              >
               <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value">
                 Declare Queryable
               </button>
@@ -251,6 +245,12 @@
             <!-- Queryable Options Panel -->
             <div v-if="queryableParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
+                <KeyExprInput 
+                  v-model="queryableParameters.key.value" 
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/computation/**)"
+                  :disabled="!isConnected"
+                />
                 <div class="option-group">
                   <label>Complete:</label>
                   <select v-model="queryableParameters.complete.value" :disabled="!isConnected">
@@ -307,13 +307,12 @@
                 <!-- Reply Fields -->
                 <div v-if="queryableParameters.replyType.value === 'reply'" class="reply-fields">
                   <div class="field-group">
-                    <label>Key Expression:</label>
-                    <input 
-                      type="text" 
+                    <KeyExprInput 
                       v-model="queryableParameters.replyKeyExpr.value"
+                      label="Key Expression"
                       placeholder="Key expression for reply (e.g., demo/example/result)"
                       :disabled="!isConnected"
-                    >
+                    />
                   </div>
                   <div class="field-group">
                     <label>Payload:</label>
@@ -435,12 +434,6 @@
               </button>
             </div>
             <div class="input-row">
-              <input 
-                type="text" 
-                v-model="getParameters.key.value" 
-                placeholder="Selector (e.g., demo/example/*)"
-                :disabled="!isConnected"
-              >
               <button @click="performGet" :disabled="!isConnected || !getParameters.key.value">
                 Get
               </button>
@@ -448,6 +441,12 @@
             
             <!-- Get Options Panel -->
             <div v-if="getParameters.showOptions.value" class="options-panel">
+              <KeyExprInput 
+                v-model="getParameters.key.value" 
+                label="Selector"
+                placeholder="Selector (e.g., demo/example/*)"
+                :disabled="!isConnected"
+              />
               <div class="options-grid">
                 <EncodingSelect 
                   v-model="getParameters.encoding.value"
@@ -696,6 +695,18 @@ watch(logEntries, () => {
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;
+}
+
+.input-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.input-row .option-group {
+  flex: 1;
+  margin-bottom: 0;
 }
 
 .button-group {
