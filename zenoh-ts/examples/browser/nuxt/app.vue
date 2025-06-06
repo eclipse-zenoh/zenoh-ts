@@ -96,7 +96,6 @@
             
             <!-- Active Subscribers List -->
             <div v-if="subscriberOptions.showOptions.value && activeSubscribers.length > 0" class="subscribers-list">
-              <h5>Active Subscribers ({{ activeSubscribers.length }})</h5>
               <div class="subscriber-item" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
                 <div class="subscriber-info">
                   <span class="subscriber-key">{{ subscriber.keyExpr }}</span>
@@ -111,15 +110,6 @@
                   :disabled="!isConnected"
                 >
                   Unsubscribe
-                </button>
-              </div>
-              <div class="subscribers-actions">
-                <button 
-                  @click="unsubscribeAll" 
-                  class="unsubscribe-all-btn"
-                  :disabled="!isConnected"
-                >
-                  Unsubscribe All
                 </button>
               </div>
             </div>
@@ -409,7 +399,6 @@ const {
   performGet,
   subscribe,
   unsubscribe,
-  unsubscribeAll,
 
   // App operations
   clearLog,
@@ -886,31 +875,6 @@ function formatJSONData(type: string, jsonData: object): string {
 }
 
 .unsubscribe-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.subscribers-actions {
-  margin-top: 10px;
-  text-align: center;
-}
-
-.unsubscribe-all-btn {
-  padding: 6px 12px;
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: background-color 0.2s;
-}
-
-.unsubscribe-all-btn:hover:not(:disabled) {
-  background-color: #5a6268;
-}
-
-.unsubscribe-all-btn:disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }

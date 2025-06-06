@@ -170,12 +170,11 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (!this.zenohSession) return;
 
     try {
-      // Unsubscribe from all active subscriptions
-      await this.unsubscribeAll();
-
+      // Close all active subscriptions automatically when closing session
       await this.zenohSession.close();
       this.zenohSession = null;
       this.isConnected.value = false;
+      this.activeSubscribers.value = []; // Clear the subscribers list
       this.addLogEntry("success", "Disconnected from Zenoh session");
     } catch (error) {
       this.addErrorLogEntry("Error during disconnect", error);
@@ -331,36 +330,6 @@ class ZenohDemo extends ZenohDemoEmpty {
       this.addLogEntry("success", `Unsubscribed from "${subscriberInfo.keyExpr}" (${subscriberId})`);
     } catch (error) {
       this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
-    }
-  }
-
-  override async unsubscribeAll(): Promise<void> {
-    const subscribersToRemove = [...this.activeSubscribers.value];
-    
-    if (subscribersToRemove.length === 0) {
-      this.addLogEntry("info", "No active subscriptions to remove");
-      return;
-    }
-
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const subscriberInfo of subscribersToRemove) {
-      try {
-        await subscriberInfo.subscriber.undeclare();
-        successCount++;
-      } catch (error) {
-        errorCount++;
-        this.addErrorLogEntry(`Failed to unsubscribe ${subscriberInfo.displayId}`, error);
-      }
-    }
-
-    this.activeSubscribers.value = [];
-    
-    if (errorCount === 0) {
-      this.addLogEntry("success", `Successfully unsubscribed from all ${successCount} subscriptions`);
-    } else {
-      this.addLogEntry("info", `Unsubscribed from ${successCount} subscriptions, ${errorCount} failed`);
     }
   }
 }

@@ -70,7 +70,6 @@ export interface ZenohDemoState {
   performGet: () => Promise<void>;
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
-  unsubscribeAll: () => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, jsonData?: object) => void;
   addErrorLogEntry: (message: string, errorDetails?: any) => void;
   clearLog: () => void;
@@ -114,7 +113,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async performGet() {}
   async subscribe() {}
   async unsubscribe(_: string) {}
-  async unsubscribeAll() {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: object) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}
