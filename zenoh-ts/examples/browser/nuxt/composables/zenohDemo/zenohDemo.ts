@@ -301,18 +301,6 @@ class ZenohDemo extends ZenohDemoEmpty {
   override async subscribe(): Promise<void> {
     if (!this.zenohSession || !this.subscribeKey.value) return;
 
-    // Check if already subscribed to this key expression
-    const existingSubscriber = this.activeSubscribers.value.find(
-      (sub) => sub.keyExpr === this.subscribeKey.value
-    );
-    if (existingSubscriber) {
-      this.addLogEntry(
-        "info",
-        `Already subscribed to ${this.subscribeKey.value}`
-      );
-      return;
-    }
-
     try {
       const keyExpr = new KeyExpr(this.subscribeKey.value);
       const subscriberOptions = subscriberOptionsStateTo(
@@ -417,18 +405,6 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async declareQueryable(): Promise<void> {
     if (!this.zenohSession || !this.queryableKey.value) return;
-
-    // Check if already declared queryable for this key expression
-    const existingQueryable = this.activeQueryables.value.find(
-      (qry) => qry.keyExpr === this.queryableKey.value
-    );
-    if (existingQueryable) {
-      this.addLogEntry(
-        "info",
-        `Already declared queryable for ${this.queryableKey.value}`
-      );
-      return;
-    }
 
     try {
       // Generate sequential display ID for this queryable
