@@ -197,7 +197,11 @@ class ZenohDemo extends ZenohDemoEmpty {
       const options = putOptionsStateTo(this.putOptions);
       await this.zenohSession.put(keyExpr, bytes, options);
       
-      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`, { "PutOptions": putOptionsToJSON(options) });
+      this.addLogEntry("success", "PUT successful", { 
+        "keyexpr": keyExpr.toString(),
+        "payload": bytes.toString(),
+        "PutOptions": putOptionsToJSON(options) 
+      });
     } catch (error) {
       this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
     }
@@ -229,7 +233,9 @@ class ZenohDemo extends ZenohDemoEmpty {
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
-            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, { "Sample": sampleToJSON(sample) });
+            this.addLogEntry("data", "GET result ", { 
+              "Sample": sampleToJSON(sample) 
+            });
             resultCount++;
           } else {
             // It's a ReplyError - log with error formatting
@@ -294,8 +300,10 @@ class ZenohDemo extends ZenohDemoEmpty {
             if (!sample) break; // Normal end of subscription
 
             try {
-              // Use JSON formatting for sample display
-              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, { "Sample": sampleToJSON(sample) });
+              // Use JSON formatting for sample display with multiple parameters
+              this.addLogEntry("data", `Subscriber ${displayId} received data`, { 
+                "Sample": sampleToJSON(sample) 
+              });
             } catch (sampleError) {
               this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }

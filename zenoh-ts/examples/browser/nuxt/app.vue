@@ -564,37 +564,53 @@ function formatJSONWithColors(obj: any, indent: number = 0): string {
 }
 
 /**
- * Formats data with support for different types and single key-value records
+ * Formats data with support for different types and multiple key-value records
  */
 function formatData(type: string, data: Record<string, any>): string {
   const typeColor = LOG_COLORS[type] || LOG_COLORS["info"];
   
-  // Get the single key-value pair from the record
-  const entries = Object.entries(data);
-  if (entries.length === 1) {
-    const [title, value] = entries[0]!;
-    
-    // Format based on value type
+  /**
+   * Formats a single parameter entry
+   */
+  function formatSingleParameter(title: string, value: any): string {
     if (typeof value === 'string') {
-      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
         <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
         <div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>
       </div>`;
     } else if (typeof value === 'number') {
-      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
         <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
         <div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>
       </div>`;
+    } else if (typeof value === 'boolean') {
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
+        <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+        <div style="font-family: 'Courier New', monospace; color: #7c3aed;">${value}</div>
+      </div>`;
     } else {
       // For objects, arrays, etc., format as JSON
-      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
         <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;">${title} =</div>
         <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
       </div>`;
     }
+  }
+  
+  const entries = Object.entries(data);
+  
+  if (entries.length === 0) {
+    return '';
+  } else if (entries.length === 1) {
+    // Single parameter - maintain backward compatibility
+    const [title, value] = entries[0]!;
+    return `<div style="margin: 8px 0 0 0;">${formatSingleParameter(title, value)}</div>`;
   } else {
-    // Multiple entries - display as JSON
-    return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(data)}</pre>`;
+    // Multiple parameters - format each individually
+    const formattedEntries = entries.map(([title, value]) => formatSingleParameter(title, value)).join('');
+    return `<div style="margin: 8px 0 0 0; padding: 8px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid ${typeColor};">
+      ${formattedEntries}
+    </div>`;
   }
 }
 </script>
