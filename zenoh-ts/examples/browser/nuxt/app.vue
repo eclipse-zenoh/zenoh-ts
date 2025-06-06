@@ -95,15 +95,12 @@
             </div>
             
             <!-- Active Subscribers List -->
-            <div v-if="subscriberOptions.showOptions.value && activeSubscribers.length > 0" class="active-items-list">
-              <h5>Active Subscribers:</h5>
+            <div v-if="activeSubscribers.length > 0" class="active-items-list">
               <div class="item-entry" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
                 <div class="item-info">
                   <span class="item-key">{{ subscriber.keyExpr }}</span>
-                  <div class="item-meta">
-                    <span class="item-id">{{ subscriber.displayId }}</span>
-                    <span class="item-time">Since: {{ subscriber.createdAt.toLocaleTimeString() }}</span>
-                  </div>
+                  <span class="item-id">{{ subscriber.displayId }}</span>
+                  <span class="item-time">{{ subscriber.createdAt.toLocaleTimeString() }}</span>
                 </div>
                 <button 
                   @click="unsubscribe(subscriber.displayId)" 
@@ -347,15 +344,12 @@
             </div>
             
             <!-- Active Queryables List -->
-            <div v-if="queryableOptions.showOptions.value && activeQueryables.length > 0" class="active-items-list">
-              <h5>Active Queryables:</h5>
+            <div v-if="activeQueryables.length > 0" class="active-items-list">
               <div class="item-entry" v-for="queryable in activeQueryables" :key="queryable.displayId">
                 <div class="item-info">
                   <span class="item-key">{{ queryable.keyExpr }}</span>
-                  <div class="item-meta">
-                    <span class="item-id">{{ queryable.displayId }}</span>
-                    <span class="item-time">Since: {{ queryable.createdAt.toLocaleTimeString() }}</span>
-                  </div>
+                  <span class="item-id">{{ queryable.displayId }}</span>
+                  <span class="item-time">{{ queryable.createdAt.toLocaleTimeString() }}</span>
                 </div>
                 <button 
                   @click="undeclareQueryable(queryable.displayId)" 
@@ -1178,24 +1172,17 @@ function formatData(type: string, data: Record<string, any>): string {
 
 /* Active Items List - unified styling for subscribers and queryables */
 .active-items-list {
-  margin-top: 15px;
-  padding-top: 15px;
+  margin-top: 8px;
+  padding-top: 8px;
   border-top: 1px solid #ddd;
-}
-
-.active-items-list h5 {
-  margin: 0 0 10px 0;
-  color: #555;
-  font-size: 14px;
-  font-weight: 600;
 }
 
 .item-entry {
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border: 1px solid #e9ecef;
-  border-radius: 8px;
-  padding: 12px;
-  margin-bottom: 8px;
+  border-radius: 6px;
+  padding: 6px 8px;
+  margin-bottom: 4px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1211,8 +1198,9 @@ function formatData(type: string, data: Record<string, any>): string {
 .item-info {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .item-key {
@@ -1223,31 +1211,27 @@ function formatData(type: string, data: Record<string, any>): string {
   margin: 0;
 }
 
-.item-meta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 12px;
-  color: #6c757d;
-}
-
 .item-id {
   background: #e9ecef;
   padding: 2px 6px;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
   font-weight: 500;
+  font-size: 12px;
+  color: #6c757d;
 }
 
 .item-time {
   font-style: italic;
+  font-size: 12px;
+  color: #6c757d;
 }
 
 .item-action-btn {
   border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1504,10 +1488,6 @@ function formatData(type: string, data: Record<string, any>): string {
 }
 
 .options-panel {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 8px;
   margin-top: 6px;
   box-sizing: border-box;
   overflow: hidden;
