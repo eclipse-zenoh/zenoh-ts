@@ -112,6 +112,7 @@ export interface ZenohDemoState {
   isConnecting: Ref<boolean>;
   putKey: Ref<string>;
   putValue: Ref<string>;
+  putPayloadEmpty: Ref<boolean>;
   putOptions: PutOptionsState;
   subscriberOptions: SubscriberOptionsState;
   queryableKey: Ref<string>;
@@ -147,6 +148,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   isConnecting = ref(false);
   putKey = ref("demo/example/test");
   putValue = ref("Hello Zenoh!");
+  putPayloadEmpty = ref(false);
   putOptions = {
     showOptions: ref(false),
     encoding: ref(""),

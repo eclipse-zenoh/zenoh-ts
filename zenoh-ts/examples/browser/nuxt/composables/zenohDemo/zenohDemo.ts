@@ -263,7 +263,7 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performPut(): Promise<void> {
-    if (!this.zenohSession || !this.putKey.value || !this.putValue.value)
+    if (!this.zenohSession || !this.putKey.value || this.putPayloadEmpty.value)
       return;
 
     try {

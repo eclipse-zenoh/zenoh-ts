@@ -155,13 +155,7 @@
                 placeholder="Key expression (e.g., demo/example/test)"
                 :disabled="!isConnected"
               >
-              <input 
-                type="text" 
-                v-model="putValue" 
-                placeholder="Value"
-                :disabled="!isConnected"
-              >
-              <button @click="performPut" :disabled="!isConnected || !putKey || !putValue">
+              <button @click="performPut" :disabled="!isConnected || !putKey || putPayloadEmpty">
                 Put
               </button>
             </div>
@@ -169,6 +163,14 @@
             <!-- Put Options Panel -->
             <div v-if="putOptions.showOptions.value" class="options-panel">
               <div class="options-grid">
+                <PayloadInput
+                  v-model="putValue"
+                  v-model:is-empty="putPayloadEmpty"
+                  label="Payload"
+                  placeholder="Value to put"
+                  :disabled="!isConnected"
+                />
+                
                 <EncodingSelect 
                   v-model="putOptions.encoding.value"
                   v-model:custom-encoding="putOptions.customEncoding.value"
@@ -592,6 +594,7 @@ const {
   isConnecting,
   putKey,
   putValue,
+  putPayloadEmpty,
   getKey,
   subscribeKey,
   queryableKey,
