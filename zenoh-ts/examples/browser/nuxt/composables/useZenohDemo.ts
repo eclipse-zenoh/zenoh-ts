@@ -8,6 +8,9 @@ import type {
   CongestionControl,
   Reliability,
   Locality,
+  QueryTarget,
+  ConsolidationMode,
+  ReplyKeyExpr,
 } from "@eclipse-zenoh/zenoh-ts";
 
 // Log entry interface
@@ -61,6 +64,25 @@ export interface QueryableOptionsState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
+// Get options state
+export interface GetOptionsState {
+  showOptions: Ref<boolean>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  priority: Ref<Priority | undefined>;
+  express: Ref<boolean | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+  payload: Ref<string>;
+  payloadEmpty: Ref<boolean>;
+  attachment: Ref<string>;
+  attachmentEmpty: Ref<boolean>;
+  timeout: Ref<number | undefined>; // timeout in milliseconds
+  target: Ref<QueryTarget | undefined>;
+  consolidation: Ref<ConsolidationMode | undefined>;
+  acceptReplies: Ref<ReplyKeyExpr | undefined>;
+}
+
 // Zenoh Demo state interface combining UI state and operations
 export interface ZenohDemoState {
   serverUrl: Ref<string>;
@@ -73,6 +95,7 @@ export interface ZenohDemoState {
   queryableKey: Ref<string>;
   queryableOptions: QueryableOptionsState;
   getKey: Ref<string>;
+  getOptions: GetOptionsState;
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
@@ -125,6 +148,23 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     allowedOrigin: ref(undefined as Locality | undefined),
   };
   getKey = ref("demo/example/*");
+  getOptions = {
+    showOptions: ref(false),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    priority: ref(undefined as Priority | undefined),
+    express: ref(undefined as boolean | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
+    encoding: ref(""),
+    customEncoding: ref(false),
+    payload: ref(""),
+    payloadEmpty: ref(true),
+    attachment: ref(""),
+    attachmentEmpty: ref(true),
+    timeout: ref(undefined as number | undefined),
+    target: ref(undefined as QueryTarget | undefined),
+    consolidation: ref(undefined as ConsolidationMode | undefined),
+    acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
+  };
   subscribeKey = ref("demo/example/**");
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);

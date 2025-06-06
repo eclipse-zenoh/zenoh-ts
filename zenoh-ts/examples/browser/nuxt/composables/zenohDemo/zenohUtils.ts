@@ -9,6 +9,7 @@ import {
   type PutOptions,
   type SubscriberOptions,
   type QueryableOptions,
+  type GetOptions,
 } from "@eclipse-zenoh/zenoh-ts";
 import { getEnumLabel } from "./utils";
 
@@ -45,6 +46,21 @@ export interface SubscriberOptionsJSON {
 export interface QueryableOptionsJSON {
   complete: string | undefined;
   allowedOrigin: string | undefined;
+}
+
+// Interface for the get options JSON representation
+export interface GetOptionsJSON {
+  congestionControl: string | undefined;
+  priority: string | undefined;
+  express: string | undefined;
+  allowedDestination: string | undefined;
+  encoding: string | undefined;
+  payload: string | undefined;
+  attachment: string | undefined;
+  timeout: string | undefined;
+  target: string | undefined;
+  consolidation: string | undefined;
+  acceptReplies: string | undefined;
 }
 
 // Interface for the query JSON representation
@@ -163,6 +179,28 @@ export function queryableOptionsToJSON(
   const result: QueryableOptionsJSON = {
     complete: options.complete?.toString(),
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return claenUndefineds(result);
+}
+
+/**
+ * Converts GetOptions object to a structured JSON object for logging
+ * @param options The GetOptions object to convert
+ * @returns A structured object containing all get options as strings
+ */
+export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
+  const result: GetOptionsJSON = {
+    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    priority: labelOrUndefined(Priority, options.priority),
+    express: options.express !== undefined ? options.express.toString() : undefined,
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    encoding: options.encoding?.toString(),
+    payload: options.payload?.toString(),
+    attachment: options.attachment?.toString(),
+    timeout: options.timeout?.toString(),
+    target: options.target !== undefined ? options.target.toString() : undefined,
+    consolidation: options.consolidation !== undefined ? options.consolidation.toString() : undefined,
+    acceptReplies: options.acceptReplies !== undefined ? options.acceptReplies.toString() : undefined,
   };
   return claenUndefineds(result);
 }

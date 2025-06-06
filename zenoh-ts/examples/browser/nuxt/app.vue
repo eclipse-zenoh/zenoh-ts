@@ -369,7 +369,17 @@
 
           <!-- Get Operation -->
           <div class="operation-group">
-            <h4>Get</h4>
+            <div class="operation-header">
+              <h4>Get</h4>
+              <button 
+                @click="getOptions.showOptions.value = !getOptions.showOptions.value" 
+                class="options-arrow-btn"
+                :class="{ active: getOptions.showOptions.value }"
+                title="Toggle advanced options"
+              >
+                {{ getOptions.showOptions.value ? '▲' : '▼' }}
+              </button>
+            </div>
             <div class="input-row">
               <input 
                 type="text" 
@@ -380,6 +390,193 @@
               <button @click="performGet" :disabled="!isConnected || !getKey">
                 Get
               </button>
+            </div>
+            
+            <!-- Get Options Panel -->
+            <div v-if="getOptions.showOptions.value" class="options-panel">
+              <div class="options-grid">
+                <div class="option-group">
+                  <label>Encoding:</label>
+                  <div class="encoding-control">
+                    <!-- Predefined Encoding Dropdown -->
+                    <select 
+                      v-if="!getOptions.customEncoding.value"
+                      v-model="getOptions.encoding.value" 
+                      :disabled="!isConnected"
+                      class="encoding-select"
+                      title="Select a predefined encoding"
+                    >
+                      <option value="">(default)</option>
+                      <option 
+                        v-for="option in encodingOptions" 
+                        :key="option.value" 
+                        :value="option.value"
+                      >
+                        {{ option.label }}
+                      </option>
+                    </select>
+                    
+                    <!-- Custom Encoding Input -->
+                    <input 
+                      v-else
+                      type="text" 
+                      v-model="getOptions.encoding.value" 
+                      :disabled="!isConnected"
+                      placeholder="e.g., application/json, text/plain"
+                      class="encoding-text-input"
+                      title="Enter a custom encoding string"
+                    >
+                    
+                    <!-- Custom Checkbox -->
+                    <label class="custom-checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        v-model="getOptions.customEncoding.value" 
+                        :disabled="!isConnected"
+                        class="custom-encoding-checkbox"
+                      >
+                      Custom
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="option-group">
+                  <label>Priority:</label>
+                  <select v-model="getOptions.priority.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option 
+                      v-for="option in priorityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Congestion Control:</label>
+                  <select v-model="getOptions.congestionControl.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option 
+                      v-for="option in congestionControlOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Allowed Destination:</label>
+                  <select v-model="getOptions.allowedDestination.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option 
+                      v-for="option in localityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Express (no batching):</label>
+                  <div class="express-control" :class="{ disabled: !isConnected }">
+                    <input 
+                      type="checkbox" 
+                      ref="getExpressCheckbox"
+                      :disabled="!isConnected"
+                      @click="handleGetExpressCheckboxClick"
+                      class="tri-state-checkbox"
+                    >
+                    <span class="express-state-label">{{ getGetExpressStateLabel() }}</span>
+                  </div>
+                </div>
+                
+                <div class="option-group">
+                  <label>Payload:</label>
+                  <div class="attachment-input-row">
+                    <input 
+                      type="text" 
+                      v-model="getOptions.payload.value" 
+                      placeholder="Optional query payload"
+                      :disabled="!isConnected || getOptions.payloadEmpty.value"
+                    >
+                    <label class="checkbox-label inline-checkbox">
+                      <input 
+                        type="checkbox" 
+                        v-model="getOptions.payloadEmpty.value" 
+                        :disabled="!isConnected"
+                      >
+                      (empty)
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="option-group">
+                  <label>Attachment:</label>
+                  <div class="attachment-input-row">
+                    <input 
+                      type="text" 
+                      v-model="getOptions.attachment.value" 
+                      placeholder="Optional attachment data"
+                      :disabled="!isConnected || getOptions.attachmentEmpty.value"
+                    >
+                    <label class="checkbox-label inline-checkbox">
+                      <input 
+                        type="checkbox" 
+                        v-model="getOptions.attachmentEmpty.value" 
+                        :disabled="!isConnected"
+                      >
+                      (empty)
+                    </label>
+                  </div>
+                </div>
+                
+                <div class="option-group">
+                  <label>Timeout (ms):</label>
+                  <input 
+                    type="number" 
+                    v-model="getOptions.timeout.value" 
+                    placeholder="10000"
+                    min="0"
+                    :disabled="!isConnected"
+                  >
+                </div>
+                
+                <div class="option-group">
+                  <label>Target:</label>
+                  <select v-model="getOptions.target.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option value="BEST_MATCHING">BEST_MATCHING</option>
+                    <option value="ALL">ALL</option>
+                    <option value="ALL_COMPLETE">ALL_COMPLETE</option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Consolidation:</label>
+                  <select v-model="getOptions.consolidation.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option value="NONE">NONE</option>
+                    <option value="MONOTONIC">MONOTONIC</option>
+                    <option value="LATEST">LATEST</option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Accept Replies:</label>
+                  <select v-model="getOptions.acceptReplies.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option value="MATCHING_TAG">MATCHING_TAG</option>
+                    <option value="MATCHING_TAG_AND_REPLIES">MATCHING_TAG_AND_REPLIES</option>
+                    <option value="REPLIES">REPLIES</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -446,6 +643,7 @@ const {
   putOptions,
   subscriberOptions,
   queryableOptions,
+  getOptions,
   
   // Option arrays (now part of the state)
   priorityOptions,
@@ -471,6 +669,7 @@ const {
 // Template ref for log content
 const logContent = ref<HTMLElement>()
 const expressCheckbox = ref<HTMLInputElement>()
+const getExpressCheckbox = ref<HTMLInputElement>()
 
 // Update express checkbox state when the value changes
 function updateExpressCheckboxState() {
@@ -494,6 +693,7 @@ onMounted(() => {
   // Use setTimeout to ensure DOM is fully rendered
   setTimeout(() => {
     updateExpressCheckboxState();
+    updateGetExpressCheckboxState();
   }, 0);
 });
 
@@ -550,6 +750,74 @@ watch(putOptions.customEncoding, (isCustom) => {
   } else {
     // Switching to predefined mode - clear the field so user can select from dropdown
     putOptions.encoding.value = '';
+  }
+}, { immediate: false })
+
+// =============================================================================
+// GET OPTIONS FUNCTIONS
+// =============================================================================
+
+// Update GET express checkbox state when the value changes
+function updateGetExpressCheckboxState() {
+  if (getExpressCheckbox.value) {
+    const value = getOptions.express.value;
+    if (value === undefined) {
+      getExpressCheckbox.value.indeterminate = true;
+      getExpressCheckbox.value.checked = false;
+    } else if (value === true) {
+      getExpressCheckbox.value.indeterminate = false;
+      getExpressCheckbox.value.checked = true;
+    } else { // false
+      getExpressCheckbox.value.indeterminate = false;
+      getExpressCheckbox.value.checked = false;
+    }
+  }
+}
+
+// Handle GET express checkbox clicks
+function handleGetExpressCheckboxClick() {
+  if (getOptions.express.value === undefined) {
+    // From default (indeterminate) to true (checked)
+    getOptions.express.value = true;
+  } else if (getOptions.express.value === true) {
+    // From true (checked) to false (unchecked)
+    getOptions.express.value = false;
+  } else {
+    // From false (unchecked) to default (indeterminate)
+    getOptions.express.value = undefined;
+  }
+}
+
+// Get display label for GET express state
+function getGetExpressStateLabel() {
+  if (getOptions.express.value === undefined) return '(default)';
+  if (getOptions.express.value === true) return 'True';
+  return 'False';
+}
+
+// Watch for changes to GET showOptions and update checkbox state when options panel is shown
+watch(() => getOptions.showOptions.value, (isShown) => {
+  if (isShown) {
+    // When options panel is shown, initialize the checkbox state
+    nextTick(() => {
+      updateGetExpressCheckboxState();
+    });
+  }
+});
+
+// Watch for changes to GET express value and update checkbox state
+watch(() => getOptions.express.value, () => {
+  nextTick(updateGetExpressCheckboxState);
+})
+
+// Clear GET encoding field when switching between custom and predefined modes
+watch(getOptions.customEncoding, (isCustom) => {
+  if (isCustom) {
+    // Switching to custom mode - clear the field for user input
+    getOptions.encoding.value = '';
+  } else {
+    // Switching to predefined mode - clear the field so user can select from dropdown
+    getOptions.encoding.value = '';
   }
 }, { immediate: false })
 

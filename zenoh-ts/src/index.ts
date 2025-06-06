@@ -15,7 +15,7 @@
 // API Layer Files
 import { KeyExpr, IntoKeyExpr } from "./key_expr.js";
 import { ZBytes, IntoZBytes } from "./z_bytes.js";
-import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, SampleKind } from "./enums.js";
+import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr, SampleKind } from "./enums.js";
 import { Sample } from "./sample.js";
 import { Timestamp } from "./timestamp.js";
 import { ZenohId } from "./zid.js";
@@ -35,7 +35,7 @@ import { Duration } from 'typed-duration'
 // Exports
 export { KeyExpr, IntoKeyExpr };
 export { ZBytes, IntoZBytes };
-export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, Sample, SampleKind };
+export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr, Sample, SampleKind };
 export { Publisher, Subscriber};
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector };
 export { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SubscriberOptions, SessionInfo};

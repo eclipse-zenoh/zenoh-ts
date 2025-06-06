@@ -7,6 +7,7 @@ import {
   type PutOptionsState,
   type SubscriberOptionsState,
   type QueryableOptionsState,
+  type GetOptionsState,
 } from "../useZenohDemo";
 import {
   Config,
@@ -23,7 +24,8 @@ import {
   Locality,
   Query,
 } from "@eclipse-zenoh/zenoh-ts";
-import type { PutOptions, SubscriberOptions, QueryableOptions } from "@eclipse-zenoh/zenoh-ts";
+import { Duration } from 'typed-duration';
+import type { PutOptions, SubscriberOptions, QueryableOptions, GetOptions } from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
@@ -34,6 +36,7 @@ import {
   putOptionsToJSON,
   subscriberOptionsToJSON,
   queryableOptionsToJSON,
+  getOptionsToJSON,
 } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
@@ -81,6 +84,44 @@ function queryableOptionsStateTo(
   }
   if (options.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = options.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function getOptionsStateTo(options: GetOptionsState): GetOptions {
+  let opts: GetOptions = {};
+  if (options.congestionControl.value !== undefined) {
+    opts.congestionControl = options.congestionControl.value;
+  }
+  if (options.priority.value !== undefined) {
+    opts.priority = options.priority.value;
+  }
+  if (options.express.value !== undefined) {
+    opts.express = options.express.value;
+  }
+  if (options.allowedDestination.value !== undefined) {
+    opts.allowedDestination = options.allowedDestination.value;
+  }
+  if (options.encoding.value) {
+    opts.encoding = Encoding.fromString(options.encoding.value);
+  }
+  if (!options.payloadEmpty.value) {
+    opts.payload = new ZBytes(options.payload.value);
+  }
+  if (!options.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(options.attachment.value);
+  }
+  if (options.timeout.value !== undefined) {
+    opts.timeout = Duration.milliseconds.of(options.timeout.value);
+  }
+  if (options.target.value !== undefined) {
+    opts.target = options.target.value;
+  }
+  if (options.consolidation.value !== undefined) {
+    opts.consolidation = options.consolidation.value;
+  }
+  if (options.acceptReplies.value !== undefined) {
+    opts.acceptReplies = options.acceptReplies.value;
   }
   return opts;
 }
@@ -248,9 +289,16 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const selector = this.getKey.value;
-      this.addLogEntry("info", `Starting GET query for selector: ${selector}`);
+      
+      // Build get options using getOptionsStateTo
+      const getOptions = getOptionsStateTo(this.getOptions);
+      
+      this.addLogEntry("info", `Starting GET`, {
+        selector: selector,
+        GetOptions: getOptionsToJSON(getOptions),
+      });
 
-      const receiver = await this.zenohSession.get(selector);
+      const receiver = await this.zenohSession.get(selector, getOptions);
       if (!receiver) {
         this.addErrorLogEntry("GET failed: No receiver returned");
         return;
