@@ -179,19 +179,19 @@
                 <PrioritySelect 
                   v-model="putOptions.priority.value" 
                   :disabled="!isConnected"
-                  :priority-options="priorityOptions"
+                  :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
                   v-model="putOptions.congestionControl.value"
                   :disabled="!isConnected"
-                  :congestion-control-options="congestionControlOptions"
+                  :options="congestionControlOptions"
                 />
                 
                 <ReliabilitySelect
                   v-model="putOptions.reliability.value"
                   :disabled="!isConnected"
-                  :reliability-options="reliabilityOptions"
+                  :options="reliabilityOptions"
                 />
                 
                 <div class="option-group">
@@ -363,12 +363,12 @@
                     <PrioritySelect 
                       v-model="queryableOptions.replyPriority.value" 
                       :disabled="!isConnected"
-                      :priority-options="priorityOptions"
+                      :options="priorityOptions"
                     />
                     <CongestionControlSelect
                       v-model="queryableOptions.replyCongestionControl.value"
                       :disabled="!isConnected"
-                      :congestion-control-options="congestionControlOptions"
+                      :options="congestionControlOptions"
                     />
                     <div class="option-group">
                       <label>Express:</label>
@@ -490,13 +490,13 @@
                 <PrioritySelect 
                   v-model="getOptions.priority.value" 
                   :disabled="!isConnected"
-                  :priority-options="priorityOptions"
+                  :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
                   v-model="getOptions.congestionControl.value"
                   :disabled="!isConnected"
-                  :congestion-control-options="congestionControlOptions"
+                  :options="congestionControlOptions"
                 />
                 
                 <div class="option-group">

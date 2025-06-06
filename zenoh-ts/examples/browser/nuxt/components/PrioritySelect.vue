@@ -1,27 +1,22 @@
 <template>
-  <div class="option-group">
-    <label>Priority:</label>
-    <select :value="modelValue" @input="updateValue" :disabled="disabled || false">
-      <option :value="undefined">(default)</option>
-      <option 
-        v-for="option in priorityOptions" 
-        :key="option.value" 
-        :value="option.value"
-      >
-        {{ option.label }}
-      </option>
-    </select>
-  </div>
+  <NumberOptionSelect
+    :model-value="modelValue"
+    :disabled="disabled ?? false"
+    :options="options"
+    label="Priority"
+    @update:model-value="$emit('update:modelValue', $event)"
+  />
 </template>
 
 <script setup lang="ts">
 import type { Priority } from '@eclipse-zenoh/zenoh-ts'
 import type { OptionItem } from '../composables/zenohDemo/utils'
+import NumberOptionSelect from './NumberOptionSelect.vue'
 
 interface Props {
   modelValue: Priority | undefined
   disabled?: boolean
-  priorityOptions: OptionItem[]
+  options: OptionItem[]
 }
 
 interface Emits {
@@ -29,11 +24,5 @@ interface Emits {
 }
 
 defineProps<Props>()
-const emit = defineEmits<Emits>()
-
-function updateValue(event: Event) {
-  const target = event.target as HTMLSelectElement
-  const value = target.value === 'undefined' ? undefined : Number(target.value)
-  emit('update:modelValue', value)
-}
+defineEmits<Emits>()
 </script>
