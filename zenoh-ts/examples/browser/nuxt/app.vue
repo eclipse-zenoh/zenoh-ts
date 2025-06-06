@@ -205,25 +205,13 @@
                   :disabled="!isConnected"
                 />
                 
-                <div class="option-group">
-                  <label>Attachment:</label>
-                  <div class="attachment-input-row">
-                    <input 
-                      type="text" 
-                      v-model="putOptions.attachment.value" 
-                      placeholder="Optional attachment data"
-                      :disabled="!isConnected || putOptions.attachmentEmpty.value"
-                    >
-                    <label class="checkbox-label inline-checkbox">
-                      <input 
-                        type="checkbox" 
-                        v-model="putOptions.attachmentEmpty.value" 
-                        :disabled="!isConnected"
-                      >
-                      (empty)
-                    </label>
-                  </div>
-                </div>
+                <PayloadInput
+                  v-model="putOptions.attachment.value"
+                  v-model:is-empty="putOptions.attachmentEmpty.value"
+                  label="Attachment"
+                  placeholder="Optional attachment data"
+                  :disabled="!isConnected"
+                />
               </div>
             </div>
           </div>
@@ -359,15 +347,13 @@
                       :disabled="!isConnected"
                     />
                     
-                    <div class="option-group">
-                      <label>Attachment:</label>
-                      <input 
-                        type="text" 
-                        v-model="queryableOptions.replyAttachment.value"
-                        placeholder="Optional attachment data"
-                        :disabled="!isConnected"
-                      >
-                    </div>
+                    <PayloadInput
+                      v-model="queryableOptions.replyAttachment.value"
+                      v-model:is-empty="queryableOptions.replyAttachmentEmpty.value"
+                      label="Attachment"
+                      placeholder="Optional attachment data"
+                      :disabled="!isConnected"
+                    />
                   </div>
                 </div>
                 
@@ -491,45 +477,21 @@
                   :disabled="!isConnected"
                 />
                 
-                <div class="option-group">
-                  <label>Payload:</label>
-                  <div class="attachment-input-row">
-                    <input 
-                      type="text" 
-                      v-model="getOptions.payload.value" 
-                      placeholder="Optional query payload"
-                      :disabled="!isConnected || getOptions.payloadEmpty.value"
-                    >
-                    <label class="checkbox-label inline-checkbox">
-                      <input 
-                        type="checkbox" 
-                        v-model="getOptions.payloadEmpty.value" 
-                        :disabled="!isConnected"
-                      >
-                      (empty)
-                    </label>
-                  </div>
-                </div>
+                <PayloadInput
+                  v-model="getOptions.payload.value"
+                  v-model:is-empty="getOptions.payloadEmpty.value"
+                  label="Payload"
+                  placeholder="Optional query payload"
+                  :disabled="!isConnected"
+                />
                 
-                <div class="option-group">
-                  <label>Attachment:</label>
-                  <div class="attachment-input-row">
-                    <input 
-                      type="text" 
-                      v-model="getOptions.attachment.value" 
-                      placeholder="Optional attachment data"
-                      :disabled="!isConnected || getOptions.attachmentEmpty.value"
-                    >
-                    <label class="checkbox-label inline-checkbox">
-                      <input 
-                        type="checkbox" 
-                        v-model="getOptions.attachmentEmpty.value" 
-                        :disabled="!isConnected"
-                      >
-                      (empty)
-                    </label>
-                  </div>
-                </div>
+                <PayloadInput
+                  v-model="getOptions.attachment.value"
+                  v-model:is-empty="getOptions.attachmentEmpty.value"
+                  label="Attachment"
+                  placeholder="Optional attachment data"
+                  :disabled="!isConnected"
+                />
                 
                 <div class="option-group">
                   <label>Timeout (ms):</label>
@@ -739,24 +701,6 @@ watch(logEntries, () => {
   font-size: 14px;
 }
 
-/* Attachment input row styling */
-.attachment-input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  width: 100%;
-}
-
-.attachment-input-row input[type="text"] {
-  flex: 1;
-  min-width: 0; /* Allows input to shrink below its content width */
-}
-
-.inline-checkbox {
-  white-space: nowrap;
-  font-size: 13px !important;
-}
-
 .button-group {
   display: flex;
   gap: 10px;
@@ -890,41 +834,7 @@ watch(logEntries, () => {
   color: #555;
 }
 
-.input-row {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.input-row input {
-  flex: 1;
-  padding: 6px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.input-row button {
-  padding: 6px 12px;
-  background-color: #2196F3;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-}
-
-.input-row button:hover:not(:disabled) {
-  background-color: #0b7dda;
-}
-
-.input-row button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-/* Active Items List - unified styling for subscribers and queryables */
+/* Button group styling - app-specific */
 .active-items-list {
   margin-top: 8px;
   padding-top: 8px;
@@ -1305,210 +1215,9 @@ watch(logEntries, () => {
   overflow: hidden;
 }
 
-.options-grid {
-  display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr);
-  gap: 8px;
-  box-sizing: border-box;
-}
+/* App-specific styles that extend the shared components */
 
-.option-group {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  box-sizing: border-box;
-}
-
-/* Make attachment field span full width of grid */
-.option-group:has(.attachment-input-row) {
-  grid-column: 1 / -1;
-}
-
-.option-group label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-}
-
-.option-group select,
-.option-group input[type="text"] {
-  padding: 4px 6px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background: white;
-}
-
-.option-group select:disabled,
-.option-group input[type="text"]:disabled {
-  background: #f8f9fa;
-  color: #6c757d;
-}
-
-/* Compact Encoding Field Styling */
-.encoding-control {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-}
-
-.encoding-control .encoding-select,
-.encoding-control .encoding-text-input {
-  flex: 1;
-  min-width: 0;
-  padding: 4px 6px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
-  background: white;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.encoding-control .custom-checkbox-label {
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.custom-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 13px;
-  color: #6c757d;
-  cursor: pointer;
-  user-select: none;
-}
-
-.custom-encoding-checkbox {
-  margin: 0;
-  cursor: pointer;
-}
-
-.encoding-control .encoding-select:disabled,
-.encoding-control .encoding-text-input:disabled {
-  background: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
-.encoding-control .encoding-select:focus,
-.encoding-control .encoding-text-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.checkbox-label {
-  display: flex !important;
-  flex-direction: row !important;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600 !important;
-  color: #495057 !important;
-  cursor: pointer;
-}
-
-.checkbox-label input[type="checkbox"] {
-  margin: 0;
-  cursor: pointer;
-}
-
-/* Triple state checkbox styles for express option */
-.express-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid #ced4da;
-  border-radius: 4px;
-  background: white;
-  min-height: 20px;
-}
-
-.express-control.disabled {
-  background: #f8f9fa;
-  color: #6c757d;
-}
-
-.express-state-label {
-  font-size: 14px;
-  color: #495057;
-}
-
-.tri-state-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-  cursor: pointer;
-  user-select: none;
-}
-
-/* Three-state checkbox styling */
-.tri-state-checkbox {
-  /* Remove browser defaults */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  
-  /* Layout and sizing */
-  width: 16px;
-  height: 16px;
-  margin: 0;
-  transform: scale(1.1);
-  
-  /* Visual styling */
-  border: 2px solid #ccc;
-  border-radius: 3px;
-  background: white;
-  position: relative;
-  cursor: pointer;
-}
-
-/* Common styling for all pseudo-element indicators */
-.tri-state-checkbox::before {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  line-height: 1;
-}
-
-/* Disabled state */
-.tri-state-checkbox:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Indeterminate state (undefined) */
-.tri-state-checkbox:indeterminate {
-  background-color: #7f7f7f !important;
-  border-color: #7f7f7f !important;
-  accent-color: #7f7f7f !important;
-}
-
-.tri-state-checkbox:indeterminate::before {
-  content: '−';
-  font-size: 14px;
-}
-
-/* Checked state (true) */
-.tri-state-checkbox:checked {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
-}
-
-.tri-state-checkbox:checked::before {
-  content: '✓';
-  font-size: 12px;
-}
-
-/* Test section styles */
+/* Test section styles - app-specific */
 .test-section {
   border: 1px solid #e9ecef;
   border-radius: 6px;

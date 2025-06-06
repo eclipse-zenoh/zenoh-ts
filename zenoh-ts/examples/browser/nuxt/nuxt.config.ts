@@ -7,6 +7,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   // SSR can be enabled, but we'll use client-only rendering for Zenoh components
   ssr: true,
+  
+  // Add shared CSS
+  css: ['~/assets/css/shared.css'],
+  
   typescript: {
     typeCheck: true,
     strict: true

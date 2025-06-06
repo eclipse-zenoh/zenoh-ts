@@ -78,6 +78,7 @@ export interface QueryableOptionsState {
   replyCongestionControl: Ref<CongestionControl | undefined>;
   replyExpress: Ref<boolean | undefined>;
   replyAttachment: Ref<string>;
+  replyAttachmentEmpty: Ref<boolean>;
   
   // ReplyErr options
   replyErrPayload: Ref<string>;
@@ -180,6 +181,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     replyCongestionControl: ref(undefined as CongestionControl | undefined),
     replyExpress: ref(undefined as boolean | undefined),
     replyAttachment: ref(""),
+    replyAttachmentEmpty: ref(true),
     
     // ReplyErr options
     replyErrPayload: ref("Error processing query"),
