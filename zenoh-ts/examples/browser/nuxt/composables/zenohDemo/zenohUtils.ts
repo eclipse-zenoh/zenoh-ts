@@ -5,8 +5,10 @@ import {
   CongestionControl,
   Reliability,
   Locality,
+  Query,
   type PutOptions,
   type SubscriberOptions,
+  type QueryableOptions,
 } from "@eclipse-zenoh/zenoh-ts";
 import { getEnumLabel } from "./utils";
 
@@ -37,6 +39,20 @@ export interface PutOptionsJSON {
 // Interface for the subscriber options JSON representation
 export interface SubscriberOptionsJSON {
   allowedOrigin: string | undefined;
+}
+
+// Interface for the queryable options JSON representation
+export interface QueryableOptionsJSON {
+  complete: string | undefined;
+  allowedOrigin: string | undefined;
+}
+
+// Interface for the query JSON representation
+export interface QueryJSON {
+  keyexpr: string;
+  parameters: string | undefined;
+  payload: string | undefined;
+  encoding: string | undefined;
 }
 
 // Wrapper function for getEnumLabel which returns
@@ -90,6 +106,20 @@ export function sampleToJSON(sample: Sample): SampleJSON {
 }
 
 /**
+ * Converts a Zenoh Query to a structured JSON object
+ * @param query The Zenoh Query to convert
+ * @returns A structured object containing all query properties as strings
+ */
+export function queryToJSON(query: Query): QueryJSON {
+  return {
+    keyexpr: query.keyExpr().toString(),
+    parameters: query.parameters()?.toString(),
+    payload: query.payload()?.toString(),
+    encoding: query.encoding()?.toString(),
+  };
+}
+
+/**
  * Converts PutOptions object to a structured JSON object for logging
  * @param options The PutOptions object to convert
  * @returns A structured object containing all put options as strings
@@ -117,6 +147,21 @@ export function subscriberOptionsToJSON(
   options: SubscriberOptions
 ): SubscriberOptionsJSON {
   const result: SubscriberOptionsJSON = {
+    allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return claenUndefineds(result);
+}
+
+/**
+ * Converts QueryableOptions object to a structured JSON object for logging
+ * @param options The QueryableOptions object to convert
+ * @returns A structured object containing all queryable options as strings
+ */
+export function queryableOptionsToJSON(
+  options: QueryableOptions
+): QueryableOptionsJSON {
+  const result: QueryableOptionsJSON = {
+    complete: options.complete?.toString(),
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
   };
   return claenUndefineds(result);

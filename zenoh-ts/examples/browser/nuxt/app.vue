@@ -292,20 +292,79 @@
         <div class="operation-block">
           <h3 class="block-title">Query / Reply Operations</h3>
           
-          <!-- Declare Queryable Operation (Placeholder) -->
+          <!-- Declare Queryable Operation -->
           <div class="operation-group">
-            <h4>Declare Queryable</h4>
+            <div class="operation-header">
+              <h4>Declare Queryable</h4>
+              <button 
+                @click="queryableOptions.showOptions.value = !queryableOptions.showOptions.value" 
+                class="options-arrow-btn"
+                :class="{ active: queryableOptions.showOptions.value }"
+                title="Toggle advanced options"
+              >
+                {{ queryableOptions.showOptions.value ? '▲' : '▼' }}
+              </button>
+            </div>
             <div class="input-row">
               <input 
                 type="text" 
+                v-model="queryableKey" 
                 placeholder="Key expression (e.g., demo/example/computation/**)"
-                :disabled="true"
+                :disabled="!isConnected"
               >
-              <button :disabled="true">
-                Create Queryable
+              <button @click="declareQueryable" :disabled="!isConnected || !queryableKey">
+                Declare Queryable
               </button>
             </div>
-            <p class="placeholder-note">Coming soon...</p>
+            
+            <!-- Queryable Options Panel -->
+            <div v-if="queryableOptions.showOptions.value" class="options-panel">
+              <div class="options-grid">
+                <div class="option-group">
+                  <label>Complete:</label>
+                  <select v-model="queryableOptions.complete.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option :value="true">true</option>
+                    <option :value="false">false</option>
+                  </select>
+                </div>
+                
+                <div class="option-group">
+                  <label>Allowed Origin:</label>
+                  <select v-model="queryableOptions.allowedOrigin.value" :disabled="!isConnected">
+                    <option :value="undefined">(default)</option>
+                    <option 
+                      v-for="option in localityOptions" 
+                      :key="option.value" 
+                      :value="option.value"
+                    >
+                      {{ option.label }}
+                    </option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Active Queryables List -->
+            <div v-if="queryableOptions.showOptions.value && activeQueryables.length > 0" class="queryables-list">
+              <h5>Active Queryables:</h5>
+              <div class="queryable-item" v-for="queryable in activeQueryables" :key="queryable.displayId">
+                <div class="queryable-info">
+                  <span class="queryable-key">{{ queryable.keyExpr }}</span>
+                  <div class="queryable-meta">
+                    <span class="queryable-id">{{ queryable.displayId }}</span>
+                    <span class="queryable-time">Since: {{ queryable.createdAt.toLocaleTimeString() }}</span>
+                  </div>
+                </div>
+                <button 
+                  @click="undeclareQueryable(queryable.displayId)" 
+                  class="undeclare-btn"
+                  :disabled="!isConnected"
+                >
+                  Undeclare
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- Get Operation -->
@@ -380,10 +439,13 @@ const {
   putValue,
   getKey,
   subscribeKey,
+  queryableKey,
   logEntries,
   activeSubscribers,
+  activeQueryables,
   putOptions,
   subscriberOptions,
+  queryableOptions,
   
   // Option arrays (now part of the state)
   priorityOptions,
@@ -399,6 +461,8 @@ const {
   performGet,
   subscribe,
   unsubscribe,
+  declareQueryable,
+  undeclareQueryable,
 
   // App operations
   clearLog,
@@ -1428,6 +1492,88 @@ function formatData(type: string, data: Record<string, any>): string {
   color: #6c757d;
   margin: 0;
   font-style: italic;
+}
+
+/* Queryable-specific styles */
+.queryables-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.queryable-item {
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s ease;
+}
+
+.queryable-item:hover {
+  background: linear-gradient(135deg, #f1f3f4, #f8f9fa);
+  border-color: #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.queryable-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.queryable-key {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #495057;
+  margin: 0;
+}
+
+.queryable-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.queryable-id {
+  background: #e9ecef;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+}
+
+.queryable-time {
+  font-style: italic;
+}
+
+.undeclare-btn {
+  background: linear-gradient(135deg, #dc3545, #e74c3c);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.undeclare-btn:hover {
+  background: linear-gradient(135deg, #c82333, #dc3545);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+}
+
+.undeclare-btn:active {
+  transform: translateY(0);
 }
 
 

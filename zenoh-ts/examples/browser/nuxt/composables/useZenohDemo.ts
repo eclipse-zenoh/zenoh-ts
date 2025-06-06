@@ -26,6 +26,14 @@ export interface SubscriberInfo {
   createdAt: Date;
 }
 
+// Queryable info interface
+export interface QueryableInfo {
+  displayId: string; // Display ID like "qry0", "qry1", etc.
+  keyExpr: string;
+  queryable: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+}
+
 // Put options state
 export interface PutOptionsState {
   showOptions: Ref<boolean>;
@@ -46,6 +54,13 @@ export interface SubscriberOptionsState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
+// Queryable options state
+export interface QueryableOptionsState {
+  showOptions: Ref<boolean>;
+  complete: Ref<boolean | undefined>;
+  allowedOrigin: Ref<Locality | undefined>;
+}
+
 // Zenoh Demo state interface combining UI state and operations
 export interface ZenohDemoState {
   serverUrl: Ref<string>;
@@ -55,10 +70,13 @@ export interface ZenohDemoState {
   putValue: Ref<string>;
   putOptions: PutOptionsState;
   subscriberOptions: SubscriberOptionsState;
+  queryableKey: Ref<string>;
+  queryableOptions: QueryableOptionsState;
   getKey: Ref<string>;
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
+  activeQueryables: Ref<QueryableInfo[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
@@ -70,8 +88,10 @@ export interface ZenohDemoState {
   performGet: () => Promise<void>;
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
+  declareQueryable: () => Promise<void>;
+  undeclareQueryable: (queryableId: string) => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
-  addErrorLogEntry: (message: string, errorDetails?: any) => void;
+  addErrorLogEntry: (message: string, error?: any) => void;
   clearLog: () => void;
 }
 
@@ -98,10 +118,17 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     showOptions: ref(false),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
+  queryableKey = ref("demo/example/queryable");
+  queryableOptions = {
+    showOptions: ref(false),
+    complete: ref(undefined as boolean | undefined),
+    allowedOrigin: ref(undefined as Locality | undefined),
+  };
   getKey = ref("demo/example/*");
   subscribeKey = ref("demo/example/**");
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);
+  activeQueryables = ref<QueryableInfo[]>([]);
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
@@ -113,6 +140,8 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async performGet() {}
   async subscribe() {}
   async unsubscribe(_: string) {}
+  async declareQueryable() {}
+  async undeclareQueryable(_: string) {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}

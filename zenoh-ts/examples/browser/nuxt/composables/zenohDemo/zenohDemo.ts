@@ -3,8 +3,10 @@ import {
   ZenohDemoEmpty,
   type LogEntry,
   type SubscriberInfo,
+  type QueryableInfo,
   type PutOptionsState,
   type SubscriberOptionsState,
+  type QueryableOptionsState,
 } from "../useZenohDemo";
 import {
   Config,
@@ -19,16 +21,19 @@ import {
   CongestionControl,
   Reliability,
   Locality,
+  Query,
 } from "@eclipse-zenoh/zenoh-ts";
-import type { PutOptions, SubscriberOptions } from "@eclipse-zenoh/zenoh-ts";
+import type { PutOptions, SubscriberOptions, QueryableOptions } from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
 import {
   sampleToJSON,
+  queryToJSON,
   putOptionsToJSON,
   subscriberOptionsToJSON,
+  queryableOptionsToJSON,
 } from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
@@ -67,9 +72,23 @@ function subscriberOptionsStateTo(
   return opts;
 }
 
+function queryableOptionsStateTo(
+  options: QueryableOptionsState
+): QueryableOptions {
+  let opts: QueryableOptions = {};
+  if (options.complete.value !== undefined) {
+    opts.complete = options.complete.value;
+  }
+  if (options.allowedOrigin.value !== undefined) {
+    opts.allowedOrigin = options.allowedOrigin.value;
+  }
+  return opts;
+}
+
 class ZenohDemo extends ZenohDemoEmpty {
   private zenohSession: Session | null = null;
   private subscriberIdCounter = 0;
+  private queryableIdCounter = 0;
 
   constructor() {
     super();
@@ -191,11 +210,11 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (!this.zenohSession) return;
 
     try {
-      // Close all active subscriptions automatically when closing session
       await this.zenohSession.close();
       this.zenohSession = null;
       this.isConnected.value = false;
       this.activeSubscribers.value = []; // Clear the subscribers list
+      this.activeQueryables.value = []; // Clear the queryables list
       this.addLogEntry("success", "Disconnected from Zenoh session");
     } catch (error) {
       this.addErrorLogEntry("Error during disconnect", error);
@@ -393,6 +412,111 @@ class ZenohDemo extends ZenohDemoEmpty {
       );
     } catch (error) {
       this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
+    }
+  }
+
+  override async declareQueryable(): Promise<void> {
+    if (!this.zenohSession || !this.queryableKey.value) return;
+
+    // Check if already declared queryable for this key expression
+    const existingQueryable = this.activeQueryables.value.find(
+      (qry) => qry.keyExpr === this.queryableKey.value
+    );
+    if (existingQueryable) {
+      this.addLogEntry(
+        "info",
+        `Already declared queryable for ${this.queryableKey.value}`
+      );
+      return;
+    }
+
+    try {
+      // Generate sequential display ID for this queryable
+      const displayId = `qry${this.queryableIdCounter++}`;
+
+      const keyExpr = new KeyExpr(this.queryableKey.value);
+      const queryableOptions = queryableOptionsStateTo(this.queryableOptions);
+
+      // Set up handler for queries
+      queryableOptions.handler = async (query: Query) => {
+        try {
+
+          this.addLogEntry(
+            "data",
+            `Query received on queryable ${displayId} for ${keyExpr.toString()}`,
+            {
+              Query: queryToJSON(query),
+            }
+          );
+
+          // Send a simple reply
+          const replyPayload = `Hello from queryable! Query for: ${query.keyExpr().toString()}${
+            query.parameters().toString() ? "?" + query.parameters().toString() : ""
+          }`;
+          await query.reply(keyExpr, replyPayload);
+        } catch (queryError) {
+          this.addErrorLogEntry("Error handling query", queryError);
+          try {
+            await query.replyErr("Internal error handling query");
+          } catch (replyError) {
+            this.addErrorLogEntry("Error sending error reply", replyError);
+          }
+        }
+      };
+
+      const queryable = await this.zenohSession.declareQueryable(
+        keyExpr,
+        queryableOptions
+      );
+
+      const queryableInfo: QueryableInfo = {
+        displayId: displayId,
+        keyExpr: this.queryableKey.value,
+        queryable,
+        createdAt: new Date(),
+      };
+
+      this.activeQueryables.value.push(queryableInfo);
+      this.addLogEntry(
+        "success",
+        `Queryable ${displayId} declared`,
+        {
+          keyexpr: keyExpr.toString(),
+          QueryableOptions: queryableOptionsToJSON(queryableOptions),
+        }
+      );
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Declare queryable failed for "${this.queryableKey.value}"`,
+        error
+      );
+    }
+  }
+
+  override async undeclareQueryable(queryableId: string): Promise<void> {
+    const queryableIndex = this.activeQueryables.value.findIndex(
+      (qry) => qry.displayId === queryableId
+    );
+    if (queryableIndex === -1) {
+      this.addErrorLogEntry(`Queryable ${queryableId} not found`);
+      return;
+    }
+
+    const queryableInfo = this.activeQueryables.value[queryableIndex];
+    if (!queryableInfo) {
+      this.addErrorLogEntry(`Queryable info for ${queryableId} is invalid`);
+      return;
+    }
+
+    try {
+      await queryableInfo.queryable.undeclare();
+      this.activeQueryables.value.splice(queryableIndex, 1);
+      this.addLogEntry(
+        "success",
+        `Undeclared queryable "${queryableInfo.keyExpr}" (${queryableId})`
+      );
+    } catch (error) {
+      this.addErrorLogEntry(`Undeclare queryable failed for ${queryableId}`, error);
     }
   }
 }
