@@ -90,8 +90,9 @@ export interface QueryableParametersState {
   replyErrCustomEncoding: Ref<boolean>;
 }
 
-// Get options state
-export interface GetOptionsState {
+// Get parameters state - includes all get-related data
+export interface GetParametersState {
+  key: Ref<string>;
   showOptions: Ref<boolean>;
   congestionControl: Ref<CongestionControl | undefined>;
   priority: Ref<Priority | undefined>;
@@ -117,8 +118,7 @@ export interface ZenohDemoState {
   putParameters: PutParametersState;
   subscriberParameters: SubscriberParametersState;
   queryableParameters: QueryableParametersState;
-  getKey: Ref<string>;
-  getOptions: GetOptionsState;
+  getParameters: GetParametersState;
   subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
@@ -190,8 +190,8 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     replyErrEncoding: ref(""),
     replyErrCustomEncoding: ref(false),
   };
-  getKey = ref("demo/example/*");
-  getOptions = {
+  getParameters = {
+    key: ref("demo/example/*"),
     showOptions: ref(false),
     congestionControl: ref(undefined as CongestionControl | undefined),
     priority: ref(undefined as Priority | undefined),

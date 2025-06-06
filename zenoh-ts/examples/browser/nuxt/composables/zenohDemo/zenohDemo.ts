@@ -7,7 +7,7 @@ import {
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
-  type GetOptionsState,
+  type GetParametersState,
 } from "../useZenohDemo";
 import {
   Config,
@@ -88,40 +88,40 @@ function queryableParametersStateToQueryableOptions(
   return opts;
 }
 
-function getOptionsStateTo(options: GetOptionsState): GetOptions {
+function getParametersStateTo(parameters: GetParametersState): GetOptions {
   let opts: GetOptions = {};
-  if (options.congestionControl.value !== undefined) {
-    opts.congestionControl = options.congestionControl.value;
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
   }
-  if (options.priority.value !== undefined) {
-    opts.priority = options.priority.value;
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
   }
-  if (options.express.value !== undefined) {
-    opts.express = options.express.value;
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
   }
-  if (options.allowedDestination.value !== undefined) {
-    opts.allowedDestination = options.allowedDestination.value;
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
   }
-  if (options.encoding.value) {
-    opts.encoding = Encoding.fromString(options.encoding.value);
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
   }
-  if (!options.payloadEmpty.value) {
-    opts.payload = new ZBytes(options.payload.value);
+  if (!parameters.payloadEmpty.value) {
+    opts.payload = new ZBytes(parameters.payload.value);
   }
-  if (!options.attachmentEmpty.value) {
-    opts.attachment = new ZBytes(options.attachment.value);
+  if (!parameters.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(parameters.attachment.value);
   }
-  if (options.timeout.value !== undefined) {
-    opts.timeout = Duration.milliseconds.of(options.timeout.value);
+  if (parameters.timeout.value !== undefined) {
+    opts.timeout = Duration.milliseconds.of(parameters.timeout.value);
   }
-  if (options.target.value !== undefined) {
-    opts.target = options.target.value;
+  if (parameters.target.value !== undefined) {
+    opts.target = parameters.target.value;
   }
-  if (options.consolidation.value !== undefined) {
-    opts.consolidation = options.consolidation.value;
+  if (parameters.consolidation.value !== undefined) {
+    opts.consolidation = parameters.consolidation.value;
   }
-  if (options.acceptReplies.value !== undefined) {
-    opts.acceptReplies = options.acceptReplies.value;
+  if (parameters.acceptReplies.value !== undefined) {
+    opts.acceptReplies = parameters.acceptReplies.value;
   }
   return opts;
 }
@@ -285,13 +285,13 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performGet(): Promise<void> {
-    if (!this.zenohSession || !this.getKey.value) return;
+    if (!this.zenohSession || !this.getParameters.key.value) return;
 
     try {
-      const selector = this.getKey.value;
+      const selector = this.getParameters.key.value;
       
-      // Build get options using getOptionsStateTo
-      const getOptions = getOptionsStateTo(this.getOptions);
+      // Build get options using getParametersStateTo
+      const getOptions = getParametersStateTo(this.getParameters);
       
       this.addLogEntry("info", `Starting GET`, {
         selector: selector,
@@ -340,7 +340,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       );
     } catch (error) {
       this.addErrorLogEntry(
-        `GET failed for selector "${this.getKey.value}"`,
+        `GET failed for selector "${this.getParameters.key.value}"`,
         error
       );
     }

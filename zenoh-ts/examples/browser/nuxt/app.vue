@@ -426,70 +426,70 @@
             <div class="operation-header">
               <h4>Get</h4>
               <button 
-                @click="getOptions.showOptions.value = !getOptions.showOptions.value" 
+                @click="getParameters.showOptions.value = !getParameters.showOptions.value" 
                 class="options-arrow-btn"
-                :class="{ active: getOptions.showOptions.value }"
+                :class="{ active: getParameters.showOptions.value }"
                 title="Toggle advanced options"
               >
-                {{ getOptions.showOptions.value ? '▲' : '▼' }}
+                {{ getParameters.showOptions.value ? '▲' : '▼' }}
               </button>
             </div>
             <div class="input-row">
               <input 
                 type="text" 
-                v-model="getKey" 
+                v-model="getParameters.key.value" 
                 placeholder="Selector (e.g., demo/example/*)"
                 :disabled="!isConnected"
               >
-              <button @click="performGet" :disabled="!isConnected || !getKey">
+              <button @click="performGet" :disabled="!isConnected || !getParameters.key.value">
                 Get
               </button>
             </div>
             
             <!-- Get Options Panel -->
-            <div v-if="getOptions.showOptions.value" class="options-panel">
+            <div v-if="getParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
                 <EncodingSelect 
-                  v-model="getOptions.encoding.value"
-                  v-model:custom-encoding="getOptions.customEncoding.value"
+                  v-model="getParameters.encoding.value"
+                  v-model:custom-encoding="getParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
                   :disabled="!isConnected"
                 />
                 
                 <PrioritySelect 
-                  v-model="getOptions.priority.value" 
+                  v-model="getParameters.priority.value" 
                   :disabled="!isConnected"
                   :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
-                  v-model="getOptions.congestionControl.value"
+                  v-model="getParameters.congestionControl.value"
                   :disabled="!isConnected"
                   :options="congestionControlOptions"
                 />
                 
                 <AllowedDestinationSelect
-                  v-model="getOptions.allowedDestination.value"
+                  v-model="getParameters.allowedDestination.value"
                   :disabled="!isConnected"
                   :options="localityOptions"
                 />
                 
                 <ExpressSelect
-                  v-model="getOptions.express.value"
+                  v-model="getParameters.express.value"
                   :disabled="!isConnected"
                 />
                 
                 <PayloadInput
-                  v-model="getOptions.payload.value"
-                  v-model:is-empty="getOptions.payloadEmpty.value"
+                  v-model="getParameters.payload.value"
+                  v-model:is-empty="getParameters.payloadEmpty.value"
                   label="Payload"
                   placeholder="Optional query payload"
                   :disabled="!isConnected"
                 />
                 
                 <PayloadInput
-                  v-model="getOptions.attachment.value"
-                  v-model:is-empty="getOptions.attachmentEmpty.value"
+                  v-model="getParameters.attachment.value"
+                  v-model:is-empty="getParameters.attachmentEmpty.value"
                   label="Attachment"
                   placeholder="Optional attachment data"
                   :disabled="!isConnected"
@@ -499,7 +499,7 @@
                   <label>Timeout (ms):</label>
                   <input 
                     type="number" 
-                    v-model="getOptions.timeout.value" 
+                    v-model="getParameters.timeout.value" 
                     placeholder="10000"
                     min="0"
                     :disabled="!isConnected"
@@ -508,7 +508,7 @@
                 
                 <div class="option-group">
                   <label>Target:</label>
-                  <select v-model="getOptions.target.value" :disabled="!isConnected">
+                  <select v-model="getParameters.target.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option value="BEST_MATCHING">BEST_MATCHING</option>
                     <option value="ALL">ALL</option>
@@ -518,7 +518,7 @@
                 
                 <div class="option-group">
                   <label>Consolidation:</label>
-                  <select v-model="getOptions.consolidation.value" :disabled="!isConnected">
+                  <select v-model="getParameters.consolidation.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option value="NONE">NONE</option>
                     <option value="MONOTONIC">MONOTONIC</option>
@@ -528,7 +528,7 @@
                 
                 <div class="option-group">
                   <label>Accept Replies:</label>
-                  <select v-model="getOptions.acceptReplies.value" :disabled="!isConnected">
+                  <select v-model="getParameters.acceptReplies.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option value="MATCHING_TAG">MATCHING_TAG</option>
                     <option value="MATCHING_TAG_AND_REPLIES">MATCHING_TAG_AND_REPLIES</option>
@@ -593,14 +593,13 @@ const {
   isConnected,
   isConnecting,
   putParameters,
-  getKey,
   subscribeKey,
   logEntries,
   activeSubscribers,
   activeQueryables,
   subscriberParameters,
   queryableParameters,
-  getOptions,
+  getParameters,
   
   // Option arrays (now part of the state)
   priorityOptions,
