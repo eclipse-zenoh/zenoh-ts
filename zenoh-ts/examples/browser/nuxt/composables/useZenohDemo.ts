@@ -12,6 +12,7 @@ import type {
   ConsolidationMode,
   ReplyKeyExpr,
 } from "@eclipse-zenoh/zenoh-ts";
+import type { QueryableOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
 
 // Log entry interface
 export interface LogEntry {
@@ -27,6 +28,7 @@ export interface SubscriberInfo {
   keyExpr: string;
   subscriber: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
+  options: SubscriberOptionsJSON
 }
 
 // Queryable info interface
@@ -35,6 +37,7 @@ export interface QueryableInfo {
   keyExpr: string;
   queryable: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
+  options: QueryableOptionsJSON
 }
 
 // Put options state

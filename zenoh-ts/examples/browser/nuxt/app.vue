@@ -97,18 +97,45 @@
             <!-- Active Subscribers List -->
             <div v-if="activeSubscribers.length > 0" class="active-items-list">
               <div class="item-entry" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
-                <div class="item-info">
-                  <span class="item-key">{{ subscriber.keyExpr }}</span>
-                  <span class="item-id">{{ subscriber.displayId }}</span>
-                  <span class="item-time">{{ subscriber.createdAt.toLocaleTimeString() }}</span>
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-key">{{ subscriber.keyExpr }}</span>
+                    <span class="item-id">{{ subscriber.displayId }}</span>
+                    <span class="item-time">{{ subscriber.createdAt.toLocaleTimeString() }}</span>
+                  </div>
+                  <div class="item-actions">
+                    <button 
+                      @click="toggleSubscriberDetails(subscriber.displayId)" 
+                      class="item-action-btn details"
+                      :class="{ active: expandedSubscriberDetails.has(subscriber.displayId) }"
+                      title="Toggle details"
+                    >
+                      Details
+                    </button>
+                    <button 
+                      @click="unsubscribe(subscriber.displayId)" 
+                      class="item-action-btn undeclare"
+                      :disabled="!isConnected"
+                    >
+                      Undeclare
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  @click="unsubscribe(subscriber.displayId)" 
-                  class="item-action-btn undeclare"
-                  :disabled="!isConnected"
-                >
-                  Undeclare
-                </button>
+                
+                <!-- Expanded Details Section -->
+                <div v-if="expandedSubscriberDetails.has(subscriber.displayId)" class="item-details">
+                  <div class="details-header">Subscriber Details</div>
+                  <div class="details-content">
+                    <ParameterDisplay 
+                      type="SubscriberOptions" 
+                      :data="subscriber.options" 
+                    />
+                    <ParameterDisplay 
+                      type="Creation Time" 
+                      :data="{ 'timestamp': subscriber.createdAt.toISOString() }" 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -346,18 +373,45 @@
             <!-- Active Queryables List -->
             <div v-if="activeQueryables.length > 0" class="active-items-list">
               <div class="item-entry" v-for="queryable in activeQueryables" :key="queryable.displayId">
-                <div class="item-info">
-                  <span class="item-key">{{ queryable.keyExpr }}</span>
-                  <span class="item-id">{{ queryable.displayId }}</span>
-                  <span class="item-time">{{ queryable.createdAt.toLocaleTimeString() }}</span>
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-key">{{ queryable.keyExpr }}</span>
+                    <span class="item-id">{{ queryable.displayId }}</span>
+                    <span class="item-time">{{ queryable.createdAt.toLocaleTimeString() }}</span>
+                  </div>
+                  <div class="item-actions">
+                    <button 
+                      @click="toggleQueryableDetails(queryable.displayId)" 
+                      class="item-action-btn details"
+                      :class="{ active: expandedQueryableDetails.has(queryable.displayId) }"
+                      title="Toggle details"
+                    >
+                      Details
+                    </button>
+                    <button 
+                      @click="undeclareQueryable(queryable.displayId)" 
+                      class="item-action-btn undeclare"
+                      :disabled="!isConnected"
+                    >
+                      Undeclare
+                    </button>
+                  </div>
                 </div>
-                <button 
-                  @click="undeclareQueryable(queryable.displayId)" 
-                  class="item-action-btn undeclare"
-                  :disabled="!isConnected"
-                >
-                  Undeclare
-                </button>
+                
+                <!-- Expanded Details Section -->
+                <div v-if="expandedQueryableDetails.has(queryable.displayId)" class="item-details">
+                  <div class="details-header">Queryable Details</div>
+                  <div class="details-content">
+                    <ParameterDisplay 
+                      type="QueryableOptions" 
+                      :data="queryable.options" 
+                    />
+                    <ParameterDisplay 
+                      type="Creation Time" 
+                      :data="{ 'timestamp': queryable.createdAt.toISOString() }" 
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -666,6 +720,27 @@ const {
 const logContent = ref<HTMLElement>()
 const expressCheckbox = ref<HTMLInputElement>()
 const getExpressCheckbox = ref<HTMLInputElement>()
+
+// State to track expanded details for subscribers and queryables
+const expandedSubscriberDetails = ref<Set<string>>(new Set())
+const expandedQueryableDetails = ref<Set<string>>(new Set())
+
+// Functions to toggle details expansion
+function toggleSubscriberDetails(displayId: string) {
+  if (expandedSubscriberDetails.value.has(displayId)) {
+    expandedSubscriberDetails.value.delete(displayId)
+  } else {
+    expandedSubscriberDetails.value.add(displayId)
+  }
+}
+
+function toggleQueryableDetails(displayId: string) {
+  if (expandedQueryableDetails.value.has(displayId)) {
+    expandedQueryableDetails.value.delete(displayId)
+  } else {
+    expandedQueryableDetails.value.add(displayId)
+  }
+}
 
 // Update express checkbox state when the value changes
 function updateExpressCheckboxState() {
@@ -1060,8 +1135,7 @@ watch(getOptions.customEncoding, (isCustom) => {
   padding: 6px 8px;
   margin-bottom: 4px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   transition: all 0.2s ease;
 }
 
@@ -1071,12 +1145,26 @@ watch(getOptions.customEncoding, (isCustom) => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
 .item-info {
   flex: 1;
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 8px;
+}
+
+.item-actions {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .item-key {
@@ -1125,6 +1213,22 @@ watch(getOptions.customEncoding, (isCustom) => {
   box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
 }
 
+.item-action-btn.details {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+}
+
+.item-action-btn.details:hover {
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(99, 102, 241, 0.3);
+}
+
+.item-action-btn.details.active {
+  background: linear-gradient(135deg, #3730a3, #581c87);
+  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+}
+
 .item-action-btn:active {
   transform: translateY(0);
 }
@@ -1134,6 +1238,31 @@ watch(getOptions.customEncoding, (isCustom) => {
   cursor: not-allowed;
   transform: none !important;
   box-shadow: none !important;
+}
+
+/* Details expansion section */
+.item-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e9ecef;
+  background: rgba(248, 249, 250, 0.5);
+  border-radius: 4px;
+  padding: 8px;
+}
+
+.details-header {
+  font-weight: 600;
+  font-size: 13px;
+  color: #495057;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .log-panel {

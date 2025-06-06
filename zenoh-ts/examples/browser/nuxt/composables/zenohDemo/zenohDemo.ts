@@ -367,6 +367,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         keyExpr: this.subscribeKey.value,
         subscriber,
         createdAt: new Date(),
+        options: subscriberOptionsToJSON(subscriberOptions),
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
@@ -498,6 +499,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         keyExpr: this.queryableKey.value,
         queryable,
         createdAt: new Date(),
+        options: queryableOptionsToJSON(queryableOptions),
       };
 
       this.activeQueryables.value.push(queryableInfo);
