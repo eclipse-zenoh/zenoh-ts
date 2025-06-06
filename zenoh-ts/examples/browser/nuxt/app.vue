@@ -260,8 +260,6 @@
               
               <!-- Reply Configuration Section -->
               <div class="reply-config-section">
-                <h5 class="section-subtitle">Query Response Configuration</h5>
-                
                 <!-- Reply Type Selection -->
                 <div class="reply-type-selection">
                   <label class="radio-group-label">Response Type:</label>
