@@ -298,13 +298,13 @@
                     />
                   </div>
                   <div class="field-group">
-                    <label>Payload:</label>
-                    <textarea 
+                    <PayloadInput
                       v-model="queryableParameters.replyPayload.value"
+                      v-model:isEmpty="queryableParameters.replyPayloadEmpty.value"
+                      label="Payload:"
                       placeholder="Payload content for successful reply"
                       :disabled="!isConnected"
-                      rows="2"
-                    ></textarea>
+                    />
                   </div>
                   
                   <!-- Reply Options -->
@@ -344,13 +344,13 @@
                 <!-- ReplyErr Fields -->
                 <div v-if="queryableParameters.replyType.value === 'replyErr'" class="reply-err-fields">
                   <div class="field-group">
-                    <label>Error Payload:</label>
-                    <textarea 
+                    <PayloadInput
                       v-model="queryableParameters.replyErrPayload.value"
+                      v-model:isEmpty="queryableParameters.replyErrPayloadEmpty.value"
+                      label="Error Payload:"
                       placeholder="Error message or payload"
                       :disabled="!isConnected"
-                      rows="2"
-                    ></textarea>
+                    />
                   </div>
                   <EncodingSelect
                     v-model="queryableParameters.replyErrEncoding.value"

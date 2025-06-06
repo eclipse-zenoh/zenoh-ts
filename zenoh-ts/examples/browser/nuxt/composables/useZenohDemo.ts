@@ -77,6 +77,7 @@ export interface QueryableParametersState {
   // Reply options
   replyKeyExpr: Ref<string>;
   replyPayload: Ref<string>;
+  replyPayloadEmpty: Ref<boolean>;
   replyEncoding: Ref<string>;
   replyCustomEncoding: Ref<boolean>;
   replyPriority: Ref<Priority | undefined>;
@@ -87,6 +88,7 @@ export interface QueryableParametersState {
   
   // ReplyErr options
   replyErrPayload: Ref<string>;
+  replyErrPayloadEmpty: Ref<boolean>;
   replyErrEncoding: Ref<string>;
   replyErrCustomEncoding: Ref<boolean>;
 }
@@ -178,6 +180,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     // Reply options
     replyKeyExpr: ref(""),
     replyPayload: ref("Hello from queryable!"),
+    replyPayloadEmpty: ref(false),
     replyEncoding: ref(""),
     replyCustomEncoding: ref(false),
     replyPriority: ref(undefined as Priority | undefined),
@@ -188,6 +191,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     
     // ReplyErr options
     replyErrPayload: ref("Error processing query"),
+    replyErrPayloadEmpty: ref(false),
     replyErrEncoding: ref(""),
     replyErrCustomEncoding: ref(false),
   };
