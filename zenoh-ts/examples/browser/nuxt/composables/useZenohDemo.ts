@@ -57,8 +57,9 @@ export interface PutParametersState {
   attachmentEmpty: Ref<boolean>;
 }
 
-// Subscriber options state
+// Subscriber parameters state - includes all subscriber-related data
 export interface SubscriberParametersState {
+  key: Ref<string>;
   showOptions: Ref<boolean>;
   allowedOrigin: Ref<Locality | undefined>;
 }
@@ -119,7 +120,6 @@ export interface ZenohDemoState {
   subscriberParameters: SubscriberParametersState;
   queryableParameters: QueryableParametersState;
   getParameters: GetParametersState;
-  subscribeKey: Ref<string>;
   logEntries: Ref<LogEntry[]>;
   activeSubscribers: Ref<SubscriberInfo[]>;
   activeQueryables: Ref<QueryableInfo[]>;
@@ -162,6 +162,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     attachmentEmpty: ref(true),
   };
   subscriberParameters = {
+    key: ref("demo/example/**"),
     showOptions: ref(false),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
@@ -208,7 +209,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     consolidation: ref(undefined as ConsolidationMode | undefined),
     acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
   };
-  subscribeKey = ref("demo/example/**");
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);
   activeQueryables = ref<QueryableInfo[]>([]);

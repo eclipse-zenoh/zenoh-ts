@@ -66,11 +66,11 @@
             <div class="input-row">
               <input 
                 type="text" 
-                v-model="subscribeKey" 
+                v-model="subscriberParameters.key.value" 
                 placeholder="Key expression (e.g., demo/example/**)"
                 :disabled="!isConnected"
               >
-              <button @click="subscribe" :disabled="!isConnected || !subscribeKey">
+              <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value">
                 Declare Subscriber
               </button>
             </div>
@@ -593,7 +593,6 @@ const {
   isConnected,
   isConnecting,
   putParameters,
-  subscribeKey,
   logEntries,
   activeSubscribers,
   activeQueryables,

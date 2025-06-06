@@ -347,10 +347,10 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async subscribe(): Promise<void> {
-    if (!this.zenohSession || !this.subscribeKey.value) return;
+    if (!this.zenohSession || !this.subscriberParameters.key.value) return;
 
     try {
-      const keyExpr = new KeyExpr(this.subscribeKey.value);
+      const keyExpr = new KeyExpr(this.subscriberParameters.key.value);
       const subscriberOptions = subscriberParametersStateToSubscriberOptions(
         this.subscriberParameters
       );
@@ -364,7 +364,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       const subscriberInfo: SubscriberInfo = {
         displayId: displayId,
-        keyExpr: this.subscribeKey.value,
+        keyExpr: this.subscriberParameters.key.value,
         subscriber,
         createdAt: new Date(),
         options: subscriberOptionsToJSON(subscriberOptions),
@@ -419,7 +419,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       })();
     } catch (error) {
       this.addErrorLogEntry(
-        `Subscribe failed for "${this.subscribeKey.value}"`,
+        `Subscribe failed for "${this.subscriberParameters.key.value}"`,
         error
       );
     }
