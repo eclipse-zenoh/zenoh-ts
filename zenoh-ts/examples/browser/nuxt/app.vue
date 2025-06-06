@@ -346,7 +346,7 @@
               <span>{{ entry.message }}</span>
               <div 
                 v-if="entry.jsonData"
-                v-html="formatJSONData(entry.type, entry.jsonData)"
+                v-html="formatJSONData(entry.type, entry.jsonData, entry.jsonTitle)"
               ></div>
             </div>
           </div>
@@ -566,9 +566,19 @@ function formatJSONWithColors(obj: any, indent: number = 0): string {
 /**
  * Formats JSON data with syntax highlighting for display
  */
-function formatJSONData(type: string, jsonData: object): string {
+function formatJSONData(type: string, jsonData: object, jsonTitle?: string): string {
   const typeColor = LOG_COLORS[type] || LOG_COLORS["info"];
-  return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>`;
+  
+  if (jsonTitle) {
+    // Display title on the left side of the JSON block to save vertical space
+    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;">${jsonTitle} =</div>
+      <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>
+    </div>`;
+  } else {
+    // No title, display JSON block normally
+    return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>`;
+  }
 }
 </script>
 
