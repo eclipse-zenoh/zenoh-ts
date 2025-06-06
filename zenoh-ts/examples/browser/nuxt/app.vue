@@ -194,19 +194,11 @@
                   :options="reliabilityOptions"
                 />
                 
-                <div class="option-group">
-                  <label>Allowed Destination:</label>
-                  <select v-model="putOptions.allowedDestination.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in localityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <AllowedDestinationSelect
+                  v-model="putOptions.allowedDestination.value"
+                  :disabled="!isConnected"
+                  :options="localityOptions"
+                />
                 
                 <div class="option-group">
                   <label>Express (no batching):</label>
@@ -499,19 +491,11 @@
                   :options="congestionControlOptions"
                 />
                 
-                <div class="option-group">
-                  <label>Allowed Destination:</label>
-                  <select v-model="getOptions.allowedDestination.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in localityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <AllowedDestinationSelect
+                  v-model="getOptions.allowedDestination.value"
+                  :disabled="!isConnected"
+                  :options="localityOptions"
+                />
                 
                 <div class="option-group">
                   <label>Express (no batching):</label>
