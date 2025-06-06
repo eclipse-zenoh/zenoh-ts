@@ -200,19 +200,10 @@
                   :options="localityOptions"
                 />
                 
-                <div class="option-group">
-                  <label>Express (no batching):</label>
-                  <div class="express-control" :class="{ disabled: !isConnected }">
-                    <input 
-                      type="checkbox" 
-                      ref="expressCheckbox"
-                      :disabled="!isConnected"
-                      @click="handleExpressCheckboxClick"
-                      class="tri-state-checkbox"
-                    >
-                    <span class="express-state-label">{{ getExpressStateLabel() }}</span>
-                  </div>
-                </div>
+                <ExpressSelect
+                  v-model="putOptions.express.value"
+                  :disabled="!isConnected"
+                />
                 
                 <div class="option-group">
                   <label>Attachment:</label>
@@ -362,14 +353,12 @@
                       :disabled="!isConnected"
                       :options="congestionControlOptions"
                     />
-                    <div class="option-group">
-                      <label>Express:</label>
-                      <select v-model="queryableOptions.replyExpress.value" :disabled="!isConnected">
-                        <option :value="undefined">(default)</option>
-                        <option :value="true">true</option>
-                        <option :value="false">false</option>
-                      </select>
-                    </div>
+                    
+                    <ExpressSelect
+                      v-model="queryableOptions.replyExpress.value"
+                      :disabled="!isConnected"
+                    />
+                    
                     <div class="option-group">
                       <label>Attachment:</label>
                       <input 
@@ -497,19 +486,10 @@
                   :options="localityOptions"
                 />
                 
-                <div class="option-group">
-                  <label>Express (no batching):</label>
-                  <div class="express-control" :class="{ disabled: !isConnected }">
-                    <input 
-                      type="checkbox" 
-                      ref="getExpressCheckbox"
-                      :disabled="!isConnected"
-                      @click="handleGetExpressCheckboxClick"
-                      class="tri-state-checkbox"
-                    >
-                    <span class="express-state-label">{{ getGetExpressStateLabel() }}</span>
-                  </div>
-                </div>
+                <ExpressSelect
+                  v-model="getOptions.express.value"
+                  :disabled="!isConnected"
+                />
                 
                 <div class="option-group">
                   <label>Payload:</label>
@@ -684,8 +664,6 @@ const {
 
 // Template ref for log content
 const logContent = ref<HTMLElement>()
-const expressCheckbox = ref<HTMLInputElement>()
-const getExpressCheckbox = ref<HTMLInputElement>()
 
 // State to track expanded details for subscribers and queryables
 const expandedSubscriberDetails = ref<Set<string>>(new Set())
@@ -708,68 +686,6 @@ function toggleQueryableDetails(displayId: string) {
   }
 }
 
-// Update express checkbox state when the value changes
-function updateExpressCheckboxState() {
-  if (expressCheckbox.value) {
-    const value = putOptions.express.value;
-    if (value === undefined) {
-      expressCheckbox.value.indeterminate = true;
-      expressCheckbox.value.checked = false;
-    } else if (value === true) {
-      expressCheckbox.value.indeterminate = false;
-      expressCheckbox.value.checked = true;
-    } else { // false
-      expressCheckbox.value.indeterminate = false;
-      expressCheckbox.value.checked = false;
-    }
-  }
-}
-
-// Initialize checkbox state when mounted
-onMounted(() => {
-  // Use setTimeout to ensure DOM is fully rendered
-  setTimeout(() => {
-    updateExpressCheckboxState();
-    updateGetExpressCheckboxState();
-  }, 0);
-});
-
-// Watch for changes to showOptions and update checkbox state when options panel is shown
-watch(() => putOptions.showOptions.value, (isShown) => {
-  if (isShown) {
-    // When options panel is shown, initialize the checkbox state
-    nextTick(() => {
-      updateExpressCheckboxState();
-    });
-  }
-});
-
-// Watch for changes and update checkbox state
-watch(() => putOptions.express.value, () => {
-  nextTick(updateExpressCheckboxState);
-})
-
-// Handle three-state checkbox clicks
-function handleExpressCheckboxClick() {
-  if (putOptions.express.value === undefined) {
-    // From default (indeterminate) to true (checked)
-    putOptions.express.value = true;
-  } else if (putOptions.express.value === true) {
-    // From true (checked) to false (unchecked)
-    putOptions.express.value = false;
-  } else {
-    // From false (unchecked) to default (indeterminate)
-    putOptions.express.value = undefined;
-  }
-}
-
-// Get display label for express state
-function getExpressStateLabel() {
-  if (putOptions.express.value === undefined) return '(default)';
-  if (putOptions.express.value === true) return 'True';
-  return 'False';
-}
-
 // Auto-scroll to bottom when new log entries are added
 watch(logEntries, () => {
   nextTick(() => {
@@ -778,63 +694,6 @@ watch(logEntries, () => {
     }
   })
 }, { deep: true })
-
-// =============================================================================
-// GET OPTIONS FUNCTIONS
-// =============================================================================
-
-// Update GET express checkbox state when the value changes
-function updateGetExpressCheckboxState() {
-  if (getExpressCheckbox.value) {
-    const value = getOptions.express.value;
-    if (value === undefined) {
-      getExpressCheckbox.value.indeterminate = true;
-      getExpressCheckbox.value.checked = false;
-    } else if (value === true) {
-      getExpressCheckbox.value.indeterminate = false;
-      getExpressCheckbox.value.checked = true;
-    } else { // false
-      getExpressCheckbox.value.indeterminate = false;
-      getExpressCheckbox.value.checked = false;
-    }
-  }
-}
-
-// Handle GET express checkbox clicks
-function handleGetExpressCheckboxClick() {
-  if (getOptions.express.value === undefined) {
-    // From default (indeterminate) to true (checked)
-    getOptions.express.value = true;
-  } else if (getOptions.express.value === true) {
-    // From true (checked) to false (unchecked)
-    getOptions.express.value = false;
-  } else {
-    // From false (unchecked) to default (indeterminate)
-    getOptions.express.value = undefined;
-  }
-}
-
-// Get display label for GET express state
-function getGetExpressStateLabel() {
-  if (getOptions.express.value === undefined) return '(default)';
-  if (getOptions.express.value === true) return 'True';
-  return 'False';
-}
-
-// Watch for changes to GET showOptions and update checkbox state when options panel is shown
-watch(() => getOptions.showOptions.value, (isShown) => {
-  if (isShown) {
-    // When options panel is shown, initialize the checkbox state
-    nextTick(() => {
-      updateGetExpressCheckboxState();
-    });
-  }
-});
-
-// Watch for changes to GET express value and update checkbox state
-watch(() => getOptions.express.value, () => {
-  nextTick(updateGetExpressCheckboxState);
-})
 </script>
 
 <style scoped>
