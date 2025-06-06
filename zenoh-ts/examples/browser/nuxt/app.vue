@@ -169,92 +169,30 @@
             <!-- Put Options Panel -->
             <div v-if="putOptions.showOptions.value" class="options-panel">
               <div class="options-grid">
-                <div class="option-group">
-                  <label>Encoding:</label>
-                  <div class="encoding-control">
-                    <!-- Predefined Encoding Dropdown -->
-                    <select 
-                      v-if="!putOptions.customEncoding.value"
-                      v-model="putOptions.encoding.value" 
-                      :disabled="!isConnected"
-                      class="encoding-select"
-                      title="Select a predefined encoding"
-                    >
-                      <option value="">(default)</option>
-                      <option 
-                        v-for="option in encodingOptions" 
-                        :key="option.value" 
-                        :value="option.value"
-                      >
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    
-                    <!-- Custom Encoding Input -->
-                    <input 
-                      v-else
-                      type="text" 
-                      v-model="putOptions.encoding.value" 
-                      :disabled="!isConnected"
-                      placeholder="e.g., application/json, text/plain"
-                      class="encoding-text-input"
-                      title="Enter a custom encoding string"
-                    >
-                    
-                    <!-- Custom Checkbox -->
-                    <label class="custom-checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="putOptions.customEncoding.value" 
-                        :disabled="!isConnected"
-                        class="custom-encoding-checkbox"
-                      >
-                      Custom
-                    </label>
-                  </div>
-                </div>
+                <EncodingSelect 
+                  v-model="putOptions.encoding.value"
+                  v-model:custom-encoding="putOptions.customEncoding.value"
+                  :encoding-options="encodingOptions"
+                  :disabled="!isConnected"
+                />
                 
-                <div class="option-group">
-                  <label>Priority:</label>
-                  <select v-model="putOptions.priority.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in priorityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <PrioritySelect 
+                  v-model="putOptions.priority.value" 
+                  :disabled="!isConnected"
+                  :priority-options="priorityOptions"
+                />
                 
-                <div class="option-group">
-                  <label>Congestion Control:</label>
-                  <select v-model="putOptions.congestionControl.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in congestionControlOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <CongestionControlSelect
+                  v-model="putOptions.congestionControl.value"
+                  :disabled="!isConnected"
+                  :congestion-control-options="congestionControlOptions"
+                />
                 
-                <div class="option-group">
-                  <label>Reliability:</label>
-                  <select v-model="putOptions.reliability.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in reliabilityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <ReliabilitySelect
+                  v-model="putOptions.reliability.value"
+                  :disabled="!isConnected"
+                  :reliability-options="reliabilityOptions"
+                />
                 
                 <div class="option-group">
                   <label>Allowed Destination:</label>
@@ -363,6 +301,114 @@
                   </select>
                 </div>
               </div>
+              
+              <!-- Reply Configuration Section -->
+              <div class="reply-config-section">
+                <h5 class="section-subtitle">Query Response Configuration</h5>
+                
+                <!-- Reply Type Selection -->
+                <div class="reply-type-selection">
+                  <label class="radio-group-label">Response Type:</label>
+                  <div class="radio-group">
+                    <label class="radio-option">
+                      <input 
+                        type="radio" 
+                        value="reply" 
+                        v-model="queryableOptions.replyType.value"
+                        :disabled="!isConnected"
+                      >
+                      <span>Reply</span>
+                    </label>
+                    <label class="radio-option">
+                      <input 
+                        type="radio" 
+                        value="replyErr" 
+                        v-model="queryableOptions.replyType.value"
+                        :disabled="!isConnected"
+                      >
+                      <span>ReplyErr</span>
+                    </label>
+                  </div>
+                </div>
+                
+                <!-- Reply Fields -->
+                <div v-if="queryableOptions.replyType.value === 'reply'" class="reply-fields">
+                  <div class="field-group">
+                    <label>Key Expression:</label>
+                    <input 
+                      type="text" 
+                      v-model="queryableOptions.replyKeyExpr.value"
+                      placeholder="Key expression for reply (e.g., demo/example/result)"
+                      :disabled="!isConnected"
+                    >
+                  </div>
+                  <div class="field-group">
+                    <label>Payload:</label>
+                    <textarea 
+                      v-model="queryableOptions.replyPayload.value"
+                      placeholder="Payload content for successful reply"
+                      :disabled="!isConnected"
+                      rows="2"
+                    ></textarea>
+                  </div>
+                  
+                  <!-- Reply Options -->
+                  <div class="reply-options-grid">
+                    <EncodingSelect
+                      v-model="queryableOptions.replyEncoding.value"
+                      v-model:custom-encoding="queryableOptions.replyCustomEncoding.value"
+                      :encoding-options="encodingOptions"
+                      :disabled="!isConnected"
+                    />
+                    <PrioritySelect 
+                      v-model="queryableOptions.replyPriority.value" 
+                      :disabled="!isConnected"
+                      :priority-options="priorityOptions"
+                    />
+                    <CongestionControlSelect
+                      v-model="queryableOptions.replyCongestionControl.value"
+                      :disabled="!isConnected"
+                      :congestion-control-options="congestionControlOptions"
+                    />
+                    <div class="option-group">
+                      <label>Express:</label>
+                      <select v-model="queryableOptions.replyExpress.value" :disabled="!isConnected">
+                        <option :value="undefined">(default)</option>
+                        <option :value="true">true</option>
+                        <option :value="false">false</option>
+                      </select>
+                    </div>
+                    <div class="option-group">
+                      <label>Attachment:</label>
+                      <input 
+                        type="text" 
+                        v-model="queryableOptions.replyAttachment.value"
+                        placeholder="Optional attachment data"
+                        :disabled="!isConnected"
+                      >
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- ReplyErr Fields -->
+                <div v-if="queryableOptions.replyType.value === 'replyErr'" class="reply-err-fields">
+                  <div class="field-group">
+                    <label>Error Payload:</label>
+                    <textarea 
+                      v-model="queryableOptions.replyErrPayload.value"
+                      placeholder="Error message or payload"
+                      :disabled="!isConnected"
+                      rows="2"
+                    ></textarea>
+                  </div>
+                  <EncodingSelect
+                    v-model="queryableOptions.replyErrEncoding.value"
+                    v-model:custom-encoding="queryableOptions.replyErrCustomEncoding.value"
+                    :encoding-options="encodingOptions"
+                    :disabled="!isConnected"
+                  />
+                </div>
+              </div>
             </div>
             
             <!-- Active Queryables List -->
@@ -434,78 +480,24 @@
             <!-- Get Options Panel -->
             <div v-if="getOptions.showOptions.value" class="options-panel">
               <div class="options-grid">
-                <div class="option-group">
-                  <label>Encoding:</label>
-                  <div class="encoding-control">
-                    <!-- Predefined Encoding Dropdown -->
-                    <select 
-                      v-if="!getOptions.customEncoding.value"
-                      v-model="getOptions.encoding.value" 
-                      :disabled="!isConnected"
-                      class="encoding-select"
-                      title="Select a predefined encoding"
-                    >
-                      <option value="">(default)</option>
-                      <option 
-                        v-for="option in encodingOptions" 
-                        :key="option.value" 
-                        :value="option.value"
-                      >
-                        {{ option.label }}
-                      </option>
-                    </select>
-                    
-                    <!-- Custom Encoding Input -->
-                    <input 
-                      v-else
-                      type="text" 
-                      v-model="getOptions.encoding.value" 
-                      :disabled="!isConnected"
-                      placeholder="e.g., application/json, text/plain"
-                      class="encoding-text-input"
-                      title="Enter a custom encoding string"
-                    >
-                    
-                    <!-- Custom Checkbox -->
-                    <label class="custom-checkbox-label">
-                      <input 
-                        type="checkbox" 
-                        v-model="getOptions.customEncoding.value" 
-                        :disabled="!isConnected"
-                        class="custom-encoding-checkbox"
-                      >
-                      Custom
-                    </label>
-                  </div>
-                </div>
+                <EncodingSelect 
+                  v-model="getOptions.encoding.value"
+                  v-model:custom-encoding="getOptions.customEncoding.value"
+                  :encoding-options="encodingOptions"
+                  :disabled="!isConnected"
+                />
                 
-                <div class="option-group">
-                  <label>Priority:</label>
-                  <select v-model="getOptions.priority.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in priorityOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <PrioritySelect 
+                  v-model="getOptions.priority.value" 
+                  :disabled="!isConnected"
+                  :priority-options="priorityOptions"
+                />
                 
-                <div class="option-group">
-                  <label>Congestion Control:</label>
-                  <select v-model="getOptions.congestionControl.value" :disabled="!isConnected">
-                    <option :value="undefined">(default)</option>
-                    <option 
-                      v-for="option in congestionControlOptions" 
-                      :key="option.value" 
-                      :value="option.value"
-                    >
-                      {{ option.label }}
-                    </option>
-                  </select>
-                </div>
+                <CongestionControlSelect
+                  v-model="getOptions.congestionControl.value"
+                  :disabled="!isConnected"
+                  :congestion-control-options="congestionControlOptions"
+                />
                 
                 <div class="option-group">
                   <label>Allowed Destination:</label>
@@ -803,17 +795,6 @@ watch(logEntries, () => {
   })
 }, { deep: true })
 
-// Clear encoding field when switching between custom and predefined modes
-watch(putOptions.customEncoding, (isCustom) => {
-  if (isCustom) {
-    // Switching to custom mode - clear the field for user input
-    putOptions.encoding.value = '';
-  } else {
-    // Switching to predefined mode - clear the field so user can select from dropdown
-    putOptions.encoding.value = '';
-  }
-}, { immediate: false })
-
 // =============================================================================
 // GET OPTIONS FUNCTIONS
 // =============================================================================
@@ -870,17 +851,6 @@ watch(() => getOptions.showOptions.value, (isShown) => {
 watch(() => getOptions.express.value, () => {
   nextTick(updateGetExpressCheckboxState);
 })
-
-// Clear GET encoding field when switching between custom and predefined modes
-watch(getOptions.customEncoding, (isCustom) => {
-  if (isCustom) {
-    // Switching to custom mode - clear the field for user input
-    getOptions.encoding.value = '';
-  } else {
-    // Switching to predefined mode - clear the field so user can select from dropdown
-    getOptions.encoding.value = '';
-  }
-}, { immediate: false })
 </script>
 
 <style scoped>
@@ -1586,19 +1556,6 @@ watch(getOptions.customEncoding, (isCustom) => {
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
-/* Remove old encoding container styles */
-.encoding-input-container {
-  display: none;
-}
-
-.encoding-dropdown {
-  display: none;
-}
-
-.encoding-help-text {
-  display: none;
-}
-
 .checkbox-label {
   display: flex !important;
   flex-direction: row !important;
@@ -1763,5 +1720,101 @@ watch(getOptions.customEncoding, (isCustom) => {
   font-style: italic;
 }
 
+/* Reply configuration styles */
+.reply-config-section {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #dee2e6;
+}
 
+.section-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0 0 12px 0;
+}
+
+.reply-type-selection {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.radio-group-label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 12px;
+  min-width: 120px;
+}
+
+.radio-group {
+  display: flex;
+  gap: 15px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.radio-option:hover {
+  background-color: #e9ecef;
+}
+
+.radio-option input[type="radio"] {
+  cursor: pointer;
+  margin: 0;
+  accent-color: #2196F3;
+}
+
+.radio-option span {
+  font-weight: 500;
+  color: #495057;
+}
+
+.reply-fields, .reply-err-fields {
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 12px;
+  border: 1px solid #e9ecef;
+}
+
+.field-group {
+  margin-bottom: 10px;
+}
+
+.field-group label {
+  display: block;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+}
+
+.field-group input,
+.field-group textarea {
+  width: 100%;
+  padding: 6px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  box-sizing: border-box;
+}
+
+.field-group textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+.reply-options-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
 </style>

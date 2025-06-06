@@ -65,6 +65,24 @@ export interface QueryableOptionsState {
   showOptions: Ref<boolean>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
+  
+  // Reply configuration
+  replyType: Ref<"reply" | "replyErr">;
+  
+  // Reply options
+  replyKeyExpr: Ref<string>;
+  replyPayload: Ref<string>;
+  replyEncoding: Ref<string>;
+  replyCustomEncoding: Ref<boolean>;
+  replyPriority: Ref<Priority | undefined>;
+  replyCongestionControl: Ref<CongestionControl | undefined>;
+  replyExpress: Ref<boolean | undefined>;
+  replyAttachment: Ref<string>;
+  
+  // ReplyErr options
+  replyErrPayload: Ref<string>;
+  replyErrEncoding: Ref<string>;
+  replyErrCustomEncoding: Ref<boolean>;
 }
 
 // Get options state
@@ -149,6 +167,24 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     showOptions: ref(false),
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),
+    
+    // Reply configuration
+    replyType: ref("reply" as "reply" | "replyErr"),
+    
+    // Reply options
+    replyKeyExpr: ref(""),
+    replyPayload: ref("Hello from queryable!"),
+    replyEncoding: ref(""),
+    replyCustomEncoding: ref(false),
+    replyPriority: ref(undefined as Priority | undefined),
+    replyCongestionControl: ref(undefined as CongestionControl | undefined),
+    replyExpress: ref(undefined as boolean | undefined),
+    replyAttachment: ref(""),
+    
+    // ReplyErr options
+    replyErrPayload: ref("Error processing query"),
+    replyErrEncoding: ref(""),
+    replyErrCustomEncoding: ref(false),
   };
   getKey = ref("demo/example/*");
   getOptions = {
