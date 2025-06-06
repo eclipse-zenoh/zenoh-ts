@@ -345,8 +345,8 @@
             <div class="log-message">
               <span>{{ entry.message }}</span>
               <div 
-                v-if="entry.jsonData"
-                v-html="formatJSONData(entry.type, entry.jsonData, entry.jsonTitle)"
+                v-if="entry.data"
+                v-html="formatData(entry.type, entry.data)"
               ></div>
             </div>
           </div>
@@ -564,20 +564,37 @@ function formatJSONWithColors(obj: any, indent: number = 0): string {
 }
 
 /**
- * Formats JSON data with syntax highlighting for display
+ * Formats data with support for different types and single key-value records
  */
-function formatJSONData(type: string, jsonData: object, jsonTitle?: string): string {
+function formatData(type: string, data: Record<string, any>): string {
   const typeColor = LOG_COLORS[type] || LOG_COLORS["info"];
   
-  if (jsonTitle) {
-    // Display title on the left side of the JSON block to save vertical space
-    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;">${jsonTitle} =</div>
-      <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>
-    </div>`;
+  // Get the single key-value pair from the record
+  const entries = Object.entries(data);
+  if (entries.length === 1) {
+    const [title, value] = entries[0]!;
+    
+    // Format based on value type
+    if (typeof value === 'string') {
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+        <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+        <div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>
+      </div>`;
+    } else if (typeof value === 'number') {
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+        <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+        <div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>
+      </div>`;
+    } else {
+      // For objects, arrays, etc., format as JSON
+      return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 8px 0 0 0;">
+        <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;">${title} =</div>
+        <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
+      </div>`;
+    }
   } else {
-    // No title, display JSON block normally
-    return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(jsonData)}</pre>`;
+    // Multiple entries - display as JSON
+    return `<pre style="margin: 8px 0 0 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(data)}</pre>`;
   }
 }
 </script>

@@ -90,24 +90,20 @@ class ZenohDemo extends ZenohDemoEmpty {
     ]);
   }
 
-  // Standard logging method - accepts required string message and optional JSON data
-  override addLogEntry(type: LogEntry["type"], message: string, jsonData?: object, jsonTitle?: string): void {
+  // Standard logging method - accepts required string message and optional data record
+  override addLogEntry(type: LogEntry["type"], message: string, data?: Record<string, any>): void {
     console.log(`[${type.toUpperCase()}] ${message}`);
     
-    if (jsonData) {
-      console.log(`[${type.toUpperCase()}] JSON Data:`, jsonData);
+    if (data) {
+      console.log(`[${type.toUpperCase()}] Data:`, data);
       
-      // Store the message and JSON data separately for Vue to format
+      // Store the message and data record separately for Vue to format
       const logEntry: LogEntry = { 
         type, 
         message, 
-        jsonData,
+        data,
         timestamp: new Date() 
       };
-      
-      if (jsonTitle) {
-        logEntry.jsonTitle = jsonTitle;
-      }
       
       this.logEntries.value.push(logEntry);
     } else {
@@ -129,15 +125,14 @@ class ZenohDemo extends ZenohDemoEmpty {
       
       console.error(`[ERROR] ${message}`, errorDetails);
       
-      // Store the message and error object separately for Vue to format
+      // Store the message and error object in data record
       const logEntry: LogEntry = { 
         type: "error", 
         message, 
-        jsonData: errorObject,
+        data: { "Error Details": errorObject },
         timestamp: new Date() 
       };
       
-      logEntry.jsonTitle = "Error Details";
       this.logEntries.value.push(logEntry);
     } else {
       // Simple string error logging
@@ -202,7 +197,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       const options = putOptionsStateTo(this.putOptions);
       await this.zenohSession.put(keyExpr, bytes, options);
       
-      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`, putOptionsToJSON(options), "PutOptions");
+      this.addLogEntry("success", `PUT successful: ${this.putKey.value} = "${this.putValue.value}"`, { "PutOptions": putOptionsToJSON(options) });
     } catch (error) {
       this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
     }
@@ -234,7 +229,7 @@ class ZenohDemo extends ZenohDemoEmpty {
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
-            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, sampleToJSON(sample), "Sample");
+            this.addLogEntry("data", `GET result from ${sample.keyexpr()}`, { "Sample": sampleToJSON(sample) });
             resultCount++;
           } else {
             // It's a ReplyError - log with error formatting
@@ -286,7 +281,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
-      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`, subscriberOptionsToJSON(subscriberOptions), "SubscriberOptions");
+      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`, { "SubscriberOptions": subscriberOptionsToJSON(subscriberOptions) });
 
       // Handle incoming data
       (async () => {
@@ -300,7 +295,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             try {
               // Use JSON formatting for sample display
-              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, sampleToJSON(sample), "Sample");
+              this.addLogEntry("data", `Subscriber ${displayId} received data from ${sample.keyexpr()}`, { "Sample": sampleToJSON(sample) });
             } catch (sampleError) {
               this.addErrorLogEntry("Error processing subscription sample", sampleError);
             }
