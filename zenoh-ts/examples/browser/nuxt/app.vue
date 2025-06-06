@@ -1204,19 +1204,23 @@ watch(getOptions.customEncoding, (isCustom) => {
 }
 
 .item-action-btn.details {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white;
+  background: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
 }
 
 .item-action-btn.details:hover {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: #e9ecef;
+  border-color: #adb5bd;
   transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 3px 8px rgba(233, 236, 239, 0.3);
 }
 
 .item-action-btn.details.active {
-  background: linear-gradient(135deg, #3730a3, #581c87);
-  box-shadow: 0 2px 6px rgba(99, 102, 241, 0.4);
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #dee2e6;
+  box-shadow: 0 2px 6px rgba(248, 249, 250, 0.4);
 }
 
 .item-action-btn:active {
