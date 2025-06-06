@@ -55,12 +55,12 @@
             <div class="operation-header">
               <h4>Declare Subscriber</h4>
               <button 
-                @click="subscriberOptions.showOptions.value = !subscriberOptions.showOptions.value" 
+                @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value" 
                 class="options-arrow-btn"
-                :class="{ active: subscriberOptions.showOptions.value }"
+                :class="{ active: subscriberParameters.showOptions.value }"
                 title="Toggle advanced options"
               >
-                {{ subscriberOptions.showOptions.value ? '▲' : '▼' }}
+                {{ subscriberParameters.showOptions.value ? '▲' : '▼' }}
               </button>
             </div>
             <div class="input-row">
@@ -76,11 +76,11 @@
             </div>
             
             <!-- Subscriber Options Panel -->
-            <div v-if="subscriberOptions.showOptions.value" class="options-panel">
+            <div v-if="subscriberParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
                 <div class="option-group">
                   <label>Allowed Origin:</label>
-                  <select v-model="subscriberOptions.allowedOrigin.value" :disabled="!isConnected">
+                  <select v-model="subscriberParameters.allowedOrigin.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in localityOptions" 
@@ -598,7 +598,7 @@ const {
   logEntries,
   activeSubscribers,
   activeQueryables,
-  subscriberOptions,
+  subscriberParameters,
   queryableParameters,
   getOptions,
   

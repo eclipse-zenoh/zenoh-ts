@@ -5,7 +5,7 @@ import {
   type SubscriberInfo,
   type QueryableInfo,
   type PutParametersState,
-  type SubscriberOptionsState,
+  type SubscriberParametersState,
   type QueryableParametersState,
   type GetOptionsState,
 } from "../useZenohDemo";
@@ -65,8 +65,8 @@ function putParametersStateToPutOptions(parameters: PutParametersState): PutOpti
   return opts;
 }
 
-function subscriberOptionsStateTo(
-  options: SubscriberOptionsState
+function subscriberParametersStateToSubscriberOptions(
+  options: SubscriberParametersState
 ): SubscriberOptions {
   let opts: SubscriberOptions = {};
   if (options.allowedOrigin.value !== undefined) {
@@ -351,8 +351,8 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const keyExpr = new KeyExpr(this.subscribeKey.value);
-      const subscriberOptions = subscriberOptionsStateTo(
-        this.subscriberOptions
+      const subscriberOptions = subscriberParametersStateToSubscriberOptions(
+        this.subscriberParameters
       );
       const subscriber = await this.zenohSession.declareSubscriber(
         keyExpr,

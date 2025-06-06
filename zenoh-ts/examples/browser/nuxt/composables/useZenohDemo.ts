@@ -58,7 +58,7 @@ export interface PutParametersState {
 }
 
 // Subscriber options state
-export interface SubscriberOptionsState {
+export interface SubscriberParametersState {
   showOptions: Ref<boolean>;
   allowedOrigin: Ref<Locality | undefined>;
 }
@@ -115,7 +115,7 @@ export interface ZenohDemoState {
   isConnected: Ref<boolean>;
   isConnecting: Ref<boolean>;
   putParameters: PutParametersState;
-  subscriberOptions: SubscriberOptionsState;
+  subscriberParameters: SubscriberParametersState;
   queryableParameters: QueryableParametersState;
   getKey: Ref<string>;
   getOptions: GetOptionsState;
@@ -161,7 +161,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     attachment: ref(""),
     attachmentEmpty: ref(true),
   };
-  subscriberOptions = {
+  subscriberParameters = {
     showOptions: ref(false),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
