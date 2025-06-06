@@ -282,7 +282,7 @@
                         v-model="queryableParameters.replyType.value"
                         :disabled="!isConnected"
                       >
-                      <span>ReplyErr</span>
+                      <span>Error</span>
                     </label>
                   </div>
                 </div>
@@ -301,7 +301,7 @@
                     <PayloadInput
                       v-model="queryableParameters.replyPayload.value"
                       v-model:isEmpty="queryableParameters.replyPayloadEmpty.value"
-                      label="Payload:"
+                      label="Payload"
                       placeholder="Payload content for successful reply"
                       :disabled="!isConnected"
                     />
@@ -347,7 +347,7 @@
                     <PayloadInput
                       v-model="queryableParameters.replyErrPayload.value"
                       v-model:isEmpty="queryableParameters.replyErrPayloadEmpty.value"
-                      label="Error Payload:"
+                      label="Error Payload"
                       placeholder="Error message or payload"
                       :disabled="!isConnected"
                     />
