@@ -25,7 +25,11 @@ import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
 } from "./utils";
-import { sampleToJSON, putOptionsToJSON, subscriberOptionsToJSON } from "./zenohUtils";
+import {
+  sampleToJSON,
+  putOptionsToJSON,
+  subscriberOptionsToJSON,
+} from "./zenohUtils";
 
 function putOptionsStateTo(options: PutOptionsState): PutOptions {
   let opts: PutOptions = {};
@@ -53,7 +57,9 @@ function putOptionsStateTo(options: PutOptionsState): PutOptions {
   return opts;
 }
 
-function subscriberOptionsStateTo(options: SubscriberOptionsState): SubscriberOptions {
+function subscriberOptionsStateTo(
+  options: SubscriberOptionsState
+): SubscriberOptions {
   let opts: SubscriberOptions = {};
   if (options.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = options.allowedOrigin.value;
@@ -91,20 +97,24 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   // Standard logging method - accepts required string message and optional data record
-  override addLogEntry(type: LogEntry["type"], message: string, data?: Record<string, any>): void {
+  override addLogEntry(
+    type: LogEntry["type"],
+    message: string,
+    data?: Record<string, any>
+  ): void {
     console.log(`[${type.toUpperCase()}] ${message}`);
-    
+
     if (data) {
       console.log(`[${type.toUpperCase()}] Data:`, data);
-      
+
       // Store the message and data record separately for Vue to format
-      const logEntry: LogEntry = { 
-        type, 
-        message, 
+      const logEntry: LogEntry = {
+        type,
+        message,
         data,
-        timestamp: new Date() 
+        timestamp: new Date(),
       };
-      
+
       this.logEntries.value.push(logEntry);
     } else {
       // Simple string logging
@@ -120,32 +130,30 @@ class ZenohDemo extends ZenohDemoEmpty {
         type: "ERROR",
         message: message,
         details: errorDetails,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
-      
+
       console.error(`[ERROR] ${message}`, errorDetails);
-      
+
       // Store the message and error object in data record
-      const logEntry: LogEntry = { 
-        type: "error", 
-        message, 
+      const logEntry: LogEntry = {
+        type: "error",
+        message,
         data: { "Error Details": errorObject },
-        timestamp: new Date() 
+        timestamp: new Date(),
       };
-      
+
       this.logEntries.value.push(logEntry);
     } else {
       // Simple string error logging
       console.error(`[ERROR] ${message}`);
-      this.logEntries.value.push({ 
-        type: "error", 
-        message, 
-        timestamp: new Date() 
+      this.logEntries.value.push({
+        type: "error",
+        message,
+        timestamp: new Date(),
       });
     }
   }
-
-
 
   override clearLog(): void {
     this.logEntries.value = [];
@@ -155,15 +163,24 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (this.isConnecting.value || this.isConnected.value) return;
 
     this.isConnecting.value = true;
-    this.addLogEntry("info", `Attempting to connect to ${this.serverUrl.value}...`);
+    this.addLogEntry(
+      "info",
+      `Attempting to connect to ${this.serverUrl.value}...`
+    );
 
     try {
       const config = new Config(this.serverUrl.value);
       this.zenohSession = await Session.open(config);
       this.isConnected.value = true;
-      this.addLogEntry("success", `Successfully connected to ${this.serverUrl.value}`);
+      this.addLogEntry(
+        "success",
+        `Successfully connected to ${this.serverUrl.value}`
+      );
     } catch (error) {
-      this.addErrorLogEntry(`Failed to connect to ${this.serverUrl.value}`, error);
+      this.addErrorLogEntry(
+        `Failed to connect to ${this.serverUrl.value}`,
+        error
+      );
       this.zenohSession = null;
     } finally {
       this.isConnecting.value = false;
@@ -196,11 +213,11 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Build put options
       const options = putOptionsStateTo(this.putOptions);
       await this.zenohSession.put(keyExpr, bytes, options);
-      
-      this.addLogEntry("success", "PUT successful", { 
-        "keyexpr": keyExpr.toString(),
-        "payload": bytes.toString(),
-        "PutOptions": putOptionsToJSON(options) 
+
+      this.addLogEntry("success", "PUT successful", {
+        keyexpr: keyExpr.toString(),
+        payload: bytes.toString(),
+        PutOptions: putOptionsToJSON(options),
       });
     } catch (error) {
       this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
@@ -233,8 +250,8 @@ class ZenohDemo extends ZenohDemoEmpty {
           if ("keyexpr" in result && typeof result.keyexpr === "function") {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
-            this.addLogEntry("data", "GET result ", { 
-              "Sample": sampleToJSON(sample) 
+            this.addLogEntry("data", "GET result ", {
+              Sample: sampleToJSON(sample),
             });
             resultCount++;
           } else {
@@ -242,7 +259,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             const replyError = result as ReplyError;
             this.addErrorLogEntry(`GET query error for ${selector}`, {
               error: replyError.payload().toString(),
-              encoding: replyError.encoding().toString()
+              encoding: replyError.encoding().toString(),
             });
           }
         } catch (resultError) {
@@ -250,9 +267,15 @@ class ZenohDemo extends ZenohDemoEmpty {
         }
       }
 
-      this.addLogEntry("success", `GET query completed for ${selector}. Found ${resultCount} results.`);
+      this.addLogEntry(
+        "success",
+        `GET query completed for ${selector}. Found ${resultCount} results.`
+      );
     } catch (error) {
-      this.addErrorLogEntry(`GET failed for selector "${this.getKey.value}"`, error);
+      this.addErrorLogEntry(
+        `GET failed for selector "${this.getKey.value}"`,
+        error
+      );
     }
   }
 
@@ -273,8 +296,13 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const keyExpr = new KeyExpr(this.subscribeKey.value);
-      const subscriberOptions = subscriberOptionsStateTo(this.subscriberOptions);
-      const subscriber = await this.zenohSession.declareSubscriber(keyExpr, subscriberOptions);
+      const subscriberOptions = subscriberOptionsStateTo(
+        this.subscriberOptions
+      );
+      const subscriber = await this.zenohSession.declareSubscriber(
+        keyExpr,
+        subscriberOptions
+      );
 
       // Generate sequential display ID for this subscriber
       const displayId = `sub${this.subscriberIdCounter++}`;
@@ -287,7 +315,14 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
-      this.addLogEntry("success", `Subscribed to "${this.subscribeKey.value}" (${displayId})`, { "SubscriberOptions": subscriberOptionsToJSON(subscriberOptions) });
+      this.addLogEntry(
+        "success",
+        `Subscriber ${displayId} declared`,
+        {
+          keyexpr: keyExpr.toString(),
+          SubscriberOptions: subscriberOptionsToJSON(subscriberOptions),
+        }
+      );
 
       // Handle incoming data
       (async () => {
@@ -301,23 +336,36 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             try {
               // Use JSON formatting for sample display with multiple parameters
-              this.addLogEntry("data", `Subscriber ${displayId} received data`, { 
-                "Sample": sampleToJSON(sample) 
-              });
+              this.addLogEntry(
+                "data",
+                `Subscriber ${displayId} received data`,
+                {
+                  Sample: sampleToJSON(sample),
+                }
+              );
             } catch (sampleError) {
-              this.addErrorLogEntry("Error processing subscription sample", sampleError);
+              this.addErrorLogEntry(
+                "Error processing subscription sample",
+                sampleError
+              );
             }
           }
           // Normal end of subscription - no error logging needed
         } catch (subscriptionError) {
           // Only log actual errors, not normal disconnections
           if (subscriptionError) {
-            this.addErrorLogEntry(`Subscription error for ${displayId}`, subscriptionError);
+            this.addErrorLogEntry(
+              `Subscription error for ${displayId}`,
+              subscriptionError
+            );
           }
         }
       })();
     } catch (error) {
-      this.addErrorLogEntry(`Subscribe failed for "${this.subscribeKey.value}"`, error);
+      this.addErrorLogEntry(
+        `Subscribe failed for "${this.subscribeKey.value}"`,
+        error
+      );
     }
   }
 
@@ -339,7 +387,10 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       await subscriberInfo.subscriber.undeclare();
       this.activeSubscribers.value.splice(subscriberIndex, 1);
-      this.addLogEntry("success", `Unsubscribed from "${subscriberInfo.keyExpr}" (${subscriberId})`);
+      this.addLogEntry(
+        "success",
+        `Unsubscribed from "${subscriberInfo.keyExpr}" (${subscriberId})`
+      );
     } catch (error) {
       this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
     }
