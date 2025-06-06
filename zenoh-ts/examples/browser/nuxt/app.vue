@@ -608,7 +608,7 @@ function formatData(type: string, data: Record<string, any>): string {
   } else {
     // Multiple parameters - format each individually
     const formattedEntries = entries.map(([title, value]) => formatSingleParameter(title, value)).join('');
-    return `<div style="margin: 8px 0 0 0; padding: 8px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid ${typeColor};">
+    return `<div style="margin: 8px 0 0 0;">
       ${formattedEntries}
     </div>`;
   }
