@@ -140,76 +140,76 @@
             <div class="operation-header">
               <h4>Put</h4>
               <button 
-                @click="putOptions.showOptions.value = !putOptions.showOptions.value" 
+                @click="putParameters.showOptions.value = !putParameters.showOptions.value" 
                 class="options-arrow-btn"
-                :class="{ active: putOptions.showOptions.value }"
+                :class="{ active: putParameters.showOptions.value }"
                 title="Toggle advanced options"
               >
-                {{ putOptions.showOptions.value ? '▲' : '▼' }}
+                {{ putParameters.showOptions.value ? '▲' : '▼' }}
               </button>
             </div>
             <div class="input-row">
               <input 
                 type="text" 
-                v-model="putKey" 
+                v-model="putParameters.key.value" 
                 placeholder="Key expression (e.g., demo/example/test)"
                 :disabled="!isConnected"
               >
-              <button @click="performPut" :disabled="!isConnected || !putKey || putPayloadEmpty">
+              <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value">
                 Put
               </button>
             </div>
             
             <!-- Put Options Panel -->
-            <div v-if="putOptions.showOptions.value" class="options-panel">
+            <div v-if="putParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
                 <PayloadInput
-                  v-model="putValue"
-                  v-model:is-empty="putPayloadEmpty"
+                  v-model="putParameters.value.value"
+                  v-model:is-empty="putParameters.valueEmpty.value"
                   label="Payload"
                   placeholder="Value to put"
                   :disabled="!isConnected"
                 />
                 
                 <EncodingSelect 
-                  v-model="putOptions.encoding.value"
-                  v-model:custom-encoding="putOptions.customEncoding.value"
+                  v-model="putParameters.encoding.value"
+                  v-model:custom-encoding="putParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
                   :disabled="!isConnected"
                 />
                 
                 <PrioritySelect 
-                  v-model="putOptions.priority.value" 
+                  v-model="putParameters.priority.value" 
                   :disabled="!isConnected"
                   :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
-                  v-model="putOptions.congestionControl.value"
+                  v-model="putParameters.congestionControl.value"
                   :disabled="!isConnected"
                   :options="congestionControlOptions"
                 />
                 
                 <ReliabilitySelect
-                  v-model="putOptions.reliability.value"
+                  v-model="putParameters.reliability.value"
                   :disabled="!isConnected"
                   :options="reliabilityOptions"
                 />
                 
                 <AllowedDestinationSelect
-                  v-model="putOptions.allowedDestination.value"
+                  v-model="putParameters.allowedDestination.value"
                   :disabled="!isConnected"
                   :options="localityOptions"
                 />
                 
                 <ExpressSelect
-                  v-model="putOptions.express.value"
+                  v-model="putParameters.express.value"
                   :disabled="!isConnected"
                 />
                 
                 <PayloadInput
-                  v-model="putOptions.attachment.value"
-                  v-model:is-empty="putOptions.attachmentEmpty.value"
+                  v-model="putParameters.attachment.value"
+                  v-model:is-empty="putParameters.attachmentEmpty.value"
                   label="Attachment"
                   placeholder="Optional attachment data"
                   :disabled="!isConnected"
@@ -592,16 +592,13 @@ const {
   serverUrl,
   isConnected,
   isConnecting,
-  putKey,
-  putValue,
-  putPayloadEmpty,
+  putParameters,
   getKey,
   subscribeKey,
   queryableKey,
   logEntries,
   activeSubscribers,
   activeQueryables,
-  putOptions,
   subscriberOptions,
   queryableOptions,
   getOptions,

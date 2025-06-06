@@ -40,8 +40,11 @@ export interface QueryableInfo {
   options: QueryableOptionsJSON
 }
 
-// Put options state
-export interface PutOptionsState {
+// Put parameters state - includes all put-related data
+export interface PutParametersState {
+  key: Ref<string>;
+  value: Ref<string>;
+  valueEmpty: Ref<boolean>;
   showOptions: Ref<boolean>;
   encoding: Ref<string>;
   customEncoding: Ref<boolean>;
@@ -110,10 +113,7 @@ export interface ZenohDemoState {
   serverUrl: Ref<string>;
   isConnected: Ref<boolean>;
   isConnecting: Ref<boolean>;
-  putKey: Ref<string>;
-  putValue: Ref<string>;
-  putPayloadEmpty: Ref<boolean>;
-  putOptions: PutOptionsState;
+  putParameters: PutParametersState;
   subscriberOptions: SubscriberOptionsState;
   queryableKey: Ref<string>;
   queryableOptions: QueryableOptionsState;
@@ -146,10 +146,10 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   serverUrl = ref("ws://localhost:10000");
   isConnected = ref(false);
   isConnecting = ref(false);
-  putKey = ref("demo/example/test");
-  putValue = ref("Hello Zenoh!");
-  putPayloadEmpty = ref(false);
-  putOptions = {
+  putParameters = {
+    key: ref("demo/example/test"),
+    value: ref("Hello Zenoh!"),
+    valueEmpty: ref(false),
     showOptions: ref(false),
     encoding: ref(""),
     customEncoding: ref(false),

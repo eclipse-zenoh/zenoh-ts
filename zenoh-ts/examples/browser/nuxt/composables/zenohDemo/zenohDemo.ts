@@ -4,7 +4,7 @@ import {
   type LogEntry,
   type SubscriberInfo,
   type QueryableInfo,
-  type PutOptionsState,
+  type PutParametersState,
   type SubscriberOptionsState,
   type QueryableOptionsState,
   type GetOptionsState,
@@ -39,28 +39,28 @@ import {
   getOptionsToJSON,
 } from "./zenohUtils";
 
-function putOptionsStateTo(options: PutOptionsState): PutOptions {
+function putParametersStateToPutOptions(parameters: PutParametersState): PutOptions {
   let opts: PutOptions = {};
-  if (options.encoding.value) {
-    opts.encoding = Encoding.fromString(options.encoding.value);
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
   }
-  if (options.priority.value !== undefined) {
-    opts.priority = options.priority.value;
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
   }
-  if (options.congestionControl.value !== undefined) {
-    opts.congestionControl = options.congestionControl.value;
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
   }
-  if (options.express.value !== undefined) {
-    opts.express = options.express.value;
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
   }
-  if (options.reliability.value !== undefined) {
-    opts.reliability = options.reliability.value;
+  if (parameters.reliability.value !== undefined) {
+    opts.reliability = parameters.reliability.value;
   }
-  if (options.allowedDestination.value !== undefined) {
-    opts.allowedDestination = options.allowedDestination.value;
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
   }
-  if (!options.attachmentEmpty.value) {
-    opts.attachment = new ZBytes(options.attachment.value);
+  if (!parameters.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(parameters.attachment.value);
   }
   return opts;
 }
@@ -263,15 +263,15 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performPut(): Promise<void> {
-    if (!this.zenohSession || !this.putKey.value || this.putPayloadEmpty.value)
+    if (!this.zenohSession || !this.putParameters.key.value || this.putParameters.valueEmpty.value)
       return;
 
     try {
-      const keyExpr = new KeyExpr(this.putKey.value);
-      const bytes = new ZBytes(this.putValue.value);
+      const keyExpr = new KeyExpr(this.putParameters.key.value);
+      const bytes = new ZBytes(this.putParameters.value.value);
 
       // Build put options
-      const options = putOptionsStateTo(this.putOptions);
+      const options = putParametersStateToPutOptions(this.putParameters);
       await this.zenohSession.put(keyExpr, bytes, options);
 
       this.addLogEntry("success", "PUT successful", {
@@ -280,7 +280,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         PutOptions: putOptionsToJSON(options),
       });
     } catch (error) {
-      this.addErrorLogEntry(`PUT failed for key "${this.putKey.value}"`, error);
+      this.addErrorLogEntry(`PUT failed for key "${this.putParameters.key.value}"`, error);
     }
   }
 
