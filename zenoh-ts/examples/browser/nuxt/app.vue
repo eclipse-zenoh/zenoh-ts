@@ -820,14 +820,6 @@ watch(logEntries, () => {
   letter-spacing: 0.5px;
 }
 
-.placeholder-note {
-  font-size: 13px;
-  color: #6c757d;
-  font-style: italic;
-  margin: 8px 0 0 0;
-  text-align: center;
-}
-
 .operation-group h4 {
   margin-top: 0;
   margin-bottom: 10px;
@@ -1209,68 +1201,7 @@ watch(logEntries, () => {
   border-color: #007bff;
 }
 
-.options-panel {
-  margin-top: 6px;
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
 /* App-specific styles that extend the shared components */
-
-/* Test section styles - app-specific */
-.test-section {
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 16px;
-  background-color: #f8f9fa;
-  margin-top: 16px;
-}
-
-.test-section h4 {
-  color: #6c757d;
-  margin-bottom: 12px;
-  font-size: 0.9em;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.test-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.test-btn {
-  background: linear-gradient(135deg, #6f42c1, #8b5cf6);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.test-btn:hover {
-  background: linear-gradient(135deg, #5a2d91, #7c3aed);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
-}
-
-.test-btn:active {
-  transform: translateY(0);
-}
-
-.test-description {
-  font-size: 12px;
-  color: #6c757d;
-  margin: 0;
-  font-style: italic;
-}
 
 /* Reply configuration styles */
 .reply-config-section {
