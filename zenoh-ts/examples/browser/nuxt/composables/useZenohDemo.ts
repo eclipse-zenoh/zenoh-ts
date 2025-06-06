@@ -63,8 +63,9 @@ export interface SubscriberOptionsState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
-// Queryable options state
-export interface QueryableOptionsState {
+// Queryable parameters state - includes all queryable-related data
+export interface QueryableParametersState {
+  key: Ref<string>;
   showOptions: Ref<boolean>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
@@ -115,8 +116,7 @@ export interface ZenohDemoState {
   isConnecting: Ref<boolean>;
   putParameters: PutParametersState;
   subscriberOptions: SubscriberOptionsState;
-  queryableKey: Ref<string>;
-  queryableOptions: QueryableOptionsState;
+  queryableParameters: QueryableParametersState;
   getKey: Ref<string>;
   getOptions: GetOptionsState;
   subscribeKey: Ref<string>;
@@ -165,8 +165,8 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     showOptions: ref(false),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
-  queryableKey = ref("demo/example/queryable");
-  queryableOptions = {
+  queryableParameters = {
+    key: ref("demo/example/queryable"),
     showOptions: ref(false),
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),

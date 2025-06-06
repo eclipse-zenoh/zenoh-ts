@@ -6,7 +6,7 @@ import {
   type QueryableInfo,
   type PutParametersState,
   type SubscriberOptionsState,
-  type QueryableOptionsState,
+  type QueryableParametersState,
   type GetOptionsState,
 } from "../useZenohDemo";
 import {
@@ -75,15 +75,15 @@ function subscriberOptionsStateTo(
   return opts;
 }
 
-function queryableOptionsStateTo(
-  options: QueryableOptionsState
+function queryableParametersStateToQueryableOptions(
+  parameters: QueryableParametersState
 ): QueryableOptions {
   let opts: QueryableOptions = {};
-  if (options.complete.value !== undefined) {
-    opts.complete = options.complete.value;
+  if (parameters.complete.value !== undefined) {
+    opts.complete = parameters.complete.value;
   }
-  if (options.allowedOrigin.value !== undefined) {
-    opts.allowedOrigin = options.allowedOrigin.value;
+  if (parameters.allowedOrigin.value !== undefined) {
+    opts.allowedOrigin = parameters.allowedOrigin.value;
   }
   return opts;
 }
@@ -453,14 +453,14 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async declareQueryable(): Promise<void> {
-    if (!this.zenohSession || !this.queryableKey.value) return;
+    if (!this.zenohSession || !this.queryableParameters.key.value) return;
 
     try {
       // Generate sequential display ID for this queryable
       const displayId = `qry${this.queryableIdCounter++}`;
 
-      const keyExpr = new KeyExpr(this.queryableKey.value);
-      const queryableOptions = queryableOptionsStateTo(this.queryableOptions);
+      const keyExpr = new KeyExpr(this.queryableParameters.key.value);
+      const queryableOptions = queryableParametersStateToQueryableOptions(this.queryableParameters);
 
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
@@ -496,7 +496,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       const queryableInfo: QueryableInfo = {
         displayId: displayId,
-        keyExpr: this.queryableKey.value,
+        keyExpr: this.queryableParameters.key.value,
         queryable,
         createdAt: new Date(),
         options: queryableOptionsToJSON(queryableOptions),
@@ -513,7 +513,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       );
     } catch (error) {
       this.addErrorLogEntry(
-        `Declare queryable failed for "${this.queryableKey.value}"`,
+        `Declare queryable failed for "${this.queryableParameters.key.value}"`,
         error
       );
     }

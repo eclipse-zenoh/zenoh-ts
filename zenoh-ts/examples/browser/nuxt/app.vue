@@ -228,32 +228,32 @@
             <div class="operation-header">
               <h4>Declare Queryable</h4>
               <button 
-                @click="queryableOptions.showOptions.value = !queryableOptions.showOptions.value" 
+                @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value" 
                 class="options-arrow-btn"
-                :class="{ active: queryableOptions.showOptions.value }"
+                :class="{ active: queryableParameters.showOptions.value }"
                 title="Toggle advanced options"
               >
-                {{ queryableOptions.showOptions.value ? '▲' : '▼' }}
+                {{ queryableParameters.showOptions.value ? '▲' : '▼' }}
               </button>
             </div>
             <div class="input-row">
               <input 
                 type="text" 
-                v-model="queryableKey" 
+                v-model="queryableParameters.key.value" 
                 placeholder="Key expression (e.g., demo/example/computation/**)"
                 :disabled="!isConnected"
               >
-              <button @click="declareQueryable" :disabled="!isConnected || !queryableKey">
+              <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value">
                 Declare Queryable
               </button>
             </div>
             
             <!-- Queryable Options Panel -->
-            <div v-if="queryableOptions.showOptions.value" class="options-panel">
+            <div v-if="queryableParameters.showOptions.value" class="options-panel">
               <div class="options-grid">
                 <div class="option-group">
                   <label>Complete:</label>
-                  <select v-model="queryableOptions.complete.value" :disabled="!isConnected">
+                  <select v-model="queryableParameters.complete.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option :value="true">true</option>
                     <option :value="false">false</option>
@@ -262,7 +262,7 @@
                 
                 <div class="option-group">
                   <label>Allowed Origin:</label>
-                  <select v-model="queryableOptions.allowedOrigin.value" :disabled="!isConnected">
+                  <select v-model="queryableParameters.allowedOrigin.value" :disabled="!isConnected">
                     <option :value="undefined">(default)</option>
                     <option 
                       v-for="option in localityOptions" 
@@ -287,7 +287,7 @@
                       <input 
                         type="radio" 
                         value="reply" 
-                        v-model="queryableOptions.replyType.value"
+                        v-model="queryableParameters.replyType.value"
                         :disabled="!isConnected"
                       >
                       <span>Reply</span>
@@ -296,7 +296,7 @@
                       <input 
                         type="radio" 
                         value="replyErr" 
-                        v-model="queryableOptions.replyType.value"
+                        v-model="queryableParameters.replyType.value"
                         :disabled="!isConnected"
                       >
                       <span>ReplyErr</span>
@@ -305,12 +305,12 @@
                 </div>
                 
                 <!-- Reply Fields -->
-                <div v-if="queryableOptions.replyType.value === 'reply'" class="reply-fields">
+                <div v-if="queryableParameters.replyType.value === 'reply'" class="reply-fields">
                   <div class="field-group">
                     <label>Key Expression:</label>
                     <input 
                       type="text" 
-                      v-model="queryableOptions.replyKeyExpr.value"
+                      v-model="queryableParameters.replyKeyExpr.value"
                       placeholder="Key expression for reply (e.g., demo/example/result)"
                       :disabled="!isConnected"
                     >
@@ -318,7 +318,7 @@
                   <div class="field-group">
                     <label>Payload:</label>
                     <textarea 
-                      v-model="queryableOptions.replyPayload.value"
+                      v-model="queryableParameters.replyPayload.value"
                       placeholder="Payload content for successful reply"
                       :disabled="!isConnected"
                       rows="2"
@@ -328,30 +328,30 @@
                   <!-- Reply Options -->
                   <div class="reply-options-grid">
                     <EncodingSelect
-                      v-model="queryableOptions.replyEncoding.value"
-                      v-model:custom-encoding="queryableOptions.replyCustomEncoding.value"
+                      v-model="queryableParameters.replyEncoding.value"
+                      v-model:custom-encoding="queryableParameters.replyCustomEncoding.value"
                       :encoding-options="encodingOptions"
                       :disabled="!isConnected"
                     />
                     <PrioritySelect 
-                      v-model="queryableOptions.replyPriority.value" 
+                      v-model="queryableParameters.replyPriority.value" 
                       :disabled="!isConnected"
                       :options="priorityOptions"
                     />
                     <CongestionControlSelect
-                      v-model="queryableOptions.replyCongestionControl.value"
+                      v-model="queryableParameters.replyCongestionControl.value"
                       :disabled="!isConnected"
                       :options="congestionControlOptions"
                     />
                     
                     <ExpressSelect
-                      v-model="queryableOptions.replyExpress.value"
+                      v-model="queryableParameters.replyExpress.value"
                       :disabled="!isConnected"
                     />
                     
                     <PayloadInput
-                      v-model="queryableOptions.replyAttachment.value"
-                      v-model:is-empty="queryableOptions.replyAttachmentEmpty.value"
+                      v-model="queryableParameters.replyAttachment.value"
+                      v-model:is-empty="queryableParameters.replyAttachmentEmpty.value"
                       label="Attachment"
                       placeholder="Optional attachment data"
                       :disabled="!isConnected"
@@ -360,19 +360,19 @@
                 </div>
                 
                 <!-- ReplyErr Fields -->
-                <div v-if="queryableOptions.replyType.value === 'replyErr'" class="reply-err-fields">
+                <div v-if="queryableParameters.replyType.value === 'replyErr'" class="reply-err-fields">
                   <div class="field-group">
                     <label>Error Payload:</label>
                     <textarea 
-                      v-model="queryableOptions.replyErrPayload.value"
+                      v-model="queryableParameters.replyErrPayload.value"
                       placeholder="Error message or payload"
                       :disabled="!isConnected"
                       rows="2"
                     ></textarea>
                   </div>
                   <EncodingSelect
-                    v-model="queryableOptions.replyErrEncoding.value"
-                    v-model:custom-encoding="queryableOptions.replyErrCustomEncoding.value"
+                    v-model="queryableParameters.replyErrEncoding.value"
+                    v-model:custom-encoding="queryableParameters.replyErrCustomEncoding.value"
                     :encoding-options="encodingOptions"
                     :disabled="!isConnected"
                   />
@@ -595,12 +595,11 @@ const {
   putParameters,
   getKey,
   subscribeKey,
-  queryableKey,
   logEntries,
   activeSubscribers,
   activeQueryables,
   subscriberOptions,
-  queryableOptions,
+  queryableParameters,
   getOptions,
   
   // Option arrays (now part of the state)
