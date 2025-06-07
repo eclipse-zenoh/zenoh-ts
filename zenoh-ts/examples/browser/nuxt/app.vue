@@ -1338,4 +1338,11 @@ watch(logEntries, () => {
   border: 1px solid #dee2e6;
   margin-bottom: 0;
 }
+
+/* Remove extra spacing from reply parameter sections */
+.reply-parameters,
+.reply-err-parameters {
+  margin: 0;
+  padding: 0;
+}
 </style>

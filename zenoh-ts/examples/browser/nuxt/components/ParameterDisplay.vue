@@ -140,11 +140,11 @@ function formatData(type: string, data: Record<string, any>): string {
   } else if (entries.length === 1) {
     // Single parameter - maintain backward compatibility
     const [title, value] = entries[0]!;
-    return `<div style="margin: 8px 0 0 0;">${formatSingleParameter(title, value, typeColor)}</div>`;
+    return `<div style="margin: 0;">${formatSingleParameter(title, value, typeColor)}</div>`;
   } else {
     // Multiple parameters - format each individually
     const formattedEntries = entries.map(([title, value]) => formatSingleParameter(title, value, typeColor)).join('');
-    return `<div style="margin: 8px 0 0 0;">
+    return `<div style="margin: 0;">
       ${formattedEntries}
     </div>`;
   }
