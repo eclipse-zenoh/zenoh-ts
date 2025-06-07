@@ -708,6 +708,16 @@ watch(logEntries, () => {
   width: 100%;
 }
 
+.input-row .compact-input {
+  flex: 1;
+  min-height: var(--compact-input-height);
+}
+
+.input-row .compact-button {
+  min-height: var(--compact-input-height);
+  flex-shrink: 0;
+}
+
 .input-row .option-group {
   flex: 1;
   margin-bottom: 0;
@@ -873,6 +883,16 @@ watch(logEntries, () => {
   flex-shrink: 0;
 }
 
+.item-actions .compact-button,
+.item-actions .collapse-btn {
+  min-height: var(--compact-input-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--compact-padding);
+  font-size: var(--compact-label-font-size);
+}
+
 .item-key {
   font-family: 'Courier New', monospace;
   font-size: 13px;
@@ -957,6 +977,13 @@ watch(logEntries, () => {
   align-items: center;
   padding: 15px;
   border-bottom: 1px solid #ddd;
+}
+
+.log-header .compact-button {
+  min-height: var(--compact-input-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .log-header h3 {
@@ -1122,28 +1149,34 @@ watch(logEntries, () => {
   gap: var(--compact-gap);
 }
 
-/* Container-specific sizing for CollapseButton components */
+.header-actions .compact-button,
 .header-actions .collapse-btn {
-  width: 28px;
-  height: 28px;
-  padding: var(--compact-gap) var(--compact-gap);
-}
-
-.item-actions .collapse-btn {
-  /* Override all base styles to match item-action-btn exactly */
-  height: auto !important;
-  padding: var(--compact-padding) !important;
-  font-size: var(--compact-label-font-size) !important;
-  font-weight: 500;
-  min-width: auto;
-  width: auto !important;
-  min-height: auto !important;
-  border-radius: var(--compact-border-radius);
-  flex-shrink: 0;
-  line-height: normal;
+  min-height: var(--compact-input-height);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Container-specific sizing for CollapseButton components */
+.header-actions .collapse-btn {
+  width: auto;
+  height: auto;
+  padding: var(--compact-padding);
+  font-size: var(--compact-font-size);
+}
+
+.item-actions .collapse-btn {
+  /* Ensure consistent sizing with other item action buttons */
+  height: auto;
+  padding: var(--compact-padding);
+  font-size: var(--compact-label-font-size);
+  font-weight: 500;
+  min-width: auto;
+  width: auto;
+  min-height: var(--compact-input-height);
+  border-radius: var(--compact-border-radius);
+  flex-shrink: 0;
+  line-height: normal;
 }
 
 .item-actions .collapse-btn .collapse-btn-label {

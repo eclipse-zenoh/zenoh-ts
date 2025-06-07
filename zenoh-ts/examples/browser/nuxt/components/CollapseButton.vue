@@ -61,40 +61,39 @@ const buttonClasses = computed(() => {
 .collapse-btn {
   background: white;
   border: 1px solid #dee2e6;
-  border-radius: 4px;
+  border-radius: var(--compact-border-radius);
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  font-size: 12px;
-  line-height: 1;
+  font-size: var(--compact-font-size);
+  line-height: 1.4;
   
   /* Default sizing - will be overridden by container */
-  padding: 4px 6px;
-  min-width: 20px;
+  padding: var(--compact-padding);
+  min-width: auto;
+  min-height: var(--compact-input-height);
   height: auto;
-  
-  /* Adapt to container size */
-  width: 100%;
-  height: 100%;
-  min-height: 20px;
+  width: auto;
 }
 
 .collapse-btn-label {
   font-weight: 500;
   white-space: nowrap;
+  font-size: var(--compact-font-size);
 }
 
 .collapse-btn-triangle {
   flex-shrink: 0;
+  font-size: 10px;
 }
 
 .collapse-btn-text {
   flex-shrink: 0;
-  font-size: 11px;
+  font-size: var(--compact-font-size);
   font-weight: 500;
 }
 
