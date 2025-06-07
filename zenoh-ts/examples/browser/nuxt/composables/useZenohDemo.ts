@@ -45,7 +45,6 @@ export interface PutParametersState {
   key: Ref<string>;
   value: Ref<string>;
   valueEmpty: Ref<boolean>;
-  showOptions: Ref<boolean>;
   encoding: Ref<string>;
   customEncoding: Ref<boolean>;
   priority: Ref<Priority | undefined>;
@@ -60,14 +59,12 @@ export interface PutParametersState {
 // Subscriber parameters state - includes all subscriber-related data
 export interface SubscriberParametersState {
   key: Ref<string>;
-  showOptions: Ref<boolean>;
   allowedOrigin: Ref<Locality | undefined>;
 }
 
 // Queryable parameters state - includes all queryable-related data
 export interface QueryableParametersState {
   key: Ref<string>;
-  showOptions: Ref<boolean>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
   
@@ -96,7 +93,6 @@ export interface QueryableParametersState {
 // Get parameters state - includes all get-related data
 export interface GetParametersState {
   key: Ref<string>;
-  showOptions: Ref<boolean>;
   congestionControl: Ref<CongestionControl | undefined>;
   priority: Ref<Priority | undefined>;
   express: Ref<boolean | undefined>;
@@ -152,7 +148,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     key: ref("demo/example/test"),
     value: ref("Hello Zenoh!"),
     valueEmpty: ref(false),
-    showOptions: ref(false),
     encoding: ref(""),
     customEncoding: ref(false),
     priority: ref(undefined as Priority | undefined),
@@ -165,12 +160,10 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   subscriberParameters = {
     key: ref("demo/example/**"),
-    showOptions: ref(false),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
   queryableParameters = {
     key: ref("demo/example/queryable"),
-    showOptions: ref(false),
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),
     
@@ -197,7 +190,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   getParameters = {
     key: ref("demo/example/*"),
-    showOptions: ref(false),
     congestionControl: ref(undefined as CongestionControl | undefined),
     priority: ref(undefined as Priority | undefined),
     express: ref(undefined as boolean | undefined),

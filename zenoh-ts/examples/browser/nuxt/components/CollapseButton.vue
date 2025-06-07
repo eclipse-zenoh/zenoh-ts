@@ -1,8 +1,7 @@
 <template>
   <button 
     :class="buttonClasses"
-    :disabled="isDisabled"
-    @click="$emit('click')"
+    @click="handleClick"
   >
     {{ expanded ? '▲' : '▼' }}
   </button>
@@ -12,21 +11,25 @@
 import { computed } from 'vue'
 
 interface Props {
-  /** Whether the content is expanded (true = ▲, false = ▼) */
-  expanded: boolean
-  /** Whether the button is disabled */
-  disabled?: boolean
+  /** Current expanded state */
+  expanded?: boolean
 }
 
 interface Emits {
-  (e: 'click'): void
+  (e: 'update:expanded', value: boolean): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  disabled: false
+  expanded: false
 })
 
-defineEmits<Emits>()
+const emit = defineEmits<Emits>()
+
+// Handle button click
+function handleClick() {
+  const newValue = !props.expanded
+  emit('update:expanded', newValue)
+}
 
 // Compute CSS classes based on state
 const buttonClasses = computed(() => {
@@ -35,9 +38,6 @@ const buttonClasses = computed(() => {
   
   return [base, active].filter(Boolean).join(' ')
 })
-
-// Compute disabled state - only disabled if explicitly true
-const isDisabled = computed(() => props.disabled === true)
 </script>
 
 <style scoped>
@@ -66,7 +66,7 @@ const isDisabled = computed(() => props.disabled === true)
   min-height: 20px;
 }
 
-.collapse-btn:hover:not(:disabled) {
+.collapse-btn:hover {
   background: #e9ecef;
   border-color: #adb5bd;
   transform: translateY(-1px);
@@ -77,15 +77,6 @@ const isDisabled = computed(() => props.disabled === true)
   background: #f8f9fa;
   color: #495057;
   border-color: #dee2e6;
-}
-
-.collapse-btn:disabled {
-  background: #f8f9fa;
-  color: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.6;
-  transform: none;
-  box-shadow: none;
 }
 
 .collapse-btn:active {

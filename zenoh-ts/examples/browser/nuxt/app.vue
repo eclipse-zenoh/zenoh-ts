@@ -59,15 +59,13 @@
                   Declare Subscriber
                 </button>
                 <CollapseButton
-                  :expanded="subscriberParameters.showOptions.value"
-                  @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value"
-                  :disabled="false"
+                  v-model:expanded="subscriberOptionsExpanded"
                 />
               </div>
             </div>
             
             <!-- Subscriber Options Panel -->
-            <div v-if="subscriberParameters.showOptions.value" class="options-panel">
+            <div v-if="subscriberOptionsExpanded" class="options-panel">
               <div class="options-grid">
                 <KeyExprInput 
                   v-model="subscriberParameters.key.value" 
@@ -103,8 +101,11 @@
                     </button>
                     <CollapseButton
                       :expanded="expandedSubscriberDetails.has(subscriber.displayId)"
-                      @click="toggleSubscriberDetails(subscriber.displayId)"
-                      :disabled="false"
+                      @update:expanded="(value) => { if (value) { 
+                        expandedSubscriberDetails.add(subscriber.displayId) 
+                      } else { 
+                        expandedSubscriberDetails.delete(subscriber.displayId) 
+                      } }"
                     />
                   </div>
                 </div>
@@ -131,15 +132,13 @@
                   Put
                 </button>
                 <CollapseButton
-                  :expanded="putParameters.showOptions.value"
-                  @click="putParameters.showOptions.value = !putParameters.showOptions.value"
-                  :disabled="false"
+                  v-model:expanded="putOptionsExpanded"
                 />
               </div>
             </div>
             
             <!-- Put Options Panel -->
-            <div v-if="putParameters.showOptions.value" class="options-panel">
+            <div v-if="putOptionsExpanded" class="options-panel">
               <KeyExprInput 
                 v-model="putParameters.key.value" 
                 label="Key Expression"
@@ -216,15 +215,13 @@
                   Declare Queryable
                 </button>
                 <CollapseButton
-                  :expanded="queryableParameters.showOptions.value"
-                  @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value"
-                  :disabled="false"
+                  v-model:expanded="queryableOptionsExpanded"
                 />
               </div>
             </div>
             
             <!-- Queryable Options Panel -->
-            <div v-if="queryableParameters.showOptions.value" class="options-panel">
+            <div v-if="queryableOptionsExpanded" class="options-panel">
               <div class="options-grid">
                 <KeyExprInput 
                   v-model="queryableParameters.key.value" 
@@ -367,8 +364,11 @@
                     </button>
                     <CollapseButton
                       :expanded="expandedQueryableDetails.has(queryable.displayId)"
-                      @click="toggleQueryableDetails(queryable.displayId)"
-                      :disabled="false"
+                      @update:expanded="(value) => { if (value) { 
+                        expandedQueryableDetails.add(queryable.displayId) 
+                      } else { 
+                        expandedQueryableDetails.delete(queryable.displayId) 
+                      } }"
                     />
                   </div>
                 </div>
@@ -395,15 +395,13 @@
                   Get
                 </button>
                 <CollapseButton
-                  :expanded="getParameters.showOptions.value"
-                  @click="getParameters.showOptions.value = !getParameters.showOptions.value"
-                  :disabled="false"
+                  v-model:expanded="getOptionsExpanded"
                 />
               </div>
             </div>
             
             <!-- Get Options Panel -->
-            <div v-if="getParameters.showOptions.value" class="options-panel">
+            <div v-if="getOptionsExpanded" class="options-panel">
               <KeyExprInput 
                 v-model="getParameters.key.value" 
                 label="Selector"
@@ -593,22 +591,11 @@ const logContent = ref<HTMLElement>()
 const expandedSubscriberDetails = ref<Set<string>>(new Set())
 const expandedQueryableDetails = ref<Set<string>>(new Set())
 
-// Functions to toggle details expansion
-function toggleSubscriberDetails(displayId: string) {
-  if (expandedSubscriberDetails.value.has(displayId)) {
-    expandedSubscriberDetails.value.delete(displayId)
-  } else {
-    expandedSubscriberDetails.value.add(displayId)
-  }
-}
-
-function toggleQueryableDetails(displayId: string) {
-  if (expandedQueryableDetails.value.has(displayId)) {
-    expandedQueryableDetails.value.delete(displayId)
-  } else {
-    expandedQueryableDetails.value.add(displayId)
-  }
-}
+// State to track expanded options panels for operations
+const subscriberOptionsExpanded = ref(false)
+const putOptionsExpanded = ref(false)
+const queryableOptionsExpanded = ref(false)
+const getOptionsExpanded = ref(false)
 
 // Auto-scroll to bottom when new log entries are added
 watch(logEntries, () => {
