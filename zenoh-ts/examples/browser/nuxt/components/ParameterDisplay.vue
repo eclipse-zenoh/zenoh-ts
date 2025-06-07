@@ -105,17 +105,17 @@ function getJsonPreStyles(typeColor: string): string {
 function formatSingleParameter(title: string, value: any, typeColor: string): string {
   if (typeof value === 'string') {
     return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
       <div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>
     </div>`;
   } else if (typeof value === 'number') {
     return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
       <div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>
     </div>`;
   } else if (typeof value === 'boolean') {
     return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title}:</div>
+      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
       <div style="font-family: 'Courier New', monospace; color: #7c3aed;">${value}</div>
     </div>`;
   } else {
