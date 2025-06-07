@@ -91,6 +91,24 @@ function formatJSONWithColors(obj: any, indent: number = 0): string {
 }
 
 /**
+ * Returns appropriate styling for JSON pre elements based on type
+ */
+function getJsonPreStyles(typeColor: string): string {
+  return props.type === 'neutral' 
+    ? '' // Neutral mode: no styling at all (no padding, no background, no borders)
+    : `background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}`; // Normal mode: full box styling
+}
+
+/**
+ * Returns appropriate styling for JSON labels based on type
+ */
+function getJsonLabelStyles(typeColor: string): string {
+  return props.type === 'neutral'
+    ? `font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;` // Neutral mode: no padding-top
+    : `font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;`; // Normal mode: with padding-top
+}
+
+/**
  * Formats a single parameter entry with proper styling
  */
 function formatSingleParameter(title: string, value: any, typeColor: string): string {
@@ -112,8 +130,8 @@ function formatSingleParameter(title: string, value: any, typeColor: string): st
   } else {
     // For objects, arrays, etc., format as JSON
     return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;">${title} =</div>
-      <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
+      <div style="${getJsonLabelStyles(typeColor)}">${title} =</div>
+      <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
     </div>`;
   }
 }
