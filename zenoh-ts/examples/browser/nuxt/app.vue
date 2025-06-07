@@ -58,14 +58,11 @@
                 <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="operation-btn">
                   Declare Subscriber
                 </button>
-                <button 
-                  @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value" 
-                  class="options-arrow-btn"
-                  :class="{ active: subscriberParameters.showOptions.value }"
-                  title="Toggle advanced options"
-                >
-                  {{ subscriberParameters.showOptions.value ? '▲' : '▼' }}
-                </button>
+                <CollapseButton
+                  :expanded="subscriberParameters.showOptions.value"
+                  @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value"
+                  :disabled="false"
+                />
               </div>
             </div>
             
@@ -104,14 +101,11 @@
                     >
                       Undeclare
                     </button>
-                    <button 
-                      @click="toggleSubscriberDetails(subscriber.displayId)" 
-                      class="item-action-btn details"
-                      :class="{ active: expandedSubscriberDetails.has(subscriber.displayId) }"
-                      title="Toggle details"
-                    >
-                      {{ expandedSubscriberDetails.has(subscriber.displayId) ? '▲' : '▼' }}
-                    </button>
+                    <CollapseButton
+                      :expanded="expandedSubscriberDetails.has(subscriber.displayId)"
+                      @click="toggleSubscriberDetails(subscriber.displayId)"
+                      :disabled="false"
+                    />
                   </div>
                 </div>
                 
@@ -136,14 +130,11 @@
                 <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="operation-btn">
                   Put
                 </button>
-                <button 
-                  @click="putParameters.showOptions.value = !putParameters.showOptions.value" 
-                  class="options-arrow-btn"
-                  :class="{ active: putParameters.showOptions.value }"
-                  title="Toggle advanced options"
-                >
-                  {{ putParameters.showOptions.value ? '▲' : '▼' }}
-                </button>
+                <CollapseButton
+                  :expanded="putParameters.showOptions.value"
+                  @click="putParameters.showOptions.value = !putParameters.showOptions.value"
+                  :disabled="false"
+                />
               </div>
             </div>
             
@@ -224,14 +215,11 @@
                 <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="operation-btn">
                   Declare Queryable
                 </button>
-                <button 
-                  @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value" 
-                  class="options-arrow-btn"
-                  :class="{ active: queryableParameters.showOptions.value }"
-                  title="Toggle advanced options"
-                >
-                  {{ queryableParameters.showOptions.value ? '▲' : '▼' }}
-                </button>
+                <CollapseButton
+                  :expanded="queryableParameters.showOptions.value"
+                  @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value"
+                  :disabled="false"
+                />
               </div>
             </div>
             
@@ -377,14 +365,11 @@
                     >
                       Undeclare
                     </button>
-                    <button 
-                      @click="toggleQueryableDetails(queryable.displayId)" 
-                      class="item-action-btn details"
-                      :class="{ active: expandedQueryableDetails.has(queryable.displayId) }"
-                      title="Toggle details"
-                    >
-                      {{ expandedQueryableDetails.has(queryable.displayId) ? '▲' : '▼' }}
-                    </button>
+                    <CollapseButton
+                      :expanded="expandedQueryableDetails.has(queryable.displayId)"
+                      @click="toggleQueryableDetails(queryable.displayId)"
+                      :disabled="false"
+                    />
                   </div>
                 </div>
                 
@@ -409,14 +394,11 @@
                 <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="operation-btn">
                   Get
                 </button>
-                <button 
-                  @click="getParameters.showOptions.value = !getParameters.showOptions.value" 
-                  class="options-arrow-btn"
-                  :class="{ active: getParameters.showOptions.value }"
-                  title="Toggle advanced options"
-                >
-                  {{ getParameters.showOptions.value ? '▲' : '▼' }}
-                </button>
+                <CollapseButton
+                  :expanded="getParameters.showOptions.value"
+                  @click="getParameters.showOptions.value = !getParameters.showOptions.value"
+                  :disabled="false"
+                />
               </div>
             </div>
             
@@ -566,6 +548,9 @@
 </template>
 
 <script setup lang="ts">
+// Import components
+import CollapseButton from './components/CollapseButton.vue'
+
 // Use the Zenoh composable
 const {
   // State
@@ -907,32 +892,6 @@ watch(logEntries, () => {
   box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
 }
 
-.item-action-btn.details {
-  background: white;
-  border: 1px solid #dee2e6;
-  color: #495057;
-  min-width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-}
-
-.item-action-btn.details:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(233, 236, 239, 0.3);
-}
-
-.item-action-btn.details.active {
-  background: #f8f9fa;
-  color: #495057;
-  border-color: #dee2e6;
-  box-shadow: 0 2px 6px rgba(248, 249, 250, 0.4);
-}
-
 .item-action-btn:active {
   transform: translateY(0);
 }
@@ -1146,6 +1105,19 @@ watch(logEntries, () => {
   gap: 8px;
 }
 
+/* Container-specific sizing for CollapseButton components */
+.header-actions .collapse-btn {
+  width: 28px;
+  height: 28px;
+  padding: 6px 8px;
+}
+
+.item-actions .collapse-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
 .operation-btn {
   background-color: #007bff;
   color: white;
@@ -1169,32 +1141,6 @@ watch(logEntries, () => {
   opacity: 0.65;
 }
 
-.options-arrow-btn {
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 4px;
-  padding: 6px 8px;
-  font-size: 12px;
-  color: #495057;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.options-arrow-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.options-arrow-btn.active {
-  background: #f8f9fa;
-  color: #495057;
-  border-color: #dee2e6;
-}
 
 .options-toggle {
   margin: 10px 0;
