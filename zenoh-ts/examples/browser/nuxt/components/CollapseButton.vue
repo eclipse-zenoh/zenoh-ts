@@ -3,8 +3,17 @@
     :class="buttonClasses"
     @click="handleClick"
   >
-    <span v-if="label" class="collapse-btn-label">{{ label }}</span>
-    <span class="collapse-btn-triangle">{{ expanded ? '▲' : '▼' }}</span>
+    <template v-if="expandedText !== undefined || collapsedText !== undefined">
+      <!-- Custom text mode: show appropriate text based on state -->
+      <span class="collapse-btn-text">
+        {{ expanded ? (expandedText || '') : (collapsedText || label || '') }}
+      </span>
+    </template>
+    <template v-else>
+      <!-- Default mode: show label + triangle -->
+      <span v-if="label" class="collapse-btn-label">{{ label }}</span>
+      <span class="collapse-btn-triangle">{{ expanded ? '▲' : '▼' }}</span>
+    </template>
   </button>
 </template>
 
@@ -16,6 +25,10 @@ interface Props {
   expanded?: boolean
   /** Optional label text to show before the triangle */
   label?: string
+  /** Text to show when expanded (instead of triangle) */
+  expandedText?: string
+  /** Text to show when collapsed (instead of triangle) */
+  collapsedText?: string
 }
 
 interface Emits {
@@ -77,6 +90,12 @@ const buttonClasses = computed(() => {
 
 .collapse-btn-triangle {
   flex-shrink: 0;
+}
+
+.collapse-btn-text {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 500;
 }
 
 .collapse-btn:hover {
