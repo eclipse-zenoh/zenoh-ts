@@ -7,6 +7,8 @@ import {
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
+  type ReplyParametersState,
+  type ReplyErrParametersState,
   type GetParametersState,
 } from "../useZenohDemo";
 import {
@@ -84,6 +86,34 @@ function queryableParametersStateToQueryableOptions(
   }
   if (parameters.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = parameters.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
+  let opts: any = {};
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
+  }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (!parameters.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(parameters.attachment.value);
+  }
+  return opts;
+}
+
+function replyErrParametersStateToReplyErrOptions(parameters: ReplyErrParametersState) {
+  let opts: any = {};
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
   }
   return opts;
 }
@@ -465,7 +495,6 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
         try {
-
           this.addLogEntry(
             "data",
             `Query received on queryable ${displayId} for ${keyExpr.toString()}`,
@@ -474,11 +503,39 @@ class ZenohDemo extends ZenohDemoEmpty {
             }
           );
 
-          // Send a simple reply
-          const replyPayload = `Hello from queryable! Query for: ${query.keyExpr().toString()}${
-            query.parameters().toString() ? "?" + query.parameters().toString() : ""
-          }`;
-          await query.reply(keyExpr, replyPayload);
+          // Handle reply based on configured reply type
+          if (this.queryableParameters.replyType.value === "reply") {
+            // Get reply parameters
+            const replyParams = this.queryableParameters.reply;
+            
+            // Determine the key expression for the reply
+            const replyKeyExpr = replyParams.keyExpr.value 
+              ? new KeyExpr(replyParams.keyExpr.value)
+              : keyExpr;
+            
+            // Get the payload (use empty if marked as empty)
+            const replyPayload = replyParams.payloadEmpty.value 
+              ? "" 
+              : replyParams.payload.value;
+            
+            // Build reply options
+            const replyOptions = replyParametersStateToReplyOptions(replyParams);
+            
+            await query.reply(replyKeyExpr, replyPayload, replyOptions);
+          } else {
+            // Handle error reply
+            const replyErrParams = this.queryableParameters.replyErr;
+            
+            // Get the error payload (use empty if marked as empty)
+            const errorPayload = replyErrParams.payloadEmpty.value 
+              ? "" 
+              : replyErrParams.payload.value;
+            
+            // Build reply error options
+            const replyErrOptions = replyErrParametersStateToReplyErrOptions(replyErrParams);
+            
+            await query.replyErr(errorPayload, replyErrOptions);
+          }
         } catch (queryError) {
           this.addErrorLogEntry("Error handling query", queryError);
           try {

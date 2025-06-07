@@ -62,6 +62,28 @@ export interface SubscriberParametersState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
+// Reply parameters state - for successful replies
+export interface ReplyParametersState {
+  keyExpr: Ref<string>;
+  payload: Ref<string>;
+  payloadEmpty: Ref<boolean>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+  priority: Ref<Priority | undefined>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  express: Ref<boolean | undefined>;
+  attachment: Ref<string>;
+  attachmentEmpty: Ref<boolean>;
+}
+
+// Reply error parameters state - for error replies
+export interface ReplyErrParametersState {
+  payload: Ref<string>;
+  payloadEmpty: Ref<boolean>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+}
+
 // Queryable parameters state - includes all queryable-related data
 export interface QueryableParametersState {
   key: Ref<string>;
@@ -71,23 +93,9 @@ export interface QueryableParametersState {
   // Reply configuration
   replyType: Ref<"reply" | "replyErr">;
   
-  // Reply options
-  replyKeyExpr: Ref<string>;
-  replyPayload: Ref<string>;
-  replyPayloadEmpty: Ref<boolean>;
-  replyEncoding: Ref<string>;
-  replyCustomEncoding: Ref<boolean>;
-  replyPriority: Ref<Priority | undefined>;
-  replyCongestionControl: Ref<CongestionControl | undefined>;
-  replyExpress: Ref<boolean | undefined>;
-  replyAttachment: Ref<string>;
-  replyAttachmentEmpty: Ref<boolean>;
-  
-  // ReplyErr options
-  replyErrPayload: Ref<string>;
-  replyErrPayloadEmpty: Ref<boolean>;
-  replyErrEncoding: Ref<string>;
-  replyErrCustomEncoding: Ref<boolean>;
+  // Reply sub-states
+  reply: ReplyParametersState;
+  replyErr: ReplyErrParametersState;
 }
 
 // Get parameters state - includes all get-related data
@@ -170,23 +178,25 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     // Reply configuration
     replyType: ref("reply" as "reply" | "replyErr"),
     
-    // Reply options
-    replyKeyExpr: ref(""),
-    replyPayload: ref("Hello from queryable!"),
-    replyPayloadEmpty: ref(false),
-    replyEncoding: ref(""),
-    replyCustomEncoding: ref(false),
-    replyPriority: ref(undefined as Priority | undefined),
-    replyCongestionControl: ref(undefined as CongestionControl | undefined),
-    replyExpress: ref(undefined as boolean | undefined),
-    replyAttachment: ref(""),
-    replyAttachmentEmpty: ref(true),
-    
-    // ReplyErr options
-    replyErrPayload: ref("Error processing query"),
-    replyErrPayloadEmpty: ref(false),
-    replyErrEncoding: ref(""),
-    replyErrCustomEncoding: ref(false),
+    // Reply sub-states
+    reply: {
+      keyExpr: ref(""),
+      payload: ref("Hello from queryable!"),
+      payloadEmpty: ref(false),
+      encoding: ref(""),
+      customEncoding: ref(false),
+      priority: ref(undefined as Priority | undefined),
+      congestionControl: ref(undefined as CongestionControl | undefined),
+      express: ref(undefined as boolean | undefined),
+      attachment: ref(""),
+      attachmentEmpty: ref(true),
+    },
+    replyErr: {
+      payload: ref("Error processing query"),
+      payloadEmpty: ref(false),
+      encoding: ref(""),
+      customEncoding: ref(false),
+    },
   };
   getParameters = {
     key: ref("demo/example/*"),

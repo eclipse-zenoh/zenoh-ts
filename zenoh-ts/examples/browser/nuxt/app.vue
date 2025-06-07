@@ -289,7 +289,7 @@
                 <div v-if="queryableParameters.replyType.value === 'reply'" class="reply-fields">
                   <div class="field-group">
                     <KeyExprInput 
-                      v-model="queryableParameters.replyKeyExpr.value"
+                      v-model="queryableParameters.reply.keyExpr.value"
                       label="Key Expression"
                       placeholder="Normally the queryable keyexpr (e.g. demo/example/queryable)"
                       :disabled="!isConnected"
@@ -297,8 +297,8 @@
                   </div>
                   <div class="field-group">
                     <PayloadInput
-                      v-model="queryableParameters.replyPayload.value"
-                      v-model:isEmpty="queryableParameters.replyPayloadEmpty.value"
+                      v-model="queryableParameters.reply.payload.value"
+                      v-model:isEmpty="queryableParameters.reply.payloadEmpty.value"
                       label="Payload"
                       placeholder="Payload content for successful reply"
                       :disabled="!isConnected"
@@ -308,30 +308,30 @@
                   <!-- Reply Options -->
                   <div class="reply-options-grid">
                     <EncodingSelect
-                      v-model="queryableParameters.replyEncoding.value"
-                      v-model:custom-encoding="queryableParameters.replyCustomEncoding.value"
+                      v-model="queryableParameters.reply.encoding.value"
+                      v-model:custom-encoding="queryableParameters.reply.customEncoding.value"
                       :encoding-options="encodingOptions"
                       :disabled="!isConnected"
                     />
                     <PrioritySelect 
-                      v-model="queryableParameters.replyPriority.value" 
+                      v-model="queryableParameters.reply.priority.value" 
                       :disabled="!isConnected"
                       :options="priorityOptions"
                     />
                     <CongestionControlSelect
-                      v-model="queryableParameters.replyCongestionControl.value"
+                      v-model="queryableParameters.reply.congestionControl.value"
                       :disabled="!isConnected"
                       :options="congestionControlOptions"
                     />
                     
                     <ExpressSelect
-                      v-model="queryableParameters.replyExpress.value"
+                      v-model="queryableParameters.reply.express.value"
                       :disabled="!isConnected"
                     />
                     
                     <PayloadInput
-                      v-model="queryableParameters.replyAttachment.value"
-                      v-model:is-empty="queryableParameters.replyAttachmentEmpty.value"
+                      v-model="queryableParameters.reply.attachment.value"
+                      v-model:is-empty="queryableParameters.reply.attachmentEmpty.value"
                       label="Attachment"
                       placeholder="Optional attachment data"
                       :disabled="!isConnected"
@@ -343,16 +343,16 @@
                 <div v-if="queryableParameters.replyType.value === 'replyErr'" class="reply-err-fields">
                   <div class="field-group">
                     <PayloadInput
-                      v-model="queryableParameters.replyErrPayload.value"
-                      v-model:isEmpty="queryableParameters.replyErrPayloadEmpty.value"
+                      v-model="queryableParameters.replyErr.payload.value"
+                      v-model:isEmpty="queryableParameters.replyErr.payloadEmpty.value"
                       label="Error Payload"
                       placeholder="Error message or payload"
                       :disabled="!isConnected"
                     />
                   </div>
                   <EncodingSelect
-                    v-model="queryableParameters.replyErrEncoding.value"
-                    v-model:custom-encoding="queryableParameters.replyErrCustomEncoding.value"
+                    v-model="queryableParameters.replyErr.encoding.value"
+                    v-model:custom-encoding="queryableParameters.replyErr.customEncoding.value"
                     :encoding-options="encodingOptions"
                     :disabled="!isConnected"
                   />
