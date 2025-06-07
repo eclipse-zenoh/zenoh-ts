@@ -10,6 +10,7 @@ import {
   type ReplyParametersState,
   type ReplyErrParametersState,
   type GetParametersState,
+  createDefaultResponseParameters,
 } from "../useZenohDemo";
 import {
   Config,
@@ -457,7 +458,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async unsubscribe(subscriberId: string): Promise<void> {
     const subscriberIndex = this.activeSubscribers.value.findIndex(
-      (sub) => sub.displayId === subscriberId
+      (sub: SubscriberInfo) => sub.displayId === subscriberId
     );
     if (subscriberIndex === -1) {
       this.addErrorLogEntry(`Subscriber ${subscriberId} not found`);
@@ -492,6 +493,12 @@ class ZenohDemo extends ZenohDemoEmpty {
       const keyExpr = new KeyExpr(this.queryableParameters.key.value);
       const queryableOptions = queryableParametersStateToQueryableOptions(this.queryableParameters);
 
+      // Create individual response parameters for this queryable
+      const responseParameters = createDefaultResponseParameters();
+      
+      // Initialize reply key expression to match the queryable's key expression
+      responseParameters.reply.keyExpr.value = this.queryableParameters.key.value;
+
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
         try {
@@ -504,9 +511,9 @@ class ZenohDemo extends ZenohDemoEmpty {
           );
 
           // Handle reply based on configured reply type
-          if (this.queryableParameters.replyType.value === "reply") {
+          if (responseParameters.replyType.value === "reply") {
             // Get reply parameters
-            const replyParams = this.queryableParameters.reply;
+            const replyParams = responseParameters.reply;
             
             // Determine the key expression for the reply
             const replyKeyExpr = replyParams.keyExpr.value 
@@ -524,7 +531,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             await query.reply(replyKeyExpr, replyPayload, replyOptions);
           } else {
             // Handle error reply
-            const replyErrParams = this.queryableParameters.replyErr;
+            const replyErrParams = responseParameters.replyErr;
             
             // Get the error payload (use empty if marked as empty)
             const errorPayload = replyErrParams.payloadEmpty.value 
@@ -561,6 +568,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         queryable,
         createdAt: new Date(),
         options: queryableOptionsToJSON(queryableOptions),
+        responseParameters: responseParameters, // Include individual response settings
       };
 
       this.activeQueryables.value.push(queryableInfo);
@@ -582,7 +590,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async undeclareQueryable(queryableId: string): Promise<void> {
     const queryableIndex = this.activeQueryables.value.findIndex(
-      (qry) => qry.displayId === queryableId
+      (qry: QueryableInfo) => qry.displayId === queryableId
     );
     if (queryableIndex === -1) {
       this.addErrorLogEntry(`Queryable ${queryableId} not found`);

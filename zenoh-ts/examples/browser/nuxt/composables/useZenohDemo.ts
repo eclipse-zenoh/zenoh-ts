@@ -31,13 +31,46 @@ export interface SubscriberInfo {
   options: SubscriberOptionsJSON
 }
 
+// Reply parameters state - for successful replies
+export interface ReplyParametersState {
+  keyExpr: Ref<string>;
+  payload: Ref<string>;
+  payloadEmpty: Ref<boolean>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+  priority: Ref<Priority | undefined>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  express: Ref<boolean | undefined>;
+  attachment: Ref<string>;
+  attachmentEmpty: Ref<boolean>;
+}
+
+// Reply error parameters state - for error replies
+export interface ReplyErrParametersState {
+  payload: Ref<string>;
+  payloadEmpty: Ref<boolean>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+}
+
+// Individual queryable response parameters state
+export interface QueryableResponseParametersState {
+  // Reply configuration
+  replyType: Ref<"reply" | "replyErr">;
+  
+  // Reply sub-states
+  reply: ReplyParametersState;
+  replyErr: ReplyErrParametersState;
+}
+
 // Queryable info interface
 export interface QueryableInfo {
   displayId: string; // Display ID like "qry0", "qry1", etc.
   keyExpr: string;
   queryable: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
-  options: QueryableOptionsJSON
+  options: QueryableOptionsJSON;
+  responseParameters: QueryableResponseParametersState; // Individual response settings
 }
 
 // Put parameters state - includes all put-related data
@@ -62,40 +95,11 @@ export interface SubscriberParametersState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
-// Reply parameters state - for successful replies
-export interface ReplyParametersState {
-  keyExpr: Ref<string>;
-  payload: Ref<string>;
-  payloadEmpty: Ref<boolean>;
-  encoding: Ref<string>;
-  customEncoding: Ref<boolean>;
-  priority: Ref<Priority | undefined>;
-  congestionControl: Ref<CongestionControl | undefined>;
-  express: Ref<boolean | undefined>;
-  attachment: Ref<string>;
-  attachmentEmpty: Ref<boolean>;
-}
-
-// Reply error parameters state - for error replies
-export interface ReplyErrParametersState {
-  payload: Ref<string>;
-  payloadEmpty: Ref<boolean>;
-  encoding: Ref<string>;
-  customEncoding: Ref<boolean>;
-}
-
-// Queryable parameters state - includes all queryable-related data
+// Queryable parameters state - includes all queryable-related data (declaration only)
 export interface QueryableParametersState {
   key: Ref<string>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
-  
-  // Reply configuration
-  replyType: Ref<"reply" | "replyErr">;
-  
-  // Reply sub-states
-  reply: ReplyParametersState;
-  replyErr: ReplyErrParametersState;
 }
 
 // Get parameters state - includes all get-related data
@@ -147,6 +151,34 @@ export interface ZenohDemoState {
   clearLog: () => void;
 }
 
+// Helper function to create default response parameters for a new queryable
+export function createDefaultResponseParameters(): QueryableResponseParametersState {
+  return {
+    // Reply configuration
+    replyType: ref("reply" as "reply" | "replyErr"),
+    
+    // Reply sub-states
+    reply: {
+      keyExpr: ref(""),
+      payload: ref("Hello from queryable!"),
+      payloadEmpty: ref(false),
+      encoding: ref(""),
+      customEncoding: ref(false),
+      priority: ref(undefined as Priority | undefined),
+      congestionControl: ref(undefined as CongestionControl | undefined),
+      express: ref(undefined as boolean | undefined),
+      attachment: ref(""),
+      attachmentEmpty: ref(true),
+    },
+    replyErr: {
+      payload: ref("Error processing query"),
+      payloadEmpty: ref(false),
+      encoding: ref(""),
+      customEncoding: ref(false),
+    },
+  };
+}
+
 export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   // state fields only; operations are bound in the super constructor
   serverUrl = ref("ws://localhost:10000");
@@ -174,29 +206,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     key: ref("demo/example/queryable"),
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),
-    
-    // Reply configuration
-    replyType: ref("reply" as "reply" | "replyErr"),
-    
-    // Reply sub-states
-    reply: {
-      keyExpr: ref(""),
-      payload: ref("Hello from queryable!"),
-      payloadEmpty: ref(false),
-      encoding: ref(""),
-      customEncoding: ref(false),
-      priority: ref(undefined as Priority | undefined),
-      congestionControl: ref(undefined as CongestionControl | undefined),
-      express: ref(undefined as boolean | undefined),
-      attachment: ref(""),
-      attachmentEmpty: ref(true),
-    },
-    replyErr: {
-      payload: ref("Error processing query"),
-      payloadEmpty: ref(false),
-      encoding: ref(""),
-      customEncoding: ref(false),
-    },
   };
   getParameters = {
     key: ref("demo/example/*"),
@@ -217,7 +226,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   logEntries = ref<LogEntry[]>([]);
   activeSubscribers = ref<SubscriberInfo[]>([]);
-  activeQueryables = ref<QueryableInfo[]>([]);
+  activeQueryables = ref<QueryableInfo[]>([]) as any;
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
