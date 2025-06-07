@@ -938,10 +938,6 @@ watch(logEntries, () => {
 }
 
 .edit-reply-section {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: var(--compact-gap);
-  padding: 12px;
   margin-top: var(--compact-gap);
 }
 
