@@ -93,28 +93,28 @@ function queryableParametersStateToQueryableOptions(
 
 function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
   let opts: any = {};
-  if (parameters.encoding.value) {
-    opts.encoding = Encoding.fromString(parameters.encoding.value);
+  if (parameters.encoding) {
+    opts.encoding = Encoding.fromString(parameters.encoding);
   }
-  if (parameters.priority.value !== undefined) {
-    opts.priority = parameters.priority.value;
+  if (parameters.priority == undefined) {
+    opts.priority = parameters.priority;
   }
-  if (parameters.congestionControl.value !== undefined) {
-    opts.congestionControl = parameters.congestionControl.value;
+  if (parameters.congestionControl == undefined) {
+    opts.congestionControl = parameters.congestionControl;
   }
-  if (parameters.express.value !== undefined) {
-    opts.express = parameters.express.value;
+  if (parameters.express !== undefined) {
+    opts.express = parameters.express;
   }
-  if (!parameters.attachmentEmpty.value) {
-    opts.attachment = new ZBytes(parameters.attachment.value);
+  if (!parameters.attachmentEmpty) {
+    opts.attachment = new ZBytes(parameters.attachment);
   }
   return opts;
 }
 
 function replyErrParametersStateToReplyErrOptions(parameters: ReplyErrParametersState) {
   let opts: any = {};
-  if (parameters.encoding.value) {
-    opts.encoding = Encoding.fromString(parameters.encoding.value);
+  if (parameters.encoding) {
+    opts.encoding = Encoding.fromString(parameters.encoding);
   }
   return opts;
 }
@@ -497,7 +497,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       const responseParameters = createDefaultResponseParameters();
       
       // Initialize reply key expression to match the queryable's key expression
-      responseParameters.reply.keyExpr.value = this.queryableParameters.key.value;
+      responseParameters.reply.keyExpr = this.queryableParameters.key.value;
 
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
@@ -511,19 +511,19 @@ class ZenohDemo extends ZenohDemoEmpty {
           );
 
           // Handle reply based on configured reply type
-          if (responseParameters.replyType.value === "reply") {
+          if (responseParameters.replyType === "reply") {
             // Get reply parameters
             const replyParams = responseParameters.reply;
             
             // Determine the key expression for the reply
-            const replyKeyExpr = replyParams.keyExpr.value 
-              ? new KeyExpr(replyParams.keyExpr.value)
+            const replyKeyExpr = replyParams.keyExpr
+              ? new KeyExpr(replyParams.keyExpr)
               : keyExpr;
             
             // Get the payload (use empty if marked as empty)
-            const replyPayload = replyParams.payloadEmpty.value 
+            const replyPayload = replyParams.payloadEmpty
               ? "" 
-              : replyParams.payload.value;
+              : replyParams.payload;
             
             // Build reply options
             const replyOptions = replyParametersStateToReplyOptions(replyParams);
@@ -534,9 +534,9 @@ class ZenohDemo extends ZenohDemoEmpty {
             const replyErrParams = responseParameters.replyErr;
             
             // Get the error payload (use empty if marked as empty)
-            const errorPayload = replyErrParams.payloadEmpty.value 
+            const errorPayload = replyErrParams.payloadEmpty
               ? "" 
-              : replyErrParams.payload.value;
+              : replyErrParams.payload;
             
             // Build reply error options
             const replyErrOptions = replyErrParametersStateToReplyErrOptions(replyErrParams);

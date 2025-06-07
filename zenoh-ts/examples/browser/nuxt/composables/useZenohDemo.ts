@@ -33,30 +33,30 @@ export interface SubscriberInfo {
 
 // Reply parameters state - for successful replies
 export interface ReplyParametersState {
-  keyExpr: Ref<string>;
-  payload: Ref<string>;
-  payloadEmpty: Ref<boolean>;
-  encoding: Ref<string>;
-  customEncoding: Ref<boolean>;
-  priority: Ref<Priority | undefined>;
-  congestionControl: Ref<CongestionControl | undefined>;
-  express: Ref<boolean | undefined>;
-  attachment: Ref<string>;
-  attachmentEmpty: Ref<boolean>;
+  keyExpr: string;
+  payload: string;
+  payloadEmpty: boolean;
+  encoding: string;
+  customEncoding: boolean;
+  priority: Priority | undefined;
+  congestionControl: CongestionControl | undefined;
+  express: boolean | undefined;
+  attachment: string;
+  attachmentEmpty: boolean;
 }
 
 // Reply error parameters state - for error replies
 export interface ReplyErrParametersState {
-  payload: Ref<string>;
-  payloadEmpty: Ref<boolean>;
-  encoding: Ref<string>;
-  customEncoding: Ref<boolean>;
+  payload: string;
+  payloadEmpty: boolean;
+  encoding: string;
+  customEncoding: boolean;
 }
 
 // Individual queryable response parameters state
 export interface QueryableResponseParametersState {
   // Reply configuration
-  replyType: Ref<"reply" | "replyErr">;
+  replyType: "reply" | "replyErr";
   
   // Reply sub-states
   reply: ReplyParametersState;
@@ -155,26 +155,26 @@ export interface ZenohDemoState {
 export function createDefaultResponseParameters(): QueryableResponseParametersState {
   return {
     // Reply configuration
-    replyType: ref("reply" as "reply" | "replyErr"),
+    replyType: "reply" as "reply" | "replyErr",
     
     // Reply sub-states
     reply: {
-      keyExpr: ref(""),
-      payload: ref("Hello from queryable!"),
-      payloadEmpty: ref(false),
-      encoding: ref(""),
-      customEncoding: ref(false),
-      priority: ref(undefined as Priority | undefined),
-      congestionControl: ref(undefined as CongestionControl | undefined),
-      express: ref(undefined as boolean | undefined),
-      attachment: ref(""),
-      attachmentEmpty: ref(true),
+      keyExpr: "",
+      payload: "Hello from queryable!",
+      payloadEmpty: false,
+      encoding: "",
+      customEncoding: false,
+      priority: undefined as Priority | undefined,
+      congestionControl: undefined as CongestionControl | undefined,
+      express: undefined as boolean | undefined,
+      attachment: "",
+      attachmentEmpty: true,
     },
     replyErr: {
-      payload: ref("Error processing query"),
-      payloadEmpty: ref(false),
-      encoding: ref(""),
-      customEncoding: ref(false),
+      payload: "Error processing query",
+      payloadEmpty: false,
+      encoding: "",
+      customEncoding: false,
     },
   };
 }
