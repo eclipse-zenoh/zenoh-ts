@@ -779,15 +779,18 @@ watch(logEntries, () => {
 
 .operation-group {
   margin-bottom: 12px;
-  padding: 8px 8px 0 8px;
+  padding: 8px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid #ddd;
 }
 
-.options-panel {
-  padding-bottom: 8px;
+/* Add spacing between operation-header and any following content */
+.operation-header + * {
+  margin-top: 8px;
 }
+
+/* Remove the extra padding-bottom that was added to options-panel */
 
 .operation-block {
   margin-bottom: 16px;
@@ -1103,8 +1106,8 @@ watch(logEntries, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0;
-  padding-bottom: 8px;
+  margin: 0;
+  padding: 0;
 }
 
 .operation-header h4 {
