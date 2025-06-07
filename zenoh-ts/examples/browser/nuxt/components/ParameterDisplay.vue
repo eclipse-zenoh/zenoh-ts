@@ -160,7 +160,6 @@ const formattedData = computed(() => {
 .parameter-display {
   /* Base styles for the component */
   line-height: 1.4;
-  margin-top: 4px; /* Add small margin to separate from log message above */
 }
 
 /* Ensure proper spacing for nested elements */
