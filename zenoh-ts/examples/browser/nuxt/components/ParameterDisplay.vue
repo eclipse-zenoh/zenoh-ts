@@ -100,15 +100,6 @@ function getJsonPreStyles(typeColor: string): string {
 }
 
 /**
- * Returns appropriate styling for JSON labels based on type
- */
-function getJsonLabelStyles(typeColor: string): string {
-  return props.type === 'neutral'
-    ? `font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;` // Neutral mode: no padding-top
-    : `font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap; padding-top: 8px;`; // Normal mode: with padding-top
-}
-
-/**
  * Formats a single parameter entry with proper styling
  */
 function formatSingleParameter(title: string, value: any, typeColor: string): string {
@@ -130,7 +121,7 @@ function formatSingleParameter(title: string, value: any, typeColor: string): st
   } else {
     // For objects, arrays, etc., format as JSON
     return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 4px 0;">
-      <div style="${getJsonLabelStyles(typeColor)}">${title} =</div>
+      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
       <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
     </div>`;
   }
