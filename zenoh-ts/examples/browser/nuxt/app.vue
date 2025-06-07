@@ -889,7 +889,7 @@ watch(logEntries, () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--compact-padding) * 0.6) calc(var(--compact-padding) * 1.2);
+  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 1.0);
   font-size: calc(var(--compact-font-size) * 0.85);
 }
 
@@ -1161,14 +1161,14 @@ watch(logEntries, () => {
 .header-actions .collapse-btn {
   width: auto;
   height: auto;
-  padding: var(--compact-padding);
+  padding: var(--compact-button-padding);
   font-size: var(--compact-font-size);
 }
 
 .item-actions .collapse-btn {
   /* Ensure consistent sizing with other item action buttons */
   height: auto;
-  padding: calc(var(--compact-padding) * 0.6) calc(var(--compact-padding) * 1.2);
+  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 1.0);
   font-size: calc(var(--compact-font-size) * 0.85);
   font-weight: 500;
   min-width: auto;

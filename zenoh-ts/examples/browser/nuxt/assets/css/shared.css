@@ -6,10 +6,14 @@
   --compact-font-size: 14px;
   --compact-label-font-size: 13px;
   --compact-padding: 6px 10px;
+  --compact-padding-v: 6px;
+  --compact-padding-h: 10px;
   --compact-margin: 4px;
   --compact-gap: 8px;
   --compact-border-radius: 4px;
   --compact-button-padding: 6px 12px;
+  --compact-button-padding-v: 6px;
+  --compact-button-padding-h: 12px;
   --compact-input-height: 32px;
 }
 
