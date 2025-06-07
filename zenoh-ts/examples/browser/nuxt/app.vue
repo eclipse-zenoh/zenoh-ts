@@ -54,19 +54,19 @@
           <div class="operation-group">
             <div class="operation-header">
               <h4>Declare Subscriber</h4>
-              <button 
-                @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value" 
-                class="options-arrow-btn"
-                :class="{ active: subscriberParameters.showOptions.value }"
-                title="Toggle advanced options"
-              >
-                {{ subscriberParameters.showOptions.value ? '▲' : '▼' }}
-              </button>
-            </div>
-            <div class="input-row">
-              <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value">
-                Declare Subscriber
-              </button>
+              <div class="header-actions">
+                <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="operation-btn">
+                  Declare Subscriber
+                </button>
+                <button 
+                  @click="subscriberParameters.showOptions.value = !subscriberParameters.showOptions.value" 
+                  class="options-arrow-btn"
+                  :class="{ active: subscriberParameters.showOptions.value }"
+                  title="Toggle advanced options"
+                >
+                  {{ subscriberParameters.showOptions.value ? '▲' : '▼' }}
+                </button>
+              </div>
             </div>
             
             <!-- Subscriber Options Panel -->
@@ -132,19 +132,19 @@
           <div class="operation-group">
             <div class="operation-header">
               <h4>Put</h4>
-              <button 
-                @click="putParameters.showOptions.value = !putParameters.showOptions.value" 
-                class="options-arrow-btn"
-                :class="{ active: putParameters.showOptions.value }"
-                title="Toggle advanced options"
-              >
-                {{ putParameters.showOptions.value ? '▲' : '▼' }}
-              </button>
-            </div>
-            <div class="input-row">
-              <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value">
-                Put
-              </button>
+              <div class="header-actions">
+                <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="operation-btn">
+                  Put
+                </button>
+                <button 
+                  @click="putParameters.showOptions.value = !putParameters.showOptions.value" 
+                  class="options-arrow-btn"
+                  :class="{ active: putParameters.showOptions.value }"
+                  title="Toggle advanced options"
+                >
+                  {{ putParameters.showOptions.value ? '▲' : '▼' }}
+                </button>
+              </div>
             </div>
             
             <!-- Put Options Panel -->
@@ -220,19 +220,19 @@
           <div class="operation-group">
             <div class="operation-header">
               <h4>Declare Queryable</h4>
-              <button 
-                @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value" 
-                class="options-arrow-btn"
-                :class="{ active: queryableParameters.showOptions.value }"
-                title="Toggle advanced options"
-              >
-                {{ queryableParameters.showOptions.value ? '▲' : '▼' }}
-              </button>
-            </div>
-            <div class="input-row">
-              <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value">
-                Declare Queryable
-              </button>
+              <div class="header-actions">
+                <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="operation-btn">
+                  Declare Queryable
+                </button>
+                <button 
+                  @click="queryableParameters.showOptions.value = !queryableParameters.showOptions.value" 
+                  class="options-arrow-btn"
+                  :class="{ active: queryableParameters.showOptions.value }"
+                  title="Toggle advanced options"
+                >
+                  {{ queryableParameters.showOptions.value ? '▲' : '▼' }}
+                </button>
+              </div>
             </div>
             
             <!-- Queryable Options Panel -->
@@ -405,19 +405,19 @@
           <div class="operation-group">
             <div class="operation-header">
               <h4>Get</h4>
-              <button 
-                @click="getParameters.showOptions.value = !getParameters.showOptions.value" 
-                class="options-arrow-btn"
-                :class="{ active: getParameters.showOptions.value }"
-                title="Toggle advanced options"
-              >
-                {{ getParameters.showOptions.value ? '▲' : '▼' }}
-              </button>
-            </div>
-            <div class="input-row">
-              <button @click="performGet" :disabled="!isConnected || !getParameters.key.value">
-                Get
-              </button>
+              <div class="header-actions">
+                <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="operation-btn">
+                  Get
+                </button>
+                <button 
+                  @click="getParameters.showOptions.value = !getParameters.showOptions.value" 
+                  class="options-arrow-btn"
+                  :class="{ active: getParameters.showOptions.value }"
+                  title="Toggle advanced options"
+                >
+                  {{ getParameters.showOptions.value ? '▲' : '▼' }}
+                </button>
+              </div>
             </div>
             
             <!-- Get Options Panel -->
@@ -1132,6 +1132,35 @@ watch(logEntries, () => {
 
 .operation-header h4 {
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.operation-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.operation-btn:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.operation-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
 }
 
 .options-arrow-btn {
