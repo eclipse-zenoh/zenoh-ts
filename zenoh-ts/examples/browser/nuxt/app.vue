@@ -672,7 +672,7 @@ watch(logEntries, () => {
 
 .input-row {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 10px;
   width: 100%;
 }
