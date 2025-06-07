@@ -1,11 +1,146 @@
 /* ===== SHARED CSS FOR ZENOH DEMO COMPONENTS ===== */
 /* This file contains reusable CSS classes to avoid duplication across components */
 
+/* ===== BASE SIZING VARIABLES ===== */
+:root {
+  --compact-font-size: 12px;
+  --compact-label-font-size: 11px;
+  --compact-padding: 3px 5px;
+  --compact-margin: 2px;
+  --compact-gap: 6px;
+  --compact-border-radius: 3px;
+  --compact-button-padding: 4px 8px;
+  --compact-input-height: 24px;
+}
+
+/* ===== BASE FORM ELEMENTS ===== */
+.compact-input,
+input.compact,
+select.compact,
+textarea.compact {
+  padding: var(--compact-padding);
+  border: 1px solid #ced4da;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
+  line-height: 1.2;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.compact-input:disabled,
+input.compact:disabled,
+select.compact:disabled,
+textarea.compact:disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+.compact-input:focus,
+input.compact:focus,
+select.compact:focus,
+textarea.compact:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.compact-label,
+label.compact {
+  font-weight: 600;
+  color: #495057;
+  font-size: var(--compact-label-font-size);
+  margin-bottom: var(--compact-margin);
+  display: block;
+}
+
+.compact-button,
+button.compact {
+  padding: var(--compact-button-padding);
+  border: none;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.compact-button:disabled,
+button.compact:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+/* ===== BUTTON VARIANTS ===== */
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.btn-primary:disabled {
+  background-color: #6c757d;
+}
+
+.btn-success {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.btn-success:hover:not(:disabled) {
+  background-color: #45a049;
+}
+
+.btn-danger {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #da190b;
+}
+
+.btn-warning {
+  background-color: #ff9800;
+  color: white;
+}
+
+.btn-warning:hover:not(:disabled) {
+  background-color: #e68900;
+}
+
+.btn-action {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  color: white;
+}
+
+.btn-action:hover:not(:disabled) {
+  background: linear-gradient(135deg, #b91c1c, #dc2626);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
+}
+
+.btn-action:active {
+  transform: translateY(0);
+}
+
+.btn-action:disabled {
+  background: #cccccc !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 /* ===== GRID SYSTEM ===== */
 .options-grid {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr);
-  gap: 8px;
+  gap: 6px;
   box-sizing: border-box;
 }
 
@@ -19,7 +154,7 @@
 .option-group {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: var(--compact-margin);
   box-sizing: border-box;
 }
 
@@ -31,7 +166,7 @@
 .radio-option-group {
   flex-direction: row !important;
   align-items: center;
-  gap: 12px;
+  gap: var(--compact-gap);
 }
 
 /* Make attachment field span full width of grid */
@@ -42,19 +177,23 @@
 .option-group label {
   font-weight: 600;
   color: #495057;
-  font-size: 14px;
+  font-size: var(--compact-label-font-size);
+  margin-bottom: var(--compact-margin);
+  display: block;
 }
 
 /* ===== FORM CONTROLS ===== */
 .option-group select,
 .option-group input[type="text"],
 .option-group input[type="number"] {
-  padding: 4px 6px;
+  padding: var(--compact-padding);
   border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
+  line-height: 1.2;
   background: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
 }
 
 .option-group select:disabled,
@@ -76,26 +215,28 @@
 /* ===== INPUT ROWS ===== */
 .input-row {
   display: flex;
-  gap: 8px;
+  gap: var(--compact-gap);
   align-items: center;
 }
 
 .input-row input {
   flex: 1;
-  padding: 6px;
+  padding: var(--compact-padding);
   border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
+  line-height: 1.2;
 }
 
 .input-row button {
-  padding: 6px 12px;
+  padding: var(--compact-button-padding);
   background-color: #2196F3;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: var(--compact-border-radius);
   cursor: pointer;
   font-weight: bold;
+  font-size: var(--compact-font-size);
   transition: background-color 0.2s;
 }
 
@@ -111,7 +252,7 @@
 /* ===== SPECIALIZED INPUT ROWS ===== */
 .attachment-input-row {
   display: flex;
-  gap: 8px;
+  gap: var(--compact-gap);
   align-items: center;
   width: 100%;
 }
@@ -119,10 +260,10 @@
 .attachment-input-row input[type="text"] {
   flex: 1;
   min-width: 0;
-  padding: 4px 6px;
+  padding: var(--compact-padding);
   border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
   background: white;
 }
 
@@ -131,7 +272,7 @@
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 8px;
+  gap: var(--compact-gap);
   font-weight: 600 !important;
   color: #495057 !important;
   cursor: pointer;
@@ -144,14 +285,14 @@
 
 .inline-checkbox {
   white-space: nowrap;
-  font-size: 13px !important;
+  font-size: var(--compact-label-font-size) !important;
 }
 
 /* ===== ENCODING CONTROLS ===== */
 .encoding-control {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: calc(var(--compact-gap) / 2);
   position: relative;
 }
 
@@ -159,10 +300,10 @@
 .encoding-control .encoding-text-input {
   flex: 1;
   min-width: 0;
-  padding: 4px 6px;
+  padding: var(--compact-padding);
   border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
   background: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -175,8 +316,8 @@
 .custom-checkbox-label {
   display: flex;
   align-items: center;
-  gap: 5px;
-  font-size: 13px;
+  gap: calc(var(--compact-gap) / 2);
+  font-size: var(--compact-label-font-size);
   color: #6c757d;
   cursor: pointer;
   user-select: none;
@@ -205,12 +346,12 @@
 .express-control {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  gap: var(--compact-gap);
+  padding: var(--compact-button-padding);
   border: 1px solid #ced4da;
-  border-radius: 4px;
+  border-radius: var(--compact-border-radius);
   background: white;
-  min-height: 20px;
+  min-height: 18px;
 }
 
 .express-control.disabled {
@@ -219,17 +360,17 @@
 }
 
 .express-state-label {
-  font-size: 14px;
+  font-size: var(--compact-font-size);
   color: #495057;
 }
 
 .tri-state-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--compact-gap);
   font-weight: 600;
   color: #495057;
-  font-size: 14px;
+  font-size: var(--compact-font-size);
   cursor: pointer;
   user-select: none;
 }
@@ -242,10 +383,10 @@
   -moz-appearance: none;
   
   /* Layout and sizing */
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   margin: 0;
-  transform: scale(1.1);
+  transform: scale(1.0);
   
   /* Visual styling */
   border: 2px solid #ccc;
@@ -281,7 +422,7 @@
 
 .tri-state-checkbox:indeterminate::before {
   content: '−';
-  font-size: 14px;
+  font-size: 12px;
 }
 
 /* Checked state (true) */
@@ -292,13 +433,13 @@
 
 .tri-state-checkbox:checked::before {
   content: '✓';
-  font-size: 12px;
+  font-size: 10px;
 }
 
 /* ===== RADIO GROUPS ===== */
 .radio-group {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   justify-content: flex-start;
 }
@@ -307,19 +448,19 @@
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   font-weight: 400 !important;
   color: #495057 !important;
   cursor: pointer;
-  font-size: 14px !important;
+  font-size: 12px !important;
   white-space: nowrap;
 }
 
 .radio-option input[type="radio"] {
   margin: 0;
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 .radio-option input[type="radio"]:disabled {

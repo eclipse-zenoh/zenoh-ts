@@ -13,18 +13,19 @@
               v-model="serverUrl" 
               :disabled="isConnected"
               placeholder="ws://localhost:10000"
+              class="compact-input"
             >
             <button 
               @click="connect" 
               :disabled="isConnecting || isConnected"
-              class="connect-btn"
+              class="compact-button btn-success"
             >
               {{ isConnecting ? 'Connecting...' : 'Connect' }}
             </button>
             <button 
               @click="disconnect" 
               :disabled="!isConnected"
-              class="disconnect-btn"
+              class="compact-button btn-danger"
             >
               Disconnect
             </button>
@@ -60,7 +61,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="operation-btn">
+                <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
                 <CollapseButton
@@ -99,7 +100,7 @@
                   <div class="item-actions">
                     <button 
                       @click="unsubscribe(subscriberInfo.displayId)" 
-                      class="item-action-btn undeclare"
+                      class="compact-button btn-danger"
                       :disabled="!isConnected"
                     >
                       Undeclare
@@ -138,7 +139,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="operation-btn">
+                <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
                   Run
                 </button>
                 <CollapseButton
@@ -226,7 +227,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="operation-btn">
+                <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
                 <CollapseButton
@@ -282,7 +283,7 @@
                     />
                     <button 
                       @click="undeclareQueryable(queryableInfo.displayId)" 
-                      class="item-action-btn undeclare"
+                      class="compact-button btn-danger"
                       :disabled="!isConnected"
                     >
                       Undeclare
@@ -443,7 +444,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="operation-btn">
+                <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="compact-button btn-primary">
                   Run
                 </button>
                 <CollapseButton
@@ -508,19 +509,20 @@
                 />
                 
                 <div class="option-group">
-                  <label>Timeout (ms):</label>
+                  <label class="compact-label">Timeout (ms):</label>
                   <input 
                     type="number" 
                     v-model="getParameters.timeout.value" 
                     placeholder="10000"
                     min="0"
                     :disabled="!isConnected"
+                    class="compact-input"
                   >
                 </div>
                 
                 <div class="option-group">
-                  <label>Target:</label>
-                  <select v-model="getParameters.target.value" :disabled="!isConnected">
+                  <label class="compact-label">Target:</label>
+                  <select v-model="getParameters.target.value" :disabled="!isConnected" class="compact-select">
                     <option :value="undefined">(default)</option>
                     <option value="BEST_MATCHING">BEST_MATCHING</option>
                     <option value="ALL">ALL</option>
@@ -529,8 +531,8 @@
                 </div>
                 
                 <div class="option-group">
-                  <label>Consolidation:</label>
-                  <select v-model="getParameters.consolidation.value" :disabled="!isConnected">
+                  <label class="compact-label">Consolidation:</label>
+                  <select v-model="getParameters.consolidation.value" :disabled="!isConnected" class="compact-select">
                     <option :value="undefined">(default)</option>
                     <option value="NONE">NONE</option>
                     <option value="MONOTONIC">MONOTONIC</option>
@@ -539,8 +541,8 @@
                 </div>
                 
                 <div class="option-group">
-                  <label>Accept Replies:</label>
-                  <select v-model="getParameters.acceptReplies.value" :disabled="!isConnected">
+                  <label class="compact-label">Accept Replies:</label>
+                  <select v-model="getParameters.acceptReplies.value" :disabled="!isConnected" class="compact-select">
                     <option :value="undefined">(default)</option>
                     <option value="MATCHING_TAG">MATCHING_TAG</option>
                     <option value="MATCHING_TAG_AND_REPLIES">MATCHING_TAG_AND_REPLIES</option>
@@ -558,7 +560,7 @@
       <div class="log-panel">
         <div class="log-header">
           <h3>Operations Log</h3>
-          <button @click="clearLog" class="clear-btn">Clear</button>
+          <button @click="clearLog" class="compact-button btn-warning">Clear</button>
         </div>
         <div class="log-content" ref="logContent">
           <div 
@@ -697,12 +699,7 @@ watch(logEntries, () => {
   color: #333;
 }
 
-.input-group input {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 14px;
-}
+/* Input styling handled by shared.css compact-input class */
 
 .input-row {
   display: flex;
@@ -721,28 +718,10 @@ watch(logEntries, () => {
   gap: 10px;
 }
 
-.connect-btn, .disconnect-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s;
-  white-space: nowrap;
-}
-
-.connect-btn {
-  background-color: #4CAF50;
-  color: white;
-}
+/* Connect/disconnect button styles now use shared btn-success/btn-danger classes */
 
 .connect-btn:hover:not(:disabled) {
   background-color: #45a049;
-}
-
-.disconnect-btn {
-  background-color: #f44336;
-  color: white;
 }
 
 .disconnect-btn:hover:not(:disabled) {
@@ -757,7 +736,7 @@ watch(logEntries, () => {
 .status-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--compact-gap);
 }
 
 .status-dot {
@@ -813,15 +792,15 @@ watch(logEntries, () => {
 
 .operation-group {
   margin-bottom: 12px;
-  padding: 8px;
+  padding: var(--compact-gap);
   background-color: white;
-  border-radius: 6px;
+  border-radius: var(--compact-gap);
   border: 1px solid #ddd;
 }
 
 /* Add spacing between operation-header and any following content */
 .operation-header + * {
-  margin-top: 8px;
+  margin-top: var(--compact-gap);
 }
 
 /* Remove the extra padding-bottom that was added to options-panel */
@@ -850,17 +829,17 @@ watch(logEntries, () => {
 
 /* Button group styling - app-specific */
 .active-items-list {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: var(--compact-gap);
+  padding-top: var(--compact-gap);
   border-top: 1px solid #ddd;
 }
 
 .item-entry {
   background: linear-gradient(135deg, #f8f9fa, #ffffff);
   border: 1px solid #e9ecef;
-  border-radius: 6px;
-  padding: 6px 8px;
-  margin-bottom: 4px;
+  border-radius: var(--compact-gap);
+  padding: var(--compact-gap) var(--compact-gap);
+  margin-bottom: var(--compact-margin);
   display: flex;
   flex-direction: column;
   transition: all 0.2s ease;
@@ -884,12 +863,12 @@ watch(logEntries, () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  gap: 8px;
+  gap: var(--compact-gap);
 }
 
 .item-actions {
   display: flex;
-  gap: 4px;
+  gap: var(--compact-margin);
   align-items: center;
   flex-shrink: 0;
 }
@@ -904,61 +883,30 @@ watch(logEntries, () => {
 
 .item-id {
   background: #e9ecef;
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: var(--compact-margin) var(--compact-gap);
+  border-radius: var(--compact-border-radius);
   font-family: 'Courier New', monospace;
   font-weight: 500;
-  font-size: 12px;
+  font-size: var(--compact-font-size);
   color: #6c757d;
 }
 
 .item-time {
   font-style: italic;
-  font-size: 12px;
+  font-size: var(--compact-font-size);
   color: #6c757d;
 }
 
-.item-action-btn {
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.item-action-btn.undeclare {
-  background: linear-gradient(135deg, #dc2626, #ef4444);
-  color: white;
-}
-
-.item-action-btn.undeclare:hover {
-  background: linear-gradient(135deg, #b91c1c, #dc2626);
-  transform: translateY(-1px);
-  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.3);
-}
-
-.item-action-btn:active {
-  transform: translateY(0);
-}
-
-.item-action-btn:disabled {
-  background: #cccccc !important;
-  cursor: not-allowed;
-  transform: none !important;
-  box-shadow: none !important;
-}
+/* Item action buttons now use shared compact-button classes */
 
 /* Details expansion section */
 .item-details {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: var(--compact-gap);
+  padding-top: var(--compact-gap);
   border-top: 1px solid #e9ecef;
   background: rgba(248, 249, 250, 0.5);
-  border-radius: 4px;
-  padding: 8px;
+  border-radius: var(--compact-border-radius);
+  padding: var(--compact-gap);
 }
 
 /* Edit reply section styling */
@@ -971,20 +919,20 @@ watch(logEntries, () => {
 .edit-reply-section {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
-  border-radius: 6px;
+  border-radius: var(--compact-gap);
   padding: 12px;
-  margin-top: 8px;
+  margin-top: var(--compact-gap);
 }
 
 .response-config-content {
-  margin-top: 8px;
+  margin-top: var(--compact-gap);
 }
 
 .details-header {
   font-weight: 600;
   font-size: 13px;
   color: #495057;
-  margin-bottom: 6px;
+  margin-bottom: var(--compact-gap);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -992,7 +940,7 @@ watch(logEntries, () => {
 .details-content {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--compact-margin);
 }
 
 .log-panel {
@@ -1016,19 +964,7 @@ watch(logEntries, () => {
   color: #333;
 }
 
-.clear-btn {
-  padding: 6px 12px;
-  background-color: #ff9800;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.clear-btn:hover {
-  background-color: #e68900;
-}
+/* Clear button now uses shared btn-warning class */
 
 .log-content {
   flex: 1;
@@ -1042,7 +978,7 @@ watch(logEntries, () => {
 .log-entry {
   display: flex;
   gap: 10px;
-  padding: 6px 0;
+  padding: var(--compact-gap) 0;
   border-bottom: 1px solid #f0f0f0;
   font-family: 'Courier New', monospace;
   font-size: 13px;
@@ -1084,7 +1020,7 @@ watch(logEntries, () => {
 }
 
 .log-message > span {
-  margin-bottom: 6px;
+  margin-bottom: var(--compact-gap);
   display: block;
 }
 
@@ -1098,10 +1034,10 @@ watch(logEntries, () => {
   margin: 8px 0 !important;
   padding: 12px !important;
   background: #f8f9fa !important;
-  border-radius: 6px !important;
-  border-left: 3px solid var(--log-color, #ccc) !important;
+  border-radius: var(--compact-gap) !important;
+  border-left: var(--compact-border-radius) solid var(--log-color, #ccc) !important;
   font-family: 'Courier New', Consolas, monospace !important;
-  font-size: 12px !important;
+  font-size: var(--compact-font-size) !important;
   line-height: 1.4 !important;
   overflow-x: auto !important;
   white-space: pre-wrap !important;
@@ -1177,32 +1113,32 @@ watch(logEntries, () => {
   font-size: 0.85em;
   font-weight: 500;
   color: #6c757d;
-  margin-left: 8px;
+  margin-left: var(--compact-gap);
 }
 
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--compact-gap);
 }
 
 /* Container-specific sizing for CollapseButton components */
 .header-actions .collapse-btn {
   width: 28px;
   height: 28px;
-  padding: 6px 8px;
+  padding: var(--compact-gap) var(--compact-gap);
 }
 
 .item-actions .collapse-btn {
   /* Override all base styles to match item-action-btn exactly */
   height: auto !important;
-  padding: 4px 8px !important;
-  font-size: 11px !important;
+  padding: var(--compact-padding) !important;
+  font-size: var(--compact-label-font-size) !important;
   font-weight: 500;
   min-width: auto;
   width: auto !important;
   min-height: auto !important;
-  border-radius: 4px;
+  border-radius: var(--compact-border-radius);
   flex-shrink: 0;
   line-height: normal;
   display: inline-flex;
@@ -1211,12 +1147,12 @@ watch(logEntries, () => {
 }
 
 .item-actions .collapse-btn .collapse-btn-label {
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-weight: 500;
 }
 
 .item-actions .collapse-btn .collapse-btn-text {
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-weight: 500;
 }
 
@@ -1224,28 +1160,7 @@ watch(logEntries, () => {
   font-size: 10px;
 }
 
-.operation-btn {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-  white-space: nowrap;
-}
-
-.operation-btn:hover:not(:disabled) {
-  background-color: #0056b3;
-}
-
-.operation-btn:disabled {
-  background-color: #6c757d;
-  cursor: not-allowed;
-  opacity: 0.65;
-}
+/* Operation buttons now use shared compact-button classes */
 
 
 .options-toggle {
@@ -1255,15 +1170,15 @@ watch(logEntries, () => {
 .options-toggle-btn {
   background: #f8f9fa;
   border: 1px solid #dee2e6;
-  border-radius: 6px;
-  padding: 4px 8px;
+  border-radius: var(--compact-gap);
+  padding: var(--compact-padding);
   font-size: 14px;
   color: #495057;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--compact-margin);
 }
 
 .options-toggle-btn:hover {
@@ -1294,32 +1209,32 @@ watch(logEntries, () => {
 }
 
 .reply-fields, .reply-err-fields {
-  padding: 12px;
+  padding: var(--compact-gap);
   background-color: #f8f9fa;
-  border-radius: 6px;
-  margin-bottom: 12px;
+  border-radius: var(--compact-border-radius);
+  margin-bottom: var(--compact-gap);
   border: 1px solid #e9ecef;
 }
 
 .field-group {
-  margin-bottom: 10px;
+  margin-bottom: var(--compact-gap);
 }
 
 .field-group label {
   display: block;
   font-weight: 600;
   color: #495057;
-  margin-bottom: 4px;
-  font-size: 0.8rem;
+  margin-bottom: var(--compact-border-radius);
+  font-size: var(--compact-label-font-size);
 }
 
 .field-group input,
 .field-group textarea {
   width: 100%;
-  padding: 6px;
+  padding: var(--compact-margin);
   border: 1px solid #ced4da;
-  border-radius: 4px;
-  font-size: 0.875rem;
+  border-radius: var(--compact-border-radius);
+  font-size: var(--compact-font-size);
   box-sizing: border-box;
 }
 
