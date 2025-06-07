@@ -779,10 +779,14 @@ watch(logEntries, () => {
 
 .operation-group {
   margin-bottom: 12px;
-  padding: 8px;
+  padding: 8px 8px 0 8px;
   background-color: white;
   border-radius: 6px;
   border: 1px solid #ddd;
+}
+
+.options-panel {
+  padding-bottom: 8px;
 }
 
 .operation-block {
@@ -1099,7 +1103,8 @@ watch(logEntries, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  padding-bottom: 8px;
 }
 
 .operation-header h4 {
