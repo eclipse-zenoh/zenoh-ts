@@ -91,6 +91,19 @@ function formatJSONWithColors(obj: any, indent: number = 0): string {
 }
 
 /**
+ * Formats a complete title element with appropriate styling
+ */
+function formatTitleElement(title: string, typeColor: string): string {
+  if (props.type === 'neutral') {
+    // Neutral mode: minimal styling for titles
+    return `<div style="font-size: 0.9em; white-space: nowrap;">${title} =</div>`;
+  }
+  
+  // Normal mode: full styling with color
+  return `<div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>`;
+}
+
+/**
  * Returns appropriate styling for JSON pre elements based on type
  */
 function getJsonPreStyles(typeColor: string): string {
@@ -100,31 +113,45 @@ function getJsonPreStyles(typeColor: string): string {
 }
 
 /**
+ * Formats a complete value element with appropriate styling and content
+ */
+function formatValueElement(value: any, valueType: 'string' | 'number' | 'boolean' | 'object', typeColor: string): string {
+  // Return appropriate element based on value type
+  if (valueType === 'string') {
+    return `<div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>`;
+  } else if (valueType === 'number') {
+    return `<div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>`;
+  } else if (valueType === 'boolean') {
+    return `<div style="font-family: 'Courier New', monospace; color: #7c3aed;">${value}</div>`;
+  } else {
+    // For objects, arrays, etc., format as JSON
+    return `<pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>`;
+  }
+}
+
+/**
  * Formats a single parameter entry with proper styling
  */
 function formatSingleParameter(title: string, value: any, typeColor: string): string {
+  let valueType: 'string' | 'number' | 'boolean' | 'object';
+  
+  // Determine value type
   if (typeof value === 'string') {
-    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
-      <div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>
-    </div>`;
+    valueType = 'string';
   } else if (typeof value === 'number') {
-    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
-      <div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>
-    </div>`;
+    valueType = 'number';
   } else if (typeof value === 'boolean') {
-    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
-      <div style="font-family: 'Courier New', monospace; color: #7c3aed;">${value}</div>
-    </div>`;
+    valueType = 'boolean';
   } else {
     // For objects, arrays, etc., format as JSON
-    return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
-      <div style="font-weight: bold; color: ${typeColor}; font-size: 0.9em; white-space: nowrap;">${title} =</div>
-      <pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>
-    </div>`;
+    valueType = 'object';
   }
+  
+  // Build the common HTML structure using the new element formatters
+  return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
+    ${formatTitleElement(title, typeColor)}
+    ${formatValueElement(value, valueType, typeColor)}
+  </div>`;
 }
 
 /**
