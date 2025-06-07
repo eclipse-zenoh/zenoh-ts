@@ -98,19 +98,19 @@
                   </div>
                   <div class="item-actions">
                     <button 
-                      @click="toggleSubscriberDetails(subscriber.displayId)" 
-                      class="item-action-btn details"
-                      :class="{ active: expandedSubscriberDetails.has(subscriber.displayId) }"
-                      title="Toggle details"
-                    >
-                      Details
-                    </button>
-                    <button 
                       @click="unsubscribe(subscriber.displayId)" 
                       class="item-action-btn undeclare"
                       :disabled="!isConnected"
                     >
                       Undeclare
+                    </button>
+                    <button 
+                      @click="toggleSubscriberDetails(subscriber.displayId)" 
+                      class="item-action-btn details"
+                      :class="{ active: expandedSubscriberDetails.has(subscriber.displayId) }"
+                      title="Toggle details"
+                    >
+                      {{ expandedSubscriberDetails.has(subscriber.displayId) ? '▲' : '▼' }}
                     </button>
                   </div>
                 </div>
@@ -371,19 +371,19 @@
                   </div>
                   <div class="item-actions">
                     <button 
-                      @click="toggleQueryableDetails(queryable.displayId)" 
-                      class="item-action-btn details"
-                      :class="{ active: expandedQueryableDetails.has(queryable.displayId) }"
-                      title="Toggle details"
-                    >
-                      Details
-                    </button>
-                    <button 
                       @click="undeclareQueryable(queryable.displayId)" 
                       class="item-action-btn undeclare"
                       :disabled="!isConnected"
                     >
                       Undeclare
+                    </button>
+                    <button 
+                      @click="toggleQueryableDetails(queryable.displayId)" 
+                      class="item-action-btn details"
+                      :class="{ active: expandedQueryableDetails.has(queryable.displayId) }"
+                      title="Toggle details"
+                    >
+                      {{ expandedQueryableDetails.has(queryable.displayId) ? '▲' : '▼' }}
                     </button>
                   </div>
                 </div>
@@ -911,6 +911,12 @@ watch(logEntries, () => {
   background: white;
   border: 1px solid #dee2e6;
   color: #495057;
+  min-width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
 
 .item-action-btn.details:hover {
