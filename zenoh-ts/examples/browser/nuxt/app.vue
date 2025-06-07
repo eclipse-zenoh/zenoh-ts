@@ -149,13 +149,13 @@
             
             <!-- Put Options Panel -->
             <div v-if="putOptionsExpanded" class="options-panel">
-              <KeyExprInput 
-                v-model="putParameters.key.value" 
-                label="Key Expression"
-                placeholder="Key expression (e.g., demo/example/test)"
-                :disabled="!isConnected"
-              />
               <div class="options-grid">
+                <KeyExprInput 
+                  v-model="putParameters.key.value" 
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/test)"
+                  :disabled="!isConnected"
+                />
                 <PayloadInput
                   v-model="putParameters.value.value"
                   v-model:is-empty="putParameters.valueEmpty.value"
@@ -422,13 +422,13 @@
             
             <!-- Get Options Panel -->
             <div v-if="getOptionsExpanded" class="options-panel">
-              <KeyExprInput 
-                v-model="getParameters.key.value" 
-                label="Selector"
-                placeholder="Selector (e.g., demo/example/*)"
-                :disabled="!isConnected"
-              />
               <div class="options-grid">
+                <KeyExprInput 
+                  v-model="getParameters.key.value" 
+                  label="Selector"
+                  placeholder="Selector (e.g., demo/example/*)"
+                  :disabled="!isConnected"
+                />
                 <EncodingSelect 
                   v-model="getParameters.encoding.value"
                   v-model:custom-encoding="getParameters.customEncoding.value"
