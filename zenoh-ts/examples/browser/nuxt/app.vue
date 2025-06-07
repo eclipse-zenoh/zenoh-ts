@@ -336,7 +336,20 @@
 
                     <!-- Individual Response Configuration Panel -->
                     <div class="individual-response-config">
-                      <h5 class="response-config-title">Response Configuration</h5>
+                      <div class="response-config-header">
+                        <h5 class="response-config-title">Edit reply parameters</h5>
+                        <CollapseButton
+                          :expanded="expandedResponseConfig.has(queryableInfo.displayId)"
+                          @update:expanded="(value) => { if (value) { 
+                            expandedResponseConfig.add(queryableInfo.displayId) 
+                          } else { 
+                            expandedResponseConfig.delete(queryableInfo.displayId) 
+                          } }"
+                        />
+                      </div>
+                      
+                      <!-- Response Configuration Content (collapsible) -->
+                      <div v-if="expandedResponseConfig.has(queryableInfo.displayId)" class="response-config-content">
                       
                       <!-- Reply Type Selection -->
                       <div class="reply-type-selection">
@@ -437,6 +450,7 @@
                           />
                         </div>
                       </div>
+                      </div> <!-- End response-config-content -->
                     </div>
                   </div>
                 </div>
@@ -653,6 +667,7 @@ const logContent = ref<HTMLElement>()
 // State to track expanded details for subscribers and queryables
 const expandedSubscriberDetails = ref<Set<string>>(new Set())
 const expandedQueryableDetails = ref<Set<string>>(new Set())
+const expandedResponseConfig = ref<Set<string>>(new Set())
 
 // State to track expanded options panels for operations
 const subscriberOptionsExpanded = ref(false)
@@ -1353,6 +1368,29 @@ watch(logEntries, () => {
   color: #495057;
   border-bottom: 1px solid #dee2e6;
   padding-bottom: 8px;
+}
+
+.response-config-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.response-config-header .response-config-title {
+  margin: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.response-config-header .collapse-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.response-config-content {
+  margin-top: 8px;
 }
 
 .individual-response-config .reply-type-selection {
