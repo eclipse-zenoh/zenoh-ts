@@ -889,8 +889,10 @@ watch(logEntries, () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 1.0);
+  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 0.8);
   font-size: calc(var(--compact-font-size) * 0.85);
+  min-width: auto;
+  box-sizing: border-box;
 }
 
 .item-key {
@@ -1168,7 +1170,7 @@ watch(logEntries, () => {
 .item-actions .collapse-btn {
   /* Ensure consistent sizing with other item action buttons */
   height: auto;
-  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 1.0);
+  padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 0.6);
   font-size: calc(var(--compact-font-size) * 0.85);
   font-weight: 500;
   min-width: auto;
@@ -1177,6 +1179,7 @@ watch(logEntries, () => {
   border-radius: var(--compact-border-radius);
   flex-shrink: 0;
   line-height: normal;
+  box-sizing: border-box;
 }
 
 .item-actions .collapse-btn .collapse-btn-label {
