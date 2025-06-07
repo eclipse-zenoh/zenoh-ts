@@ -1083,6 +1083,11 @@ watch(logEntries, () => {
   word-break: break-word;
 }
 
+.log-message > span {
+  margin-bottom: 6px;
+  display: block;
+}
+
 /* Styles for HTML-formatted JSON log messages */
 .log-message div[style*="margin: 4px 0"] {
   margin: 0 !important;
