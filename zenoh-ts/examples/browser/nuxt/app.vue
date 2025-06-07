@@ -53,7 +53,12 @@
           <!-- Declare Subscriber Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Subscriber</h4>
+              <h4>
+                Subscriber
+                <span v-if="!subscriberOptionsExpanded && subscriberParameters.key.value" class="header-keyexpr">
+                  - {{ subscriberParameters.key.value }}
+                </span>
+              </h4>
               <div class="header-actions">
                 <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="operation-btn">
                   Declare
@@ -126,7 +131,12 @@
           <!-- Put Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Put</h4>
+              <h4>
+                Put
+                <span v-if="!putOptionsExpanded && putParameters.key.value" class="header-keyexpr">
+                  - {{ putParameters.key.value }}
+                </span>
+              </h4>
               <div class="header-actions">
                 <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="operation-btn">
                   Run
@@ -209,7 +219,12 @@
           <!-- Declare Queryable Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Queryable</h4>
+              <h4>
+                Queryable
+                <span v-if="!queryableOptionsExpanded && queryableParameters.key.value" class="header-keyexpr">
+                  - {{ queryableParameters.key.value }}
+                </span>
+              </h4>
               <div class="header-actions">
                 <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="operation-btn">
                   Declare
@@ -389,7 +404,12 @@
           <!-- Get Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Get</h4>
+              <h4>
+                Get
+                <span v-if="!getOptionsExpanded && getParameters.key.value" class="header-keyexpr">
+                  - {{ getParameters.key.value }}
+                </span>
+              </h4>
               <div class="header-actions">
                 <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="operation-btn">
                   Run
@@ -1084,6 +1104,14 @@ watch(logEntries, () => {
 
 .operation-header h4 {
   margin: 0;
+}
+
+.header-keyexpr {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: #6c757d;
+  margin-left: 8px;
 }
 
 .header-actions {
