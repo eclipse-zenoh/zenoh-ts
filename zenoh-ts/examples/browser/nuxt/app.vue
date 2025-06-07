@@ -53,10 +53,10 @@
           <!-- Declare Subscriber Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Declare Subscriber</h4>
+              <h4>Subscriber</h4>
               <div class="header-actions">
                 <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="operation-btn">
-                  Declare Subscriber
+                  Declare
                 </button>
                 <CollapseButton
                   v-model:expanded="subscriberOptionsExpanded"
@@ -129,7 +129,7 @@
               <h4>Put</h4>
               <div class="header-actions">
                 <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="operation-btn">
-                  Put
+                  Run
                 </button>
                 <CollapseButton
                   v-model:expanded="putOptionsExpanded"
@@ -209,10 +209,10 @@
           <!-- Declare Queryable Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Declare Queryable</h4>
+              <h4>Queryable</h4>
               <div class="header-actions">
                 <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="operation-btn">
-                  Declare Queryable
+                  Declare
                 </button>
                 <CollapseButton
                   v-model:expanded="queryableOptionsExpanded"
@@ -392,7 +392,7 @@
               <h4>Get</h4>
               <div class="header-actions">
                 <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="operation-btn">
-                  Get
+                  Run
                 </button>
                 <CollapseButton
                   v-model:expanded="getOptionsExpanded"
