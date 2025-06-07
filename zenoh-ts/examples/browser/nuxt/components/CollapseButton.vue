@@ -3,7 +3,8 @@
     :class="buttonClasses"
     @click="handleClick"
   >
-    {{ expanded ? '▲' : '▼' }}
+    <span v-if="label" class="collapse-btn-label">{{ label }}</span>
+    <span class="collapse-btn-triangle">{{ expanded ? '▲' : '▼' }}</span>
   </button>
 </template>
 
@@ -13,6 +14,8 @@ import { computed } from 'vue'
 interface Props {
   /** Current expanded state */
   expanded?: boolean
+  /** Optional label text to show before the triangle */
+  label?: string
 }
 
 interface Emits {
@@ -52,6 +55,7 @@ const buttonClasses = computed(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   font-size: 12px;
   line-height: 1;
   
@@ -64,6 +68,15 @@ const buttonClasses = computed(() => {
   width: 100%;
   height: 100%;
   min-height: 20px;
+}
+
+.collapse-btn-label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.collapse-btn-triangle {
+  flex-shrink: 0;
 }
 
 .collapse-btn:hover {

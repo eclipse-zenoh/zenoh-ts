@@ -269,6 +269,15 @@
                     <span class="item-time">{{ queryableInfo.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
+                    <CollapseButton
+                      label="Edit reply"
+                      :expanded="expandedResponseConfig.has(queryableInfo.displayId)"
+                      @update:expanded="(value: boolean) => { if (value) { 
+                        expandedResponseConfig.add(queryableInfo.displayId) 
+                      } else { 
+                        expandedResponseConfig.delete(queryableInfo.displayId) 
+                      } }"
+                    />
                     <button 
                       @click="undeclareQueryable(queryableInfo.displayId)" 
                       class="item-action-btn undeclare"
@@ -290,6 +299,89 @@
                 <!-- Expanded Details Section -->
                 <div v-if="expandedQueryableDetails.has(queryableInfo.displayId)" class="item-details">
                   <div class="details-content">
+                    <!-- Edit Reply Section -->
+                    <div class="edit-reply-section">
+                      <!-- Individual Response Configuration Panel -->
+                      <div v-if="expandedResponseConfig.has(queryableInfo.displayId)" class="response-config-content">
+                        <div class="options-grid">
+                            <!-- Response Type Selection -->
+                            <ResponseTypeSelect
+                              v-model="queryableInfo.responseParameters.replyType"
+                              :name="`response-type-${queryableInfo.displayId}`"
+                              :disabled="!isConnected"
+                            />
+                            
+                            <!-- Reply Fields -->
+                            <template v-if="queryableInfo.responseParameters.replyType === 'reply'">
+                              <KeyExprInput 
+                                v-model="queryableInfo.responseParameters.reply.keyExpr"
+                                label="Key Expression"
+                                placeholder="Normally the queryable keyexpr"
+                                :disabled="!isConnected"
+                              />
+                              
+                              <PayloadInput
+                                v-model="queryableInfo.responseParameters.reply.payload"
+                                v-model:is-empty="queryableInfo.responseParameters.reply.payloadEmpty"
+                                label="Payload"
+                                placeholder="Payload content for successful reply"
+                                :disabled="!isConnected"
+                              />
+                              
+                              <EncodingSelect 
+                                v-model="queryableInfo.responseParameters.reply.encoding"
+                                v-model:custom-encoding="queryableInfo.responseParameters.reply.customEncoding"
+                                :encoding-options="encodingOptions"
+                                :disabled="!isConnected"
+                              />
+                              
+                              <PrioritySelect 
+                                v-model="queryableInfo.responseParameters.reply.priority" 
+                                :disabled="!isConnected"
+                                :options="priorityOptions"
+                              />
+                              
+                              <CongestionControlSelect
+                                v-model="queryableInfo.responseParameters.reply.congestionControl"
+                                :disabled="!isConnected"
+                                :options="congestionControlOptions"
+                              />
+                              
+                              <ExpressSelect
+                                v-model="queryableInfo.responseParameters.reply.express"
+                                :disabled="!isConnected"
+                              />
+                              
+                              <PayloadInput
+                                v-model="queryableInfo.responseParameters.reply.attachment"
+                                v-model:is-empty="queryableInfo.responseParameters.reply.attachmentEmpty"
+                                label="Attachment"
+                                placeholder="Optional attachment data"
+                                :disabled="!isConnected"
+                              />
+                            </template>
+                            
+                            <!-- ReplyErr Fields -->
+                            <template v-if="queryableInfo.responseParameters.replyType === 'replyErr'">
+                              <PayloadInput
+                                v-model="queryableInfo.responseParameters.replyErr.payload"
+                                v-model:is-empty="queryableInfo.responseParameters.replyErr.payloadEmpty"
+                                label="Error Payload"
+                                placeholder="Error message or payload"
+                                :disabled="!isConnected"
+                              />
+                              
+                              <EncodingSelect 
+                                v-model="queryableInfo.responseParameters.replyErr.encoding"
+                                v-model:custom-encoding="queryableInfo.responseParameters.replyErr.customEncoding"
+                                :encoding-options="encodingOptions"
+                                :disabled="!isConnected"
+                              />
+                            </template>
+                          </div>
+                        </div> <!-- End response-config-content -->
+                    </div>
+
                     <!-- Queryable Options Display -->
                     <ParameterDisplay 
                       type="neutral" 
@@ -332,101 +424,6 @@
                         type="neutral" 
                         :data="{ 'ReplyErrOptions': queryableInfo.responseParameters.getReplyErrOptionsJSON() }"
                       />
-                    </div>
-
-                    <!-- Individual Response Configuration Panel -->
-                    <div class="individual-response-config">
-                      <div class="response-config-header">
-                        <h5 class="response-config-title">Edit reply parameters</h5>
-                        <CollapseButton
-                          :expanded="expandedResponseConfig.has(queryableInfo.displayId)"
-                          @update:expanded="(value) => { if (value) { 
-                            expandedResponseConfig.add(queryableInfo.displayId) 
-                          } else { 
-                            expandedResponseConfig.delete(queryableInfo.displayId) 
-                          } }"
-                        />
-                      </div>
-                      
-                      <!-- Response Configuration Content (collapsible) -->
-                      <div v-if="expandedResponseConfig.has(queryableInfo.displayId)" class="response-config-content">
-                        <div class="options-grid">
-                          <!-- Response Type Selection -->
-                          <ResponseTypeSelect
-                            v-model="queryableInfo.responseParameters.replyType"
-                            :name="`response-type-${queryableInfo.displayId}`"
-                            :disabled="!isConnected"
-                          />
-                          
-                          <!-- Reply Fields -->
-                          <template v-if="queryableInfo.responseParameters.replyType === 'reply'">
-                            <KeyExprInput 
-                              v-model="queryableInfo.responseParameters.reply.keyExpr"
-                              label="Key Expression"
-                              placeholder="Normally the queryable keyexpr"
-                              :disabled="!isConnected"
-                            />
-                            
-                            <PayloadInput
-                              v-model="queryableInfo.responseParameters.reply.payload"
-                              v-model:is-empty="queryableInfo.responseParameters.reply.payloadEmpty"
-                              label="Payload"
-                              placeholder="Payload content for successful reply"
-                              :disabled="!isConnected"
-                            />
-                            
-                            <EncodingSelect 
-                              v-model="queryableInfo.responseParameters.reply.encoding"
-                              v-model:custom-encoding="queryableInfo.responseParameters.reply.customEncoding"
-                              :encoding-options="encodingOptions"
-                              :disabled="!isConnected"
-                            />
-                            
-                            <PrioritySelect 
-                              v-model="queryableInfo.responseParameters.reply.priority" 
-                              :disabled="!isConnected"
-                              :options="priorityOptions"
-                            />
-                            
-                            <CongestionControlSelect
-                              v-model="queryableInfo.responseParameters.reply.congestionControl"
-                              :disabled="!isConnected"
-                              :options="congestionControlOptions"
-                            />
-                            
-                            <ExpressSelect
-                              v-model="queryableInfo.responseParameters.reply.express"
-                              :disabled="!isConnected"
-                            />
-                            
-                            <PayloadInput
-                              v-model="queryableInfo.responseParameters.reply.attachment"
-                              v-model:is-empty="queryableInfo.responseParameters.reply.attachmentEmpty"
-                              label="Attachment"
-                              placeholder="Optional attachment data"
-                              :disabled="!isConnected"
-                            />
-                          </template>
-                          
-                          <!-- ReplyErr Fields -->
-                          <template v-if="queryableInfo.responseParameters.replyType === 'replyErr'">
-                            <PayloadInput
-                              v-model="queryableInfo.responseParameters.replyErr.payload"
-                              v-model:is-empty="queryableInfo.responseParameters.replyErr.payloadEmpty"
-                              label="Error Payload"
-                              placeholder="Error message or payload"
-                              :disabled="!isConnected"
-                            />
-                            
-                            <EncodingSelect 
-                              v-model="queryableInfo.responseParameters.replyErr.encoding"
-                              v-model:custom-encoding="queryableInfo.responseParameters.replyErr.customEncoding"
-                              :encoding-options="encodingOptions"
-                              :disabled="!isConnected"
-                            />
-                          </template>
-                        </div>
-                      </div> <!-- End response-config-content -->
                     </div>
                   </div>
                 </div>
@@ -962,6 +959,17 @@ watch(logEntries, () => {
   padding: 8px;
 }
 
+/* Edit reply section styling */
+.edit-reply-section {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.response-config-content {
+  margin-top: 8px;
+}
+
 .details-header {
   font-weight: 600;
   font-size: 13px;
@@ -1171,9 +1179,19 @@ watch(logEntries, () => {
 }
 
 .item-actions .collapse-btn {
-  width: 24px;
   height: 24px;
-  padding: 0;
+  padding: 2px 6px;
+  font-size: 12px;
+  min-width: auto;
+}
+
+.item-actions .collapse-btn .collapse-btn-label {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.item-actions .collapse-btn .collapse-btn-triangle {
+  font-size: 10px;
 }
 
 .operation-btn {
@@ -1287,38 +1305,6 @@ watch(logEntries, () => {
   background-color: #f8f9fa;
   border-radius: 8px;
   border: 1px solid #e9ecef;
-}
-
-.response-config-title {
-  margin: 0 0 12px 0;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #495057;
-  border-bottom: 1px solid #dee2e6;
-  padding-bottom: 8px;
-}
-
-.response-config-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.response-config-header .response-config-title {
-  margin: 0;
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.response-config-header .collapse-btn {
-  width: 24px;
-  height: 24px;
-  padding: 0;
-}
-
-.response-config-content {
-  margin-top: 8px;
 }
 
 .individual-response-config .reply-fields,
