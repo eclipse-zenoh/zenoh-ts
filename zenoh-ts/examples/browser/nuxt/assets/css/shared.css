@@ -3,14 +3,14 @@
 
 /* ===== BASE SIZING VARIABLES ===== */
 :root {
-  --compact-font-size: 12px;
-  --compact-label-font-size: 11px;
-  --compact-padding: 3px 5px;
-  --compact-margin: 2px;
-  --compact-gap: 6px;
-  --compact-border-radius: 3px;
-  --compact-button-padding: 4px 8px;
-  --compact-input-height: 24px;
+  --compact-font-size: 14px;
+  --compact-label-font-size: 13px;
+  --compact-padding: 6px 10px;
+  --compact-margin: 4px;
+  --compact-gap: 8px;
+  --compact-border-radius: 4px;
+  --compact-button-padding: 6px 12px;
+  --compact-input-height: 32px;
 }
 
 /* ===== BASE FORM ELEMENTS ===== */
@@ -22,10 +22,11 @@ textarea.compact {
   border: 1px solid #ced4da;
   border-radius: var(--compact-border-radius);
   font-size: var(--compact-font-size);
-  line-height: 1.2;
+  line-height: 1.4;
   background: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  min-height: var(--compact-input-height);
 }
 
 .compact-input:disabled,
@@ -65,7 +66,11 @@ button.compact {
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  line-height: 1.2;
+  line-height: 1.4;
+  min-height: var(--compact-input-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .compact-button:disabled,
@@ -139,13 +144,13 @@ button.compact:disabled {
 /* ===== GRID SYSTEM ===== */
 .options-grid {
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) minmax(120px, 1fr);
-  gap: 6px;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--compact-gap);
   box-sizing: border-box;
 }
 
 .options-panel {
-  margin-top: 6px;
+  margin-top: var(--compact-gap);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -190,10 +195,11 @@ button.compact:disabled {
   border: 1px solid #ced4da;
   border-radius: var(--compact-border-radius);
   font-size: var(--compact-font-size);
-  line-height: 1.2;
+  line-height: 1.4;
   background: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  min-height: var(--compact-input-height);
 }
 
 .option-group select:disabled,
@@ -225,7 +231,8 @@ button.compact:disabled {
   border: 1px solid #ccc;
   border-radius: var(--compact-border-radius);
   font-size: var(--compact-font-size);
-  line-height: 1.2;
+  line-height: 1.4;
+  min-height: var(--compact-input-height);
 }
 
 .input-row button {
@@ -238,6 +245,10 @@ button.compact:disabled {
   font-weight: bold;
   font-size: var(--compact-font-size);
   transition: background-color 0.2s;
+  min-height: var(--compact-input-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .input-row button:hover:not(:disabled) {
@@ -265,6 +276,8 @@ button.compact:disabled {
   border-radius: var(--compact-border-radius);
   font-size: var(--compact-font-size);
   background: white;
+  min-height: var(--compact-input-height);
+  line-height: 1.4;
 }
 
 /* ===== CHECKBOX AND LABELS ===== */
@@ -306,6 +319,8 @@ button.compact:disabled {
   font-size: var(--compact-font-size);
   background: white;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  min-height: var(--compact-input-height);
+  line-height: 1.4;
 }
 
 .encoding-control .custom-checkbox-label {
@@ -351,7 +366,7 @@ button.compact:disabled {
   border: 1px solid #ced4da;
   border-radius: var(--compact-border-radius);
   background: white;
-  min-height: 18px;
+  min-height: var(--compact-input-height);
 }
 
 .express-control.disabled {

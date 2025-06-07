@@ -930,7 +930,7 @@ watch(logEntries, () => {
 
 .details-header {
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--compact-font-size);
   color: #495057;
   margin-bottom: var(--compact-gap);
   text-transform: uppercase;
@@ -1202,7 +1202,7 @@ watch(logEntries, () => {
 }
 
 .section-subtitle {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   color: #495057;
   margin: 0 0 12px 0;
