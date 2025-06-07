@@ -1,6 +1,6 @@
 import type { Ref } from "vue";
 import { ref } from "vue";
-import { Deconstructable, type OptionItem } from "./zenohDemo/utils";
+import { Deconstructable, type OptionItem } from "./zenohDemo/safeUtils";
 
 // Type-only imports - safe for SSR
 import type {
@@ -12,7 +12,7 @@ import type {
   ConsolidationMode,
   ReplyKeyExpr,
 } from "@eclipse-zenoh/zenoh-ts";
-import type { QueryableOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
+import type { QueryableOptionsJSON, ReplyErrOptionsJSON, ReplyOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
 
 // Log entry interface
 export interface LogEntry {
@@ -41,6 +41,7 @@ export interface ReplyParametersState {
   priority: Priority | undefined;
   congestionControl: CongestionControl | undefined;
   express: boolean | undefined;
+  timestamp: Date | undefined;
   attachment: string;
   attachmentEmpty: boolean;
 }
@@ -61,6 +62,12 @@ export interface QueryableResponseParametersState {
   // Reply sub-states
   reply: ReplyParametersState;
   replyErr: ReplyErrParametersState;
+
+  // Methods to get JSON representations of the reply options
+  // As the zenoh-ts library is loaded dynamically to avoid SSR issues,
+  // we cannot import real method implementations here, so using function references
+  getReplyOptionsJSON: () => ReplyOptionsJSON;
+  getReplyErrOptionsJSON: () => ReplyErrOptionsJSON;
 }
 
 // Queryable info interface
@@ -167,6 +174,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
       priority: undefined as Priority | undefined,
       congestionControl: undefined as CongestionControl | undefined,
       express: undefined as boolean | undefined,
+      timestamp: undefined as Date | undefined,
       attachment: "",
       attachmentEmpty: true,
     },
@@ -176,6 +184,9 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
       encoding: "",
       customEncoding: false,
     },
+
+    getReplyOptionsJSON: () => { return {} as ReplyOptionsJSON; },
+    getReplyErrOptionsJSON: () => { return {} as ReplyErrOptionsJSON; },
   };
 }
 

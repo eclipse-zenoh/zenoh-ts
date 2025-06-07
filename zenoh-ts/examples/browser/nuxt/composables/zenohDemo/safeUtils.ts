@@ -1,3 +1,7 @@
+//
+// Utility functions safe to be loaded in the browser
+//
+
 // This class is used to ensure that the methods of the derived class
 // are bound to the correct `this` context when the instance is deconstructed.
 // It is not intended to be instantiated directly.
@@ -102,3 +106,4 @@ export function createOptionsFromStaticConstants(classRef: any, excludeKeys: str
     })
     .sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically by label
 }
+

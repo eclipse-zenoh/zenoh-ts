@@ -15,7 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import type { OptionItem } from '../composables/zenohDemo/utils'
+import type { OptionItem } from '../composables/zenohDemo/safeUtils'
 
 interface Props {
   modelValue: number | undefined

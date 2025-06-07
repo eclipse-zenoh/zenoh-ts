@@ -89,38 +89,38 @@
             
             <!-- Active Subscribers List -->
             <div v-if="activeSubscribers.length > 0" class="active-items-list">
-              <div class="item-entry" v-for="subscriber in activeSubscribers" :key="subscriber.displayId">
+              <div class="item-entry" v-for="subscriberInfo in activeSubscribers" :key="subscriberInfo.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ subscriber.keyExpr }}</span>
-                    <span class="item-id">{{ subscriber.displayId }}</span>
-                    <span class="item-time">{{ subscriber.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ subscriberInfo.keyExpr }}</span>
+                    <span class="item-id">{{ subscriberInfo.displayId }}</span>
+                    <span class="item-time">{{ subscriberInfo.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
                     <button 
-                      @click="unsubscribe(subscriber.displayId)" 
+                      @click="unsubscribe(subscriberInfo.displayId)" 
                       class="item-action-btn undeclare"
                       :disabled="!isConnected"
                     >
                       Undeclare
                     </button>
                     <CollapseButton
-                      :expanded="expandedSubscriberDetails.has(subscriber.displayId)"
-                      @update:expanded="(value) => { if (value) { 
-                        expandedSubscriberDetails.add(subscriber.displayId) 
+                      :expanded="expandedSubscriberDetails.has(subscriberInfo.displayId)"
+                      @update:expanded="(value: boolean) => { if (value) { 
+                        expandedSubscriberDetails.add(subscriberInfo.displayId) 
                       } else { 
-                        expandedSubscriberDetails.delete(subscriber.displayId) 
+                        expandedSubscriberDetails.delete(subscriberInfo.displayId) 
                       } }"
                     />
                   </div>
                 </div>
                 
                 <!-- Expanded Details Section -->
-                <div v-if="expandedSubscriberDetails.has(subscriber.displayId)" class="item-details">
+                <div v-if="expandedSubscriberDetails.has(subscriberInfo.displayId)" class="item-details">
                   <div class="details-content">
                     <ParameterDisplay 
                       type="neutral" 
-                      :data="{ 'SubscriberOptions': subscriber.options }"
+                      :data="{ 'SubscriberOptions': subscriberInfo.options }"
                     />
                   </div>
                 </div>
@@ -261,41 +261,79 @@
             
             <!-- Active Queryables List -->
             <div v-if="activeQueryables.length > 0" class="active-items-list">
-              <div class="item-entry" v-for="queryable in activeQueryables" :key="queryable.displayId">
+              <div class="item-entry" v-for="queryableInfo in activeQueryables" :key="queryableInfo.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ queryable.keyExpr }}</span>
-                    <span class="item-id">{{ queryable.displayId }}</span>
-                    <span class="item-time">{{ queryable.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ queryableInfo.keyExpr }}</span>
+                    <span class="item-id">{{ queryableInfo.displayId }}</span>
+                    <span class="item-time">{{ queryableInfo.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
                     <button 
-                      @click="undeclareQueryable(queryable.displayId)" 
+                      @click="undeclareQueryable(queryableInfo.displayId)" 
                       class="item-action-btn undeclare"
                       :disabled="!isConnected"
                     >
                       Undeclare
                     </button>
                     <CollapseButton
-                      :expanded="expandedQueryableDetails.has(queryable.displayId)"
-                      @update:expanded="(value) => { if (value) { 
-                        expandedQueryableDetails.add(queryable.displayId) 
+                      :expanded="expandedQueryableDetails.has(queryableInfo.displayId)"
+                      @update:expanded="(value: boolean) => { if (value) { 
+                        expandedQueryableDetails.add(queryableInfo.displayId) 
                       } else { 
-                        expandedQueryableDetails.delete(queryable.displayId) 
+                        expandedQueryableDetails.delete(queryableInfo.displayId) 
                       } }"
                     />
                   </div>
                 </div>
                 
                 <!-- Expanded Details Section -->
-                <div v-if="expandedQueryableDetails.has(queryable.displayId)" class="item-details">
+                <div v-if="expandedQueryableDetails.has(queryableInfo.displayId)" class="item-details">
                   <div class="details-content">
                     <!-- Queryable Options Display -->
                     <ParameterDisplay 
                       type="neutral" 
-                      :data="{ 'QueryableOptions': queryable.options }"
+                      :data="{ 'QueryableOptions': queryableInfo.options }"
                     />
+
+                    <!-- Display Reply Parameters when reply type is "reply" -->
+                    <div v-if="queryableInfo.responseParameters.replyType === 'reply'" class="reply-parameters">
+                      <!-- Key Expression Parameter -->
+                      <ParameterDisplay 
+                        type="neutral" 
+                        :data="{ 'reply keyexpr': queryableInfo.responseParameters.reply.keyExpr }"
+                      />
+                      
+                      <!-- Payload Parameter -->
+                      <ParameterDisplay
+                        v-if="!queryableInfo.responseParameters.reply.payloadEmpty"
+                        type="neutral" 
+                        :data="{ 'reply payload': queryableInfo.responseParameters.reply.payload }"
+                      />
+                      
+                      <!-- ReplyOptions Parameter -->
+                      <ParameterDisplay 
+                        type="neutral" 
+                        :data="{ 'ReplyOptions': queryableInfo.responseParameters.getReplyOptionsJSON() }"
+                      />
+                    </div>
                     
+                    <!-- Display ReplyErr Parameters when reply type is "replyErr" -->
+                    <div v-if="queryableInfo.responseParameters.replyType === 'replyErr'" class="reply-err-parameters">
+                      <!-- Payload Parameter -->
+                      <ParameterDisplay 
+                        v-if="!queryableInfo.responseParameters.replyErr.payloadEmpty"
+                        type="neutral" 
+                        :data="{ 'reply error payload': queryableInfo.responseParameters.replyErr.payload }"
+                      />
+                      
+                      <!-- ReplyErrOptions Parameter -->
+                      <ParameterDisplay 
+                        type="neutral" 
+                        :data="{ 'ReplyErrOptions': queryableInfo.responseParameters.getReplyErrOptionsJSON() }"
+                      />
+                    </div>
+
                     <!-- Individual Response Configuration Panel -->
                     <div class="individual-response-config">
                       <h5 class="response-config-title">Response Configuration</h5>
@@ -307,9 +345,9 @@
                           <label class="radio-option">
                             <input 
                               type="radio" 
-                              :name="`response-type-${queryable.displayId}`"
+                              :name="`response-type-${queryableInfo.displayId}`"
                               value="reply" 
-                              v-model="queryable.responseParameters.replyType"
+                              v-model="queryableInfo.responseParameters.replyType"
                               :disabled="!isConnected"
                             >
                             <span>Reply</span>
@@ -317,9 +355,9 @@
                           <label class="radio-option">
                             <input 
                               type="radio" 
-                              :name="`response-type-${queryable.displayId}`"
+                              :name="`response-type-${queryableInfo.displayId}`"
                               value="replyErr" 
-                              v-model="queryable.responseParameters.replyType"
+                              v-model="queryableInfo.responseParameters.replyType"
                               :disabled="!isConnected"
                             >
                             <span>Error</span>
@@ -328,51 +366,51 @@
                       </div>
                       
                       <!-- Reply Fields -->
-                      <div v-if="queryable.responseParameters.replyType === 'reply'" class="reply-fields">
+                      <div v-if="queryableInfo.responseParameters.replyType === 'reply'" class="reply-fields">
                         <!-- Reply configuration fields -->
                         <div class="options-grid">
                           <KeyExprInput 
-                            v-model="queryable.responseParameters.reply.keyExpr"
+                            v-model="queryableInfo.responseParameters.reply.keyExpr"
                             label="Key Expression"
                             placeholder="Normally the queryable keyexpr"
                             :disabled="!isConnected"
                           />
                           
                           <PayloadInput
-                            v-model="queryable.responseParameters.reply.payload"
-                            v-model:is-empty="queryable.responseParameters.reply.payloadEmpty"
+                            v-model="queryableInfo.responseParameters.reply.payload"
+                            v-model:is-empty="queryableInfo.responseParameters.reply.payloadEmpty"
                             label="Payload"
                             placeholder="Payload content for successful reply"
                             :disabled="!isConnected"
                           />
                           
                           <EncodingSelect 
-                            v-model="queryable.responseParameters.reply.encoding"
-                            v-model:custom-encoding="queryable.responseParameters.reply.customEncoding"
+                            v-model="queryableInfo.responseParameters.reply.encoding"
+                            v-model:custom-encoding="queryableInfo.responseParameters.reply.customEncoding"
                             :encoding-options="encodingOptions"
                             :disabled="!isConnected"
                           />
                           
                           <PrioritySelect 
-                            v-model="queryable.responseParameters.reply.priority" 
+                            v-model="queryableInfo.responseParameters.reply.priority" 
                             :disabled="!isConnected"
                             :options="priorityOptions"
                           />
                           
                           <CongestionControlSelect
-                            v-model="queryable.responseParameters.reply.congestionControl"
+                            v-model="queryableInfo.responseParameters.reply.congestionControl"
                             :disabled="!isConnected"
                             :options="congestionControlOptions"
                           />
                           
                           <ExpressSelect
-                            v-model="queryable.responseParameters.reply.express"
+                            v-model="queryableInfo.responseParameters.reply.express"
                             :disabled="!isConnected"
                           />
                           
                           <PayloadInput
-                            v-model="queryable.responseParameters.reply.attachment"
-                            v-model:is-empty="queryable.responseParameters.reply.attachmentEmpty"
+                            v-model="queryableInfo.responseParameters.reply.attachment"
+                            v-model:is-empty="queryableInfo.responseParameters.reply.attachmentEmpty"
                             label="Attachment"
                             placeholder="Optional attachment data"
                             :disabled="!isConnected"
@@ -381,19 +419,19 @@
                       </div>
                       
                       <!-- ReplyErr Fields -->
-                      <div v-if="queryable.responseParameters.replyType === 'replyErr'" class="reply-err-fields">
+                      <div v-if="queryableInfo.responseParameters.replyType === 'replyErr'" class="reply-err-fields">
                         <div class="options-grid">
                           <PayloadInput
-                            v-model="queryable.responseParameters.replyErr.payload"
-                            v-model:is-empty="queryable.responseParameters.replyErr.payloadEmpty"
+                            v-model="queryableInfo.responseParameters.replyErr.payload"
+                            v-model:is-empty="queryableInfo.responseParameters.replyErr.payloadEmpty"
                             label="Error Payload"
                             placeholder="Error message or payload"
                             :disabled="!isConnected"
                           />
                           
                           <EncodingSelect 
-                            v-model="queryable.responseParameters.replyErr.encoding"
-                            v-model:custom-encoding="queryable.responseParameters.replyErr.customEncoding"
+                            v-model="queryableInfo.responseParameters.replyErr.encoding"
+                            v-model:custom-encoding="queryableInfo.responseParameters.replyErr.customEncoding"
                             :encoding-options="encodingOptions"
                             :disabled="!isConnected"
                           />

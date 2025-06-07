@@ -20,7 +20,7 @@ import { Sample } from "./sample.js";
 import { Timestamp } from "./timestamp.js";
 import { ZenohId } from "./zid.js";
 import { Publisher, Subscriber } from "./pubsub.js";
-import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector } from "./query.js";
+import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyOptions, ReplyErrOptions,ReplyError, Selector } from "./query.js";
 import { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SubscriberOptions, SessionInfo } from "./session.js";
 import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
@@ -37,7 +37,7 @@ export { KeyExpr, IntoKeyExpr };
 export { ZBytes, IntoZBytes };
 export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr, Sample, SampleKind };
 export { Publisher, Subscriber};
-export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, Selector };
+export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyOptions, ReplyErrOptions, ReplyError, Selector };
 export { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SubscriberOptions, SessionInfo};
 export { ZenohId, Timestamp }
 export { Config };

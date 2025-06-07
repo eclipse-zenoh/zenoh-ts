@@ -10,8 +10,10 @@ import {
   type SubscriberOptions,
   type QueryableOptions,
   type GetOptions,
+  type ReplyErrOptions,
+  type ReplyOptions,
 } from "@eclipse-zenoh/zenoh-ts";
-import { getEnumLabel } from "./utils";
+import { getEnumLabel } from "./safeUtils";
 
 // Interface for the sample JSON representation
 export interface SampleJSON {
@@ -46,6 +48,21 @@ export interface SubscriberOptionsJSON {
 export interface QueryableOptionsJSON {
   complete: string | undefined;
   allowedOrigin: string | undefined;
+}
+
+// Interface for the reply options JSON representation
+export interface ReplyOptionsJSON {
+  encoding: string | undefined;
+  congestionControl: string | undefined;
+  priority: string | undefined;
+  express: string | undefined;
+  timestamp: string | undefined;
+  attachment: string | undefined;
+}
+
+// Interface for the reply error options JSON representation
+export interface ReplyErrOptionsJSON {
+  encoding: string | undefined;
 }
 
 // Interface for the get options JSON representation
@@ -93,7 +110,7 @@ function labelOrUndefined<
   return label(enumObj, value);
 }
 
-function claenUndefineds<T extends Record<string, any>>(obj: T): T {
+function cleanUndefineds<T extends Record<string, any>>(obj: T): T {
   return Object.fromEntries(
     Object.entries(obj).filter(([_, value]) => value !== undefined)
   ) as T;
@@ -151,7 +168,7 @@ export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
     allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
     attachment: options.attachment?.toString(),
   };
-  return claenUndefineds(result);
+  return cleanUndefineds(result);
 }
 
 /**
@@ -165,7 +182,7 @@ export function subscriberOptionsToJSON(
   const result: SubscriberOptionsJSON = {
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
   };
-  return claenUndefineds(result);
+  return cleanUndefineds(result);
 }
 
 /**
@@ -180,7 +197,7 @@ export function queryableOptionsToJSON(
     complete: options.complete?.toString(),
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
   };
-  return claenUndefineds(result);
+  return cleanUndefineds(result);
 }
 
 /**
@@ -202,5 +219,48 @@ export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
     consolidation: options.consolidation !== undefined ? options.consolidation.toString() : undefined,
     acceptReplies: options.acceptReplies !== undefined ? options.acceptReplies.toString() : undefined,
   };
-  return claenUndefineds(result);
+  return cleanUndefineds(result);
+}
+
+export function replyOptionsToJSON(options: ReplyOptions): ReplyOptionsJSON {
+  const result: ReplyOptionsJSON = {
+    encoding: options.encoding?.toString(),
+    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    priority: labelOrUndefined(Priority, options.priority),
+    express: options.express !== undefined ? options.express.toString() : undefined,
+    timestamp: options.timestamp !== undefined ? options.timestamp.asDate().toISOString() : undefined,
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+export function replyErrOptionsToJSON(options: ReplyErrOptions): ReplyErrOptionsJSON {
+  const result: ReplyErrOptionsJSON = {
+    encoding: options.encoding?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParametersState): ReplyOptionsJSON {
+  const result: ReplyOptionsJSON = {
+    encoding: parameters.encoding?.toString(),
+    congestionControl: labelOrUndefined(CongestionControl, parameters.congestionControl),
+    priority: labelOrUndefined(Priority, parameters.priority),
+    express: parameters.express !== undefined ? parameters.express.toString() : undefined,
+    timestamp: parameters.timestamp !== undefined ? parameters.timestamp.toString() : undefined,
+    attachment: parameters.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts ReplyErrOptions object to a structured JSON object for logging
+ * @param options The ReplyErrOptions object to convert
+ * @returns A structured object containing all reply error options as strings
+ */
+export function replyErrParametersStateToReplyErrOptionsJSON(parameters: ReplyErrParametersState): ReplyErrOptionsJSON {
+  const result: ReplyErrOptionsJSON = {
+    encoding: parameters.encoding?.toString(),
+  };
+  return cleanUndefineds(result);
 }

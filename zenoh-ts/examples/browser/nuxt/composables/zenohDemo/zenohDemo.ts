@@ -32,7 +32,7 @@ import type { PutOptions, SubscriberOptions, QueryableOptions, GetOptions } from
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
-} from "./utils";
+} from "./safeUtils";
 import {
   sampleToJSON,
   queryToJSON,
@@ -40,7 +40,10 @@ import {
   subscriberOptionsToJSON,
   queryableOptionsToJSON,
   getOptionsToJSON,
+  replyErrOptionsToJSON,
+  replyOptionsToJSON,
 } from "./zenohUtils";
+import type { ReplyOptions } from "@eclipse-zenoh/zenoh-ts";
 
 function putParametersStateToPutOptions(parameters: PutParametersState): PutOptions {
   let opts: PutOptions = {};
@@ -92,14 +95,14 @@ function queryableParametersStateToQueryableOptions(
 }
 
 function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
-  let opts: any = {};
+  let opts: ReplyOptions = {};
   if (parameters.encoding) {
     opts.encoding = Encoding.fromString(parameters.encoding);
   }
-  if (parameters.priority == undefined) {
+  if (parameters.priority !== undefined) {
     opts.priority = parameters.priority;
   }
-  if (parameters.congestionControl == undefined) {
+  if (parameters.congestionControl !== undefined) {
     opts.congestionControl = parameters.congestionControl;
   }
   if (parameters.express !== undefined) {
@@ -495,6 +498,16 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters();
+      responseParameters.getReplyErrOptionsJSON = () => {
+        return replyErrOptionsToJSON(
+          replyErrParametersStateToReplyErrOptions(responseParameters.replyErr)
+        );
+      };
+      responseParameters.getReplyOptionsJSON = () => {
+        return replyOptionsToJSON(
+          replyParametersStateToReplyOptions(responseParameters.reply)
+        );
+      };
       
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;
@@ -528,6 +541,13 @@ class ZenohDemo extends ZenohDemoEmpty {
             // Build reply options
             const replyOptions = replyParametersStateToReplyOptions(replyParams);
             
+            // Log the reply details
+            this.addLogEntry("info", `Replying to query`, {
+              keyexpr: replyKeyExpr.toString(),
+              payload: replyPayload,
+              ReplyOptions: replyOptionsToJSON(replyOptions),
+            });
+
             await query.reply(replyKeyExpr, replyPayload, replyOptions);
           } else {
             // Handle error reply
@@ -541,6 +561,12 @@ class ZenohDemo extends ZenohDemoEmpty {
             // Build reply error options
             const replyErrOptions = replyErrParametersStateToReplyErrOptions(replyErrParams);
             
+            // Log the error reply details
+            this.addLogEntry("info", `Replying with error`, {
+              payload: errorPayload,
+              ReplyErrOptions: replyErrOptionsToJSON(replyErrOptions),
+            });
+
             await query.replyErr(errorPayload, replyErrOptions);
           }
 

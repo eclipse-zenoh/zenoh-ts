@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import type { CongestionControl } from '@eclipse-zenoh/zenoh-ts'
-import type { OptionItem } from '../composables/zenohDemo/utils'
+import type { OptionItem } from '../composables/zenohDemo/safeUtils'
 import NumberOptionSelect from './NumberOptionSelect.vue'
 
 interface Props {
