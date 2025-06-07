@@ -536,10 +536,14 @@ class ZenohDemo extends ZenohDemoEmpty {
             
             await query.replyErr(errorPayload, replyErrOptions);
           }
+
+          // Finalize the query to signal no more replies will be sent
+          await query.finalize();
         } catch (queryError) {
           this.addErrorLogEntry("Error handling query", queryError);
           try {
             await query.replyErr("Internal error handling query");
+            await query.finalize();
           } catch (replyError) {
             this.addErrorLogEntry("Error sending error reply", replyError);
           }
