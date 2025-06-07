@@ -145,6 +145,17 @@ button.compact:disabled {
   box-shadow: none !important;
 }
 
+/* ===== BUTTON INTERNAL ELEMENTS ===== */
+.button-label,
+.button-text {
+  margin-right: calc(var(--compact-margin) / 2);
+}
+
+.button-triangle {
+  font-size: 0.8em;
+  line-height: 1;
+}
+
 /* ===== GRID SYSTEM ===== */
 .options-grid {
   display: grid;

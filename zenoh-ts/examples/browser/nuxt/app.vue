@@ -883,8 +883,7 @@ watch(logEntries, () => {
   flex-shrink: 0;
 }
 
-.item-actions .compact-button,
-.item-actions .collapse-btn {
+.item-actions .compact-button {
   min-height: calc(var(--compact-input-height) * 0.7);
   display: inline-flex;
   align-items: center;
@@ -1151,23 +1150,22 @@ watch(logEntries, () => {
   gap: var(--compact-gap);
 }
 
-.header-actions .compact-button,
-.header-actions .collapse-btn {
+.header-actions .compact-button {
   min-height: var(--compact-input-height);
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Container-specific sizing for CollapseButton components */
-.header-actions .collapse-btn {
+/* Container-specific sizing for CollapseButton components using compact-button */
+.header-actions .compact-button {
   width: auto;
   height: auto;
   padding: var(--compact-button-padding);
   font-size: var(--compact-font-size);
 }
 
-.item-actions .collapse-btn {
+.item-actions .compact-button {
   /* Ensure consistent sizing with other item action buttons */
   height: auto;
   padding: calc(var(--compact-button-padding-v) * 0.8) calc(var(--compact-button-padding-h) * 0.6);
@@ -1182,17 +1180,17 @@ watch(logEntries, () => {
   box-sizing: border-box;
 }
 
-.item-actions .collapse-btn .collapse-btn-label {
+.item-actions .compact-button .button-label {
   font-size: calc(var(--compact-label-font-size) * 0.9);
   font-weight: 500;
 }
 
-.item-actions .collapse-btn .collapse-btn-text {
+.item-actions .compact-button .button-text {
   font-size: calc(var(--compact-label-font-size) * 0.9);
   font-weight: 500;
 }
 
-.item-actions .collapse-btn .collapse-btn-triangle {
+.item-actions .compact-button .button-triangle {
   font-size: 8px;
 }
 

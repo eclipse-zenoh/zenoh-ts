@@ -5,14 +5,14 @@
   >
     <template v-if="expandedText !== undefined || collapsedText !== undefined">
       <!-- Custom text mode: show appropriate text based on state -->
-      <span class="collapse-btn-text">
+      <span class="button-text">
         {{ expanded ? (expandedText || '') : (collapsedText || label || '') }}
       </span>
     </template>
     <template v-else>
       <!-- Default mode: show label + triangle -->
-      <span v-if="label" class="collapse-btn-label">{{ label }}</span>
-      <span class="collapse-btn-triangle">{{ expanded ? '▲' : '▼' }}</span>
+      <span v-if="label" class="button-label">{{ label }}</span>
+      <span class="button-triangle">{{ expanded ? '▲' : '▼' }}</span>
     </template>
   </button>
 </template>
@@ -49,9 +49,9 @@ function handleClick() {
 
 // Compute CSS classes based on state
 const buttonClasses = computed(() => {
-  const base = 'collapse-btn'
-  const active = props.expanded ? 'collapse-btn--active' : ''
+  const base = 'compact-button'
+  const variant = props.expanded ? 'btn-primary' : ''
   
-  return [base, active].filter(Boolean).join(' ')
+  return [base, variant].filter(Boolean).join(' ')
 })
 </script>
