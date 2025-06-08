@@ -12,6 +12,7 @@ import {
   type GetParametersState,
   createDefaultResponseParameters,
 } from "../useZenohDemo";
+import { computed } from "vue";
 import {
   Config,
   Session,
@@ -50,10 +51,11 @@ import {
   subscriberOptionsToJSON,
   queryableOptionsToJSON,
   getOptionsToJSON,
-  replyErrOptionsToJSON,
   replyOptionsToJSON,
   replyErrorToJSON,
   sessionInfoToJSON,
+  replyParametersStateToReplyOptionsJSON,
+  replyErrParametersStateToReplyErrOptionsJSON,
 } from "./zenohUtils";
 import type { ReplyOptions } from "@eclipse-zenoh/zenoh-ts";
 
@@ -108,7 +110,7 @@ function queryableParametersStateToQueryableOptions(
   return opts;
 }
 
-function replyParametersStateToReplyOptions(parameters: ReplyParametersState, timestamp?: Timestamp) {
+async function replyParametersStateToReplyOptions(parameters: ReplyParametersState, session?: Session) {
   let opts: ReplyOptions = {};
   if (parameters.encoding) {
     opts.encoding = Encoding.fromString(parameters.encoding);
@@ -122,9 +124,10 @@ function replyParametersStateToReplyOptions(parameters: ReplyParametersState, ti
   if (parameters.express !== undefined) {
     opts.express = parameters.express;
   }
-  // Handle timestamp - if useTimestamp is enabled and timestamp is provided
-  if (parameters.useTimestamp && timestamp) {
-    opts.timestamp = timestamp;
+  if (parameters.useTimestamp && session) {
+    console.log("Requesting new timestamp for reply");
+    opts.timestamp = await session.newTimestamp();
+    console.log("Timestamp for reply:", opts.timestamp);
   }
   if (!parameters.attachmentEmpty) {
     opts.attachment = new ZBytes(parameters.attachment);
@@ -186,7 +189,7 @@ function getParametersStateToGetOptions(
 }
 
 class ZenohDemo extends ZenohDemoEmpty {
-  private zenohSession: Session | null = null;
+  private zenohSession: Session | undefined = undefined;
   private subscriberIdCounter = 0;
   private queryableIdCounter = 0;
 
@@ -343,7 +346,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Failed to connect to ${this.serverUrl.value}`,
         error
       );
-      this.zenohSession = null;
+      this.zenohSession = undefined;
     } finally {
       this.isConnecting.value = false;
     }
@@ -354,7 +357,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       await this.zenohSession.close();
-      this.zenohSession = null;
+      this.zenohSession = undefined;
       this.isConnected.value = false;
       this.activeSubscribers.value = []; // Clear the subscribers list
       this.activeQueryables.value = []; // Clear the queryables list
@@ -565,16 +568,12 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters();
-      responseParameters.getReplyErrOptionsJSON = () => {
-        return replyErrOptionsToJSON(
-          replyErrParametersStateToReplyErrOptions(responseParameters.replyErr)
-        );
-      };
-      responseParameters.getReplyOptionsJSON = () => {
-        return replyOptionsToJSON(
-          replyParametersStateToReplyOptions(responseParameters.reply, undefined)
-        );
-      };
+      responseParameters.replyErr.getOptionsJSON = computed(() => Promise.resolve(
+        replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr)
+      ));
+      responseParameters.reply.getOptionsJSON = computed(() => Promise.resolve(
+        replyParametersStateToReplyOptionsJSON(responseParameters.reply)
+      ));
 
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;
@@ -623,7 +622,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             // Build reply options with timestamp if available
             const replyOptions =
-              replyParametersStateToReplyOptions(replyParams, timestamp);
+              await replyParametersStateToReplyOptions(replyParams, this.zenohSession);
 
             // Log the reply details with timestamp information
             const logData: Record<string, any> = {
