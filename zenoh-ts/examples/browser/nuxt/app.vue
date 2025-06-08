@@ -960,8 +960,10 @@ watch(activeQueryables, (queryables) => {
 .item-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
+  flex-wrap: wrap;
+  gap: var(--compact-gap);
 }
 
 .item-info {
@@ -970,13 +972,15 @@ watch(activeQueryables, (queryables) => {
   flex-direction: row;
   align-items: center;
   gap: var(--compact-gap);
+  min-width: 0; /* Allow shrinking */
 }
 
 .item-actions {
   display: flex;
   gap: var(--compact-margin);
   align-items: center;
-  flex-shrink: 0;
+  flex-wrap: wrap;
+  flex-shrink: 1; /* Allow shrinking to enable wrapping */
 }
 
 .item-actions .compact-button {
