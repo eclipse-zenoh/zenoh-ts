@@ -15,6 +15,7 @@ import {
   QueryTarget,
   ConsolidationMode,
   ReplyKeyExpr,
+  ReplyError,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration';
 import { getEnumLabel } from "./safeUtils";
@@ -32,6 +33,11 @@ export interface SampleJSON {
   express: string;
   timestamp: string | undefined;
   attachment: string | undefined;
+}
+
+export interface ReplyErrorJSON {
+  payload: string;
+  encoding: string;
 }
 
 // Interface for the put options JSON representation
@@ -141,6 +147,13 @@ export function sampleToJSON(sample: Sample): SampleJSON {
     express: sample.express().toString(),
     timestamp: sample.timestamp()?.asDate().toISOString(),
     attachment: sample.attachment()?.toString(),
+  };
+}
+
+export function replyErrorToJSON(replyError: ReplyError): ReplyErrorJSON {
+  return {
+    payload: replyError.payload().toString(),
+    encoding: replyError.encoding().toString(),
   };
 }
 

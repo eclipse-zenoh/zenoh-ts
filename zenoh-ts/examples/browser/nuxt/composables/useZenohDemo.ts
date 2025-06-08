@@ -163,10 +163,7 @@ export interface ZenohDemoState {
 }
 
 // Helper function to create default response parameters for a new queryable
-export function createDefaultResponseParameters(displayId?: string): QueryableResponseParametersState {
-  const defaultPayload = displayId ? `Hello from queryable ${displayId}!` : "Hello from queryable!";
-  const defaultErrorPayload = displayId ? `Error processing query from ${displayId}` : "Error processing query";
-  
+export function createDefaultResponseParameters(): QueryableResponseParametersState {
   return {
     // Reply configuration
     replyType: "reply" as "reply" | "replyErr",
@@ -174,8 +171,8 @@ export function createDefaultResponseParameters(displayId?: string): QueryableRe
     // Reply sub-states
     reply: {
       keyExpr: "",
-      payload: defaultPayload,
-      payloadEmpty: false,
+      payload: "",
+      payloadEmpty: true,
       encoding: "",
       customEncoding: false,
       priority: undefined as Priority | undefined,
@@ -186,8 +183,8 @@ export function createDefaultResponseParameters(displayId?: string): QueryableRe
       attachmentEmpty: true,
     },
     replyErr: {
-      payload: defaultErrorPayload,
-      payloadEmpty: false,
+      payload: "",
+      payloadEmpty: true,
       encoding: "",
       customEncoding: false,
     },

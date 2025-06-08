@@ -51,6 +51,7 @@ import {
   getOptionsToJSON,
   replyErrOptionsToJSON,
   replyOptionsToJSON,
+  replyErrorToJSON,
 } from "./zenohUtils";
 import type { ReplyOptions } from "@eclipse-zenoh/zenoh-ts";
 
@@ -389,9 +390,8 @@ class ZenohDemo extends ZenohDemoEmpty {
           } else {
             // It's a ReplyError - log with error formatting
             const replyError = result as ReplyError;
-            this.addErrorLogEntry(`GET query error for ${selector}`, {
-              error: replyError.payload().toString(),
-              encoding: replyError.encoding().toString(),
+            this.addLogEntry("data", `GET query error for ${selector}`, {
+              ReplyError: replyErrorToJSON(replyError),
             });
           }
         } catch (resultError) {
@@ -525,7 +525,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       );
 
       // Create individual response parameters for this queryable
-      const responseParameters = createDefaultResponseParameters(displayId);
+      const responseParameters = createDefaultResponseParameters();
       responseParameters.getReplyErrOptionsJSON = () => {
         return replyErrOptionsToJSON(
           replyErrParametersStateToReplyErrOptions(responseParameters.replyErr)
@@ -539,6 +539,17 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;
+
+      // Create a single timestamp for both payload and QueryableInfo consistency
+      const createdAt = new Date();
+      const createdAtStr = `${createdAt.getHours()}:${createdAt.getMinutes()}:${createdAt.getSeconds()}`;
+      
+      // Set payload explicitly with queryable ID and creation time
+      responseParameters.reply.payload = `Hello from queryable ${displayId} created at ${createdAtStr}`;
+      responseParameters.reply.payloadEmpty = false;
+      // Set error payload explicitly with queryable ID and creation time
+      responseParameters.replyErr.payload = `Error processing query from ${displayId} created at ${createdAtStr}`;
+      responseParameters.replyErr.payloadEmpty = false;
 
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
@@ -623,7 +634,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         displayId: displayId,
         keyExpr: this.queryableParameters.key.value,
         queryable,
-        createdAt: new Date(),
+        createdAt,
         options: queryableOptionsToJSON(queryableOptions),
         responseParameters: responseParameters, // Include individual response settings
       };
