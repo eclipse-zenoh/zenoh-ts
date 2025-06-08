@@ -36,6 +36,7 @@ import type {
   SubscriberOptions,
   QueryableOptions,
   GetOptions,
+  ChannelReceiver,
 } from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
@@ -374,21 +375,11 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       let resultCount = 0;
 
-      while (true) {
-        const reply: Reply | null = await receiver.receive();
-        if (!reply) {
-          this.addLogEntry(
-            "success",
-            `GET query completed for ${selector}. Found ${resultCount} results.`
-          );
-          break; // Normal end of GET query
-        }
-
+      for await (const reply of receiver as ChannelReceiver<Reply>) {
         try {
           const result = reply.result();
-
           // Check if it's a successful sample or an error
-          if ("keyexpr" in result && typeof result.keyexpr === "function") {
+          if (result instanceof Sample) {
             // It's a Sample - use JSON formatting for enhanced display
             const sample = result as Sample;
             this.addLogEntry("data", "GET result ", {
@@ -407,6 +398,10 @@ class ZenohDemo extends ZenohDemoEmpty {
           this.addErrorLogEntry("Error processing GET result", resultError);
         }
       }
+      this.addLogEntry(
+        "success",
+        `GET query completed for ${selector}. Found ${resultCount} results.`
+      );
     } catch (error) {
       this.addErrorLogEntry(
         `GET failed for selector "${this.getParameters.key.value}"`,
