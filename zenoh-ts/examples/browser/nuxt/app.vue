@@ -73,10 +73,9 @@
               <div class="item-entry" v-for="sessionState in activeSessions" :key="sessionState.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ sessionState.serverUrl }}</span>
                     <span class="item-id">{{ sessionState.displayId }}</span>
+                    <span class="item-key">{{ sessionState.serverUrl }}</span>
                     <span v-if="selectedSessionId === sessionState.displayId" class="item-selected">(selected)</span>
-                    <span class="item-time">{{ sessionState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
                     <button 
@@ -161,10 +160,9 @@
               <div class="item-entry" v-for="subscriberState in activeSubscribers" :key="subscriberState.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ subscriberState.keyExpr }}</span>
+                    <span class="item-session">{{ subscriberState.sessionId }}</span>
                     <span class="item-id">{{ subscriberState.displayId }}</span>
-                    <span class="item-session">session: {{ subscriberState.sessionId }}</span>
-                    <span class="item-time">{{ subscriberState.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ subscriberState.keyExpr }}</span>
                   </div>
                   <div class="item-actions">
                     <button 
@@ -334,10 +332,9 @@
               <div class="item-entry" v-for="queryableState in activeQueryables" :key="queryableState.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ queryableState.keyExpr }}</span>
+                    <span class="item-session">{{ queryableState.sessionId }}</span>
                     <span class="item-id">{{ queryableState.displayId }}</span>
-                    <span class="item-session">session: {{ queryableState.sessionId }}</span>
-                    <span class="item-time">{{ queryableState.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ queryableState.keyExpr }}</span>
                   </div>
                   <div class="item-actions">
                     <CollapseButton

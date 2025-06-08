@@ -291,21 +291,6 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.logEntries.value = [];
   }
 
-  // Helper method to get the currently selected session, or first session if none selected
-  private getCurrentSession(): Session | undefined {
-    // Prioritize selected session if available
-    if (this.selectedSessionId.value) {
-      const selectedSession = this.activeSessions.value.find(
-        session => session.displayId === this.selectedSessionId.value
-      );
-      if (selectedSession) {
-        return selectedSession.session;
-      }
-    }
-    // Fallback to first session if no selection or selected session not found
-    return this.activeSessions.value.length > 0 ? this.activeSessions.value[0]?.session : undefined;
-  }
-
   // Helper method to get current session with its ID for tracking purposes
   private getCurrentSessionWithId(): { session: Session; sessionId: string } | undefined {
     // Prioritize selected session if available
@@ -344,24 +329,26 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async getSessionInfo(): Promise<void> {
-    const currentSession = this.getCurrentSession();
-    if (!currentSession) {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId) {
       this.addErrorLogEntry("No active session. Please connect first.");
       return;
     }
 
+    const { session: currentSession, sessionId } = sessionWithId;
+
     try {
-      this.addLogEntry("info", "Retrieving session information...");
+      this.addLogEntry("info", `Retrieving session information from ${sessionId}...`);
       const sessionInfo = await currentSession.info();
       const sessionInfoJson = sessionInfoToJSON(sessionInfo);
       
       this.addLogEntry(
         "success", 
-        "Session information retrieved successfully",
+        `Session information retrieved successfully from ${sessionId}`,
         { "SessionInfo": sessionInfoJson }
       );
     } catch (error) {
-      this.addErrorLogEntry("Failed to retrieve session information", error);
+      this.addErrorLogEntry(`Failed to retrieve session information from ${sessionId}`, error);
     }
   }
 
@@ -456,13 +443,15 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performPut(): Promise<void> {
-    const currentSession = this.getCurrentSession();
+    const sessionWithId = this.getCurrentSessionWithId();
     if (
-      !currentSession ||
+      !sessionWithId ||
       !this.putParameters.key.value ||
       this.putParameters.valueEmpty.value
     )
       return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
 
     try {
       const keyExpr = new KeyExpr(this.putParameters.key.value);
@@ -472,22 +461,24 @@ class ZenohDemo extends ZenohDemoEmpty {
       const options = putParametersStateToPutOptions(this.putParameters);
       await currentSession.put(keyExpr, bytes, options);
 
-      this.addLogEntry("success", "PUT successful", {
+      this.addLogEntry("success", `PUT successful on ${sessionId}`, {
         keyexpr: keyExpr.toString(),
         payload: bytes.toString(),
         PutOptions: putOptionsToJSON(options),
       });
     } catch (error) {
       this.addErrorLogEntry(
-        `PUT failed for key "${this.putParameters.key.value}"`,
+        `PUT failed for key "${this.putParameters.key.value}" on ${sessionId}`,
         error
       );
     }
   }
 
   override async performGet(): Promise<void> {
-    const currentSession = this.getCurrentSession();
-    if (!currentSession || !this.getParameters.key.value) return;
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.getParameters.key.value) return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
 
     try {
       const selector = this.getParameters.key.value;
@@ -495,7 +486,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Build get options using getParametersStateTo
       const getOptions = getParametersStateToGetOptions(this.getParameters);
 
-      this.addLogEntry("info", `Starting GET`, {
+      this.addLogEntry("info", `Starting GET on ${sessionId}`, {
         selector: selector,
         GetOptions: getOptionsToJSON(getOptions),
       });
@@ -532,11 +523,11 @@ class ZenohDemo extends ZenohDemoEmpty {
       }
       this.addLogEntry(
         "success",
-        `GET query completed for ${selector}. Found ${resultCount} results.`
+        `GET query completed on ${sessionId} for ${selector}. Found ${resultCount} results.`
       );
     } catch (error) {
       this.addErrorLogEntry(
-        `GET failed for selector "${this.getParameters.key.value}"`,
+        `GET failed for selector "${this.getParameters.key.value}" on ${sessionId}`,
         error
       );
     }
@@ -681,11 +672,11 @@ class ZenohDemo extends ZenohDemoEmpty {
       const createdAt = new Date();
       const createdAtStr =createdAt.toISOString().slice(11, 19);
       
-      // Set payload explicitly with queryable ID and creation time
-      responseParameters.reply.payload = `Hello from queryable ${displayId} created at ${createdAtStr}`;
+      // Set payload explicitly with queryable ID, session ID, and creation time
+      responseParameters.reply.payload = `Hello from queryable ${displayId} on session ${sessionId} created at ${createdAtStr}`;
       responseParameters.reply.payloadEmpty = false;
-      // Set error payload explicitly with queryable ID and creation time
-      responseParameters.replyErr.payload = `Error processing query from ${displayId} created at ${createdAtStr}`;
+      // Set error payload explicitly with queryable ID, session ID, and creation time
+      responseParameters.replyErr.payload = `Error processing query from ${displayId} on session ${sessionId} created at ${createdAtStr}`;
       responseParameters.replyErr.payloadEmpty = false;
 
       // Set up handler for queries
