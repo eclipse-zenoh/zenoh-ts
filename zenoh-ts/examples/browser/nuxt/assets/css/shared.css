@@ -411,66 +411,7 @@ button.compact:disabled {
   user-select: none;
 }
 
-/* ===== TRI-STATE CHECKBOX ===== */
-.tri-state-checkbox {
-  /* Remove browser defaults */
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  
-  /* Layout and sizing */
-  width: 14px;
-  height: 14px;
-  margin: 0;
-  transform: scale(1.0);
-  
-  /* Visual styling */
-  border: 2px solid #ccc;
-  border-radius: 3px;
-  background: white;
-  position: relative;
-  cursor: pointer;
-}
 
-/* Common styling for all pseudo-element indicators */
-.tri-state-checkbox::before {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  color: white;
-  font-weight: bold;
-  line-height: 1;
-}
-
-/* Disabled state */
-.tri-state-checkbox:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
-/* Indeterminate state (undefined) */
-.tri-state-checkbox:indeterminate {
-  background-color: #7f7f7f !important;
-  border-color: #7f7f7f !important;
-  accent-color: #7f7f7f !important;
-}
-
-.tri-state-checkbox:indeterminate::before {
-  content: '−';
-  font-size: 12px;
-}
-
-/* Checked state (true) */
-.tri-state-checkbox:checked {
-  background-color: #007bff !important;
-  border-color: #007bff !important;
-}
-
-.tri-state-checkbox:checked::before {
-  content: '✓';
-  font-size: 10px;
-}
 
 /* ===== RADIO GROUPS ===== */
 .radio-group {

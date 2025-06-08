@@ -7,7 +7,7 @@
         ref="checkbox"
         :disabled="disabled || false"
         @click="handleCheckboxClick"
-        class="tri-state-checkbox"
+        class="compact-input"
       >
       <span class="express-state-label">{{ getStateLabel() }}</span>
     </div>
@@ -85,3 +85,61 @@ watch(() => props.modelValue, () => {
   nextTick(updateCheckboxState);
 })
 </script>
+
+<style scoped>
+/* Import shared CSS variables and ensure consistent height */
+.express-control {
+  /* These styles are defined in shared.css but we ensure they're applied */
+  min-height: var(--compact-input-height);
+  height: var(--compact-input-height);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--compact-gap);
+  padding: var(--compact-button-padding);
+  border: 1px solid #ced4da;
+  border-radius: var(--compact-border-radius);
+  background: white;
+  box-sizing: border-box;
+}
+
+.express-control.disabled {
+  background: #f8f9fa;
+  color: #6c757d;
+}
+
+.express-state-label {
+  font-size: var(--compact-font-size);
+  color: #495057;
+  line-height: 1.4;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.compact-input {
+  margin: 0;
+  flex-shrink: 0;
+  width: calc(var(--compact-font-size) + 2px);
+  height: calc(var(--compact-font-size) + 2px);
+  min-width: calc(var(--compact-font-size) + 2px);
+  min-height: calc(var(--compact-font-size) + 2px);
+  align-self: flex-start;
+}
+
+.option-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--compact-margin);
+  box-sizing: border-box;
+}
+
+.option-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: var(--compact-label-font-size);
+  margin-bottom: var(--compact-margin);
+  display: block;
+}
+</style>
