@@ -1,67 +1,99 @@
 <template>
   <ClientOnly>
     <div class="zenoh-container">
-      <!-- Server Connection Panel -->
-      <div class="server-panel">
-      <div class="connection-controls">
-        <div class="input-group">
-          <label for="server-url">Zenoh Server</label>
-          <div class="input-row">
-            <input 
-              type="text" 
-              id="server-url" 
-              v-model="serverUrl" 
-              :disabled="isConnected"
-              placeholder="ws://localhost:10000"
-              class="compact-input"
-            >
-            <button 
-              @click="connect" 
-              :disabled="isConnecting || isConnected"
-              class="compact-button btn-success"
-            >
-              {{ isConnecting ? 'Connecting...' : 'Connect' }}
-            </button>
-            <button 
-              @click="disconnect" 
-              :disabled="!isConnected"
-              class="compact-button btn-danger"
-            >
-              Disconnect
-            </button>
-            <button 
-              @click="getSessionInfo" 
-              :disabled="!isConnected"
-              class="compact-button btn-info"
-            >
-              Session Info
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Connection Status -->
-      <div class="status-indicator" :class="{ connected: isConnected, connecting: isConnecting }">
-        <span class="status-dot"></span>
-        <span class="status-text">
-          <template v-if="isConnected">
-            Connected
-            <span v-if="sessionId" class="session-id"> (Session ID: {{ sessionId }})</span>
-          </template>
-          <template v-else-if="isConnecting">
-            Connecting...
-          </template>
-          <template v-else>
-            Disconnected
-          </template>
-        </span>
-      </div>
-    </div>
-
-    <!-- Main Operations Panel -->
+      <!-- Main Operations Panel -->
     <div class="main-panel">
       <!-- Operations Controls -->
       <div class="operations-panel" :class="{ disabled: !isConnected }">
+        
+        <!-- Session Block -->
+        <div class="operation-block">
+          <h3 class="block-title">Session</h3>
+          
+          <!-- Session Operation -->
+          <div class="operation-group">
+            <div class="operation-header">
+              <h4>
+                Connection
+                <span v-if="!sessionOptionsExpanded" class="header-keyexpr">
+                  <template v-if="isConnected">
+                    - Connected
+                    <span v-if="sessionId" class="session-id"> ({{ sessionId }})</span>
+                  </template>
+                  <template v-else-if="isConnecting">
+                    - Connecting...
+                  </template>
+                  <template v-else>
+                    - {{ serverUrl || 'ws://localhost:10000' }}
+                  </template>
+                </span>
+              </h4>
+              <div class="header-actions">
+                <button 
+                  v-if="!isConnected && !isConnecting"
+                  @click="connect" 
+                  :disabled="isConnecting || isConnected"
+                  class="compact-button btn-success"
+                >
+                  Connect
+                </button>
+                <button 
+                  v-if="isConnected"
+                  @click="disconnect" 
+                  :disabled="!isConnected"
+                  class="compact-button btn-danger"
+                >
+                  Disconnect
+                </button>
+                <button 
+                  v-if="isConnected"
+                  @click="getSessionInfo" 
+                  :disabled="!isConnected"
+                  class="compact-button btn-info"
+                >
+                  Session Info
+                </button>
+                <CollapseButton
+                  v-model:expanded="sessionOptionsExpanded"
+                />
+              </div>
+            </div>
+            
+            <!-- Session Options Panel -->
+            <div v-if="sessionOptionsExpanded" class="options-panel">
+              <div class="options-grid">
+                <div class="option-group">
+                  <label for="server-url">Zenoh Server</label>
+                  <input 
+                    type="text" 
+                    id="server-url" 
+                    v-model="serverUrl" 
+                    :disabled="isConnected"
+                    placeholder="ws://localhost:10000"
+                    class="compact-input"
+                  >
+                </div>
+              </div>
+              
+              <!-- Connection Status -->
+              <div class="status-indicator" :class="{ connected: isConnected, connecting: isConnecting }">
+                <span class="status-dot"></span>
+                <span class="status-text">
+                  <template v-if="isConnected">
+                    Connected
+                    <span v-if="sessionId" class="session-id"> (Session ID: {{ sessionId }})</span>
+                  </template>
+                  <template v-else-if="isConnecting">
+                    Connecting...
+                  </template>
+                  <template v-else>
+                    Disconnected
+                  </template>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
         
         <!-- Publish / Subscribe Block -->
         <div class="operation-block">
@@ -707,6 +739,7 @@ const expandedQueryableDetails = ref<Set<string>>(new Set())
 const expandedResponseConfig = ref<Set<string>>(new Set())
 
 // State to track expanded options panels for operations
+const sessionOptionsExpanded = ref(false)
 const subscriberOptionsExpanded = ref(false)
 const putOptionsExpanded = ref(false)
 const queryableOptionsExpanded = ref(false)
@@ -759,117 +792,6 @@ watch(activeQueryables, (queryables) => {
   padding: 10px;
   font-family: Arial, sans-serif;
   box-sizing: border-box;
-}
-
-.server-panel {
-  background-color: #f0f0f0;
-  padding: 15px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-}
-
-.connection-controls {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  margin-bottom: 10px;
-}
-
-.input-group {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-.input-group label {
-  font-weight: bold;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-/* Input styling handled by shared.css compact-input class */
-
-.input-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-}
-
-.input-row .compact-input {
-  flex: 1;
-  min-height: var(--compact-input-height);
-}
-
-.input-row .compact-button {
-  min-height: var(--compact-input-height);
-  flex-shrink: 0;
-}
-
-.input-row .option-group {
-  flex: 1;
-  margin-bottom: 0;
-}
-
-.button-group {
-  display: flex;
-  gap: 10px;
-}
-
-/* Connect/disconnect button styles now use shared btn-success/btn-danger classes */
-
-.connect-btn:hover:not(:disabled) {
-  background-color: #45a049;
-}
-
-.disconnect-btn:hover:not(:disabled) {
-  background-color: #da190b;
-}
-
-.connect-btn:disabled, .disconnect-btn:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: var(--compact-gap);
-}
-
-.status-dot {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background-color: #ccc;
-  transition: background-color 0.3s;
-}
-
-.status-indicator.connecting .status-dot {
-  background-color: #ff9800;
-  animation: pulse 1s infinite;
-}
-
-.status-indicator.connected .status-dot {
-  background-color: #4CAF50;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
-}
-
-.status-text {
-  font-weight: bold;
-  color: #333;
-}
-
-.session-id {
-  font-family: 'Courier New', monospace;
-  font-weight: normal;
-  font-size: 0.85em;
-  color: #666;
-  opacity: 0.8;
 }
 
 .main-panel {
@@ -931,6 +853,53 @@ watch(activeQueryables, (queryables) => {
   margin-top: 0;
   margin-bottom: 10px;
   color: #555;
+}
+
+/* Status indicator styles for session section */
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--compact-gap);
+  margin-top: var(--compact-gap);
+  padding: var(--compact-gap);
+  background-color: #f8f9fa;
+  border-radius: var(--compact-border-radius);
+  border: 1px solid #e9ecef;
+}
+
+.status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #ccc;
+  transition: background-color 0.3s;
+}
+
+.status-indicator.connecting .status-dot {
+  background-color: #ff9800;
+  animation: pulse 1s infinite;
+}
+
+.status-indicator.connected .status-dot {
+  background-color: #4CAF50;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-text {
+  font-weight: bold;
+  color: #333;
+}
+
+.session-id {
+  font-family: 'Courier New', monospace;
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #666;
+  opacity: 0.8;
 }
 
 /* Button group styling - app-specific */
