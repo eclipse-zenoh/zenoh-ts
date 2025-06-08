@@ -75,9 +75,17 @@
                   <div class="item-info">
                     <span class="item-key">{{ sessionState.serverUrl }}</span>
                     <span class="item-id">{{ sessionState.displayId }}</span>
+                    <span v-if="selectedSessionId === sessionState.displayId" class="item-selected">(selected)</span>
                     <span class="item-time">{{ sessionState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
+                    <button 
+                      @click="selectSession(sessionState.displayId)"
+                      :disabled="selectedSessionId === sessionState.displayId"
+                      class="compact-button btn-info"
+                    >
+                      Select
+                    </button>
                     <button 
                       @click="disconnect(sessionState.displayId)" 
                       class="compact-button btn-danger"
@@ -155,6 +163,7 @@
                   <div class="item-info">
                     <span class="item-key">{{ subscriberState.keyExpr }}</span>
                     <span class="item-id">{{ subscriberState.displayId }}</span>
+                    <span class="item-session">session: {{ subscriberState.sessionId }}</span>
                     <span class="item-time">{{ subscriberState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
@@ -327,6 +336,7 @@
                   <div class="item-info">
                     <span class="item-key">{{ queryableState.keyExpr }}</span>
                     <span class="item-id">{{ queryableState.displayId }}</span>
+                    <span class="item-session">session: {{ queryableState.sessionId }}</span>
                     <span class="item-time">{{ queryableState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
@@ -668,6 +678,7 @@ const {
   isConnected,
   isConnecting,
   activeSessions,
+  selectedSessionId,
   putParameters,
   logEntries,
   activeSubscribers,
@@ -690,6 +701,7 @@ const {
   connect,
   getSessionInfo,
   disconnect,
+  selectSession,
   performPut,
   performGet,
   subscribe,
@@ -975,6 +987,25 @@ watch(activeQueryables, (queryables) => {
   font-weight: 500;
   font-size: var(--compact-font-size);
   color: #6c757d;
+}
+
+.item-session {
+  background: #e3f2fd;
+  padding: var(--compact-margin) var(--compact-gap);
+  border-radius: var(--compact-border-radius);
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  font-size: var(--compact-font-size);
+  color: #1976d2;
+}
+
+.item-selected {
+  background: #c8e6c9;
+  padding: var(--compact-margin) var(--compact-gap);
+  border-radius: var(--compact-border-radius);
+  font-weight: 500;
+  font-size: var(--compact-font-size);
+  color: #388e3c;
 }
 
 .item-time {

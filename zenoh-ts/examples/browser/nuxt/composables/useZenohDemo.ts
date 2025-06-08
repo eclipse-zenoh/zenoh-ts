@@ -34,6 +34,7 @@ export interface SessionState {
 // Subscriber state interface
 export interface SubscriberState {
   displayId: string; // Display ID like "sub0", "sub1", etc.
+  sessionId: string; // Session ID that this subscriber belongs to
   keyExpr: string;
   subscriber: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
@@ -82,6 +83,7 @@ export interface QueryableResponseParametersState {
 // Queryable state interface
 export interface QueryableState {
   displayId: string; // Display ID like "qry0", "qry1", etc.
+  sessionId: string; // Session ID that this queryable belongs to
   keyExpr: string;
   queryable: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
@@ -149,6 +151,7 @@ export interface ZenohDemoState {
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
   activeSessions: Ref<SessionState[]>;
+  selectedSessionId: Ref<string | null>; // Track which session is currently selected
   activeSubscribers: Ref<SubscriberState[]>;
   activeQueryables: Ref<QueryableState[]>;
   priorityOptions: OptionItem[];
@@ -161,6 +164,7 @@ export interface ZenohDemoState {
   acceptRepliesOptions: OptionItem[];
   connect: () => Promise<void>;
   disconnect: (sessionId: string) => Promise<void>;
+  selectSession: (sessionId: string) => void;
   performPut: () => Promise<void>;
   performGet: () => Promise<void>;
   getSessionInfo: () => Promise<void>;
@@ -257,6 +261,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   logEntries = ref<LogEntry[]>([]);
   activeSessions = ref<SessionState[]>([]);
+  selectedSessionId = ref<string | null>(null);
   activeSubscribers = ref<SubscriberState[]>([]);
   activeQueryables = ref<QueryableState[]>([]) as any;
   priorityOptions: OptionItem[] = [];
@@ -269,6 +274,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   acceptRepliesOptions: OptionItem[] = [];
   async connect() {}
   async disconnect(_: string) {}
+  selectSession(_: string) {}
   async performPut() {}
   async performGet() {}
   async subscribe() {}

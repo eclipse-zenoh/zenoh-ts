@@ -291,9 +291,51 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.logEntries.value = [];
   }
 
-  // Helper method to get the first session (for now, we'll use the first session for all operations)
+  // Helper method to get the currently selected session, or first session if none selected
   private getCurrentSession(): Session | undefined {
+    // Prioritize selected session if available
+    if (this.selectedSessionId.value) {
+      const selectedSession = this.activeSessions.value.find(
+        session => session.displayId === this.selectedSessionId.value
+      );
+      if (selectedSession) {
+        return selectedSession.session;
+      }
+    }
+    // Fallback to first session if no selection or selected session not found
     return this.activeSessions.value.length > 0 ? this.activeSessions.value[0]?.session : undefined;
+  }
+
+  // Helper method to get current session with its ID for tracking purposes
+  private getCurrentSessionWithId(): { session: Session; sessionId: string } | undefined {
+    // Prioritize selected session if available
+    if (this.selectedSessionId.value) {
+      const selectedSession = this.activeSessions.value.find(
+        session => session.displayId === this.selectedSessionId.value
+      );
+      if (selectedSession) {
+        return { session: selectedSession.session, sessionId: selectedSession.displayId };
+      }
+    }
+    // Fallback to first session if no selection or selected session not found
+    if (this.activeSessions.value.length > 0) {
+      const firstSession = this.activeSessions.value[0];
+      if (firstSession) {
+        return { session: firstSession.session, sessionId: firstSession.displayId };
+      }
+    }
+    return undefined;
+  }
+
+  // Method to select a session
+  override selectSession(sessionId: string): void {
+    const session = this.activeSessions.value.find(s => s.displayId === sessionId);
+    if (session) {
+      this.selectedSessionId.value = sessionId;
+      this.addLogEntry("info", `Selected session ${sessionId} as current session`);
+    } else {
+      this.addErrorLogEntry(`Session ${sessionId} not found`);
+    }
   }
 
   // Update isConnected to reflect if we have any active sessions
@@ -350,6 +392,11 @@ class ZenohDemo extends ZenohDemoEmpty {
       this.activeSessions.value.push(sessionState);
       this.updateConnectionStatus();
       
+      // Auto-select the first session if none is selected
+      if (!this.selectedSessionId.value) {
+        this.selectedSessionId.value = displayId;
+      }
+      
       this.addLogEntry(
         "success",
         `Successfully connected to ${this.serverUrl.value} (${displayId})`
@@ -383,6 +430,18 @@ class ZenohDemo extends ZenohDemoEmpty {
       await sessionState.session.close();
       this.activeSessions.value.splice(sessionIndex, 1);
       this.updateConnectionStatus();
+      
+      // Clear selected session if it's the one being disconnected
+      if (this.selectedSessionId.value === sessionId) {
+        this.selectedSessionId.value = null;
+        // Auto-select first remaining session if any
+        if (this.activeSessions.value.length > 0) {
+          const firstSession = this.activeSessions.value[0];
+          if (firstSession) {
+            this.selectedSessionId.value = firstSession.displayId;
+          }
+        }
+      }
       
       // Clear subscribers and queryables if no sessions remain
       if (this.activeSessions.value.length === 0) {
@@ -484,8 +543,10 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async subscribe(): Promise<void> {
-    const currentSession = this.getCurrentSession();
-    if (!currentSession || !this.subscriberParameters.key.value) return;
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.subscriberParameters.key.value) return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
 
     try {
       const keyExpr = new KeyExpr(this.subscriberParameters.key.value);
@@ -506,6 +567,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         subscriber,
         createdAt: new Date(),
         options: subscriberOptionsToJSON(subscriberOptions),
+        sessionId: sessionId,
       };
 
       this.activeSubscribers.value.push(subscriberState);
@@ -587,8 +649,10 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async declareQueryable(): Promise<void> {
-    const currentSession = this.getCurrentSession();
-    if (!currentSession || !this.queryableParameters.key.value) return;
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.queryableParameters.key.value) return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
 
     try {
       // Generate sequential display ID for this queryable
@@ -734,6 +798,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         createdAt,
         options: queryableOptionsToJSON(queryableOptions),
         responseParameters: responseParameters, // Include individual response settings
+        sessionId: sessionId,
       };
 
       this.activeQueryables.value.push(queryableState);
