@@ -12,6 +12,9 @@ import {
   type GetOptions,
   type ReplyErrOptions,
   type ReplyOptions,
+  QueryTarget,
+  ConsolidationMode,
+  ReplyKeyExpr,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration';
 import { getEnumLabel } from "./safeUtils";
@@ -218,9 +221,9 @@ export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
     payload: options.payload?.toString(),
     attachment: options.attachment?.toString(),
     timeout_ms: options.timeout !== undefined ? milliseconds.from(options.timeout) : undefined,
-    target: options.target !== undefined ? options.target.toString() : undefined,
-    consolidation: options.consolidation !== undefined ? options.consolidation.toString() : undefined,
-    acceptReplies: options.acceptReplies !== undefined ? options.acceptReplies.toString() : undefined,
+    target: labelOrUndefined(QueryTarget, options.target),
+    consolidation: labelOrUndefined(ConsolidationMode, options.consolidation),
+    acceptReplies: labelOrUndefined(ReplyKeyExpr, options.acceptReplies),
   };
   return cleanUndefineds(result);
 }

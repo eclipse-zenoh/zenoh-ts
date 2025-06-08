@@ -511,7 +511,7 @@
                 <TimeoutInput
                   v-model="getParameters.timeout.value"
                   v-model:is-empty="getParameters.timeoutEmpty.value"
-                  placeholder="10000"
+                  placeholder="Timeout (ms)"
                   :disabled="!isConnected"
                 />
                 
