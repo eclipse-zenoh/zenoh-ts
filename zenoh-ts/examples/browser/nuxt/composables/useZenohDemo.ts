@@ -22,8 +22,17 @@ export interface LogEntry {
   data?: Record<string, any>; // Optional data record with single key-value pair
 }
 
-// Subscriber info interface
-export interface SubscriberInfo {
+// Session state interface
+export interface SessionState {
+  displayId: string; // Display ID like "ses0", "ses1", etc.
+  serverUrl: string;
+  session: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  isConnecting: boolean;
+}
+
+// Subscriber state interface
+export interface SubscriberState {
   displayId: string; // Display ID like "sub0", "sub1", etc.
   keyExpr: string;
   subscriber: any; // Use any type to avoid strict type checking issues
@@ -70,8 +79,8 @@ export interface QueryableResponseParametersState {
   // Legacy methods for backward compatibility (now delegate to nested structures)
 }
 
-// Queryable info interface
-export interface QueryableInfo {
+// Queryable state interface
+export interface QueryableState {
   displayId: string; // Display ID like "qry0", "qry1", etc.
   keyExpr: string;
   queryable: any; // Use any type to avoid strict type checking issues
@@ -139,8 +148,9 @@ export interface ZenohDemoState {
   queryableParameters: QueryableParametersState;
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
-  activeSubscribers: Ref<SubscriberInfo[]>;
-  activeQueryables: Ref<QueryableInfo[]>;
+  activeSessions: Ref<SessionState[]>;
+  activeSubscribers: Ref<SubscriberState[]>;
+  activeQueryables: Ref<QueryableState[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
@@ -150,10 +160,10 @@ export interface ZenohDemoState {
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
   connect: () => Promise<void>;
-  getSessionInfo: () => Promise<void>;
-  disconnect: () => Promise<void>;
+  disconnect: (sessionId: string) => Promise<void>;
   performPut: () => Promise<void>;
   performGet: () => Promise<void>;
+  getSessionInfo: () => Promise<void>;
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
   declareQueryable: () => Promise<void>;
@@ -246,8 +256,9 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
   };
   logEntries = ref<LogEntry[]>([]);
-  activeSubscribers = ref<SubscriberInfo[]>([]);
-  activeQueryables = ref<QueryableInfo[]>([]) as any;
+  activeSessions = ref<SessionState[]>([]);
+  activeSubscribers = ref<SubscriberState[]>([]);
+  activeQueryables = ref<QueryableState[]>([]) as any;
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
@@ -257,7 +268,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   consolidationOptions: OptionItem[] = [];
   acceptRepliesOptions: OptionItem[] = [];
   async connect() {}
-  async disconnect() {}
+  async disconnect(_: string) {}
   async performPut() {}
   async performGet() {}
   async subscribe() {}

@@ -16,8 +16,8 @@
               <h4>
                 Connection
                 <span v-if="!sessionOptionsExpanded" class="header-keyexpr">
-                  <template v-if="isConnected">
-                    - Connected
+                  <template v-if="activeSessions.length > 0">
+                    - {{ activeSessions.length }} session{{ activeSessions.length > 1 ? 's' : '' }}
                   </template>
                   <template v-else-if="isConnecting">
                     - Connecting...
@@ -29,25 +29,16 @@
               </h4>
               <div class="header-actions">
                 <button 
-                  v-if="!isConnected && !isConnecting"
                   @click="connect" 
-                  :disabled="isConnecting || isConnected"
+                  :disabled="isConnecting"
                   class="compact-button btn-success"
                 >
-                  Connect
+                  <span v-if="isConnecting">Connecting...</span>
+                  <span v-else>Connect</span>
                 </button>
                 <button 
-                  v-if="isConnected"
-                  @click="disconnect" 
-                  :disabled="!isConnected"
-                  class="compact-button btn-danger"
-                >
-                  Disconnect
-                </button>
-                <button 
-                  v-if="isConnected"
                   @click="getSessionInfo" 
-                  :disabled="!isConnected"
+                  :disabled="activeSessions.length === 0"
                   class="compact-button btn-info"
                 >
                   Session Info
@@ -63,7 +54,7 @@
               <div class="options-grid">
                 <ServerInput 
                   v-model="serverUrl"
-                  :disabled="isConnected"
+                  :disabled="false"
                 />
               </div>
               
@@ -71,8 +62,8 @@
               <div class="status-indicator" :class="{ connected: isConnected, connecting: isConnecting }">
                 <span class="status-dot"></span>
                 <span class="status-text">
-                  <template v-if="isConnected">
-                    Connected
+                  <template v-if="activeSessions.length > 0">
+                    {{ activeSessions.length }} Active Session{{ activeSessions.length > 1 ? 's' : '' }}
                   </template>
                   <template v-else-if="isConnecting">
                     Connecting...
@@ -81,6 +72,27 @@
                     Disconnected
                   </template>
                 </span>
+              </div>
+            </div>
+            
+            <!-- Active Sessions List -->
+            <div v-if="activeSessions.length > 0" class="active-items-list">
+              <div class="item-entry" v-for="sessionState in activeSessions" :key="sessionState.displayId">
+                <div class="item-row">
+                  <div class="item-info">
+                    <span class="item-key">{{ sessionState.serverUrl }}</span>
+                    <span class="item-id">{{ sessionState.displayId }}</span>
+                    <span class="item-time">{{ sessionState.createdAt.toLocaleTimeString() }}</span>
+                  </div>
+                  <div class="item-actions">
+                    <button 
+                      @click="disconnect(sessionState.displayId)" 
+                      class="compact-button btn-danger"
+                    >
+                      Disconnect
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -129,38 +141,38 @@
             
             <!-- Active Subscribers List -->
             <div v-if="activeSubscribers.length > 0" class="active-items-list">
-              <div class="item-entry" v-for="subscriberInfo in activeSubscribers" :key="subscriberInfo.displayId">
+              <div class="item-entry" v-for="subscriberState in activeSubscribers" :key="subscriberState.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ subscriberInfo.keyExpr }}</span>
-                    <span class="item-id">{{ subscriberInfo.displayId }}</span>
-                    <span class="item-time">{{ subscriberInfo.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ subscriberState.keyExpr }}</span>
+                    <span class="item-id">{{ subscriberState.displayId }}</span>
+                    <span class="item-time">{{ subscriberState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
                     <button 
-                      @click="unsubscribe(subscriberInfo.displayId)" 
+                      @click="unsubscribe(subscriberState.displayId)" 
                       class="compact-button btn-danger"
                       :disabled="!isConnected"
                     >
                       Undeclare
                     </button>
                     <CollapseButton
-                      :expanded="expandedSubscriberDetails.has(subscriberInfo.displayId)"
+                      :expanded="expandedSubscriberDetails.has(subscriberState.displayId)"
                       @update:expanded="(value: boolean) => { if (value) { 
-                        expandedSubscriberDetails.add(subscriberInfo.displayId) 
+                        expandedSubscriberDetails.add(subscriberState.displayId) 
                       } else { 
-                        expandedSubscriberDetails.delete(subscriberInfo.displayId) 
+                        expandedSubscriberDetails.delete(subscriberState.displayId) 
                       } }"
                     />
                   </div>
                 </div>
                 
                 <!-- Expanded Details Section -->
-                <div v-if="expandedSubscriberDetails.has(subscriberInfo.displayId)" class="item-details">
+                <div v-if="expandedSubscriberDetails.has(subscriberState.displayId)" class="item-details">
                   <div class="details-content">
                     <ParameterDisplay 
                       type="neutral" 
-                      :data="{ 'SubscriberOptions': subscriberInfo.options }"
+                      :data="{ 'SubscriberOptions': subscriberState.options }"
                     />
                   </div>
                 </div>
@@ -301,105 +313,105 @@
             
             <!-- Active Queryables List -->
             <div v-if="activeQueryables.length > 0" class="active-items-list">
-              <div class="item-entry" v-for="queryableInfo in activeQueryables" :key="queryableInfo.displayId">
+              <div class="item-entry" v-for="queryableState in activeQueryables" :key="queryableState.displayId">
                 <div class="item-row">
                   <div class="item-info">
-                    <span class="item-key">{{ queryableInfo.keyExpr }}</span>
-                    <span class="item-id">{{ queryableInfo.displayId }}</span>
-                    <span class="item-time">{{ queryableInfo.createdAt.toLocaleTimeString() }}</span>
+                    <span class="item-key">{{ queryableState.keyExpr }}</span>
+                    <span class="item-id">{{ queryableState.displayId }}</span>
+                    <span class="item-time">{{ queryableState.createdAt.toLocaleTimeString() }}</span>
                   </div>
                   <div class="item-actions">
                     <CollapseButton
                       label="Edit reply"
-                      :expanded="expandedResponseConfig.has(queryableInfo.displayId)"
+                      :expanded="expandedResponseConfig.has(queryableState.displayId)"
                       expanded-text="Close edit"
                       collapsed-text=""
                       @update:expanded="(value: boolean) => { if (value) { 
-                        expandedResponseConfig.add(queryableInfo.displayId) 
+                        expandedResponseConfig.add(queryableState.displayId) 
                       } else { 
-                        expandedResponseConfig.delete(queryableInfo.displayId) 
+                        expandedResponseConfig.delete(queryableState.displayId) 
                       } }"
                     />
                     <button 
-                      @click="undeclareQueryable(queryableInfo.displayId)" 
+                      @click="undeclareQueryable(queryableState.displayId)" 
                       class="compact-button btn-danger"
                       :disabled="!isConnected"
                     >
                       Undeclare
                     </button>
                     <CollapseButton
-                      :expanded="expandedQueryableDetails.has(queryableInfo.displayId)"
+                      :expanded="expandedQueryableDetails.has(queryableState.displayId)"
                       @update:expanded="(value: boolean) => { if (value) { 
-                        expandedQueryableDetails.add(queryableInfo.displayId) 
+                        expandedQueryableDetails.add(queryableState.displayId) 
                       } else { 
-                        expandedQueryableDetails.delete(queryableInfo.displayId) 
+                        expandedQueryableDetails.delete(queryableState.displayId) 
                       } }"
                     />
                   </div>
                 </div>
                 
                 <!-- Edit Reply Section (Independent) -->
-                <div v-if="expandedResponseConfig.has(queryableInfo.displayId)" class="edit-reply-section">
+                <div v-if="expandedResponseConfig.has(queryableState.displayId)" class="edit-reply-section">
                   <div class="response-config-content">
                     <div class="options-grid">
                         <!-- Response Type Selection -->
                         <ResponseTypeSelect
-                          v-model="queryableInfo.responseParameters.replyType"
-                          :name="`response-type-${queryableInfo.displayId}`"
+                          v-model="queryableState.responseParameters.replyType"
+                          :name="`response-type-${queryableState.displayId}`"
                           :disabled="!isConnected"
                         />
                         
                         <!-- Reply Fields -->
-                        <template v-if="queryableInfo.responseParameters.replyType === 'reply'">
+                        <template v-if="queryableState.responseParameters.replyType === 'reply'">
                           <KeyExprInput 
-                            v-model="queryableInfo.responseParameters.reply.keyExpr"
+                            v-model="queryableState.responseParameters.reply.keyExpr"
                             label="Key Expression"
                             placeholder="Normally the queryable keyexpr"
                             :disabled="!isConnected"
                           />
                           
                           <PayloadInput
-                            v-model="queryableInfo.responseParameters.reply.payload"
-                            v-model:is-empty="queryableInfo.responseParameters.reply.payloadEmpty"
+                            v-model="queryableState.responseParameters.reply.payload"
+                            v-model:is-empty="queryableState.responseParameters.reply.payloadEmpty"
                             label="Payload"
                             placeholder="Payload content for successful reply"
                             :disabled="!isConnected"
                           />
                           
                           <EncodingSelect 
-                            v-model="queryableInfo.responseParameters.reply.encoding"
-                            v-model:custom-encoding="queryableInfo.responseParameters.reply.customEncoding"
+                            v-model="queryableState.responseParameters.reply.encoding"
+                            v-model:custom-encoding="queryableState.responseParameters.reply.customEncoding"
                             :encoding-options="encodingOptions"
                             :disabled="!isConnected"
                           />
                           
                           <PrioritySelect 
-                            v-model="queryableInfo.responseParameters.reply.priority" 
+                            v-model="queryableState.responseParameters.reply.priority" 
                             :disabled="!isConnected"
                             :options="priorityOptions"
                           />
                           
                           <CongestionControlSelect
-                            v-model="queryableInfo.responseParameters.reply.congestionControl"
+                            v-model="queryableState.responseParameters.reply.congestionControl"
                             :disabled="!isConnected"
                             :options="congestionControlOptions"
                           />
                           
                           <ExpressSelect
-                            v-model="queryableInfo.responseParameters.reply.express"
+                            v-model="queryableState.responseParameters.reply.express"
                             :disabled="!isConnected"
                           />
                           
                           <CheckBox
-                            v-model="queryableInfo.responseParameters.reply.useTimestamp"
+                            v-model="queryableState.responseParameters.reply.useTimestamp"
                             label="Use timestamp"
                             :disabled="!isConnected"
                             :three-state="false"
                           />
                           
                           <PayloadInput
-                            v-model="queryableInfo.responseParameters.reply.attachment"
-                            v-model:is-empty="queryableInfo.responseParameters.reply.attachmentEmpty"
+                            v-model="queryableState.responseParameters.reply.attachment"
+                            v-model:is-empty="queryableState.responseParameters.reply.attachmentEmpty"
                             label="Attachment"
                             placeholder="Optional attachment data"
                             :disabled="!isConnected"
@@ -407,18 +419,18 @@
                         </template>
                         
                         <!-- ReplyErr Fields -->
-                        <template v-if="queryableInfo.responseParameters.replyType === 'replyErr'">
+                        <template v-if="queryableState.responseParameters.replyType === 'replyErr'">
                           <PayloadInput
-                            v-model="queryableInfo.responseParameters.replyErr.payload"
-                            v-model:is-empty="queryableInfo.responseParameters.replyErr.payloadEmpty"
+                            v-model="queryableState.responseParameters.replyErr.payload"
+                            v-model:is-empty="queryableState.responseParameters.replyErr.payloadEmpty"
                             label="Error Payload"
                             placeholder="Error message or payload"
                             :disabled="!isConnected"
                           />
                           
                           <EncodingSelect 
-                            v-model="queryableInfo.responseParameters.replyErr.encoding"
-                            v-model:custom-encoding="queryableInfo.responseParameters.replyErr.customEncoding"
+                            v-model="queryableState.responseParameters.replyErr.encoding"
+                            v-model:custom-encoding="queryableState.responseParameters.replyErr.customEncoding"
                             :encoding-options="encodingOptions"
                             :disabled="!isConnected"
                           />
@@ -428,50 +440,50 @@
                 </div>
                 
                 <!-- Expanded Details Section -->
-                <div v-if="expandedQueryableDetails.has(queryableInfo.displayId)" class="item-details">
+                <div v-if="expandedQueryableDetails.has(queryableState.displayId)" class="item-details">
                   <div class="details-content">
 
                     <!-- Queryable Options Display -->
                     <ParameterDisplay 
                       type="neutral" 
-                      :data="{ 'QueryableOptions': queryableInfo.options }"
+                      :data="{ 'QueryableOptions': queryableState.options }"
                     />
 
                     <!-- Display Reply Parameters when reply type is "reply" -->
-                    <div v-if="queryableInfo.responseParameters.replyType === 'reply'" class="reply-parameters">
+                    <div v-if="queryableState.responseParameters.replyType === 'reply'" class="reply-parameters">
                       <!-- Key Expression Parameter -->
                       <ParameterDisplay 
                         type="neutral" 
-                        :data="{ 'reply keyexpr': queryableInfo.responseParameters.reply.keyExpr }"
+                        :data="{ 'reply keyexpr': queryableState.responseParameters.reply.keyExpr }"
                       />
                       
                       <!-- Payload Parameter -->
                       <ParameterDisplay
-                        v-if="!queryableInfo.responseParameters.reply.payloadEmpty"
+                        v-if="!queryableState.responseParameters.reply.payloadEmpty"
                         type="neutral" 
-                        :data="{ 'reply payload': queryableInfo.responseParameters.reply.payload }"
+                        :data="{ 'reply payload': queryableState.responseParameters.reply.payload }"
                       />
                       
                       <!-- ReplyOptions Parameter -->
                       <ParameterDisplay 
                         type="neutral" 
-                        :data="{ 'ReplyOptions': queryableInfo.responseParameters.reply.replyOptionsJSON }"
+                        :data="{ 'ReplyOptions': queryableState.responseParameters.reply.replyOptionsJSON }"
                       />
                     </div>
                     
                     <!-- Display ReplyErr Parameters when reply type is "replyErr" -->
-                    <div v-if="queryableInfo.responseParameters.replyType === 'replyErr'" class="reply-err-parameters">
+                    <div v-if="queryableState.responseParameters.replyType === 'replyErr'" class="reply-err-parameters">
                       <!-- Payload Parameter -->
                       <ParameterDisplay 
-                        v-if="!queryableInfo.responseParameters.replyErr.payloadEmpty"
+                        v-if="!queryableState.responseParameters.replyErr.payloadEmpty"
                         type="neutral" 
-                        :data="{ 'reply error payload': queryableInfo.responseParameters.replyErr.payload }"
+                        :data="{ 'reply error payload': queryableState.responseParameters.replyErr.payload }"
                       />
                       
                       <!-- ReplyErrOptions Parameter -->
                       <ParameterDisplay 
                         type="neutral" 
-                        :data="{ 'ReplyErrOptions': queryableInfo.responseParameters.replyErr.replyErrOptionsJSON }"
+                        :data="{ 'ReplyErrOptions': queryableState.responseParameters.replyErr.replyErrOptionsJSON }"
                       />
                     </div>
                   </div>
@@ -646,6 +658,7 @@ const {
   serverUrl,
   isConnected,
   isConnecting,
+  activeSessions,
   putParameters,
   logEntries,
   activeSubscribers,
@@ -681,9 +694,12 @@ const {
 
 // Cleanup function to ensure proper disconnection
 const cleanup = async () => {
-  if (isConnected.value) {
+  if (activeSessions.value.length > 0) {
     try {
-      await disconnect()
+      // Disconnect all active sessions
+      for (const session of activeSessions.value) {
+        await disconnect(session.displayId)
+      }
     } catch (error) {
       console.error('Error during cleanup:', error)
     }

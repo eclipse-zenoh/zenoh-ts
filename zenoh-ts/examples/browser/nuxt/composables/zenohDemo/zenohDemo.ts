@@ -2,8 +2,9 @@ import {
   type ZenohDemoState,
   ZenohDemoEmpty,
   type LogEntry,
-  type SubscriberInfo,
-  type QueryableInfo,
+  type SessionState,
+  type SubscriberState,
+  type QueryableState,
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
@@ -188,7 +189,7 @@ function getParametersStateToGetOptions(
 }
 
 class ZenohDemo extends ZenohDemoEmpty {
-  private zenohSession: Session | undefined = undefined;
+  private sessionIdCounter = 0;
   private subscriberIdCounter = 0;
   private queryableIdCounter = 0;
 
@@ -290,15 +291,26 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.logEntries.value = [];
   }
 
+  // Helper method to get the first session (for now, we'll use the first session for all operations)
+  private getCurrentSession(): Session | undefined {
+    return this.activeSessions.value.length > 0 ? this.activeSessions.value[0]?.session : undefined;
+  }
+
+  // Update isConnected to reflect if we have any active sessions
+  private updateConnectionStatus(): void {
+    this.isConnected.value = this.activeSessions.value.length > 0;
+  }
+
   override async getSessionInfo(): Promise<void> {
-    if (!this.zenohSession) {
+    const currentSession = this.getCurrentSession();
+    if (!currentSession) {
       this.addErrorLogEntry("No active session. Please connect first.");
       return;
     }
 
     try {
       this.addLogEntry("info", "Retrieving session information...");
-      const sessionInfo = await this.zenohSession.info();
+      const sessionInfo = await currentSession.info();
       const sessionInfoJson = sessionInfoToJSON(sessionInfo);
       
       this.addLogEntry(
@@ -312,7 +324,7 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async connect(): Promise<void> {
-    if (this.isConnecting.value || this.isConnected.value) return;
+    if (this.isConnecting.value) return;
 
     this.isConnecting.value = true;
     this.addLogEntry(
@@ -322,41 +334,72 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const config = new Config(this.serverUrl.value);
-      this.zenohSession = await Session.open(config);
-      this.isConnected.value = true;
+      const session = await Session.open(config);
+      
+      // Generate sequential display ID for this session
+      const displayId = `ses${this.sessionIdCounter++}`;
+      
+      const sessionState: SessionState = {
+        displayId: displayId,
+        serverUrl: this.serverUrl.value,
+        session: session,
+        createdAt: new Date(),
+        isConnecting: false,
+      };
+
+      this.activeSessions.value.push(sessionState);
+      this.updateConnectionStatus();
+      
       this.addLogEntry(
         "success",
-        `Successfully connected to ${this.serverUrl.value}`
+        `Successfully connected to ${this.serverUrl.value} (${displayId})`
       );
     } catch (error) {
       this.addErrorLogEntry(
         `Failed to connect to ${this.serverUrl.value}`,
         error
       );
-      this.zenohSession = undefined;
     } finally {
       this.isConnecting.value = false;
     }
   }
 
-  override async disconnect(): Promise<void> {
-    if (!this.zenohSession) return;
+  override async disconnect(sessionId: string): Promise<void> {
+    const sessionIndex = this.activeSessions.value.findIndex(
+      (session: SessionState) => session.displayId === sessionId
+    );
+    if (sessionIndex === -1) {
+      this.addErrorLogEntry(`Session ${sessionId} not found`);
+      return;
+    }
+
+    const sessionState = this.activeSessions.value[sessionIndex];
+    if (!sessionState) {
+      this.addErrorLogEntry(`Session info for ${sessionId} is invalid`);
+      return;
+    }
 
     try {
-      await this.zenohSession.close();
-      this.zenohSession = undefined;
-      this.isConnected.value = false;
-      this.activeSubscribers.value = []; // Clear the subscribers list
-      this.activeQueryables.value = []; // Clear the queryables list
-      this.addLogEntry("success", "Disconnected from Zenoh session");
+      await sessionState.session.close();
+      this.activeSessions.value.splice(sessionIndex, 1);
+      this.updateConnectionStatus();
+      
+      // Clear subscribers and queryables if no sessions remain
+      if (this.activeSessions.value.length === 0) {
+        this.activeSubscribers.value = [];
+        this.activeQueryables.value = [];
+      }
+      
+      this.addLogEntry("success", `Disconnected from session ${sessionId} (${sessionState.serverUrl})`);
     } catch (error) {
-      this.addErrorLogEntry("Error during disconnect", error);
+      this.addErrorLogEntry(`Error during disconnect of session ${sessionId}`, error);
     }
   }
 
   override async performPut(): Promise<void> {
+    const currentSession = this.getCurrentSession();
     if (
-      !this.zenohSession ||
+      !currentSession ||
       !this.putParameters.key.value ||
       this.putParameters.valueEmpty.value
     )
@@ -368,7 +411,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Build put options
       const options = putParametersStateToPutOptions(this.putParameters);
-      await this.zenohSession.put(keyExpr, bytes, options);
+      await currentSession.put(keyExpr, bytes, options);
 
       this.addLogEntry("success", "PUT successful", {
         keyexpr: keyExpr.toString(),
@@ -384,7 +427,8 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performGet(): Promise<void> {
-    if (!this.zenohSession || !this.getParameters.key.value) return;
+    const currentSession = this.getCurrentSession();
+    if (!currentSession || !this.getParameters.key.value) return;
 
     try {
       const selector = this.getParameters.key.value;
@@ -397,7 +441,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         GetOptions: getOptionsToJSON(getOptions),
       });
 
-      const receiver = await this.zenohSession.get(selector, getOptions);
+      const receiver = await currentSession.get(selector, getOptions);
       if (!receiver) {
         this.addErrorLogEntry("GET failed: No receiver returned");
         return;
@@ -440,14 +484,15 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async subscribe(): Promise<void> {
-    if (!this.zenohSession || !this.subscriberParameters.key.value) return;
+    const currentSession = this.getCurrentSession();
+    if (!currentSession || !this.subscriberParameters.key.value) return;
 
     try {
       const keyExpr = new KeyExpr(this.subscriberParameters.key.value);
       const subscriberOptions = subscriberParametersStateToSubscriberOptions(
         this.subscriberParameters
       );
-      const subscriber = await this.zenohSession.declareSubscriber(
+      const subscriber = await currentSession.declareSubscriber(
         keyExpr,
         subscriberOptions
       );
@@ -455,7 +500,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Generate sequential display ID for this subscriber
       const displayId = `sub${this.subscriberIdCounter++}`;
 
-      const subscriberInfo: SubscriberInfo = {
+      const subscriberState: SubscriberState = {
         displayId: displayId,
         keyExpr: this.subscriberParameters.key.value,
         subscriber,
@@ -463,7 +508,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         options: subscriberOptionsToJSON(subscriberOptions),
       };
 
-      this.activeSubscribers.value.push(subscriberInfo);
+      this.activeSubscribers.value.push(subscriberState);
       this.addLogEntry("success", `Subscriber ${displayId} declared`, {
         keyexpr: keyExpr.toString(),
         SubscriberOptions: subscriberOptionsToJSON(subscriberOptions),
@@ -516,25 +561,25 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async unsubscribe(subscriberId: string): Promise<void> {
     const subscriberIndex = this.activeSubscribers.value.findIndex(
-      (sub: SubscriberInfo) => sub.displayId === subscriberId
+      (sub: SubscriberState) => sub.displayId === subscriberId
     );
     if (subscriberIndex === -1) {
       this.addErrorLogEntry(`Subscriber ${subscriberId} not found`);
       return;
     }
 
-    const subscriberInfo = this.activeSubscribers.value[subscriberIndex];
-    if (!subscriberInfo) {
+    const subscriberState = this.activeSubscribers.value[subscriberIndex];
+    if (!subscriberState) {
       this.addErrorLogEntry(`Subscriber info for ${subscriberId} is invalid`);
       return;
     }
 
     try {
-      await subscriberInfo.subscriber.undeclare();
+      await subscriberState.subscriber.undeclare();
       this.activeSubscribers.value.splice(subscriberIndex, 1);
       this.addLogEntry(
         "success",
-        `Unsubscribed from "${subscriberInfo.keyExpr}" (${subscriberId})`
+        `Unsubscribed from "${subscriberState.keyExpr}" (${subscriberId})`
       );
     } catch (error) {
       this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
@@ -542,7 +587,8 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async declareQueryable(): Promise<void> {
-    if (!this.zenohSession || !this.queryableParameters.key.value) return;
+    const currentSession = this.getCurrentSession();
+    if (!currentSession || !this.queryableParameters.key.value) return;
 
     try {
       // Generate sequential display ID for this queryable
@@ -567,7 +613,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;
 
-      // Create a single timestamp for both payload and QueryableInfo consistency
+      // Create a single timestamp for both payload and QueryableState consistency
       const createdAt = new Date();
       const createdAtStr =createdAt.toISOString().slice(11, 19);
       
@@ -598,9 +644,9 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             // Get timestamp if useTimestamp is enabled
             let timestamp: Timestamp | undefined = undefined;
-            if (replyParams.useTimestamp && this.zenohSession) {
+            if (replyParams.useTimestamp && currentSession) {
               try {
-                timestamp = await this.zenohSession.newTimestamp();
+                timestamp = await currentSession.newTimestamp();
               } catch (error) {
                 this.addLogEntry(
                   "error",
@@ -611,7 +657,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
             // Build reply options with timestamp if available
             const replyOptions =
-              await replyParametersStateToReplyOptions(replyParams, this.zenohSession);
+              await replyParametersStateToReplyOptions(replyParams, currentSession);
 
             // Log the reply details with timestamp information
             const logData: Record<string, any> = {
@@ -676,12 +722,12 @@ class ZenohDemo extends ZenohDemoEmpty {
         }
       };
 
-      const queryable = await this.zenohSession.declareQueryable(
+      const queryable = await currentSession.declareQueryable(
         keyExpr,
         queryableOptions
       );
 
-      const queryableInfo: QueryableInfo = {
+      const queryableState: QueryableState = {
         displayId: displayId,
         keyExpr: this.queryableParameters.key.value,
         queryable,
@@ -690,7 +736,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         responseParameters: responseParameters, // Include individual response settings
       };
 
-      this.activeQueryables.value.push(queryableInfo);
+      this.activeQueryables.value.push(queryableState);
       this.addLogEntry("success", `Queryable ${displayId} declared`, {
         keyexpr: keyExpr.toString(),
         QueryableOptions: queryableOptionsToJSON(queryableOptions),
@@ -705,25 +751,25 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async undeclareQueryable(queryableId: string): Promise<void> {
     const queryableIndex = this.activeQueryables.value.findIndex(
-      (qry: QueryableInfo) => qry.displayId === queryableId
+      (qry: QueryableState) => qry.displayId === queryableId
     );
     if (queryableIndex === -1) {
       this.addErrorLogEntry(`Queryable ${queryableId} not found`);
       return;
     }
 
-    const queryableInfo = this.activeQueryables.value[queryableIndex];
-    if (!queryableInfo) {
+    const queryableState = this.activeQueryables.value[queryableIndex];
+    if (!queryableState) {
       this.addErrorLogEntry(`Queryable info for ${queryableId} is invalid`);
       return;
     }
 
     try {
-      await queryableInfo.queryable.undeclare();
+      await queryableState.queryable.undeclare();
       this.activeQueryables.value.splice(queryableIndex, 1);
       this.addLogEntry(
         "success",
-        `Undeclared queryable "${queryableInfo.keyExpr}" (${queryableId})`
+        `Undeclared queryable "${queryableState.keyExpr}" (${queryableId})`
       );
     } catch (error) {
       this.addErrorLogEntry(
