@@ -508,17 +508,12 @@
                   :disabled="!isConnected"
                 />
                 
-                <div class="option-group">
-                  <label class="compact-label">Timeout (ms):</label>
-                  <input 
-                    type="number" 
-                    v-model="getParameters.timeout.value" 
-                    placeholder="10000"
-                    min="0"
-                    :disabled="!isConnected"
-                    class="compact-input"
-                  >
-                </div>
+                <TimeoutInput
+                  v-model="getParameters.timeout.value"
+                  v-model:is-empty="getParameters.timeoutEmpty.value"
+                  placeholder="10000"
+                  :disabled="!isConnected"
+                />
                 
                 <div class="option-group">
                   <label class="compact-label">Target:</label>
@@ -603,6 +598,7 @@
 // Import components
 import CollapseButton from './components/CollapseButton.vue'
 import ResponseTypeSelect from './components/ResponseTypeSelect.vue'
+import TimeoutInput from './components/TimeoutInput.vue'
 
 // Use the Zenoh composable
 const {

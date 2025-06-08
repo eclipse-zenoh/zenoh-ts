@@ -123,6 +123,7 @@ export interface GetParametersState {
   attachment: Ref<string>;
   attachmentEmpty: Ref<boolean>;
   timeout: Ref<number | undefined>; // timeout in milliseconds
+  timeoutEmpty: Ref<boolean>;
   target: Ref<QueryTarget | undefined>;
   consolidation: Ref<ConsolidationMode | undefined>;
   acceptReplies: Ref<ReplyKeyExpr | undefined>;
@@ -234,6 +235,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     attachment: ref(""),
     attachmentEmpty: ref(true),
     timeout: ref(undefined as number | undefined),
+    timeoutEmpty: ref(true),
     target: ref(undefined as QueryTarget | undefined),
     consolidation: ref(undefined as ConsolidationMode | undefined),
     acceptReplies: ref(undefined as ReplyKeyExpr | undefined),

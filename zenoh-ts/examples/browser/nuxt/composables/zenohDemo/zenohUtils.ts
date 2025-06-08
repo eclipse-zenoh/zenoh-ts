@@ -12,9 +12,11 @@ import {
   type GetOptions,
   type ReplyErrOptions,
   type ReplyOptions,
-  Duration,
 } from "@eclipse-zenoh/zenoh-ts";
+import { Duration } from 'typed-duration';
 import { getEnumLabel } from "./safeUtils";
+
+const { milliseconds } = Duration;
 
 // Interface for the sample JSON representation
 export interface SampleJSON {
@@ -215,7 +217,7 @@ export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
     encoding: options.encoding?.toString(),
     payload: options.payload?.toString(),
     attachment: options.attachment?.toString(),
-    timeout_ms: options.timeout !== undefined ? Duration.milliseconds.from(options.timeout) : undefined,
+    timeout_ms: options.timeout !== undefined ? milliseconds.from(options.timeout) : undefined,
     target: options.target !== undefined ? options.target.toString() : undefined,
     consolidation: options.consolidation !== undefined ? options.consolidation.toString() : undefined,
     acceptReplies: options.acceptReplies !== undefined ? options.acceptReplies.toString() : undefined,

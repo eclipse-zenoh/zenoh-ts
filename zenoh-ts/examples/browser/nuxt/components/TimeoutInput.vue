@@ -1,13 +1,15 @@
 <template>
-  <div class="option-group option-group-full-width">
-    <label>{{ label }}:</label>
-    <div class="fullwidth-input-row">
+  <div class="option-group">
+    <label class="compact-label">{{ label }}:</label>
+    <div class="input-row">
       <input 
-        type="text" 
+        type="number" 
         :value="modelValue" 
         @input="handleInput"
-        :placeholder="placeholder || ''"
+        :placeholder="placeholder || '10000'"
+        :min="min || 0"
         :disabled="disabled || isEmpty"
+        class="compact-input"
       >
       <label class="checkbox-label inline-checkbox">
         <input 
@@ -24,24 +26,28 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue: string
+  modelValue: number | undefined
   isEmpty: boolean
-  label: string
+  label?: string
   placeholder?: string
+  min?: number
   disabled?: boolean
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: string): void
+  (e: 'update:modelValue', value: number | undefined): void
   (e: 'update:isEmpty', value: boolean): void
 }
 
-defineProps<Props>()
+withDefaults(defineProps<Props>(), {
+  label: 'Timeout (ms)'
+})
 const emit = defineEmits<Emits>()
 
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value)
+  const value = target.value === '' ? undefined : Number(target.value)
+  emit('update:modelValue', value)
 }
 
 function handleEmptyToggle(event: Event) {

@@ -145,7 +145,7 @@ function getParametersStateToGetOptions(parameters: GetParametersState): GetOpti
   if (!parameters.attachmentEmpty.value) {
     opts.attachment = new ZBytes(parameters.attachment.value);
   }
-  if (parameters.timeout.value !== undefined) {
+  if (!parameters.timeoutEmpty.value && parameters.timeout.value !== undefined) {
     opts.timeout = Duration.milliseconds.of(parameters.timeout.value);
   }
   if (parameters.target.value !== undefined) {

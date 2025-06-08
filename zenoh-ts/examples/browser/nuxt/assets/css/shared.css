@@ -196,7 +196,7 @@ button.compact:disabled {
 }
 
 /* Make attachment field span full width of grid */
-.option-group:has(.attachment-input-row) {
+.option-group:has(.fullwidth-input-row) {
   grid-column: 1 / -1;
 }
 
@@ -282,14 +282,14 @@ button.compact:disabled {
 }
 
 /* ===== SPECIALIZED INPUT ROWS ===== */
-.attachment-input-row {
+.fullwidth-input-row {
   display: flex;
   gap: var(--compact-gap);
   align-items: center;
   width: 100%;
 }
 
-.attachment-input-row input[type="text"] {
+.fullwidth-input-row input[type="text"] {
   flex: 1;
   min-width: 0;
   padding: var(--compact-padding);
