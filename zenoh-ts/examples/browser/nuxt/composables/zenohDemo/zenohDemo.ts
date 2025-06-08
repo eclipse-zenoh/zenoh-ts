@@ -542,7 +542,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create a single timestamp for both payload and QueryableInfo consistency
       const createdAt = new Date();
-      const createdAtStr = `${createdAt.getHours()}:${createdAt.getMinutes()}:${createdAt.getSeconds()}`;
+      const createdAtStr =createdAt.toISOString().slice(11, 19);
       
       // Set payload explicitly with queryable ID and creation time
       responseParameters.reply.payload = `Hello from queryable ${displayId} created at ${createdAtStr}`;

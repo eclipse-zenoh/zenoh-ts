@@ -583,6 +583,8 @@
 </template>
 
 <script setup lang="ts">
+import { onBeforeUnmount, onUnmounted } from 'vue'
+
 // Import components
 import CollapseButton from './components/CollapseButton.vue'
 import ResponseTypeSelect from './components/ResponseTypeSelect.vue'
@@ -628,6 +630,36 @@ const {
   // App operations
   clearLog,
 } = await useZenohDemo();
+
+// Cleanup function to ensure proper disconnection
+const cleanup = async () => {
+  if (isConnected.value) {
+    try {
+      await disconnect()
+    } catch (error) {
+      console.error('Error during cleanup:', error)
+    }
+  }
+}
+
+// Vue lifecycle hooks for cleanup
+onBeforeUnmount(cleanup)
+
+// Handle browser page unloads and HMR scenarios
+if (import.meta.client) {
+  // Clean up on page unload (covers browser refresh, tab close, etc.)
+  window.addEventListener('beforeunload', cleanup)
+  // Handle HMR module replacement (development only)
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => {
+      cleanup()
+    })
+  }
+  // Clean up event listeners when component is destroyed
+  onUnmounted(() => {
+    window.removeEventListener('beforeunload', cleanup)
+  })
+}
 
 // Template ref for log content
 const logContent = ref<HTMLElement>()
