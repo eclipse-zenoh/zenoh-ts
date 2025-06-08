@@ -10,11 +10,11 @@
         <div class="operation-block">
           <h3 class="block-title">Session</h3>
           
-          <!-- Session Operation -->
+          <!-- Open Operation -->
           <div class="operation-group">
             <div class="operation-header">
               <h4>
-                Connection
+                Open
                 <span v-if="!sessionOptionsExpanded" class="header-keyexpr">
                   <template v-if="activeSessions.length > 0">
                     - {{ activeSessions.length }} session{{ activeSessions.length > 1 ? 's' : '' }}
@@ -35,13 +35,6 @@
                 >
                   <span v-if="isConnecting">Connecting...</span>
                   <span v-else>Connect</span>
-                </button>
-                <button 
-                  @click="getSessionInfo" 
-                  :disabled="activeSessions.length === 0"
-                  class="compact-button btn-info"
-                >
-                  Session Info
                 </button>
                 <CollapseButton
                   v-model:expanded="sessionOptionsExpanded"
@@ -93,6 +86,22 @@
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Info Operation -->
+          <div class="operation-group">
+            <div class="operation-header">
+              <h4>Info</h4>
+              <div class="header-actions">
+                <button 
+                  @click="getSessionInfo" 
+                  :disabled="activeSessions.length === 0"
+                  class="compact-button btn-primary"
+                >
+                  Run
+                </button>
               </div>
             </div>
           </div>
