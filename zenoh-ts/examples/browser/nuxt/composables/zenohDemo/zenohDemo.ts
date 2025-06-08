@@ -497,7 +497,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       const queryableOptions = queryableParametersStateToQueryableOptions(this.queryableParameters);
 
       // Create individual response parameters for this queryable
-      const responseParameters = createDefaultResponseParameters();
+      const responseParameters = createDefaultResponseParameters(displayId);
       responseParameters.getReplyErrOptionsJSON = () => {
         return replyErrOptionsToJSON(
           replyErrParametersStateToReplyErrOptions(responseParameters.replyErr)
