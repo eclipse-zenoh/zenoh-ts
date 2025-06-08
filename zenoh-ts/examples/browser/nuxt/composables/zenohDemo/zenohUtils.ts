@@ -16,11 +16,19 @@ import {
   ConsolidationMode,
   ReplyKeyExpr,
   ReplyError,
+  Timestamp,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration';
 import { getEnumLabel } from "./safeUtils";
+import type { ReplyParametersState, ReplyErrParametersState } from "../useZenohDemo";
 
 const { milliseconds } = Duration;
+
+// Interface for the timestamp JSON representation
+export interface TimestampJSON {
+  timestamp: string;
+  id: string;
+}
 
 // Interface for the sample JSON representation
 export interface SampleJSON {
@@ -31,7 +39,7 @@ export interface SampleJSON {
   priority: string;
   congestionControl: string;
   express: string;
-  timestamp: string | undefined;
+  timestamp: TimestampJSON | undefined;
   attachment: string | undefined;
 }
 
@@ -68,7 +76,7 @@ export interface ReplyOptionsJSON {
   congestionControl: string | undefined;
   priority: string | undefined;
   express: string | undefined;
-  timestamp: string | undefined;
+  timestamp: TimestampJSON | undefined;
   attachment: string | undefined;
 }
 
@@ -129,6 +137,18 @@ function cleanUndefineds<T extends Record<string, any>>(obj: T): T {
 }
 
 /**
+ * Converts a Zenoh Timestamp to a structured JSON object
+ * @param timestamp The Zenoh Timestamp to convert
+ * @returns A structured object containing timestamp as ISO string and id as string
+ */
+export function timestampToJSON(timestamp: Timestamp): TimestampJSON {
+  return {
+    timestamp: timestamp.asDate().toISOString(),
+    id: timestamp.getId().toString(),
+  };
+}
+
+/**
  * Converts a Zenoh Sample to a structured JSON object
  * @param sample The Zenoh Sample to convert
  * @returns A structured object containing all sample properties as strings
@@ -145,7 +165,7 @@ export function sampleToJSON(sample: Sample): SampleJSON {
     congestionControl:
       label(CongestionControl, sample.congestionControl()),
     express: sample.express().toString(),
-    timestamp: sample.timestamp()?.asDate().toISOString(),
+    timestamp: sample.timestamp() ? timestampToJSON(sample.timestamp()!) : undefined,
     attachment: sample.attachment()?.toString(),
   };
 }
@@ -247,7 +267,7 @@ export function replyOptionsToJSON(options: ReplyOptions): ReplyOptionsJSON {
     congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
     priority: labelOrUndefined(Priority, options.priority),
     express: options.express !== undefined ? options.express.toString() : undefined,
-    timestamp: options.timestamp !== undefined ? options.timestamp.asDate().toISOString() : undefined,
+    timestamp: options.timestamp ? timestampToJSON(options.timestamp) : undefined,
     attachment: options.attachment?.toString(),
   };
   return cleanUndefineds(result);
@@ -266,7 +286,7 @@ export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParamete
     congestionControl: labelOrUndefined(CongestionControl, parameters.congestionControl),
     priority: labelOrUndefined(Priority, parameters.priority),
     express: parameters.express !== undefined ? parameters.express.toString() : undefined,
-    timestamp: parameters.timestamp !== undefined ? parameters.timestamp.toString() : undefined,
+    timestamp: parameters.timestamp ? { timestamp: parameters.timestamp.toISOString(), id: "" } : undefined,
     attachment: parameters.attachment?.toString(),
   };
   return cleanUndefineds(result);
