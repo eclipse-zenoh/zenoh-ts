@@ -720,6 +720,35 @@ watch(logEntries, () => {
     }
   })
 }, { deep: true })
+
+// Watchers to update replyOptionsJSON and replyErrOptionsJSON when corresponding fields changes
+watch(activeQueryables, (queryables) => {
+  queryables.forEach(queryable => {
+    // Set up watchers for reply parameters
+    watch(
+      () => ({
+        reply: queryable.responseParameters.reply,
+      }),
+      () => {
+        // Update replyOptionsJSON 
+        queryable.responseParameters.reply.updateReplyOptionsJSON()
+      },
+      { deep: true, immediate: true }
+    );
+
+    // Set up watchers for replyErr parameters  
+    watch(
+      () => ({
+        replyErr: queryable.responseParameters.replyErr,
+      }),
+      () => {
+        // Update replyErrOptionsJSON 
+        queryable.responseParameters.replyErr.updateReplyErrOptionsJSON()
+      },
+      { deep: true, immediate: true }
+    );
+  });
+}, { deep: true, immediate: true })
 </script>
 
 <style scoped>

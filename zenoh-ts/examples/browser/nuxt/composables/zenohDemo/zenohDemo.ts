@@ -567,10 +567,14 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters();
-      responseParameters.replyErr.replyErrOptionsJSON = 
-        replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr);
-      responseParameters.reply.replyOptionsJSON = 
-        replyParametersStateToReplyOptionsJSON(responseParameters.reply, await this.zenohSession.newTimestamp());
+      responseParameters.replyErr.updateReplyErrOptionsJSON = () => {
+        responseParameters.replyErr.replyErrOptionsJSON =
+          replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr);
+      };
+      responseParameters.reply.updateReplyOptionsJSON = () => {
+        responseParameters.reply.replyOptionsJSON =
+          replyParametersStateToReplyOptionsJSON(responseParameters.reply);
+      };
 
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;

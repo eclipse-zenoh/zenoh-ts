@@ -45,6 +45,7 @@ export interface ReplyParametersState {
   attachment: string;
   attachmentEmpty: boolean;
   replyOptionsJSON: ReplyOptionsJSON;
+  updateReplyOptionsJSON: () => void
 }
 
 // Reply error parameters state - for error replies
@@ -54,6 +55,7 @@ export interface ReplyErrParametersState {
   encoding: string;
   customEncoding: boolean;
   replyErrOptionsJSON: ReplyErrOptionsJSON;
+  updateReplyErrOptionsJSON: () => void
 }
 
 // Individual queryable response parameters state
@@ -177,6 +179,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
     attachment: "",
     attachmentEmpty: true,
     replyOptionsJSON: {} as ReplyOptionsJSON,
+    updateReplyOptionsJSON: () => {}
   };
 
   const replyErr: ReplyErrParametersState = {
@@ -185,6 +188,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
     encoding: "",
     customEncoding: false,
     replyErrOptionsJSON: {} as ReplyErrOptionsJSON,
+    updateReplyErrOptionsJSON: () => {}
   };
 
   return {

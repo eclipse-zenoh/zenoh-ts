@@ -19,9 +19,12 @@ import {
   Timestamp,
   SessionInfo,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration } from 'typed-duration';
+import { Duration } from "typed-duration";
 import { getEnumLabel } from "./safeUtils";
-import type { ReplyParametersState, ReplyErrParametersState } from "../useZenohDemo";
+import type {
+  ReplyParametersState,
+  ReplyErrParametersState,
+} from "../useZenohDemo";
 
 const { milliseconds } = Duration;
 
@@ -118,9 +121,10 @@ export interface QueryJSON {
 
 // Wrapper function for getEnumLabel which returns
 // a string label of the enum value or a default "UNKNOWN" and the value in round brackets
-function label<
-  T extends Record<string, string | number>
->(enumObj: T, value: T[keyof T]): string {
+function label<T extends Record<string, string | number>>(
+  enumObj: T,
+  value: T[keyof T]
+): string {
   const label = getEnumLabel(enumObj, value);
   if (label !== undefined) {
     return `${label}(${value})`;
@@ -129,9 +133,10 @@ function label<
   }
 }
 
-function labelOrUndefined<
-  T extends Record<string, string | number>
->(enumObj: T, value: T[keyof T] | undefined): string | undefined {
+function labelOrUndefined<T extends Record<string, string | number>>(
+  enumObj: T,
+  value: T[keyof T] | undefined
+): string | undefined {
   if (value === undefined) {
     return undefined;
   }
@@ -164,8 +169,8 @@ export function timestampToJSON(timestamp: Timestamp): TimestampJSON {
 export function sessionInfoToJSON(sessionInfo: SessionInfo): SessionInfoJSON {
   return {
     sessionId: sessionInfo.zid().toString(),
-    peersZid: sessionInfo.peersZid().map(zid => zid.toString()),
-    routersZid: sessionInfo.routersZid().map(zid => zid.toString()),
+    peersZid: sessionInfo.peersZid().map((zid) => zid.toString()),
+    routersZid: sessionInfo.routersZid().map((zid) => zid.toString()),
   };
 }
 
@@ -178,15 +183,14 @@ export function sampleToJSON(sample: Sample): SampleJSON {
   return {
     keyexpr: sample.keyexpr().toString(),
     payload: sample.payload().toString(),
-    kind:
-      label(SampleKind, sample.kind()),
+    kind: label(SampleKind, sample.kind()),
     encoding: sample.encoding().toString(),
-    priority:
-      label(Priority, sample.priority()),
-    congestionControl:
-      label(CongestionControl, sample.congestionControl()),
+    priority: label(Priority, sample.priority()),
+    congestionControl: label(CongestionControl, sample.congestionControl()),
     express: sample.express().toString(),
-    timestamp: sample.timestamp() ? timestampToJSON(sample.timestamp()!) : undefined,
+    timestamp: sample.timestamp()
+      ? timestampToJSON(sample.timestamp()!)
+      : undefined,
     attachment: sample.attachment()?.toString(),
   };
 }
@@ -221,7 +225,10 @@ export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
   const result: PutOptionsJSON = {
     encoding: options.encoding?.toString(),
     priority: labelOrUndefined(Priority, options.priority),
-    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
     express:
       options.express !== undefined ? options.express.toString() : undefined,
     reliability: labelOrUndefined(Reliability, options.reliability),
@@ -267,14 +274,21 @@ export function queryableOptionsToJSON(
  */
 export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
   const result: GetOptionsJSON = {
-    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
     priority: labelOrUndefined(Priority, options.priority),
-    express: options.express !== undefined ? options.express.toString() : undefined,
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
     allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
     encoding: options.encoding?.toString(),
     payload: options.payload?.toString(),
     attachment: options.attachment?.toString(),
-    timeout_ms: options.timeout !== undefined ? milliseconds.from(options.timeout) : undefined,
+    timeout_ms:
+      options.timeout !== undefined
+        ? milliseconds.from(options.timeout)
+        : undefined,
     target: labelOrUndefined(QueryTarget, options.target),
     consolidation: labelOrUndefined(ConsolidationMode, options.consolidation),
     acceptReplies: labelOrUndefined(ReplyKeyExpr, options.acceptReplies),
@@ -285,30 +299,56 @@ export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
 export function replyOptionsToJSON(options: ReplyOptions): ReplyOptionsJSON {
   const result: ReplyOptionsJSON = {
     encoding: options.encoding?.toString(),
-    congestionControl: labelOrUndefined(CongestionControl, options.congestionControl),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
     priority: labelOrUndefined(Priority, options.priority),
-    express: options.express !== undefined ? options.express.toString() : undefined,
-    timestamp: options.timestamp ? timestampToJSON(options.timestamp) : undefined,
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    timestamp: options.timestamp
+      ? timestampToJSON(options.timestamp)
+      : undefined,
     attachment: options.attachment?.toString(),
   };
   return cleanUndefineds(result);
 }
 
-export function replyErrOptionsToJSON(options: ReplyErrOptions): ReplyErrOptionsJSON {
+export function replyErrOptionsToJSON(
+  options: ReplyErrOptions
+): ReplyErrOptionsJSON {
   const result: ReplyErrOptionsJSON = {
     encoding: options.encoding?.toString(),
   };
   return cleanUndefineds(result);
 }
 
-export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParametersState, timestamp: Timestamp): ReplyOptionsJSON {
+export function replyParametersStateToReplyOptionsJSON(
+  parameters: ReplyParametersState,
+  timestamp?: Timestamp
+): ReplyOptionsJSON {
   const result: ReplyOptionsJSON = {
-    encoding: parameters.encoding?.toString(),
-    congestionControl: labelOrUndefined(CongestionControl, parameters.congestionControl),
+    encoding: parameters.encoding ? parameters.encoding.toString() : undefined,
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      parameters.congestionControl
+    ),
     priority: labelOrUndefined(Priority, parameters.priority),
-    express: parameters.express !== undefined ? parameters.express.toString() : undefined,
-    timestamp: parameters.useTimestamp ? timestampToJSON(timestamp) : undefined,
-    attachment: parameters.attachment?.toString(),
+    express:
+      parameters.express !== undefined
+        ? parameters.express.toString()
+        : undefined,
+    timestamp: parameters.useTimestamp
+      ? timestamp
+        ? timestampToJSON(timestamp)
+        : {
+            timestamp: new Date().toISOString(),
+            id: "\<current session zid\>",
+          }
+      : undefined,
+    attachment: parameters.attachmentEmpty
+      ? undefined
+      : parameters.attachment.toString(),
   };
   return cleanUndefineds(result);
 }
@@ -318,7 +358,9 @@ export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParamete
  * @param options The ReplyErrOptions object to convert
  * @returns A structured object containing all reply error options as strings
  */
-export function replyErrParametersStateToReplyErrOptionsJSON(parameters: ReplyErrParametersState): ReplyErrOptionsJSON {
+export function replyErrParametersStateToReplyErrOptionsJSON(
+  parameters: ReplyErrParametersState
+): ReplyErrOptionsJSON {
   const result: ReplyErrOptionsJSON = {
     encoding: parameters.encoding?.toString(),
   };
