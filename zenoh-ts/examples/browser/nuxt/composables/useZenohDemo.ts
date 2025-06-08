@@ -146,6 +146,9 @@ export interface ZenohDemoState {
   reliabilityOptions: OptionItem[];
   localityOptions: OptionItem[];
   encodingOptions: OptionItem[];
+  targetOptions: OptionItem[];
+  consolidationOptions: OptionItem[];
+  acceptRepliesOptions: OptionItem[];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   performPut: () => Promise<void>;
@@ -248,6 +251,9 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   reliabilityOptions: OptionItem[] = [];
   localityOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
+  targetOptions: OptionItem[] = [];
+  consolidationOptions: OptionItem[] = [];
+  acceptRepliesOptions: OptionItem[] = [];
   async connect() {}
   async disconnect() {}
   async performPut() {}

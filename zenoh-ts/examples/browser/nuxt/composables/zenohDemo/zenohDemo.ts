@@ -25,6 +25,9 @@ import {
   CongestionControl,
   Reliability,
   Locality,
+  QueryTarget,
+  ConsolidationMode,
+  ReplyKeyExpr,
   Query,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration';
@@ -180,6 +183,12 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.reliabilityOptions = createOptionsFromEnum(Reliability, ["DEFAULT"]);
 
     this.localityOptions = createOptionsFromEnum(Locality, ["DEFAULT"]);
+
+    this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
+
+    this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, ["DEFAULT"]);
+
+    this.acceptRepliesOptions = createOptionsFromEnum(ReplyKeyExpr, ["DEFAULT"]);
 
     // Encoding options - dynamically populated from Encoding static properties
     // Exclude private static properties that might be exposed

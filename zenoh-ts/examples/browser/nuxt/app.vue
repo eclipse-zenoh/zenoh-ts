@@ -515,35 +515,23 @@
                   :disabled="!isConnected"
                 />
                 
-                <div class="option-group">
-                  <label class="compact-label">Target:</label>
-                  <select v-model="getParameters.target.value" :disabled="!isConnected" class="compact-select">
-                    <option :value="undefined">(default)</option>
-                    <option value="BEST_MATCHING">BEST_MATCHING</option>
-                    <option value="ALL">ALL</option>
-                    <option value="ALL_COMPLETE">ALL_COMPLETE</option>
-                  </select>
-                </div>
+                <TargetSelect
+                  v-model="getParameters.target.value"
+                  :disabled="!isConnected"
+                  :options="targetOptions"
+                />
                 
-                <div class="option-group">
-                  <label class="compact-label">Consolidation:</label>
-                  <select v-model="getParameters.consolidation.value" :disabled="!isConnected" class="compact-select">
-                    <option :value="undefined">(default)</option>
-                    <option value="NONE">NONE</option>
-                    <option value="MONOTONIC">MONOTONIC</option>
-                    <option value="LATEST">LATEST</option>
-                  </select>
-                </div>
+                <ConsolidationSelect
+                  v-model="getParameters.consolidation.value"
+                  :disabled="!isConnected"
+                  :options="consolidationOptions"
+                />
                 
-                <div class="option-group">
-                  <label class="compact-label">Accept Replies:</label>
-                  <select v-model="getParameters.acceptReplies.value" :disabled="!isConnected" class="compact-select">
-                    <option :value="undefined">(default)</option>
-                    <option value="MATCHING_TAG">MATCHING_TAG</option>
-                    <option value="MATCHING_TAG_AND_REPLIES">MATCHING_TAG_AND_REPLIES</option>
-                    <option value="REPLIES">REPLIES</option>
-                  </select>
-                </div>
+                <AcceptRepliesSelect
+                  v-model="getParameters.acceptReplies.value"
+                  :disabled="!isConnected"
+                  :options="acceptRepliesOptions"
+                />
               </div>
             </div>
           </div>
@@ -599,6 +587,9 @@
 import CollapseButton from './components/CollapseButton.vue'
 import ResponseTypeSelect from './components/ResponseTypeSelect.vue'
 import TimeoutInput from './components/TimeoutInput.vue'
+import TargetSelect from './components/TargetSelect.vue'
+import ConsolidationSelect from './components/ConsolidationSelect.vue'
+import AcceptRepliesSelect from './components/AcceptRepliesSelect.vue'
 
 // Use the Zenoh composable
 const {
@@ -620,6 +611,9 @@ const {
   reliabilityOptions,
   localityOptions,
   encodingOptions,
+  targetOptions,
+  consolidationOptions,
+  acceptRepliesOptions,
   
   // Operations
   connect,
