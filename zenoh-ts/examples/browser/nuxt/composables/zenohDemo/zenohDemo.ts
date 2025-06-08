@@ -515,14 +515,6 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
         try {
-          this.addLogEntry(
-            "data",
-            `Query received on queryable ${displayId} for ${keyExpr.toString()}`,
-            {
-              Query: queryToJSON(query),
-            }
-          );
-
           // Handle reply based on configured reply type
           if (responseParameters.replyType === "reply") {
             // Get reply parameters
@@ -542,9 +534,10 @@ class ZenohDemo extends ZenohDemoEmpty {
             const replyOptions = replyParametersStateToReplyOptions(replyParams);
             
             // Log the reply details
-            this.addLogEntry("info", `Replying to query`, {
-              keyexpr: replyKeyExpr.toString(),
-              payload: replyPayload,
+            this.addLogEntry("data", `Queryable ${displayId} replying to query:`, {
+              Query: queryToJSON(query),
+              "reply keyexpr": replyKeyExpr.toString(),
+              "reply payload": replyPayload,
               ReplyOptions: replyOptionsToJSON(replyOptions),
             });
 
@@ -561,12 +554,12 @@ class ZenohDemo extends ZenohDemoEmpty {
             // Build reply error options
             const replyErrOptions = replyErrParametersStateToReplyErrOptions(replyErrParams);
             
-            // Log the error reply details
-            this.addLogEntry("info", `Replying with error`, {
-              payload: errorPayload,
-              ReplyErrOptions: replyErrOptionsToJSON(replyErrOptions),
+            // Log the reply details
+            this.addLogEntry("data", `Queryable ${displayId} replying error to query:`, {
+              Query: queryToJSON(query),
+              "error payload": errorPayload,
+              ReplyErrOptions: replyOptionsToJSON(replyErrOptions),
             });
-
             await query.replyErr(errorPayload, replyErrOptions);
           }
 
