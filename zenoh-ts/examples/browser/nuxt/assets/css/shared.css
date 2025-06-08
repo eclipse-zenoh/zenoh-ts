@@ -19,6 +19,7 @@
 
 /* ===== BASE FORM ELEMENTS ===== */
 .compact-input,
+.compact-select,
 input.compact,
 select.compact,
 textarea.compact {
@@ -31,9 +32,12 @@ textarea.compact {
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
   min-height: var(--compact-input-height);
+  min-width: 120px;
+  width: 100%;
 }
 
 .compact-input:disabled,
+.compact-select:disabled,
 input.compact:disabled,
 select.compact:disabled,
 textarea.compact:disabled {
@@ -43,6 +47,7 @@ textarea.compact:disabled {
 }
 
 .compact-input:focus,
+.compact-select:focus,
 input.compact:focus,
 select.compact:focus,
 textarea.compact:focus {
@@ -159,7 +164,7 @@ button.compact:disabled {
 /* ===== GRID SYSTEM ===== */
 .options-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: var(--compact-gap);
   box-sizing: border-box;
 }
@@ -167,7 +172,8 @@ button.compact:disabled {
 .options-panel {
   margin-top: var(--compact-gap);
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: visible;
+  width: 100%;
 }
 
 /* ===== OPTION GROUPS ===== */
@@ -500,6 +506,30 @@ button.compact:disabled {
 
 .radio-option span {
   user-select: none;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+/* Ensure grid adapts to different screen sizes and content amounts */
+@media (max-width: 768px) {
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  .options-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+}
+
+/* For panels with many controls, ensure minimum grid item size */
+.options-grid > .option-group {
+  min-width: 0; /* Allow items to shrink below their content size */
+}
+
+/* Improve select element sizing in grid */
+.compact-select {
+  max-width: 100%;
 }
 
 /* ===== UTILITY CLASSES ===== */
