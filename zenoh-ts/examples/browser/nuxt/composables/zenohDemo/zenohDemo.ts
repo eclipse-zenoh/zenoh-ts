@@ -30,8 +30,13 @@ import {
   ReplyKeyExpr,
   Query,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration } from 'typed-duration';
-import type { PutOptions, SubscriberOptions, QueryableOptions, GetOptions } from "@eclipse-zenoh/zenoh-ts";
+import { Duration } from "typed-duration";
+import type {
+  PutOptions,
+  SubscriberOptions,
+  QueryableOptions,
+  GetOptions,
+} from "@eclipse-zenoh/zenoh-ts";
 import {
   createOptionsFromEnum,
   createOptionsFromStaticConstants,
@@ -48,7 +53,9 @@ import {
 } from "./zenohUtils";
 import type { ReplyOptions } from "@eclipse-zenoh/zenoh-ts";
 
-function putParametersStateToPutOptions(parameters: PutParametersState): PutOptions {
+function putParametersStateToPutOptions(
+  parameters: PutParametersState
+): PutOptions {
   let opts: PutOptions = {};
   if (parameters.encoding.value) {
     opts.encoding = Encoding.fromString(parameters.encoding.value);
@@ -117,7 +124,9 @@ function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
   return opts;
 }
 
-function replyErrParametersStateToReplyErrOptions(parameters: ReplyErrParametersState) {
+function replyErrParametersStateToReplyErrOptions(
+  parameters: ReplyErrParametersState
+) {
   let opts: any = {};
   if (parameters.encoding) {
     opts.encoding = Encoding.fromString(parameters.encoding);
@@ -125,7 +134,9 @@ function replyErrParametersStateToReplyErrOptions(parameters: ReplyErrParameters
   return opts;
 }
 
-function getParametersStateToGetOptions(parameters: GetParametersState): GetOptions {
+function getParametersStateToGetOptions(
+  parameters: GetParametersState
+): GetOptions {
   let opts: GetOptions = {};
   if (parameters.congestionControl.value !== undefined) {
     opts.congestionControl = parameters.congestionControl.value;
@@ -148,7 +159,10 @@ function getParametersStateToGetOptions(parameters: GetParametersState): GetOpti
   if (!parameters.attachmentEmpty.value) {
     opts.attachment = new ZBytes(parameters.attachment.value);
   }
-  if (!parameters.timeoutEmpty.value && parameters.timeout.value !== undefined) {
+  if (
+    !parameters.timeoutEmpty.value &&
+    parameters.timeout.value !== undefined
+  ) {
     opts.timeout = Duration.milliseconds.of(parameters.timeout.value);
   }
   if (parameters.target.value !== undefined) {
@@ -186,9 +200,13 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
-    this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, ["DEFAULT"]);
+    this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, [
+      "DEFAULT",
+    ]);
 
-    this.acceptRepliesOptions = createOptionsFromEnum(ReplyKeyExpr, ["DEFAULT"]);
+    this.acceptRepliesOptions = createOptionsFromEnum(ReplyKeyExpr, [
+      "DEFAULT",
+    ]);
 
     // Encoding options - dynamically populated from Encoding static properties
     // Exclude private static properties that might be exposed
@@ -306,7 +324,11 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async performPut(): Promise<void> {
-    if (!this.zenohSession || !this.putParameters.key.value || this.putParameters.valueEmpty.value)
+    if (
+      !this.zenohSession ||
+      !this.putParameters.key.value ||
+      this.putParameters.valueEmpty.value
+    )
       return;
 
     try {
@@ -323,7 +345,10 @@ class ZenohDemo extends ZenohDemoEmpty {
         PutOptions: putOptionsToJSON(options),
       });
     } catch (error) {
-      this.addErrorLogEntry(`PUT failed for key "${this.putParameters.key.value}"`, error);
+      this.addErrorLogEntry(
+        `PUT failed for key "${this.putParameters.key.value}"`,
+        error
+      );
     }
   }
 
@@ -332,7 +357,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const selector = this.getParameters.key.value;
-      
+
       // Build get options using getParametersStateTo
       const getOptions = getParametersStateToGetOptions(this.getParameters);
 
@@ -351,7 +376,13 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       while (true) {
         const reply: Reply | null = await receiver.receive();
-        if (!reply) break;
+        if (!reply) {
+          this.addLogEntry(
+            "success",
+            `GET query completed for ${selector}. Found ${resultCount} results.`
+          );
+          break; // Normal end of GET query
+        }
 
         try {
           const result = reply.result();
@@ -376,11 +407,6 @@ class ZenohDemo extends ZenohDemoEmpty {
           this.addErrorLogEntry("Error processing GET result", resultError);
         }
       }
-
-      this.addLogEntry(
-        "success",
-        `GET query completed for ${selector}. Found ${resultCount} results.`
-      );
     } catch (error) {
       this.addErrorLogEntry(
         `GET failed for selector "${this.getParameters.key.value}"`,
@@ -414,14 +440,10 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSubscribers.value.push(subscriberInfo);
-      this.addLogEntry(
-        "success",
-        `Subscriber ${displayId} declared`,
-        {
-          keyexpr: keyExpr.toString(),
-          SubscriberOptions: subscriberOptionsToJSON(subscriberOptions),
-        }
-      );
+      this.addLogEntry("success", `Subscriber ${displayId} declared`, {
+        keyexpr: keyExpr.toString(),
+        SubscriberOptions: subscriberOptionsToJSON(subscriberOptions),
+      });
 
       // Handle incoming data
       (async () => {
@@ -503,7 +525,9 @@ class ZenohDemo extends ZenohDemoEmpty {
       const displayId = `qry${this.queryableIdCounter++}`;
 
       const keyExpr = new KeyExpr(this.queryableParameters.key.value);
-      const queryableOptions = queryableParametersStateToQueryableOptions(this.queryableParameters);
+      const queryableOptions = queryableParametersStateToQueryableOptions(
+        this.queryableParameters
+      );
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters(displayId);
@@ -517,7 +541,7 @@ class ZenohDemo extends ZenohDemoEmpty {
           replyParametersStateToReplyOptions(responseParameters.reply)
         );
       };
-      
+
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;
 
@@ -528,47 +552,57 @@ class ZenohDemo extends ZenohDemoEmpty {
           if (responseParameters.replyType === "reply") {
             // Get reply parameters
             const replyParams = responseParameters.reply;
-            
+
             // Determine the key expression for the reply
             const replyKeyExpr = replyParams.keyExpr
               ? new KeyExpr(replyParams.keyExpr)
               : keyExpr;
-            
+
             // Get the payload (use empty if marked as empty)
             const replyPayload = replyParams.payloadEmpty
-              ? "" 
+              ? ""
               : replyParams.payload;
-            
+
             // Build reply options
-            const replyOptions = replyParametersStateToReplyOptions(replyParams);
-            
+            const replyOptions =
+              replyParametersStateToReplyOptions(replyParams);
+
             // Log the reply details
-            this.addLogEntry("data", `Queryable ${displayId} replying to query:`, {
-              Query: queryToJSON(query),
-              "reply keyexpr": replyKeyExpr.toString(),
-              "reply payload": replyPayload,
-              ReplyOptions: replyOptionsToJSON(replyOptions),
-            });
+            this.addLogEntry(
+              "data",
+              `Queryable ${displayId} replying to query:`,
+              {
+                Query: queryToJSON(query),
+                "reply keyexpr": replyKeyExpr.toString(),
+                "reply payload": replyPayload,
+                ReplyOptions: replyOptionsToJSON(replyOptions),
+              }
+            );
 
             await query.reply(replyKeyExpr, replyPayload, replyOptions);
           } else {
             // Handle error reply
             const replyErrParams = responseParameters.replyErr;
-            
+
             // Get the error payload (use empty if marked as empty)
             const errorPayload = replyErrParams.payloadEmpty
-              ? "" 
+              ? ""
               : replyErrParams.payload;
-            
+
             // Build reply error options
-            const replyErrOptions = replyErrParametersStateToReplyErrOptions(replyErrParams);
-            
+            const replyErrOptions =
+              replyErrParametersStateToReplyErrOptions(replyErrParams);
+
             // Log the reply details
-            this.addLogEntry("data", `Queryable ${displayId} replying error to query:`, {
-              Query: queryToJSON(query),
-              "error payload": errorPayload,
-              ReplyErrOptions: replyOptionsToJSON(replyErrOptions),
-            });
+            this.addLogEntry(
+              "data",
+              `Queryable ${displayId} replying error to query:`,
+              {
+                Query: queryToJSON(query),
+                "error payload": errorPayload,
+                ReplyErrOptions: replyOptionsToJSON(replyErrOptions),
+              }
+            );
             await query.replyErr(errorPayload, replyErrOptions);
           }
 
@@ -600,14 +634,10 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeQueryables.value.push(queryableInfo);
-      this.addLogEntry(
-        "success",
-        `Queryable ${displayId} declared`,
-        {
-          keyexpr: keyExpr.toString(),
-          QueryableOptions: queryableOptionsToJSON(queryableOptions),
-        }
-      );
+      this.addLogEntry("success", `Queryable ${displayId} declared`, {
+        keyexpr: keyExpr.toString(),
+        QueryableOptions: queryableOptionsToJSON(queryableOptions),
+      });
     } catch (error) {
       this.addErrorLogEntry(
         `Declare queryable failed for "${this.queryableParameters.key.value}"`,
@@ -639,7 +669,10 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Undeclared queryable "${queryableInfo.keyExpr}" (${queryableId})`
       );
     } catch (error) {
-      this.addErrorLogEntry(`Undeclare queryable failed for ${queryableId}`, error);
+      this.addErrorLogEntry(
+        `Undeclare queryable failed for ${queryableId}`,
+        error
+      );
     }
   }
 }
