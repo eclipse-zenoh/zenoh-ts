@@ -18,7 +18,6 @@
                 <span v-if="!sessionOptionsExpanded" class="header-keyexpr">
                   <template v-if="isConnected">
                     - Connected
-                    <span v-if="sessionId" class="session-id"> ({{ sessionId }})</span>
                   </template>
                   <template v-else-if="isConnecting">
                     - Connecting...
@@ -62,17 +61,10 @@
             <!-- Session Options Panel -->
             <div v-if="sessionOptionsExpanded" class="options-panel">
               <div class="options-grid">
-                <div class="option-group">
-                  <label for="server-url">Zenoh Server</label>
-                  <input 
-                    type="text" 
-                    id="server-url" 
-                    v-model="serverUrl" 
-                    :disabled="isConnected"
-                    placeholder="ws://localhost:10000"
-                    class="compact-input"
-                  >
-                </div>
+                <ServerInput 
+                  v-model="serverUrl"
+                  :disabled="isConnected"
+                />
               </div>
               
               <!-- Connection Status -->
@@ -81,7 +73,6 @@
                 <span class="status-text">
                   <template v-if="isConnected">
                     Connected
-                    <span v-if="sessionId" class="session-id"> (Session ID: {{ sessionId }})</span>
                   </template>
                   <template v-else-if="isConnecting">
                     Connecting...
@@ -643,6 +634,7 @@ import { onBeforeUnmount, onUnmounted } from 'vue'
 // Import components
 import CollapseButton from './components/CollapseButton.vue'
 import ResponseTypeSelect from './components/ResponseTypeSelect.vue'
+import ServerInput from './components/ServerInput.vue'
 import TimeoutInput from './components/TimeoutInput.vue'
 import TargetSelect from './components/TargetSelect.vue'
 import ConsolidationSelect from './components/ConsolidationSelect.vue'
@@ -674,7 +666,6 @@ const {
   
   // Operations
   connect,
-  getSessionId,
   getSessionInfo,
   disconnect,
   performPut,
@@ -687,18 +678,6 @@ const {
   // App operations
   clearLog,
 } = await useZenohDemo();
-
-// Reactive session ID for display
-const sessionId = ref<string | null>(null);
-
-// Watch for connection status changes to update session ID
-watch(isConnected, async (connected) => {
-  if (connected) {
-    sessionId.value = await getSessionId();
-  } else {
-    sessionId.value = null;
-  }
-});
 
 // Cleanup function to ensure proper disconnection
 const cleanup = async () => {
@@ -892,14 +871,6 @@ watch(activeQueryables, (queryables) => {
 .status-text {
   font-weight: bold;
   color: #333;
-}
-
-.session-id {
-  font-family: 'Courier New', monospace;
-  font-weight: normal;
-  font-size: 0.85em;
-  color: #666;
-  opacity: 0.8;
 }
 
 /* Button group styling - app-specific */

@@ -150,7 +150,6 @@ export interface ZenohDemoState {
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
   connect: () => Promise<void>;
-  getSessionId: () => Promise<string | null>;
   getSessionInfo: () => Promise<void>;
   disconnect: () => Promise<void>;
   performPut: () => Promise<void>;
@@ -268,7 +267,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}
-  async getSessionId() { return null as string | null; }
   async getSessionInfo() {}
 }
 
