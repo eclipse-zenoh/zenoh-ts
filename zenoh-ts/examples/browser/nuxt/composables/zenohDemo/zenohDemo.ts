@@ -122,7 +122,7 @@ function replyErrParametersStateToReplyErrOptions(parameters: ReplyErrParameters
   return opts;
 }
 
-function getParametersStateTo(parameters: GetParametersState): GetOptions {
+function getParametersStateToGetOptions(parameters: GetParametersState): GetOptions {
   let opts: GetOptions = {};
   if (parameters.congestionControl.value !== undefined) {
     opts.congestionControl = parameters.congestionControl.value;
@@ -325,8 +325,8 @@ class ZenohDemo extends ZenohDemoEmpty {
       const selector = this.getParameters.key.value;
       
       // Build get options using getParametersStateTo
-      const getOptions = getParametersStateTo(this.getParameters);
-      
+      const getOptions = getParametersStateToGetOptions(this.getParameters);
+
       this.addLogEntry("info", `Starting GET`, {
         selector: selector,
         GetOptions: getOptionsToJSON(getOptions),
