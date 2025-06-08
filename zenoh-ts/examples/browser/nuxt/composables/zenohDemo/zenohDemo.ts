@@ -29,6 +29,7 @@ import {
   ConsolidationMode,
   ReplyKeyExpr,
   Query,
+  Timestamp,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from "typed-duration";
 import type {
@@ -107,7 +108,7 @@ function queryableParametersStateToQueryableOptions(
   return opts;
 }
 
-function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
+function replyParametersStateToReplyOptions(parameters: ReplyParametersState, timestamp?: Timestamp) {
   let opts: ReplyOptions = {};
   if (parameters.encoding) {
     opts.encoding = Encoding.fromString(parameters.encoding);
@@ -120,6 +121,10 @@ function replyParametersStateToReplyOptions(parameters: ReplyParametersState) {
   }
   if (parameters.express !== undefined) {
     opts.express = parameters.express;
+  }
+  // Handle timestamp - if useTimestamp is enabled and timestamp is provided
+  if (parameters.useTimestamp && timestamp) {
+    opts.timestamp = timestamp;
   }
   if (!parameters.attachmentEmpty) {
     opts.attachment = new ZBytes(parameters.attachment);
@@ -567,7 +572,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
       responseParameters.getReplyOptionsJSON = () => {
         return replyOptionsToJSON(
-          replyParametersStateToReplyOptions(responseParameters.reply)
+          replyParametersStateToReplyOptions(responseParameters.reply, undefined)
         );
       };
 
@@ -603,20 +608,44 @@ class ZenohDemo extends ZenohDemoEmpty {
               ? ""
               : replyParams.payload;
 
-            // Build reply options
-            const replyOptions =
-              replyParametersStateToReplyOptions(replyParams);
+            // Get timestamp if useTimestamp is enabled
+            let timestamp: Timestamp | undefined = undefined;
+            if (replyParams.useTimestamp && this.zenohSession) {
+              try {
+                timestamp = await this.zenohSession.newTimestamp();
+              } catch (error) {
+                this.addLogEntry(
+                  "error",
+                  `Failed to get timestamp for reply: ${error}`
+                );
+              }
+            }
 
-            // Log the reply details
+            // Build reply options with timestamp if available
+            const replyOptions =
+              replyParametersStateToReplyOptions(replyParams, timestamp);
+
+            // Log the reply details with timestamp information
+            const logData: Record<string, any> = {
+              Query: queryToJSON(query),
+              "reply keyexpr": replyKeyExpr.toString(),
+              "reply payload": replyPayload,
+              ReplyOptions: replyOptionsToJSON(replyOptions),
+            };
+
+            // Add timestamp info to logs if enabled
+            if (replyParams.useTimestamp) {
+              logData["timestamp requested"] = true;
+              logData["timestamp included"] = timestamp !== undefined;
+              if (timestamp) {
+                logData["timestamp value"] = timestamp.asDate().toISOString();
+              }
+            }
+
             this.addLogEntry(
               "data",
               `Queryable ${displayId} replying to query:`,
-              {
-                Query: queryToJSON(query),
-                "reply keyexpr": replyKeyExpr.toString(),
-                "reply payload": replyPayload,
-                ReplyOptions: replyOptionsToJSON(replyOptions),
-              }
+              logData
             );
 
             await query.reply(replyKeyExpr, replyPayload, replyOptions);

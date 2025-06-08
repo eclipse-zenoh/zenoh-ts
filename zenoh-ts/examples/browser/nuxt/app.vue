@@ -367,6 +367,13 @@
                             :disabled="!isConnected"
                           />
                           
+                          <CheckBox
+                            v-model="queryableInfo.responseParameters.reply.useTimestamp"
+                            label="Use timestamp"
+                            :disabled="!isConnected"
+                            :three-state="false"
+                          />
+                          
                           <PayloadInput
                             v-model="queryableInfo.responseParameters.reply.attachment"
                             v-model:is-empty="queryableInfo.responseParameters.reply.attachmentEmpty"

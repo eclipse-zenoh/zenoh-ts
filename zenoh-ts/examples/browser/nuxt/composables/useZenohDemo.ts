@@ -42,6 +42,7 @@ export interface ReplyParametersState {
   congestionControl: CongestionControl | undefined;
   express: boolean | undefined;
   timestamp: Date | undefined;
+  useTimestamp: boolean; // Whether to automatically get timestamp from session
   attachment: string;
   attachmentEmpty: boolean;
 }
@@ -181,6 +182,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
       congestionControl: undefined as CongestionControl | undefined,
       express: undefined as boolean | undefined,
       timestamp: undefined as Date | undefined,
+      useTimestamp: false,
       attachment: "",
       attachmentEmpty: true,
     },
