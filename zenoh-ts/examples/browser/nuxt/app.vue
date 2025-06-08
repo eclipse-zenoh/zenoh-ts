@@ -37,7 +37,16 @@
       <div class="status-indicator" :class="{ connected: isConnected, connecting: isConnecting }">
         <span class="status-dot"></span>
         <span class="status-text">
-          {{ isConnected ? 'Connected' : isConnecting ? 'Connecting...' : 'Disconnected' }}
+          <template v-if="isConnected">
+            Connected
+            <span v-if="sessionId" class="session-id"> (Session ID: {{ sessionId }})</span>
+          </template>
+          <template v-else-if="isConnecting">
+            Connecting...
+          </template>
+          <template v-else>
+            Disconnected
+          </template>
         </span>
       </div>
     </div>
@@ -619,6 +628,7 @@ const {
   
   // Operations
   connect,
+  getSessionId,
   disconnect,
   performPut,
   performGet,
@@ -630,6 +640,18 @@ const {
   // App operations
   clearLog,
 } = await useZenohDemo();
+
+// Reactive session ID for display
+const sessionId = ref<string | null>(null);
+
+// Watch for connection status changes to update session ID
+watch(isConnected, async (connected) => {
+  if (connected) {
+    sessionId.value = await getSessionId();
+  } else {
+    sessionId.value = null;
+  }
+});
 
 // Cleanup function to ensure proper disconnection
 const cleanup = async () => {
@@ -796,6 +818,14 @@ watch(logEntries, () => {
 .status-text {
   font-weight: bold;
   color: #333;
+}
+
+.session-id {
+  font-family: 'Courier New', monospace;
+  font-weight: normal;
+  font-size: 0.85em;
+  color: #666;
+  opacity: 0.8;
 }
 
 .main-panel {

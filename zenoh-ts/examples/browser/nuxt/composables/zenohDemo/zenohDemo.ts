@@ -282,6 +282,18 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.logEntries.value = [];
   }
 
+  override async getSessionId(): Promise<string | null> {
+    if (!this.zenohSession) return null;
+    
+    try {
+      const sessionInfo = await this.zenohSession.info();
+      return sessionInfo.zid().toString();
+    } catch (error) {
+      console.error("Failed to get session ID:", error);
+      return null;
+    }
+  }
+
   override async connect(): Promise<void> {
     if (this.isConnecting.value || this.isConnected.value) return;
 
