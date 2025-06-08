@@ -12,7 +12,6 @@ import {
   type GetParametersState,
   createDefaultResponseParameters,
 } from "../useZenohDemo";
-import { computed } from "vue";
 import {
   Config,
   Session,
@@ -568,12 +567,10 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters();
-      responseParameters.replyErr.getOptionsJSON = computed(() => Promise.resolve(
-        replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr)
-      ));
-      responseParameters.reply.getOptionsJSON = computed(() => Promise.resolve(
-        replyParametersStateToReplyOptionsJSON(responseParameters.reply)
-      ));
+      responseParameters.replyErr.replyErrOptionsJSON = 
+        replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr);
+      responseParameters.reply.replyOptionsJSON = 
+        replyParametersStateToReplyOptionsJSON(responseParameters.reply, await this.zenohSession.newTimestamp());
 
       // Initialize reply key expression to match the queryable's key expression
       responseParameters.reply.keyExpr = this.queryableParameters.key.value;

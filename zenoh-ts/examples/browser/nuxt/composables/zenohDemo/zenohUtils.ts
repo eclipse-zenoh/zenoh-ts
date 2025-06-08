@@ -301,13 +301,13 @@ export function replyErrOptionsToJSON(options: ReplyErrOptions): ReplyErrOptions
   return cleanUndefineds(result);
 }
 
-export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParametersState): ReplyOptionsJSON {
+export function replyParametersStateToReplyOptionsJSON(parameters: ReplyParametersState, timestamp: Timestamp): ReplyOptionsJSON {
   const result: ReplyOptionsJSON = {
     encoding: parameters.encoding?.toString(),
     congestionControl: labelOrUndefined(CongestionControl, parameters.congestionControl),
     priority: labelOrUndefined(Priority, parameters.priority),
     express: parameters.express !== undefined ? parameters.express.toString() : undefined,
-    timestamp: parameters.timestamp ? { timestamp: parameters.timestamp.toISOString(), id: "" } : undefined,
+    timestamp: parameters.useTimestamp ? timestampToJSON(timestamp) : undefined,
     attachment: parameters.attachment?.toString(),
   };
   return cleanUndefineds(result);

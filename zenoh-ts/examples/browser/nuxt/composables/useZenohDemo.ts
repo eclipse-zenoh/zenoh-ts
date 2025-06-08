@@ -1,5 +1,5 @@
-import type { Ref, ComputedRef } from "vue";
-import { ref, reactive, computed } from "vue";
+import type { Ref } from "vue";
+import { ref } from "vue";
 import { Deconstructable, type OptionItem } from "./zenohDemo/safeUtils";
 
 // Type-only imports - safe for SSR
@@ -41,11 +41,10 @@ export interface ReplyParametersState {
   priority: Priority | undefined;
   congestionControl: CongestionControl | undefined;
   express: boolean | undefined;
-  timestamp: Date | undefined;
   useTimestamp: boolean; // Whether to automatically get timestamp from session
   attachment: string;
   attachmentEmpty: boolean;
-  getOptionsJSON: ComputedRef<Promise<ReplyOptionsJSON>>;
+  replyOptionsJSON: ReplyOptionsJSON;
 }
 
 // Reply error parameters state - for error replies
@@ -54,7 +53,7 @@ export interface ReplyErrParametersState {
   payloadEmpty: boolean;
   encoding: string;
   customEncoding: boolean;
-  getOptionsJSON: ComputedRef<Promise<ReplyErrOptionsJSON>>;
+  replyErrOptionsJSON: ReplyErrOptionsJSON;
 }
 
 // Individual queryable response parameters state
@@ -67,8 +66,6 @@ export interface QueryableResponseParametersState {
   replyErr: ReplyErrParametersState;
 
   // Legacy methods for backward compatibility (now delegate to nested structures)
-  getReplyOptionsJSON: ComputedRef<Promise<ReplyOptionsJSON>>;
-  getReplyErrOptionsJSON: ComputedRef<Promise<ReplyErrOptionsJSON>>;
 }
 
 // Queryable info interface
@@ -167,7 +164,7 @@ export interface ZenohDemoState {
 
 // Helper function to create default response parameters for a new queryable
 export function createDefaultResponseParameters(): QueryableResponseParametersState {
-  const reply = reactive({
+  const reply: ReplyParametersState = {
     keyExpr: "",
     payload: "",
     payloadEmpty: true,
@@ -176,34 +173,26 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
     priority: undefined as Priority | undefined,
     congestionControl: undefined as CongestionControl | undefined,
     express: undefined as boolean | undefined,
-    timestamp: undefined as Date | undefined,
     useTimestamp: false,
     attachment: "",
     attachmentEmpty: true,
-  } as Omit<ReplyParametersState, 'getOptionsJSON'>);
+    replyOptionsJSON: {} as ReplyOptionsJSON,
+  };
 
-  const replyErr = reactive({
+  const replyErr: ReplyErrParametersState = {
     payload: "",
     payloadEmpty: true,
     encoding: "",
     customEncoding: false,
-  } as Omit<ReplyErrParametersState, 'getOptionsJSON'>);
-
-  // Add getOptionsJSON as computed properties that will be properly set later
-  (reply as any).getOptionsJSON = computed(() => Promise.resolve({} as ReplyOptionsJSON));
-  (replyErr as any).getOptionsJSON = computed(() => Promise.resolve({} as ReplyErrOptionsJSON));
+    replyErrOptionsJSON: {} as ReplyErrOptionsJSON,
+  };
 
   return {
     // Reply configuration
     replyType: "reply" as "reply" | "replyErr",
-    
     // Reply sub-states
-    reply: reply as ReplyParametersState,
-    replyErr: replyErr as ReplyErrParametersState,
-
-    // Legacy methods that delegate to the nested structures
-    getReplyOptionsJSON: computed(() => (reply as ReplyParametersState).getOptionsJSON.value),
-    getReplyErrOptionsJSON: computed(() => (replyErr as ReplyErrParametersState).getOptionsJSON.value),
+    reply,
+    replyErr,
   };
 }
 

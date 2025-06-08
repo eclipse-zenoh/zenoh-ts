@@ -432,7 +432,7 @@
                       <!-- ReplyOptions Parameter -->
                       <ParameterDisplay 
                         type="neutral" 
-                        :data="{ 'ReplyOptions': queryableInfo.responseParameters.reply.getOptionsJSON }"
+                        :data="{ 'ReplyOptions': queryableInfo.responseParameters.reply.replyOptionsJSON }"
                       />
                     </div>
                     
@@ -448,7 +448,7 @@
                       <!-- ReplyErrOptions Parameter -->
                       <ParameterDisplay 
                         type="neutral" 
-                        :data="{ 'ReplyErrOptions': queryableInfo.responseParameters.replyErr.getOptionsJSON }"
+                        :data="{ 'ReplyErrOptions': queryableInfo.responseParameters.replyErr.replyErrOptionsJSON }"
                       />
                     </div>
                   </div>
