@@ -29,6 +29,13 @@
             >
               Disconnect
             </button>
+            <button 
+              @click="getSessionInfo" 
+              :disabled="!isConnected"
+              class="compact-button btn-info"
+            >
+              Session Info
+            </button>
           </div>
         </div>
       </div>
@@ -629,6 +636,7 @@ const {
   // Operations
   connect,
   getSessionId,
+  getSessionInfo,
   disconnect,
   performPut,
   performGet,

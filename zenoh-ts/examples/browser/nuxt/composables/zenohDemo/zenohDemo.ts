@@ -52,6 +52,7 @@ import {
   replyErrOptionsToJSON,
   replyOptionsToJSON,
   replyErrorToJSON,
+  sessionInfoToJSON,
 } from "./zenohUtils";
 import type { ReplyOptions } from "@eclipse-zenoh/zenoh-ts";
 
@@ -291,6 +292,27 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       console.error("Failed to get session ID:", error);
       return null;
+    }
+  }
+
+  override async getSessionInfo(): Promise<void> {
+    if (!this.zenohSession) {
+      this.addErrorLogEntry("No active session. Please connect first.");
+      return;
+    }
+
+    try {
+      this.addLogEntry("info", "Retrieving session information...");
+      const sessionInfo = await this.zenohSession.info();
+      const sessionInfoJson = sessionInfoToJSON(sessionInfo);
+      
+      this.addLogEntry(
+        "success", 
+        "Session information retrieved successfully",
+        { "SessionInfo": sessionInfoJson }
+      );
+    } catch (error) {
+      this.addErrorLogEntry("Failed to retrieve session information", error);
     }
   }
 

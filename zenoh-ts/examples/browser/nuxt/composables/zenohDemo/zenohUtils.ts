@@ -17,6 +17,7 @@ import {
   ReplyKeyExpr,
   ReplyError,
   Timestamp,
+  SessionInfo,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from 'typed-duration';
 import { getEnumLabel } from "./safeUtils";
@@ -30,7 +31,12 @@ export interface TimestampJSON {
   id: string;
 }
 
-
+// Interface for the session info JSON representation
+export interface SessionInfoJSON {
+  sessionId: string;
+  peersZid: string[];
+  routersZid: string[];
+}
 
 // Interface for the sample JSON representation
 export interface SampleJSON {
@@ -147,6 +153,19 @@ export function timestampToJSON(timestamp: Timestamp): TimestampJSON {
   return {
     timestamp: timestamp.asDate().toISOString(),
     id: timestamp.getId().toString(),
+  };
+}
+
+/**
+ * Converts a Zenoh SessionInfo to a structured JSON object
+ * @param sessionInfo The Zenoh SessionInfo to convert
+ * @returns A structured object containing session ID and connected peers/routers
+ */
+export function sessionInfoToJSON(sessionInfo: SessionInfo): SessionInfoJSON {
+  return {
+    sessionId: sessionInfo.zid().toString(),
+    peersZid: sessionInfo.peersZid().map(zid => zid.toString()),
+    routersZid: sessionInfo.routersZid().map(zid => zid.toString()),
   };
 }
 
