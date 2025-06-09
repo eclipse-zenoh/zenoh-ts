@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError, Config, RecvErr, Sample, Session, QueryTarget, ChannelReceiver, Reply } from "@eclipse-zenoh/zenoh-ts";
+import { ReplyError, Config, Sample, Session, QueryTarget, ChannelReceiver, Reply } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 const { milliseconds } = Duration
 import { BaseParseArgs } from "./parse_args.ts";
@@ -77,13 +77,13 @@ class ParseArgs extends BaseParseArgs {
   public getQueryTarget(): QueryTarget {
     switch (this.target) {
       case "BEST_MATCHING":
-        return QueryTarget.BestMatching;
+        return QueryTarget.BEST_MATCHING;
       case "ALL":
-        return QueryTarget.All;
+        return QueryTarget.ALL;
       case "ALL_COMPLETE":
-        return QueryTarget.AllComplete;
+        return QueryTarget.ALL_COMPLETE;
       default:
-        return QueryTarget.BestMatching;
+        return QueryTarget.BEST_MATCHING;
     }
   }
 

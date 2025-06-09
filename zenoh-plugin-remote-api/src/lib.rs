@@ -25,12 +25,12 @@ use std::{
     io::{self, BufReader, ErrorKind},
     net::SocketAddr,
     path::Path,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
-use flume::Sender;
 use futures::{future, pin_mut, StreamExt, TryStreamExt};
-use interface::RemoteAPIMsg;
+use interface::{InRemoteMessage, OutRemoteMessage, SequenceId};
+use remote_state::RemoteState;
 use rustls_pemfile::{certs, private_key};
 use serde::Serialize;
 use tokio::{
@@ -48,8 +48,6 @@ use tokio_rustls::{
     TlsAcceptor,
 };
 use tokio_tungstenite::tungstenite::protocol::Message;
-use tracing::{debug, error};
-use uhlc::Timestamp;
 use uuid::Uuid;
 use zenoh::{
     bytes::{Encoding, ZBytes},
@@ -61,10 +59,7 @@ use zenoh::{
         format::{kedefine, keformat},
         keyexpr, OwnedKeyExpr,
     },
-    liveliness::LivelinessToken,
-    pubsub::Publisher,
-    query::{Querier, Query},
-    Session,
+    query::Query,
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};
 use zenoh_result::{bail, zerror, ZResult};
@@ -72,12 +67,9 @@ use zenoh_result::{bail, zerror, ZResult};
 mod config;
 pub use config::Config;
 
-mod handle_control_message;
-mod handle_data_message;
 mod interface;
-use crate::{
-    handle_control_message::handle_control_message, handle_data_message::handle_data_message,
-};
+
+mod remote_state;
 
 kedefine!(
     // Admin space key expressions of plugin's version
@@ -213,8 +205,7 @@ pub async fn run(
     config: Config,
     opt_certs: Option<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>)>,
 ) {
-    let hm: HashMap<SocketAddr, RemoteState> = HashMap::new();
-    let state_map = Arc::new(RwLock::new(hm));
+    let state_map = Arc::new(RwLock::new(HashMap::new()));
 
     // Return WebServer And State
     let remote_api_runtime = RemoteAPIRuntime {
@@ -255,45 +246,64 @@ impl RemoteAPIRuntime {
     }
 }
 
-#[derive(Debug, Serialize)]
-struct AdminSpaceClient {
+#[derive(Debug, Serialize, Clone)]
+pub(crate) struct AdminSpaceClient {
     uuid: String,
     remote_address: SocketAddr,
-    publishers: Vec<String>,
-    subscribers: Vec<String>,
-    queryables: Vec<String>,
+    publishers: HashMap<u32, String>,
+    subscribers: HashMap<u32, String>,
+    queryables: HashMap<u32, String>,
+    queriers: HashMap<u32, String>,
+    liveliness_tokens: HashMap<u32, String>,
 }
 
-impl From<(&SocketAddr, &RemoteState)> for AdminSpaceClient {
-    fn from(value: (&SocketAddr, &RemoteState)) -> Self {
-        let remote_state = value.1;
-        let sock_addr = value.0;
-
-        let pub_keyexprs = remote_state
-            .publishers
-            .values()
-            .map(|x| x.key_expr().to_string())
-            .collect::<Vec<String>>();
-
-        let query_keyexprs = remote_state
-            .queryables
-            .values()
-            .map(|(_, key_expr)| key_expr.to_string())
-            .collect::<Vec<String>>();
-
-        let sub_keyexprs = remote_state
-            .subscribers
-            .values()
-            .map(|(_, key_expr)| key_expr.to_string())
-            .collect::<Vec<String>>();
-
+impl AdminSpaceClient {
+    pub(crate) fn new(uuid: String, remote_address: SocketAddr) -> Self {
         AdminSpaceClient {
-            uuid: remote_state.session_id.to_string(),
-            remote_address: *sock_addr,
-            publishers: pub_keyexprs,
-            subscribers: sub_keyexprs,
-            queryables: query_keyexprs,
+            uuid,
+            remote_address,
+            publishers: HashMap::new(),
+            subscribers: HashMap::new(),
+            queryables: HashMap::new(),
+            queriers: HashMap::new(),
+            liveliness_tokens: HashMap::new(),
         }
+    }
+
+    pub(crate) fn register_publisher(&mut self, id: u32, key_expr: &str) {
+        self.publishers.insert(id, key_expr.to_string());
+    }
+
+    pub(crate) fn register_subscriber(&mut self, id: u32, key_expr: &str) {
+        self.subscribers.insert(id, key_expr.to_string());
+    }
+
+    pub(crate) fn register_queryable(&mut self, id: u32, key_expr: &str) {
+        self.queryables.insert(id, key_expr.to_string());
+    }
+
+    pub(crate) fn register_querier(&mut self, id: u32, key_expr: &str) {
+        self.queriers.insert(id, key_expr.to_string());
+    }
+
+    pub(crate) fn unregister_publisher(&mut self, id: u32) {
+        self.publishers.remove(&id);
+    }
+
+    pub(crate) fn unregister_subscriber(&mut self, id: u32) {
+        self.subscribers.remove(&id);
+    }
+
+    pub(crate) fn unregister_queryable(&mut self, id: u32) {
+        self.queryables.remove(&id);
+    }
+
+    pub(crate) fn unregister_querier(&mut self, id: u32) {
+        self.queriers.remove(&id);
+    }
+
+    pub(crate) fn id(&self) -> &str {
+        &self.uuid
     }
 }
 
@@ -338,10 +348,11 @@ async fn run_admin_space_queryable(zenoh_runtime: Runtime, state_map: StateMap, 
                 if query_ke.is_wild() {
                     if query_ke.contains("clients") {
                         let read_guard = state_map.read().await;
-                        let mut admin_space_clients = Vec::new();
-                        for (sock, remote_state) in read_guard.iter() {
-                            admin_space_clients.push(AdminSpaceClient::from((sock, remote_state)));
-                        }
+                        let admin_space_clients = read_guard
+                            .values()
+                            .map(|v| v.lock().unwrap().clone())
+                            .collect::<Vec<_>>();
+                        drop(read_guard);
                         send_reply(admin_space_clients, query, query_ke).await;
                     } else {
                         for (ke, admin_ref) in admin_space.iter() {
@@ -368,17 +379,10 @@ async fn run_admin_space_queryable(zenoh_runtime: Runtime, state_map: StateMap, 
                         }
                         if let Some(id) = opt_id {
                             let read_guard = state_map.read().await;
-                            for (sock, remote_state) in read_guard.iter() {
-                                if remote_state.session_id.to_string() == id {
-                                    send_reply(
-                                        AdminSpaceClient::from((sock, remote_state)),
-                                        query,
-                                        own_ke,
-                                    )
-                                    .await;
-
-                                    break;
-                                }
+                            if let Some(state) = read_guard.get(id) {
+                                let state = state.lock().unwrap().clone();
+                                drop(read_guard);
+                                send_reply(state, query, own_ke).await;
                             }
                         }
                     }
@@ -402,11 +406,11 @@ where
                 .encoding(Encoding::APPLICATION_JSON)
                 .await
             {
-                error!("AdminSpace: Reply to Query failed, {}", err);
+                tracing::error!("AdminSpace: Reply to Query failed, {}", err);
             };
         }
         Err(_) => {
-            error!("AdminSpace: Could not seralize client data");
+            tracing::error!("AdminSpace: Could not seralize client data");
         }
     };
 }
@@ -472,75 +476,7 @@ impl RunningPluginTrait for RunningPlugin {
     }
 }
 
-type StateMap = Arc<RwLock<HashMap<SocketAddr, RemoteState>>>;
-
-struct RemoteState {
-    websocket_tx: Sender<RemoteAPIMsg>,
-    session_id: Uuid,
-    session: Session,
-    // Timestamp
-    timestamps: HashMap<Uuid, Timestamp>,
-    // PubSub
-    subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
-    publishers: HashMap<Uuid, Publisher<'static>>,
-    // Queryable
-    queryables: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
-    unanswered_queries: Arc<std::sync::RwLock<HashMap<Uuid, Query>>>,
-    // Liveliness
-    liveliness_tokens: HashMap<Uuid, LivelinessToken>,
-    liveliness_subscribers: HashMap<Uuid, (JoinHandle<()>, OwnedKeyExpr)>,
-    // Querier
-    queriers: HashMap<Uuid, Querier<'static>>,
-}
-
-impl RemoteState {
-    fn new(websocket_tx: Sender<RemoteAPIMsg>, session_id: Uuid, session: Session) -> Self {
-        Self {
-            websocket_tx,
-            session_id,
-            session,
-            timestamps: HashMap::new(),
-            subscribers: HashMap::new(),
-            publishers: HashMap::new(),
-            queryables: HashMap::new(),
-            unanswered_queries: Arc::new(std::sync::RwLock::new(HashMap::new())),
-            liveliness_tokens: HashMap::new(),
-            liveliness_subscribers: HashMap::new(),
-            queriers: HashMap::new(),
-        }
-    }
-
-    async fn cleanup(self) {
-        for (_, publisher) in self.publishers {
-            if let Err(e) = publisher.undeclare().await {
-                error!("{e}")
-            }
-        }
-        for (_, (subscriber, _)) in self.subscribers {
-            subscriber.abort();
-        }
-
-        for (_, (queryable, _)) in self.queryables {
-            queryable.abort();
-        }
-
-        drop(self.unanswered_queries);
-
-        for (_, queryable) in self.liveliness_tokens {
-            if let Err(e) = queryable.undeclare().await {
-                error!("{e}")
-            }
-        }
-
-        for (_, (liveliness_subscriber, _)) in self.liveliness_subscribers {
-            liveliness_subscriber.abort();
-        }
-
-        if let Err(err) = self.session.close().await {
-            error!("{err}")
-        };
-    }
-}
+type StateMap = Arc<RwLock<HashMap<String, Arc<Mutex<AdminSpaceClient>>>>>;
 
 pub trait Streamable:
     tokio::io::AsyncRead + tokio::io::AsyncWrite + std::marker::Send + Unpin
@@ -576,15 +512,12 @@ async fn run_websocket_server(
     };
 
     while let Ok((tcp_stream, sock_addr)) = server.accept().await {
-        let state_map = state_map.clone();
         let zenoh_runtime = zenoh_runtime.clone();
         let opt_tls_acceptor = opt_tls_acceptor.clone();
-
+        let state_map2 = state_map.clone();
         let new_websocket = async move {
             let sock_adress = Arc::new(sock_addr);
-            let (ws_ch_tx, ws_ch_rx) = flume::unbounded::<RemoteAPIMsg>();
-
-            let mut write_guard = state_map.write().await;
+            let (ws_ch_tx, ws_ch_rx) = flume::unbounded::<(OutRemoteMessage, Option<SequenceId>)>();
 
             let session = match zenoh::session::init(zenoh_runtime.clone()).await {
                 Ok(session) => session,
@@ -596,17 +529,11 @@ async fn run_websocket_server(
             let id = Uuid::new_v4();
             tracing::debug!("Client {sock_addr:?} -> {id}");
 
-            let state: RemoteState = RemoteState::new(ws_ch_tx.clone(), id, session);
-
-            // if remote state exists in map already. Ignore it and reinitialize
-            let _ = write_guard.insert(sock_addr, state);
-            drop(write_guard);
-
             let streamable: Box<dyn Streamable> = match &opt_tls_acceptor {
                 Some(acceptor) => match acceptor.accept(tcp_stream).await {
                     Ok(tls_stream) => Box::new(tls_stream),
                     Err(err) => {
-                        error!("Could not secure TcpStream -> TlsStream {:?}", err);
+                        tracing::error!("Could not secure TcpStream -> TlsStream {:?}", err);
                         return;
                     }
                 },
@@ -616,7 +543,7 @@ async fn run_websocket_server(
             let ws_stream = match tokio_tungstenite::accept_async(streamable).await {
                 Ok(ws_stream) => ws_stream,
                 Err(e) => {
-                    error!("Error during the websocket handshake occurred: {}", e);
+                    tracing::error!("Error during the websocket handshake occurred: {}", e);
                     return;
                 }
             };
@@ -625,39 +552,38 @@ async fn run_websocket_server(
 
             let ch_rx_stream = ws_ch_rx
                 .into_stream()
-                .map(|remote_api_msg| {
-                    let val = serde_json::to_string(&remote_api_msg).unwrap(); // This unwrap should be alright
-                    Ok(Message::Text(val))
-                })
+                .map(|(out_msg, sequence_id)| Ok(Message::Binary(out_msg.to_wire(sequence_id))))
                 .forward(ws_tx);
 
-            let sock_adress_cl = sock_adress.clone();
+            // send confirmation that session was successfully opened
+            let admin_client =
+                Arc::new(Mutex::new(AdminSpaceClient::new(id.to_string(), sock_addr)));
+            state_map2
+                .write()
+                .await
+                .insert(id.to_string(), admin_client.clone());
 
-            let state_map_cl_outer = state_map.clone();
+            let mut remote_state = RemoteState::new(ws_ch_tx.clone(), admin_client, session);
 
             //  Incoming message from Websocket
             let incoming_ws = tokio::task::spawn(async move {
                 let mut non_close_messages = ws_rx.try_filter(|msg| future::ready(!msg.is_close()));
-                let state_map_cl = state_map_cl_outer.clone();
-                let sock_adress_ref = sock_adress_cl.clone();
+
                 while let Ok(Some(msg)) = non_close_messages.try_next().await {
-                    if let Some(response) =
-                        handle_message(msg, *sock_adress_ref, state_map_cl.clone()).await
-                    {
+                    if let Some(response) = handle_message(msg, &mut remote_state).await {
                         if let Err(err) = ws_ch_tx.send(response) {
-                            error!("WS Send Error: {err:?}");
+                            tracing::error!("WS Send Error: {err:?}");
                         };
                     };
                 }
+                remote_state.clear().await;
             });
 
             pin_mut!(ch_rx_stream, incoming_ws);
             future::select(ch_rx_stream, incoming_ws).await;
 
             // cleanup state
-            if let Some(state) = state_map.write().await.remove(sock_adress.as_ref()) {
-                state.cleanup().await;
-            };
+            state_map2.write().await.remove(&id.to_string());
 
             tracing::info!("Client Disconnected {}", sock_adress.as_ref());
         };
@@ -668,37 +594,65 @@ async fn run_websocket_server(
 
 async fn handle_message(
     msg: Message,
-    sock_addr: SocketAddr,
-    state_map: StateMap,
-) -> Option<RemoteAPIMsg> {
+    state: &mut RemoteState,
+) -> Option<(OutRemoteMessage, Option<SequenceId>)> {
     match msg {
-        Message::Text(text) => match serde_json::from_str::<RemoteAPIMsg>(&text) {
-            Ok(msg) => match msg {
-                RemoteAPIMsg::Control(ctrl_msg) => {
-                    match handle_control_message(ctrl_msg, sock_addr, state_map).await {
-                        Ok(_) => return None,
-                        Err(err) => {
-                            tracing::error!(err);
-                        }
+        Message::Binary(val) => match InRemoteMessage::from_wire(val) {
+            Ok((header, msg)) => {
+                match state.handle_message(msg).await {
+                    Ok(Some(msg)) => Some((msg, header.sequence_id)),
+                    Ok(None) => header.sequence_id.map(|_| {
+                        (
+                            OutRemoteMessage::Ok(interface::Ok {
+                                content_id: header.content_id,
+                            }),
+                            header.sequence_id,
+                        )
+                    }),
+                    Err(error) => {
+                        tracing::error!(
+                            "RemoteAPI: Failed to execute request {:?}: {}",
+                            header.content_id,
+                            error
+                        );
+                        header.sequence_id.map(|_| {
+                            // send error response if ack was requested
+                            (
+                                OutRemoteMessage::Error(interface::Error {
+                                    error: error.to_string(),
+                                }),
+                                header.sequence_id,
+                            )
+                        })
                     }
                 }
-                RemoteAPIMsg::Data(data_msg) => {
-                    if let Err(err) = handle_data_message(data_msg, sock_addr, state_map).await {
-                        tracing::error!(err);
-                    }
+            }
+            Err(err) => match err {
+                interface::FromWireError::HeaderError(error) => {
+                    tracing::error!("RemoteAPI: Failed to parse message header: {}", error);
+                    None
+                }
+                interface::FromWireError::BodyError((header, error)) => {
+                    tracing::error!(
+                        "RemoteAPI: Failed to parse message body for {:?}: {}",
+                        header,
+                        error
+                    );
+                    header.sequence_id.map(|_| {
+                        // send error response if ack was requested
+                        (
+                            OutRemoteMessage::Error(interface::Error {
+                                error: error.to_string(),
+                            }),
+                            header.sequence_id,
+                        )
+                    })
                 }
             },
-            Err(err) => {
-                tracing::error!(
-                    "RemoteAPI: WS Message Cannot be Deserialized to RemoteAPIMsg {}, message: {}",
-                    err,
-                    text
-                );
-            }
         },
         _ => {
-            debug!("RemoteAPI: WS Message Not Text");
+            tracing::error!("RemoteAPI: message format is not `Binary`");
+            None
         }
-    };
-    None
+    }
 }

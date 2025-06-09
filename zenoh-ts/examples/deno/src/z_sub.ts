@@ -13,7 +13,8 @@
 //
 
 import {
-  Config, Subscriber, Session, KeyExpr, RingChannel, ChannelReceiver, Sample
+  Config, Subscriber, Session, KeyExpr, RingChannel, ChannelReceiver, Sample,
+  SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -30,7 +31,7 @@ export async function main() {
   for await (const sample of pollSubscriber.receiver() as ChannelReceiver<Sample>) {
     console.warn!(
       ">> [Subscriber] Received " +
-      sample.kind() + " ('" +
+      SampleKind[sample.kind()] + " ('" +
       sample.keyexpr() + "': '" +
       sample.payload().toString() + "')",
     );

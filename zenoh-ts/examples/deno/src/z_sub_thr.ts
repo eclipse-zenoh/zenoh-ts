@@ -16,44 +16,39 @@ import { Config, Session, Sample, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { BaseParseArgs } from "./parse_args.ts";
 // Throughput test
 class Stats {
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  round_count: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  round_size: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  finished_rounds: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  round_start: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention
-  global_start: number;
+  roundCount: number;
+  roundSize: number;
+  finishedRounds: number;
+  roundStart: number;
+  globalStart: number;
 
   constructor(roundSize: number) {
-    this.round_count = 0;
-    this.round_size = roundSize;
-    this.finished_rounds = 0;
-    this.round_start = Date.now();
-    this.global_start = 0;
+    this.roundCount = 0;
+    this.roundSize = roundSize;
+    this.finishedRounds = 0;
+    this.roundStart = performance.now();
+    this.globalStart = 0;
   }
 
   increment() {
-    if (this.round_count == 0) {
-      this.round_start = Date.now();
-      if (this.global_start == 0) {
-        this.global_start = this.round_start;
+    if (this.roundCount == 0) {
+      this.roundStart = performance.now();
+      if (this.globalStart == 0) {
+        this.globalStart = this.roundStart;
       }
-      this.round_count += 1;
-    } else if (this.round_count < this.round_size) {
-      this.round_count += 1;
+      this.roundCount += 1;
+    } else if (this.roundCount < this.roundSize) {
+      this.roundCount += 1;
     } else {
       this.printRound();
-      this.finished_rounds += 1;
-      this.round_count = 0;
+      this.finishedRounds += 1;
+      this.roundCount = 0;
     }
   }
 
   printRound() {
-    const elapsedMs = Date.now() - this.round_start;
-    const throughput = (this.round_size) / (elapsedMs / 1000);
+    const elapsedMs = performance.now() - this.roundStart;
+    const throughput = (this.roundSize) / (elapsedMs / 1000);
     console.warn(throughput, " msg/s");
   }
 }
@@ -73,7 +68,7 @@ export async function main() {
     { handler: subscriberCallback }
   );
 
-  while (stats.finished_rounds < args.samples) {
+  while (stats.finishedRounds < args.samples) {
     await sleep(500);
   }
   

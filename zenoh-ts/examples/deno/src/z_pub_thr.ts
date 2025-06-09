@@ -36,8 +36,17 @@ export async function main() {
     payload[i] = i;
   }
 
+  let startTime = performance.now();
+  let n = 0;
   while (true) {
     await publisher.put(payload);
+    n++;
+
+    if (n % 1000000 == 0) {
+      const endTime = performance.now();
+      console.log(1000000 / (endTime - startTime) * 1000, " msg/s")
+      startTime = performance.now();
+    }
   }
   await session.close();
 }

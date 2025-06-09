@@ -131,6 +131,7 @@ export class ChatSession {
 				query.reply(keyexpr, response, {
 					attachment: this.user.username
 				});
+				query.finalize();
 			},
 			complete: true
 		});
