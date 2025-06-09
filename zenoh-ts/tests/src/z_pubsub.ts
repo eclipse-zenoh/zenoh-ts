@@ -23,7 +23,7 @@ import {
   ZBytes,
   SampleKind,
   PutOptions,
-  DeleteOpts,
+  DeleteOptions,
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
@@ -35,13 +35,14 @@ class TestCase {
   constructor(
     public description: string,
     public sampleKind: SampleKind,
-    public options?: PutOptions | DeleteOpts,
+    public options?: PutOptions | DeleteOptions,
     public payload?: string
   ) {}
 
   expectedEncoding(): Encoding {
     if (this.sampleKind === SampleKind.PUT) {
-      return (this.options as PutOptions)?.encoding ?? Encoding.default();
+      const encoding = (this.options as PutOptions)?.encoding;
+      return encoding ? Encoding.from(encoding) : Encoding.default();
     }
     return Encoding.default(); // DELETE doesn't have encoding
   }
@@ -196,7 +197,7 @@ Deno.test("API - Put/Delete Operations with Options", async () => {
         if (testCase.options) {
           await session1.delete(
             "zenoh/test/operations",
-            testCase.options as DeleteOpts
+            testCase.options as DeleteOptions
           );
         } else {
           await session1.delete("zenoh/test/operations", {});

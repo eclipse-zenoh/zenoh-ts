@@ -190,6 +190,7 @@ class TestCase {
   // All test parameters as direct fields
   public description: string;
   public keyexpr: KeyExpr;
+  public parameters?: Parameters;
   public encoding?: Encoding;
   public congestionControl?: CongestionControl;
   public priority?: Priority;
@@ -218,6 +219,7 @@ class TestCase {
       timeout?: number;
       consolidation?: ConsolidationMode;
       // QuerierGetOptions parameters
+      parameters?: string;
       encoding?: Encoding;
       payload?: IntoZBytes;
       attachment?: ZBytes;
@@ -242,7 +244,7 @@ class TestCase {
    */
   toQuerierOptions(): QuerierOptions {
     return {
-      target: this.target ?? QueryTarget.BestMatching,
+      target: this.target ?? QueryTarget.BEST_MATCHING,
       congestionControl: this.congestionControl,
       consolidation: this.consolidation,
       priority: this.priority,
@@ -319,11 +321,11 @@ class TestCase {
       this.payload || new ZBytes(""),
       SampleKind.PUT, // Sample kind for query responses is always PUT
       this.encoding || Encoding.default(),
-      this.priority || Priority.DATA,
+      this.attachment,
       undefined, // Timestamp is not set in test responses
+      this.priority || Priority.DATA,
       this.congestionControl || CongestionControl.DROP,
-      this.express === undefined ? false : this.express,
-      this.attachment
+      this.express === undefined ? false : this.express
     );
 
     return sample;
@@ -376,7 +378,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         {
           priority: Priority.REAL_TIME,
           congestionControl: CongestionControl.BLOCK,
-          target: QueryTarget.BestMatching,
+          target: QueryTarget.BEST_MATCHING,
           encoding: Encoding.default(),
           payload: "priority-payload",
         }
@@ -386,14 +388,14 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       // Note: express flag is consistently false in responses regardless of what is set
       new TestCase("With express flag", "zenoh/test/express", {
         express: false, // Changed to match actual behavior
-        target: QueryTarget.BestMatching,
+        target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         payload: "express-payload",
       }),
 
       // Test with attachment
       new TestCase("With attachment", "zenoh/test/attachment", {
-        target: QueryTarget.BestMatching,
+        target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         attachment: attachmentData,
         payload: "attachment-payload",
@@ -403,14 +405,14 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       new TestCase("With timeout", "zenoh/test/timeout", {
         timeout: 1000, // use numeric value for milliseconds
         priority: Priority.DATA_HIGH,
-        target: QueryTarget.BestMatching,
+        target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         payload: "timeout-payload",
       }),
 
       // Test with target
       new TestCase("With target", "zenoh/test/target", {
-        target: QueryTarget.All,
+        target: QueryTarget.ALL,
         priority: Priority.INTERACTIVE_HIGH,
         encoding: Encoding.default(),
         payload: "target-payload",
@@ -418,9 +420,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with consolidation
       new TestCase("With consolidation", "zenoh/test/consolidation", {
-        consolidation: ConsolidationMode.None,
+        consolidation: ConsolidationMode.NONE,
         priority: Priority.DATA_LOW,
-        target: QueryTarget.BestMatching,
+        target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         payload: "consolidation-payload",
       }),
@@ -431,8 +433,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         priority: Priority.BACKGROUND,
         express: false,
         timeout: 5000, // use numeric value for milliseconds
-        target: QueryTarget.BestMatching,
-        consolidation: ConsolidationMode.Latest,
+        target: QueryTarget.BEST_MATCHING,
+        consolidation: ConsolidationMode.LATEST,
         encoding: Encoding.default(),
         attachment: fullOptionsAttachment,
         payload: "all-options-payload",
@@ -447,8 +449,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           priority: Priority.REAL_TIME,
           express: true,
           timeout: 1000, // use numeric value for milliseconds
-          target: QueryTarget.All,
-          consolidation: ConsolidationMode.Latest,
+          target: QueryTarget.ALL,
+          consolidation: ConsolidationMode.LATEST,
           encoding: Encoding.default(),
           attachment: attachmentData,
           payload: "",
@@ -464,8 +466,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           priority: Priority.DATA_HIGH,
           express: false,
           timeout: 5000, // use numeric value for milliseconds
-          target: QueryTarget.BestMatching,
-          consolidation: ConsolidationMode.None,
+          target: QueryTarget.BEST_MATCHING,
+          consolidation: ConsolidationMode.NONE,
           encoding: Encoding.default(),
           attachment: fullOptionsAttachment,
         }
@@ -502,11 +504,20 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         },
       ];
 
+      let receiver: ChannelReceiver<Reply> | undefined;
+      let query: Query | undefined;
+      let querier: Querier | undefined;
+      let replies: Reply[] = [];
+
       for (const operation of operations) {
         const fullDescription = `${testCase.description} - ${operation.type}`;
         console.log(`Executing: ${fullDescription}`);
 
-        let query: Query | undefined;
+        receiver = undefined;
+        querier = undefined;
+        query = undefined;
+        replies = [];
+
 
         // Declare a queryable only for the current test
         const keQueryable = testCase.keyexpr;
@@ -526,19 +537,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             } else {
               q.replyErr("error response");
             }
+            q.finalize();
           },
         });
 
         // Short delay to ensure queryable is ready
-        await sleep(100);
-
-        const replies: Reply[] = [];
-        let receiver: ChannelReceiver<Reply> | undefined;
-        let querier: Querier | undefined;
-
-        const handler = (reply: Reply) => {
-          replies.push(reply);
-        };
+        await sleep(500);
 
         // Declare a querier for this specific test if needed
         try {
@@ -547,7 +551,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (operation.useCallback) {
               await session2.get(new Selector(keGet, "ok"), {
                 ...testCase.toGetOptions(),
-                handler,
+                handler: (reply: Reply) => {
+                  replies.push(reply);
+                },
               });
             } else {
               receiver = await session2.get(
@@ -561,20 +567,23 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               testCase.toQuerierOptions()
             );
             if (operation.useCallback) {
-              await querier!.get(new Parameters("ok"), {
+              await querier!.get({
+                parameters: new Parameters("ok"),
                 ...testCase.toQuerierGetOptions(),
-                handler,
+                handler: (reply: Reply) => {
+                  replies.push(reply);
+                },
               });
             } else {
-              receiver = await querier!.get(
-                new Parameters("ok"),
-                testCase.toQuerierGetOptions()
-              );
+              receiver = await querier!.get({
+                parameters: new Parameters("ok"),
+                ...testCase.toQuerierGetOptions(),
+              });
             }
           }
 
           // Wait for query to be processed
-          await sleep(100);
+          await sleep(500);
 
           // Verify the query was received correctly
           assertEquals(
@@ -610,10 +619,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             }
           } else {
             // For callback operations, wait for handler to be called
-            await sleep(100);
+            await sleep(500);
             assertEquals(
-              replies.length > 0,
-              true,
+              replies.length,
+              1,
               `Reply should be received via handler for ${fullDescription}`
             );
             const reply = replies[replies.length - 1];
