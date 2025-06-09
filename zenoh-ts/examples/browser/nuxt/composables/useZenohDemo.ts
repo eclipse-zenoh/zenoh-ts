@@ -71,7 +71,7 @@ export interface ReplyErrParametersState {
 // Individual queryable response parameters state
 export interface QueryableResponseParametersState {
   // Reply configuration
-  replyType: "reply" | "replyErr";
+  replyType: "reply" | "replyErr" | "ignore";
   
   // Reply sub-states
   reply: ReplyParametersState;
@@ -206,7 +206,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 
   return {
     // Reply configuration
-    replyType: "reply" as "reply" | "replyErr",
+    replyType: "reply" as "reply" | "replyErr" | "ignore",
     // Reply sub-states
     reply,
     replyErr,

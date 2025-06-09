@@ -451,6 +451,16 @@
                             :disabled="!isConnected"
                           />
                         </template>
+                        
+                        <!-- Ignore Fields -->
+                        <template v-if="queryableState.responseParameters.replyType === 'ignore'">
+                          <div class="ignore-info">
+                            <p class="ignore-description">
+                              When <strong>Ignore</strong> is selected, queries will be received but no reply will be sent. 
+                              Only <code>query.finalize()</code> will be called to acknowledge the query.
+                            </p>
+                          </div>
+                        </template>
                       </div>
                     </div> <!-- End response-config-content -->
                 </div>
@@ -500,6 +510,15 @@
                       <ParameterDisplay 
                         type="neutral" 
                         :data="{ 'ReplyErrOptions': queryableState.responseParameters.replyErr.replyErrOptionsJSON }"
+                      />
+                    </div>
+                    
+                    <!-- Display Ignore Parameters when reply type is "ignore" -->
+                    <div v-if="queryableState.responseParameters.replyType === 'ignore'" class="ignore-parameters">
+                      <!-- Info Parameter -->
+                      <ParameterDisplay 
+                        type="neutral" 
+                        :data="{ 'behavior': 'Queries will be received but no reply will be sent (only query.finalize() is called)' }"
                       />
                     </div>
                   </div>
@@ -1387,5 +1406,29 @@ watch(activeQueryables, (queryables) => {
 .reply-err-parameters {
   margin: 0;
   padding: 0;
+}
+
+/* Ignore info styling */
+.ignore-info {
+  padding: var(--compact-gap);
+  background-color: #f8f9fa;
+  border-radius: var(--compact-border-radius);
+  border: 1px solid #e9ecef;
+  margin-bottom: var(--compact-gap);
+}
+
+.ignore-description {
+  margin: 0;
+  color: #495057;
+  font-size: var(--compact-font-size);
+  line-height: 1.5;
+}
+
+.ignore-description code {
+  background-color: #e9ecef;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
 }
 </style>

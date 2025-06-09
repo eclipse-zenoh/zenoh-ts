@@ -738,7 +738,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             );
 
             await query.reply(replyKeyExpr, replyPayload, replyOptions);
-          } else {
+          } else if (responseParameters.replyType === "replyErr") {
             // Handle error reply
             const replyErrParams = responseParameters.replyErr;
 
@@ -762,6 +762,16 @@ class ZenohDemo extends ZenohDemoEmpty {
               }
             );
             await query.replyErr(errorPayload, replyErrOptions);
+          } else if (responseParameters.replyType === "ignore") {
+            // Handle ignore case - just log that the query is being ignored
+            this.addLogEntry(
+              "data",
+              `Queryable ${displayId} ignoring query:`,
+              {
+                Query: queryToJSON(query),
+              }
+            );
+            // No reply sent, just continue to finalize
           }
 
           // Finalize the query to signal no more replies will be sent

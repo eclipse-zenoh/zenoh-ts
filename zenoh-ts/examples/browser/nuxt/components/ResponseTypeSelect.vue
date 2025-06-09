@@ -24,20 +24,31 @@
         >
         <span>Error</span>
       </label>
+      <label class="radio-option">
+        <input 
+          type="radio" 
+          :name="props.name"
+          value="ignore" 
+          :checked="props.modelValue === 'ignore'"
+          @change="updateValue"
+          :disabled="props.disabled"
+        >
+        <span>Ignore</span>
+      </label>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 interface Props {
-  modelValue: 'reply' | 'replyErr'
+  modelValue: 'reply' | 'replyErr' | 'ignore'
   disabled?: boolean
   label?: string
   name: string
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: 'reply' | 'replyErr'): void
+  (e: 'update:modelValue', value: 'reply' | 'replyErr' | 'ignore'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,6 +59,6 @@ const emit = defineEmits<Emits>()
 
 function updateValue(event: Event) {
   const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value as 'reply' | 'replyErr')
+  emit('update:modelValue', target.value as 'reply' | 'replyErr' | 'ignore')
 }
 </script>
