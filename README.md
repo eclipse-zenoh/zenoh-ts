@@ -155,10 +155,15 @@ and daemon from the sources and start it.
 
    ```sh
    yarn install 
-   yarn build library
+   yarn build
    ```
 
    The result is placed into the `zenoh-ts/dist` directory.
+
+   Note: `yarn build` defaults to building the library. You can also specify
+   components explicitly: `yarn build library`, `yarn build tests`,
+   `yarn build examples`, or `yarn build ALL` for everything. See all options available by
+   `yarn build --help`
 
    This library is currently compatible with browsers, but not with NodeJS due
    to websocket library limitations.
