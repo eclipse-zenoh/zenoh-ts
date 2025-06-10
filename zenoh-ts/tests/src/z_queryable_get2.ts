@@ -17,6 +17,7 @@ import {
   Session,
   Query,
   Reply,
+  ReplyError,
   KeyExpr,
   Selector,
   Sample,
@@ -38,6 +39,11 @@ import {
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { Duration } from "typed-duration";
+
+// Define ReplyErrOptions locally since it's not exported from the main package
+interface ReplyErrOptions {
+  encoding?: Encoding,
+}
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -212,6 +218,18 @@ class TestCase {
     };
   }
 
+  /**
+   * Convert parameters to reply error options for queryable's replyErr method
+   * @returns ReplyErrOptions object containing options for the Query.replyErr method
+   */
+  toReplyErrOptions(): ReplyErrOptions {
+    return {
+      encoding: this.getOptions.encoding
+        ? Encoding.from(this.getOptions.encoding)
+        : undefined,
+    };
+  }
+
   expectedQuery(): ExpectedQuery {
     return new ExpectedQuery(
       this.getOptions.payload ? new ZBytes(this.getOptions.payload) : undefined,
@@ -256,6 +274,40 @@ class TestCase {
 
     return sample;
   }
+
+  /**
+   * Create expected ReplyError object for error reply validation
+   * @returns ReplyError object with expected properties using the query payload
+   */
+  expectedReplyError(): ReplyError {
+    // Create expected ReplyError with the query payload and encoding from test case options
+    // This mirrors how sample replies work - they echo back the query payload
+    return new ReplyError(
+      new ZBytes(this.getOptions.payload ?? ""),
+      this.getOptions.encoding
+        ? Encoding.from(this.getOptions.encoding)
+        : Encoding.default()
+    );
+  }
+}
+
+/**
+ * Helper function to compare ReplyError objects in tests
+ * @param actual The actual ReplyError received
+ * @param expected The expected ReplyError to compare against
+ * @param description Test description to include in error messages
+ */
+function compareReplyError(actual: ReplyError, expected: ReplyError, description: string) {
+  assertEquals(
+    actual.payload().toString(),
+    expected.payload().toString(),
+    `ReplyError payload mismatch for ${description}`
+  );
+  assertEquals(
+    actual.encoding().toString(),
+    expected.encoding().toString(),
+    `ReplyError encoding mismatch for ${description}`
+  );
 }
 
 Deno.test("API - Comprehensive Query Operations with Options", async () => {
@@ -386,6 +438,29 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         encoding: Encoding.default(),
         attachment: fullOptionsAttachment,
       }),
+
+      // ERROR TEST CASES - Test replyErr functionality with different encodings
+      
+      // Basic error test with default encoding (explicitly set)
+      new TestCase("zenoh/test/error_basic", "err", {
+        encoding: Encoding.default(),
+        payload: "error-payload",
+      }),
+
+      // Error test with specific encoding
+      new TestCase("zenoh/test/error_encoding", "err", {
+        encoding: Encoding.TEXT_PLAIN,
+        payload: "error-text-payload",
+      }),
+
+      // Error test with complex options
+      new TestCase("zenoh/test/error_complex", "err", {
+        priority: Priority.REAL_TIME,
+        congestionControl: CongestionControl.BLOCK,
+        target: QueryTarget.BEST_MATCHING,
+        encoding: Encoding.APPLICATION_JSON,
+        payload: '{"error": "test error"}',
+      }),
     ];
 
     // Execute all operations - run all 4 variants for each test case
@@ -447,8 +522,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
                 q.payload() ?? "",
                 testCase.toReplyOptions()
               );
+            } else if (q.parameters().toString().includes("err")) {
+              // Use replyErr for error test cases - echo back the query payload like sample reply does
+              q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
             } else {
-              q.replyErr("error response");
+              q.replyErr("unknown parameter");
             }
             q.finalize();
           },
@@ -516,17 +594,32 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           // Handle replies for channel-based operations
           if (receiver) {
             const reply = await receiver.receive();
-            assertEquals(
-              reply.result() instanceof Sample,
-              true,
-              `Reply should be Sample for ${fullDescription}`
-            );
-            if (reply.result() instanceof Sample) {
-              compareSample(
-                reply.result() as Sample,
-                testCase.expectedSample(),
-                fullDescription
+            
+            if (testCase.parameters.toString().includes("err")) {
+              // For error test cases, expect ReplyError
+              assertEquals(
+                reply.result() instanceof ReplyError,
+                true,
+                `Reply should be ReplyError for ${fullDescription}`
               );
+              if (reply.result() instanceof ReplyError) {
+                const expectedError = testCase.expectedReplyError();
+                compareReplyError(reply.result() as ReplyError, expectedError, fullDescription);
+              }
+            } else {
+              // For success test cases, expect Sample
+              assertEquals(
+                reply.result() instanceof Sample,
+                true,
+                `Reply should be Sample for ${fullDescription}`
+              );
+              if (reply.result() instanceof Sample) {
+                compareSample(
+                  reply.result() as Sample,
+                  testCase.expectedSample(),
+                  fullDescription
+                );
+              }
             }
           } else {
             // For callback operations, wait for handler to be called
@@ -537,17 +630,32 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Reply should be received via handler for ${fullDescription}`
             );
             const reply = replies[replies.length - 1];
-            assertEquals(
-              reply.result() instanceof Sample,
-              true,
-              `Reply should be Sample for ${fullDescription}`
-            );
-            if (reply.result() instanceof Sample) {
-              const sample = reply.result() as Sample;
-              const expectedSample = testCase.expectedSample();
+            
+            if (testCase.parameters.toString().includes("err")) {
+              // For error test cases, expect ReplyError
+              assertEquals(
+                reply.result() instanceof ReplyError,
+                true,
+                `Reply should be ReplyError for ${fullDescription}`
+              );
+              if (reply.result() instanceof ReplyError) {
+                const expectedError = testCase.expectedReplyError();
+                compareReplyError(reply.result() as ReplyError, expectedError, fullDescription);
+              }
+            } else {
+              // For success test cases, expect Sample
+              assertEquals(
+                reply.result() instanceof Sample,
+                true,
+                `Reply should be Sample for ${fullDescription}`
+              );
+              if (reply.result() instanceof Sample) {
+                const sample = reply.result() as Sample;
+                const expectedSample = testCase.expectedSample();
 
-              // Validate all Sample fields against expected response
-              compareSample(sample, expectedSample, fullDescription);
+                // Validate all Sample fields against expected response
+                compareSample(sample, expectedSample, fullDescription);
+              }
             }
           }
 
@@ -571,7 +679,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }
     }
 
-    const totalTests = testCases.length * 4; // 4 variants per test case
+    const totalTests = testCases.length * 4; // 4 variants per test case (including new error test cases)
     console.log(`All ${totalTests} test cases completed successfully`);
   } finally {
     // Cleanup sessions
