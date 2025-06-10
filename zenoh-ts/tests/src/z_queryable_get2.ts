@@ -190,7 +190,6 @@ function compareQuery(
  */
 class TestCase {
   // All test parameters as direct fields
-  public description: string;
   public keyexpr: KeyExpr;
   public parameters?: Parameters;
   public encoding?: Encoding;
@@ -205,12 +204,10 @@ class TestCase {
 
   /**
    * Create a new TestCase with all parameters
-   * @param description Human-readable description of this test case
    * @param keyexpr Unique key expression for this test case
    * @param params Object containing all parameters for this test
    */
   constructor(
-    description: string,
     keyexpr: string,
     params: {
       // QuerierOptions parameters
@@ -227,7 +224,6 @@ class TestCase {
       attachment?: ZBytes;
     } = {}
   ) {
-    this.description = description;
     this.keyexpr = new KeyExpr(keyexpr);
     this.encoding = params.encoding;
     this.congestionControl = params.congestionControl;
@@ -352,22 +348,22 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // Basic test without options
-      new TestCase("Basic test without options", "zenoh/test/basic"),
+      new TestCase("zenoh/test/basic"),
 
       // Test with empty payload
-      new TestCase("With empty payload", "zenoh/test/empty_payload", {
+      new TestCase("zenoh/test/empty_payload", {
         payload: "",
       }),
 
       // Test without payload field - using default encoding since no payload is specified
-      new TestCase("Without payload field", "zenoh/test/no_payload", {
+      new TestCase("zenoh/test/no_payload", {
         // Note: Even though we might specify another encoding, the actual behavior
         // returns zenoh/bytes when no payload is provided
         encoding: Encoding.default(),
       }),
 
       // Test with encoding only
-      new TestCase("With encoding", "zenoh/test/encoding", {
+      new TestCase("zenoh/test/encoding", {
         // Note: Even with a payload, the actual behavior seems to use the default encoding
         encoding: Encoding.default(),
         payload: "encoded-payload",
@@ -375,7 +371,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with querier options (priority, congestion control, etc.)
       new TestCase(
-        "With priority and congestion control",
         "zenoh/test/priority_congestion",
         {
           priority: Priority.REAL_TIME,
@@ -388,7 +383,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with express flag
       // Note: express flag is consistently false in responses regardless of what is set
-      new TestCase("With express flag", "zenoh/test/express", {
+      new TestCase("zenoh/test/express", {
         express: false, // Changed to match actual behavior
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
@@ -396,7 +391,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with attachment
-      new TestCase("With attachment", "zenoh/test/attachment", {
+      new TestCase("zenoh/test/attachment", {
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         attachment: attachmentData,
@@ -404,7 +399,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with timeout
-      new TestCase("With timeout", "zenoh/test/timeout", {
+      new TestCase("zenoh/test/timeout", {
         timeout: 1000, // use numeric value for milliseconds
         priority: Priority.DATA_HIGH,
         target: QueryTarget.BEST_MATCHING,
@@ -413,7 +408,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with target
-      new TestCase("With target", "zenoh/test/target", {
+      new TestCase("zenoh/test/target", {
         target: QueryTarget.ALL,
         priority: Priority.INTERACTIVE_HIGH,
         encoding: Encoding.default(),
@@ -421,7 +416,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with consolidation
-      new TestCase("With consolidation", "zenoh/test/consolidation", {
+      new TestCase("zenoh/test/consolidation", {
         consolidation: ConsolidationMode.NONE,
         priority: Priority.DATA_LOW,
         target: QueryTarget.BEST_MATCHING,
@@ -430,7 +425,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options combined
-      new TestCase("With all options combined", "zenoh/test/all_options", {
+      new TestCase("zenoh/test/all_options", {
         congestionControl: CongestionControl.DROP,
         priority: Priority.BACKGROUND,
         express: false,
@@ -444,7 +439,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with all options but empty payload
       new TestCase(
-        "With all options but empty payload",
         "zenoh/test/all_options_empty",
         {
           congestionControl: CongestionControl.BLOCK,
@@ -461,7 +455,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       // Test with all options but no payload
       new TestCase(
-        "With all options but no payload",
         "zenoh/test/all_options_no_payload",
         {
           congestionControl: CongestionControl.DROP,
@@ -512,7 +505,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       let replies: Reply[] = [];
 
       for (const operation of operations) {
-        const fullDescription = `${testCase.description} - ${operation.type}`;
+        const fullDescription = `${testCase.keyexpr.toString()} - ${operation.type}`;
         receiver = undefined;
         querier = undefined;
         query = undefined;
