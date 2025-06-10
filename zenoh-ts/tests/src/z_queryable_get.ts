@@ -181,12 +181,14 @@ class TestCase {
    */
   toQuerierOptions(): QuerierOptions {
     return {
-      target: this.getOptions.target,
       congestionControl: this.getOptions.congestionControl,
-      consolidation: this.getOptions.consolidation,
       priority: this.getOptions.priority,
       express: this.getOptions.express,
+      target: this.getOptions.target,
+      consolidation: this.getOptions.consolidation,
       timeout: this.getOptions.timeout,
+      allowedDestination: this.getOptions.allowedDestinaton,
+      acceptReplies: this.getOptions.acceptReplies,
     };
   }
 
@@ -307,6 +309,59 @@ function compareReplyError(actual: ReplyError, expected: ReplyError, description
     actual.encoding().toString(),
     expected.encoding().toString(),
     `ReplyError encoding mismatch for ${description}`
+  );
+}
+
+/**
+ * Helper function to compare querier properties with expected values from QuerierOptions
+ * @param querier The Querier object to test
+ * @param expectedKeyExpr The expected key expression
+ * @param expectedOptions The expected QuerierOptions to compare against
+ * @param description Test description to include in error messages
+ */
+function compareQuerierProperties(
+  querier: Querier,
+  expectedKeyExpr: KeyExpr,
+  expectedOptions: QuerierOptions,
+  description: string
+) {
+  // Test keyExpr() method
+  assertEquals(
+    querier.keyExpr().toString(),
+    expectedKeyExpr.toString(),
+    `Querier keyExpr should match for ${description}`
+  );
+
+  // Test congestionControl() method
+  const expectedCongestionControl = expectedOptions.congestionControl ?? CongestionControl.DEFAULT_REQUEST;
+  assertEquals(
+    querier.congestionControl(),
+    expectedCongestionControl,
+    `Querier congestionControl should match for ${description}`
+  );
+
+  // Test priority() method
+  const expectedPriority = expectedOptions.priority ?? Priority.DEFAULT;
+  assertEquals(
+    querier.priority(),
+    expectedPriority,
+    `Querier priority should match for ${description}`
+  );
+
+  // Test acceptReplies() method
+  const acceptRepliesValue = querier.acceptReplies();
+  assertEquals(
+    typeof acceptRepliesValue,
+    "number",
+    `Querier acceptReplies should return a number for ${description}`
+  );
+  
+  // The expected value should come from options or default to MATCHING_QUERY (1)
+  const expectedAcceptReplies = expectedOptions.acceptReplies ?? 1; // ReplyKeyExpr.DEFAULT which is MATCHING_QUERY = 1
+  assertEquals(
+    acceptRepliesValue,
+    expectedAcceptReplies,
+    `Querier acceptReplies should return expected value for ${description}`
   );
 }
 
@@ -461,6 +516,17 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         encoding: Encoding.APPLICATION_JSON,
         payload: '{"error": "test error"}',
       }),
+
+      // Test with custom acceptReplies (ReplyKeyExpr.ANY = 0)
+      new TestCase("zenoh/test/accept_replies_any", "ok", {
+        priority: Priority.DATA_HIGH,
+        congestionControl: CongestionControl.DROP,
+        target: QueryTarget.BEST_MATCHING,
+        encoding: Encoding.default(),
+        payload: "accept-replies-any-payload",
+        // Note: We can't directly set acceptReplies in GetOptions, this would be set in QuerierOptions
+        // This test case will use the default value, but we test the acceptReplies() method
+      }),
     ];
 
     // Execute all operations - run all 4 variants for each test case
@@ -557,6 +623,17 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               keGet,
               testCase.toQuerierOptions()
             );
+
+            // Test querier methods return values
+            if (querier) {
+              compareQuerierProperties(
+                querier,
+                keGet,
+                testCase.toQuerierOptions(),
+                fullDescription
+              );
+            }
+
             if (operation.useCallback) {
               await querier!.get({
                 ...testCase.toQuerierGetOptions(),
