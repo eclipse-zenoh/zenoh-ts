@@ -29,9 +29,22 @@ import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
  * Configuration for the queryable/get performance tests
  */
 const PACKET_SIZES = [
-  8, 16, 32, 64, 128, 256, 512,          // Small packets: 8B - 512B
-  1024, 2048, 4096, 8192, 16384,         // Medium packets: 1KB - 16KB
-  32768, 65536, 131072, 262144,          // Large packets: 32KB - 256KB
+  8,
+  16,
+  32,
+  64,
+  128,
+  256,
+  512, // Small packets: 8B - 512B
+  1024,
+  2048,
+  4096,
+  8192,
+  16384, // Medium packets: 1KB - 16KB
+  32768,
+  65536,
+  131072,
+  262144, // Large packets: 32KB - 256KB
 ];
 const KEY_EXPR = "test/queryable/perf";
 
@@ -51,20 +64,20 @@ async function initializeGlobalSessions(): Promise<void> {
   // Create separate sessions for queryable and querier
   globalQueryableSession = await Session.open(new Config("ws/127.0.0.1:10000"));
   globalQuerierSession = await Session.open(new Config("ws/127.0.0.1:10000"));
-  
+
   // Declare queryable with channel handler
-  globalQueryable = await globalQueryableSession.declareQueryable(KEY_EXPR, { 
+  globalQueryable = await globalQueryableSession.declareQueryable(KEY_EXPR, {
     handler: new FifoChannel(256),
-    complete: true 
+    complete: true,
   });
-  
+
   // Declare querier
   globalQuerier = await globalQuerierSession.declareQuerier(KEY_EXPR, {
-    target: QueryTarget.BestMatching
+    target: QueryTarget.BEST_MATCHING,
   });
-  
+
   // Small delay to ensure setup is complete
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise((resolve) => setTimeout(resolve, 100));
 }
 
 /**
@@ -80,21 +93,27 @@ async function cleanupGlobalSessions(): Promise<void> {
 /**
  * Create test payloads for each packet size
  */
-function createTestPayloads(): Map<number, { payload: Uint8Array; iterations: number }> {
-  const payloads = new Map<number, { payload: Uint8Array; iterations: number }>();
-  
+function createTestPayloads(): Map<
+  number,
+  { payload: Uint8Array; iterations: number }
+> {
+  const payloads = new Map<
+    number,
+    { payload: Uint8Array; iterations: number }
+  >();
+
   for (const size of PACKET_SIZES) {
     const payload = new Uint8Array(size);
     for (let i = 0; i < size; i++) {
       payload[i] = i % 256;
     }
-    
+
     // Calculate how many packets needed to transfer FIXED_DATA_SIZE
     const iterations = Math.max(1, Math.floor(FIXED_DATA_SIZE / size));
-    
+
     payloads.set(size, { payload, iterations });
   }
-  
+
   return payloads;
 }
 
@@ -111,9 +130,10 @@ globalThis.addEventListener("beforeunload", () => {
 async function startQueryHandler() {
   while (true) {
     try {
-      const queryReceiver = globalQueryable.receiver() as ChannelReceiver<Query>;
+      const queryReceiver =
+        globalQueryable.receiver() as ChannelReceiver<Query>;
       const query = await queryReceiver.receive();
-      
+
       if (query) {
         // Echo back the received payload
         const payload = query.payload();
@@ -136,18 +156,19 @@ startQueryHandler();
 // Run queryable/get benchmarks for each packet size
 for (const packetSize of PACKET_SIZES) {
   const testData = _testPayloads.get(packetSize)!;
-  
+
   Deno.bench({
     name: `Queryable/Get Transfer - ${packetSize}B packets, ${testData.iterations} msgs`,
     fn: async () => {
       // Send fixed amount of data using multiple query/reply cycles
       for (let i = 0; i < testData.iterations; i++) {
-        const replyReceiver = await globalQuerier.get(new Parameters(`iter=${i}`), { 
-          payload: testData.payload 
-        }) as ChannelReceiver<Reply>;
-        
+        const replyReceiver = (await globalQuerier.get({
+          parameters: `iter=${i}`,
+          payload: testData.payload,
+        })) as ChannelReceiver<Reply>;
+
         const reply = await replyReceiver.receive();
-        
+
         // Verify we got a successful reply
         const result = reply.result();
         if (result instanceof ReplyError) {
