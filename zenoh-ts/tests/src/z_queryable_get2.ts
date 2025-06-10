@@ -36,7 +36,7 @@ import {
   SampleKind,
   IntoZBytes,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration } from "typed-duration";
+import { Duration, TimeDuration } from "typed-duration";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 const { milliseconds } = Duration;
@@ -197,7 +197,7 @@ class TestCase {
   public priority?: Priority;
   public express?: boolean;
   public target?: QueryTarget;
-  public timeout?: number; // Use number for timeouts (milliseconds)
+  public timeout?: TimeDuration;
   public consolidation?: ConsolidationMode;
   public payload?: ZBytes;
   public attachment?: ZBytes;
@@ -230,7 +230,7 @@ class TestCase {
     this.priority = params.priority;
     this.express = params.express;
     this.target = params.target;
-    this.timeout = params.timeout;
+    this.timeout = params.timeout !== undefined ? milliseconds.of(params.timeout) : undefined;
     this.consolidation = params.consolidation;
     this.payload = params.payload ? new ZBytes(params.payload) : undefined;
     this.attachment = params.attachment;
@@ -247,8 +247,7 @@ class TestCase {
       consolidation: this.consolidation,
       priority: this.priority,
       express: this.express,
-      timeout:
-        this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
+      timeout: this.timeout,
     };
   }
 
@@ -275,8 +274,7 @@ class TestCase {
       priority: this.priority,
       express: this.express,
       target: this.target,
-      timeout:
-        this.timeout !== undefined ? milliseconds.of(this.timeout) : undefined,
+      timeout: this.timeout,
       encoding: this.encoding,
       payload: this.payload,
       attachment: this.attachment,
