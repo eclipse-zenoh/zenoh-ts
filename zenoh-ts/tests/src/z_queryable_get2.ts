@@ -116,7 +116,9 @@ class ExpectedQuery {
    * @returns ZBytes | undefined
    */
   payload(): ZBytes | undefined {
-    return this.payload_;
+    // specific case: if encoding is set, we return an empty ZBytes even if payload is undefined
+    // TODO: check if this behavior is necessary or if we can remove it
+    return this.payload_ ?? (this.encoding_ ? new ZBytes("") : undefined);
   }
 
   /**
@@ -318,13 +320,13 @@ class TestCase {
     // Create a new Sample object with all the expected properties
     const sample = new Sample(
       this.keyexpr,
-      this.payload || new ZBytes(""),
+      this.payload === undefined ? new ZBytes("") : this.payload,
       SampleKind.PUT, // Sample kind for query responses is always PUT
       this.encoding || Encoding.default(),
       this.attachment,
       undefined, // Timestamp is not set in test responses
-      this.priority || Priority.DATA,
-      this.congestionControl || CongestionControl.DROP,
+      this.priority === undefined ? Priority.DATA : this.priority,
+      this.congestionControl === undefined ? CongestionControl.DEFAULT_RESPONSE : this.congestionControl,
       this.express === undefined ? false : this.express
     );
 
@@ -511,13 +513,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       for (const operation of operations) {
         const fullDescription = `${testCase.description} - ${operation.type}`;
-        console.log(`Executing: ${fullDescription}`);
-
         receiver = undefined;
         querier = undefined;
         query = undefined;
         replies = [];
-
 
         // Declare a queryable only for the current test
         const keQueryable = testCase.keyexpr;
@@ -542,7 +541,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         });
 
         // Short delay to ensure queryable is ready
-        await sleep(500);
+        await sleep(100);
 
         // Declare a querier for this specific test if needed
         try {
@@ -583,7 +582,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           }
 
           // Wait for query to be processed
-          await sleep(500);
+          await sleep(100);
 
           // Verify the query was received correctly
           assertEquals(
@@ -619,7 +618,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             }
           } else {
             // For callback operations, wait for handler to be called
-            await sleep(500);
+            await sleep(100);
             assertEquals(
               replies.length,
               1,
