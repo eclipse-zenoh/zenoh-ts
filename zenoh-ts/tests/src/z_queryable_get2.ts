@@ -19,7 +19,6 @@ import {
   Reply,
   KeyExpr,
   Selector,
-  Parameters,
   Sample,
   QueryTarget,
   ChannelReceiver,
@@ -34,12 +33,11 @@ import {
   ZBytes,
   ConsolidationMode,
   SampleKind,
-  IntoZBytes,
+  IntoParameters,
+  IntoKeyExpr,
 } from "@eclipse-zenoh/zenoh-ts";
-import { Duration, TimeDuration } from "typed-duration";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
-
-const { milliseconds } = Duration;
+import { Duration } from "typed-duration";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -101,40 +99,16 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
  * Provides the same data access methods that Query class provides
  */
 class ExpectedQuery {
-  private payload_?: ZBytes;
-  private encoding_?: Encoding;
-  private attachment_?: ZBytes;
-
-  constructor(payload?: ZBytes, encoding?: Encoding, attachment?: ZBytes) {
-    this.payload_ = payload;
-    this.encoding_ = encoding;
-    this.attachment_ = attachment;
-  }
-
-  /**
-   * Gets the optional payload of the expected query
-   * @returns ZBytes | undefined
-   */
-  payload(): ZBytes | undefined {
+  constructor(
+    public payload?: ZBytes,
+    public encoding?: Encoding,
+    public attachment?: ZBytes
+  ) {
     // specific case: if encoding is set, we return an empty ZBytes even if payload is undefined
     // TODO: check if this behavior is necessary or if we can remove it
-    return this.payload_ ?? (this.encoding_ ? new ZBytes("") : undefined);
-  }
-
-  /**
-   * Gets the optional encoding of the expected query
-   * @returns Encoding | undefined
-   */
-  encoding(): Encoding | undefined {
-    return this.encoding_;
-  }
-
-  /**
-   * Gets the optional attachment of the expected query
-   * @returns ZBytes | undefined
-   */
-  attachment(): ZBytes | undefined {
-    return this.attachment_;
+    if (this.encoding && !this.payload) {
+      this.payload = new ZBytes("");
+    }
   }
 }
 
@@ -151,19 +125,19 @@ function compareQuery(
 ) {
   assertEquals(
     actual.payload(),
-    expected.payload(),
+    expected.payload,
     `Query payload mismatch for ${description}`
   );
 
   assertEquals(
     actual.encoding(),
-    expected.encoding(),
+    expected.encoding,
     `Query encoding mismatch for ${description}`
   );
 
   assertEquals(
     actual.attachment(),
-    expected.attachment(),
+    expected.attachment,
     `Query attachment mismatch for ${description}`
   );
 }
@@ -189,52 +163,11 @@ function compareQuery(
  * This includes all parameters for QuerierOptions, QuerierGetOptions, and reply options.
  */
 class TestCase {
-  // All test parameters as direct fields
-  public keyexpr: KeyExpr;
-  public parameters?: Parameters;
-  public encoding?: Encoding;
-  public congestionControl?: CongestionControl;
-  public priority?: Priority;
-  public express?: boolean;
-  public target?: QueryTarget;
-  public timeout?: TimeDuration;
-  public consolidation?: ConsolidationMode;
-  public payload?: ZBytes;
-  public attachment?: ZBytes;
-
-  /**
-   * Create a new TestCase with all parameters
-   * @param keyexpr Unique key expression for this test case
-   * @param params Object containing all parameters for this test
-   */
   constructor(
-    keyexpr: string,
-    params: {
-      // QuerierOptions parameters
-      congestionControl?: CongestionControl;
-      priority?: Priority;
-      express?: boolean;
-      target?: QueryTarget;
-      timeout?: number;
-      consolidation?: ConsolidationMode;
-      // QuerierGetOptions parameters
-      parameters?: string;
-      encoding?: Encoding;
-      payload?: IntoZBytes;
-      attachment?: ZBytes;
-    } = {}
-  ) {
-    this.keyexpr = new KeyExpr(keyexpr);
-    this.encoding = params.encoding;
-    this.congestionControl = params.congestionControl;
-    this.priority = params.priority;
-    this.express = params.express;
-    this.target = params.target;
-    this.timeout = params.timeout !== undefined ? milliseconds.of(params.timeout) : undefined;
-    this.consolidation = params.consolidation;
-    this.payload = params.payload ? new ZBytes(params.payload) : undefined;
-    this.attachment = params.attachment;
-  }
+    public keyexpr: IntoKeyExpr,
+    public parameters: IntoParameters,
+    public getOptions: GetOptions
+  ) {}
 
   /**
    * Convert parameters to QuerierOptions for Querier creation
@@ -242,12 +175,12 @@ class TestCase {
    */
   toQuerierOptions(): QuerierOptions {
     return {
-      target: this.target ?? QueryTarget.BEST_MATCHING,
-      congestionControl: this.congestionControl,
-      consolidation: this.consolidation,
-      priority: this.priority,
-      express: this.express,
-      timeout: this.timeout,
+      target: this.getOptions.target,
+      congestionControl: this.getOptions.congestionControl,
+      consolidation: this.getOptions.consolidation,
+      priority: this.getOptions.priority,
+      express: this.getOptions.express,
+      timeout: this.getOptions.timeout,
     };
   }
 
@@ -257,27 +190,10 @@ class TestCase {
    */
   toQuerierGetOptions(): QuerierGetOptions {
     return {
-      encoding: this.encoding,
-      payload: this.payload,
-      attachment: this.attachment,
-    };
-  }
-
-  /**
-   * Convert parameters to GetOptions for session operations
-   * @returns GetOptions object populated with the TestCase parameters
-   */
-  toGetOptions(): GetOptions {
-    return {
-      congestionControl: this.congestionControl,
-      consolidation: this.consolidation,
-      priority: this.priority,
-      express: this.express,
-      target: this.target,
-      timeout: this.timeout,
-      encoding: this.encoding,
-      payload: this.payload,
-      attachment: this.attachment,
+      parameters: this.parameters,
+      encoding: this.getOptions.encoding,
+      payload: this.getOptions.payload,
+      attachment: this.getOptions.attachment,
     };
   }
 
@@ -288,16 +204,24 @@ class TestCase {
   toReplyOptions(): ReplyOptions {
     // Create options object with named fields
     return {
-      encoding: this.encoding,
-      congestionControl: this.congestionControl,
-      priority: this.priority,
-      express: this.express,
-      attachment: this.attachment,
+      encoding: this.getOptions.encoding,
+      congestionControl: this.getOptions.congestionControl,
+      priority: this.getOptions.priority,
+      express: this.getOptions.express,
+      attachment: this.getOptions.attachment,
     };
   }
 
   expectedQuery(): ExpectedQuery {
-    return new ExpectedQuery(this.payload, this.encoding, this.attachment);
+    return new ExpectedQuery(
+      this.getOptions.payload ? new ZBytes(this.getOptions.payload) : undefined,
+      this.getOptions.encoding
+        ? Encoding.from(this.getOptions.encoding)
+        : undefined,
+      this.getOptions.attachment
+        ? new ZBytes(this.getOptions.attachment)
+        : undefined
+    );
   }
 
   expectedSample(): Sample {
@@ -313,15 +237,21 @@ class TestCase {
 
     // Create a new Sample object with all the expected properties
     const sample = new Sample(
-      this.keyexpr,
-      this.payload === undefined ? new ZBytes("") : this.payload,
+      new KeyExpr(this.keyexpr),
+      new ZBytes(this.getOptions.payload ?? ""),
       SampleKind.PUT, // Sample kind for query responses is always PUT
-      this.encoding || Encoding.default(),
-      this.attachment,
+      this.getOptions.encoding
+        ? Encoding.from(this.getOptions.encoding)
+        : Encoding.default(),
+      this.getOptions.attachment ? new ZBytes(this.getOptions.attachment) : undefined,
       undefined, // Timestamp is not set in test responses
-      this.priority === undefined ? Priority.DATA : this.priority,
-      this.congestionControl === undefined ? CongestionControl.DEFAULT_RESPONSE : this.congestionControl,
-      this.express === undefined ? false : this.express
+      this.getOptions.priority === undefined
+        ? Priority.DATA
+        : this.getOptions.priority,
+      this.getOptions.congestionControl === undefined
+        ? CongestionControl.DEFAULT_RESPONSE
+        : this.getOptions.congestionControl,
+      this.getOptions.express === undefined ? false : this.getOptions.express
     );
 
     return sample;
@@ -346,42 +276,39 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     const testCases: TestCase[] = [
       // Basic test without options
-      new TestCase("zenoh/test/basic"),
+      new TestCase("zenoh/test/basic", "ok", {}),
 
       // Test with empty payload
-      new TestCase("zenoh/test/empty_payload", {
+      new TestCase("zenoh/test/empty_payload", "ok", {
         payload: "",
       }),
 
       // Test without payload field - using default encoding since no payload is specified
-      new TestCase("zenoh/test/no_payload", {
+      new TestCase("zenoh/test/no_payload", "ok", {
         // Note: Even though we might specify another encoding, the actual behavior
         // returns zenoh/bytes when no payload is provided
         encoding: Encoding.default(),
       }),
 
       // Test with encoding only
-      new TestCase("zenoh/test/encoding", {
+      new TestCase("zenoh/test/encoding", "ok", {
         // Note: Even with a payload, the actual behavior seems to use the default encoding
         encoding: Encoding.default(),
         payload: "encoded-payload",
       }),
 
       // Test with querier options (priority, congestion control, etc.)
-      new TestCase(
-        "zenoh/test/priority_congestion",
-        {
-          priority: Priority.REAL_TIME,
-          congestionControl: CongestionControl.BLOCK,
-          target: QueryTarget.BEST_MATCHING,
-          encoding: Encoding.default(),
-          payload: "priority-payload",
-        }
-      ),
+      new TestCase("zenoh/test/priority_congestion", "ok", {
+        priority: Priority.REAL_TIME,
+        congestionControl: CongestionControl.BLOCK,
+        target: QueryTarget.BEST_MATCHING,
+        encoding: Encoding.default(),
+        payload: "priority-payload",
+      }),
 
       // Test with express flag
       // Note: express flag is consistently false in responses regardless of what is set
-      new TestCase("zenoh/test/express", {
+      new TestCase("zenoh/test/express", "ok", {
         express: false, // Changed to match actual behavior
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
@@ -389,7 +316,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with attachment
-      new TestCase("zenoh/test/attachment", {
+      new TestCase("zenoh/test/attachment", "ok", {
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         attachment: attachmentData,
@@ -397,8 +324,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with timeout
-      new TestCase("zenoh/test/timeout", {
-        timeout: 1000, // use numeric value for milliseconds
+      new TestCase("zenoh/test/timeout", "ok", {
+        timeout: Duration.milliseconds.of(2000),
         priority: Priority.DATA_HIGH,
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
@@ -406,7 +333,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with target
-      new TestCase("zenoh/test/target", {
+      new TestCase("zenoh/test/target", "ok", {
         target: QueryTarget.ALL,
         priority: Priority.INTERACTIVE_HIGH,
         encoding: Encoding.default(),
@@ -414,7 +341,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with consolidation
-      new TestCase("zenoh/test/consolidation", {
+      new TestCase("zenoh/test/consolidation", "ok", {
         consolidation: ConsolidationMode.NONE,
         priority: Priority.DATA_LOW,
         target: QueryTarget.BEST_MATCHING,
@@ -423,11 +350,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options combined
-      new TestCase("zenoh/test/all_options", {
+      new TestCase("zenoh/test/all_options", "ok", {
         congestionControl: CongestionControl.DROP,
         priority: Priority.BACKGROUND,
         express: false,
-        timeout: 5000, // use numeric value for milliseconds
+        timeout: Duration.milliseconds.of(5000),
         target: QueryTarget.BEST_MATCHING,
         consolidation: ConsolidationMode.LATEST,
         encoding: Encoding.default(),
@@ -436,35 +363,29 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with all options but empty payload
-      new TestCase(
-        "zenoh/test/all_options_empty",
-        {
-          congestionControl: CongestionControl.BLOCK,
-          priority: Priority.REAL_TIME,
-          express: true,
-          timeout: 1000, // use numeric value for milliseconds
-          target: QueryTarget.ALL,
-          consolidation: ConsolidationMode.LATEST,
-          encoding: Encoding.default(),
-          attachment: attachmentData,
-          payload: "",
-        }
-      ),
+      new TestCase("zenoh/test/all_options_empty", "ok", {
+        congestionControl: CongestionControl.BLOCK,
+        priority: Priority.REAL_TIME,
+        express: true,
+        timeout: Duration.milliseconds.of(1000),
+        target: QueryTarget.ALL,
+        consolidation: ConsolidationMode.LATEST,
+        encoding: Encoding.default(),
+        attachment: attachmentData,
+        payload: "",
+      }),
 
       // Test with all options but no payload
-      new TestCase(
-        "zenoh/test/all_options_no_payload",
-        {
-          congestionControl: CongestionControl.DROP,
-          priority: Priority.DATA_HIGH,
-          express: false,
-          timeout: 5000, // use numeric value for milliseconds
-          target: QueryTarget.BEST_MATCHING,
-          consolidation: ConsolidationMode.NONE,
-          encoding: Encoding.default(),
-          attachment: fullOptionsAttachment,
-        }
-      ),
+      new TestCase("zenoh/test/all_options_no_payload", "ok", {
+        congestionControl: CongestionControl.DROP,
+        priority: Priority.DATA_HIGH,
+        express: false,
+        timeout: Duration.milliseconds.of(3000),
+        target: QueryTarget.BEST_MATCHING,
+        consolidation: ConsolidationMode.NONE,
+        encoding: Encoding.default(),
+        attachment: fullOptionsAttachment,
+      }),
     ];
 
     // Execute all operations - run all 4 variants for each test case
@@ -503,7 +424,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       let replies: Reply[] = [];
 
       for (const operation of operations) {
-        const fullDescription = `${testCase.keyexpr.toString()} - ${operation.type}`;
+        const fullDescription = `${testCase.keyexpr.toString()} - ${
+          operation.type
+        }`;
         receiver = undefined;
         querier = undefined;
         query = undefined;
@@ -539,16 +462,16 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           const keGet = new KeyExpr(`zenoh/test/*`);
           if (operation.useSession) {
             if (operation.useCallback) {
-              await session2.get(new Selector(keGet, "ok"), {
-                ...testCase.toGetOptions(),
+              await session2.get(new Selector(keGet, testCase.parameters), {
+                ...testCase.getOptions,
                 handler: (reply: Reply) => {
                   replies.push(reply);
                 },
               });
             } else {
               receiver = await session2.get(
-                new Selector(keGet, "ok"),
-                testCase.toGetOptions()
+                new Selector(keGet, testCase.parameters),
+                testCase.getOptions
               );
             }
           } else {
@@ -558,7 +481,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (operation.useCallback) {
               await querier!.get({
-                parameters: new Parameters("ok"),
                 ...testCase.toQuerierGetOptions(),
                 handler: (reply: Reply) => {
                   replies.push(reply);
@@ -566,7 +488,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               });
             } else {
               receiver = await querier!.get({
-                parameters: new Parameters("ok"),
                 ...testCase.toQuerierGetOptions(),
               });
             }
