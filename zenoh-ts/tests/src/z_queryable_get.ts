@@ -444,9 +444,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }),
 
       // Test with express flag
-      // Note: express flag is consistently false in responses regardless of what is set
       new TestCase("zenoh/test/express", "ok", {
-        express: false, // Changed to match actual behavior
+        express: true,
         target: QueryTarget.BEST_MATCHING,
         encoding: Encoding.default(),
         payload: "express-payload",
@@ -490,7 +489,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       new TestCase("zenoh/test/all_options", "ok", {
         congestionControl: CongestionControl.DROP,
         priority: Priority.BACKGROUND,
-        express: false,
+        express: true,
         timeout: Duration.milliseconds.of(5000),
         target: QueryTarget.BEST_MATCHING,
         consolidation: ConsolidationMode.LATEST,
@@ -559,32 +558,32 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       // Define the 6 operation types
       const operations = [
         {
-          useSession: true,
+          useQuerier: true,
           useCallback: true,
           useSameSession: true,
         },
         {
-          useSession: true,
+          useQuerier: true,
           useCallback: false,
           useSameSession: true,
         },
         {
-          useSession: false,
+          useQuerier: false,
           useCallback: true,
           useSameSession: true,
         },
         {
-          useSession: false,
+          useQuerier: false,
           useCallback: false,
           useSameSession: true,
         },
         {
-          useSession: false,
+          useQuerier: false,
           useCallback: true,
           useSameSession: false,
         },
         {
-          useSession: false,
+          useQuerier: false,
           useCallback: false,
           useSameSession: false,
         },
@@ -597,7 +596,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       for (const operation of operations) {
         // Generate description based on operation properties
-        const sessionType = operation.useSession ? "Session" : "Querier";
+        const sessionType = operation.useQuerier ? "Querier" : "Session";
         const callbackType = operation.useCallback ? "Callback" : "Channel";
         const sessionMode = operation.useSameSession ? "Same" : "Different";
         const fullDescription = `${testCase.keyexpr.toString()} - ${sessionType} ${callbackType} ${sessionMode}Session`;
@@ -642,7 +641,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           // Choose session based on useSameSession flag
           const clientSession = operation.useSameSession ? session1 : session2;
           
-          if (operation.useSession) {
+          if (!operation.useQuerier) {
             if (operation.useCallback) {
               await clientSession!.get(new Selector(keGet, testCase.parameters), {
                 ...testCase.getOptions,
