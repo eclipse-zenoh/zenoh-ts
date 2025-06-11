@@ -4,8 +4,6 @@
  * This module contains shared utility classes and functions used across multiple test files.
  */
 
-import { ChannelReceiver } from "@eclipse-zenoh/zenoh-ts";
-
 /**
  * A deterministic pseudo-random number generator using Linear Congruential Generator (LCG).
  * This provides reproducible random sequences for consistent test results.
@@ -59,27 +57,4 @@ function createTimeoutPromise<T = never>(timeoutMs: number, errorMessage: string
   return { promise, cleanup };
 }
 
-/**
- * Receives from a channel with a timeout to prevent hanging.
- * Useful for test scenarios where we expect replies but want to avoid infinite waiting.
- * 
- * @param receiver The channel receiver to receive from
- * @param timeoutMs Timeout in milliseconds (default: 1000ms)
- * @param description Optional description for error messages
- * @returns Promise resolving to the received reply or rejecting on timeout
- */
-function receiveWithTimeout<T>(
-  receiver: ChannelReceiver<T>, 
-  timeoutMs: number = 1000, 
-  description: string = "receive operation"
-): Promise<T> {
-  const { promise: timeoutPromise, cleanup } = createTimeoutPromise<T>(timeoutMs, `Timeout waiting for ${description}`);
-  
-  const receivePromise = receiver.receive();
-  
-  return Promise.race([receivePromise, timeoutPromise]).finally(() => {
-    cleanup(); // Always clean up the timeout
-  });
-}
-
-export { StableRandom, createTimeoutPromise, receiveWithTimeout };
+export { StableRandom, createTimeoutPromise };

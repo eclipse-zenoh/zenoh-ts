@@ -23,7 +23,6 @@ import {
   ReplyError,
 } from "@eclipse-zenoh/zenoh-ts";
 import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
-import { receiveWithTimeout } from "../commonTestUtils.ts";
 
 /**
  * Configuration for the queryable/get performance tests
@@ -132,7 +131,7 @@ async function startQueryHandler() {
     try {
       const queryReceiver =
         globalQueryable.receiver() as ChannelReceiver<Query>;
-      const query = await receiveWithTimeout(queryReceiver, 5000, "query in handler");
+      const query = await queryReceiver.receive();
 
       if (query) {
         // Echo back the received payload
@@ -167,7 +166,7 @@ for (const packetSize of PACKET_SIZES) {
           payload: testData.payload,
         })) as ChannelReceiver<Reply>;
 
-        const reply = await receiveWithTimeout(replyReceiver, 5000, "reply in benchmark");
+        const reply = await replyReceiver.receive();
 
         // Verify we got a successful reply
         const result = reply.result();

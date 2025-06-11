@@ -14,7 +14,6 @@
 
 import { Config, Session, Sample, KeyExpr, SampleKind } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
-import { receiveWithTimeout } from "./commonTestUtils.ts";
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,7 +49,7 @@ Deno.test("Liveliness - Token Get", async () => {
     if (!receiver) {
       throw new Error("Failed to get liveliness receiver");
     }
-    let reply = await receiveWithTimeout(receiver, 2000, "liveliness reply");
+    let reply = await receiver.receive();
     
     const result = reply.result();
     // Check that the result is a Sample and not a ReplyError
@@ -68,7 +67,7 @@ Deno.test("Liveliness - Token Get", async () => {
       throw new Error("Failed to get liveliness receiver");
     }
     try {
-      reply = await receiveWithTimeout(receiver2, 2000, "undeclared token reply");
+      reply = await receiver2.receive();
       assert(false, "Received reply on undeclared token");
     } catch {
       // we should correctly fail to receive reply on undeclared token

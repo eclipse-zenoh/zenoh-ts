@@ -15,17 +15,14 @@ import {
   Config,
   Subscriber,
   Session,
-  KeyExpr,
   Publisher,
   ChannelReceiver,
   Sample,
   CongestionControl,
   Priority,
   Reliability,
-  Encoding,
 } from "@eclipse-zenoh/zenoh-ts";
 import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
-import { receiveWithTimeout } from "../commonTestUtils.ts";
 
 /**
  * Configuration for the pub/sub performance tests
@@ -105,7 +102,7 @@ globalThis.addEventListener("beforeunload", () => {
 // Run pub/sub benchmarks for each packet size
 for (const packetSize of PACKET_SIZES) {
   const testData = testPayloads.get(packetSize)!;
-  const totalDataMB = (testData.iterations * packetSize) / (1024 * 1024);
+  const _totalDataMB = (testData.iterations * packetSize) / (1024 * 1024);
   
   Deno.bench({
     name: `PubSub Transfer - ${packetSize}B packets, ${testData.iterations} msgs`,
@@ -113,7 +110,7 @@ for (const packetSize of PACKET_SIZES) {
       // Send fixed amount of data using multiple packets
       for (let i = 0; i < testData.iterations; i++) {
         await globalPublisher.put(testData.payload);
-        await receiveWithTimeout(globalSubscriber.receiver() as ChannelReceiver<Sample>, 5000, "sample in benchmark");
+        await (globalSubscriber.receiver() as ChannelReceiver<Sample>).receive();
       }
     },
   });
