@@ -885,43 +885,35 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           // Handle replies only if query was expected to be received
           if (queryExpected && receiver) {
-            // We expect at least 2 replies: one Sample (PUT) and one ReplyError
-            // We may also receive a DELETE reply depending on configuration
+            // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
             const reply1 = await receiver.receive();
             const reply2 = await receiver.receive();
             
-            // Try to receive a third reply (DELETE) with a timeout
-            let reply3: Reply | undefined;
-            let timeoutId: number | undefined;
+            // Add a timeout for the third reply to avoid hanging indefinitely
+            let reply3: Reply;
             try {
-              // Create a promise that will timeout after a short delay
-              const timeoutPromise = new Promise<Reply>((_, reject) => {
-                timeoutId = setTimeout(() => {
-                  reject(new Error("timeout"));
-                }, 200);
+              const timeoutPromise = new Promise<never>((_, reject) => {
+                setTimeout(() => reject(new Error("Timeout waiting for third reply")), 1000);
               });
-              
               reply3 = await Promise.race([receiver.receive(), timeoutPromise]);
-            } catch (_error) {
-              // Timeout or other error - no third reply available
-              reply3 = undefined;
-            } finally {
-              // Always clear the timeout
-              if (timeoutId !== undefined) {
-                clearTimeout(timeoutId);
-              }
+            } catch (error) {
+              throw new Error(`Expected exactly 3 replies but only received 2. Missing third reply (likely DELETE sample). Error: ${error}`);
             }
 
             // Categorize replies into separate lists
-            const allReplies: Reply[] = reply3 ? [reply1, reply2, reply3] : [reply1, reply2];
-            const { samplePut, sampleDelete: _sampleDelete, replyErrors } = categorizeReplies(allReplies);
+            const allReplies: Reply[] = [reply1, reply2, reply3];
+            const { samplePut, sampleDelete, replyErrors } = categorizeReplies(allReplies);
 
-            // Verify we received exactly one PUT sample and one ReplyError
-            // Note: DELETE replies are not received through receiver channels
+            // Verify we received exactly one of each reply type
             assertEquals(
               samplePut.length,
               1,
               `Should receive exactly one PUT sample for ${fullDescription}`
+            );
+            assertEquals(
+              sampleDelete.length,
+              1,
+              `Should receive exactly one DELETE sample for ${fullDescription}`
             );
             assertEquals(
               replyErrors.length,
@@ -933,6 +925,13 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             compareSample(
               samplePut[0],
               testCase.expectedSample(),
+              fullDescription
+            );
+
+            // Verify DELETE Sample reply
+            compareSample(
+              sampleDelete[0],
+              testCase.expectedDeleteSample(),
               fullDescription
             );
 
