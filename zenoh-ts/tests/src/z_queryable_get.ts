@@ -735,7 +735,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         const queryable = await session1.declareQueryable(keQueryable, {
           complete: true, // Required for QueryTarget.ALL_COMPLETE to work properly
           // TODO: Add tests for complete: false and for not receiveing queries when complete is false
-          handler: async (q: Query) => {
+          handler: (q: Query) => {
             // Store the query for validation
             query = q;
 
@@ -752,7 +752,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Query parameters should match for ${fullDescription}`
             );
 
-            // Always send a normal reply, an error reply, and try to send a delete reply to accelerate testing
+            // Always send replies in order: PUT, DELETE, ERROR to test consolidation behavior
+            // Send normal reply first
             try {
               q.reply(
                 // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
@@ -765,18 +766,18 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               throw new Error(`Normal reply failed for ${fullDescription}: ${error}`);
             }
 
-            // Also send an error reply
+            // Send delete reply second
+            try {
+              q.replyDel(keQueryable, testCase.toReplyDelOptions());
+            } catch (error) {
+              throw new Error(`Delete reply failed for ${fullDescription}: ${error}`);
+            }
+
+            // Send error reply last
             try {
               q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
             } catch (error) {
               throw new Error(`Error reply failed for ${fullDescription}: ${error}`);
-            }
-
-            // Try to send a delete reply - EXPERIMENTAL
-            try {
-              await q.replyDel(keQueryable, testCase.toReplyDelOptions());
-            } catch (error) {
-              throw new Error(`Delete reply failed for ${fullDescription}: ${error}`);
             }
 
             q.finalize();
@@ -889,33 +890,31 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               // Collect replies from the receiver
               replies.push(reply);
             }
-            // verify that exactly 3 replies were received
-            assertEquals(
-              replies.length,
-              3,
-              `Expected exactly 3 replies for ${fullDescription}, got ${replies.length}`
-            );
-
+            
+            // Verify consolidation worked correctly based on the consolidation mode
+            verifyConsolidation(replies, testCase.getOptions.consolidation, fullDescription);
+            
             // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
             // Categorize replies into separate lists
             const { samplePut, sampleDelete, replyErrors } = categorizeReplies(replies);
 
-            // Verify we received exactly one of each reply type
+            // Verify we received exactly one PUT sample and one ReplyError
+            // DELETE samples may or may not be received depending on consolidation
             assertEquals(
               samplePut.length,
               1,
               `Should receive exactly one PUT sample for ${fullDescription}`
             );
             assertEquals(
-              sampleDelete.length,
-              1,
-              `Should receive exactly one DELETE sample for ${fullDescription}`
-            );
-            assertEquals(
               replyErrors.length,
               1,
               `Should receive exactly one ReplyError for ${fullDescription}`
             );
+
+            // DELETE sample is optional - it may be consolidated away
+            if (sampleDelete.length > 1) {
+              throw new Error(`Should receive at most one DELETE sample for ${fullDescription}, got ${sampleDelete.length}`);
+            }
 
             // Verify Sample reply (PUT)
             compareSample(
@@ -924,12 +923,14 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               fullDescription
             );
 
-            // Verify DELETE Sample reply
-            compareSample(
-              sampleDelete[0],
-              testCase.expectedDeleteSample(),
-              fullDescription
-            );
+            // Verify DELETE Sample reply if received
+            if (sampleDelete.length === 1) {
+              compareSample(
+                sampleDelete[0],
+                testCase.expectedDeleteSample(),
+                fullDescription
+              );
+            }
 
             // Verify ReplyError reply
             const expectedError = testCase.expectedReplyError();
@@ -949,14 +950,8 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             // For callback operations, wait for handlers to be called
             await sleep(100);
             
-            // We expect at least 2 replies (PUT and ERROR), possibly 3 if DELETE is also received
-            // The DELETE reply reception depends on consolidation mode and other factors
-            const minExpectedReplies = 2;
-            const maxExpectedReplies = 3;
-            
-            if (replies.length < minExpectedReplies || replies.length > maxExpectedReplies) {
-              throw new Error(`Expected ${minExpectedReplies}-${maxExpectedReplies} replies, got ${replies.length} for ${fullDescription}`);
-            }
+            // Verify consolidation worked correctly based on the consolidation mode
+            verifyConsolidation(replies, testCase.getOptions.consolidation, fullDescription);
 
             // Categorize replies into separate lists
             const { samplePut, sampleDelete: _sampleDelete, replyErrors } = categorizeReplies(replies);
@@ -1020,7 +1015,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       `All ${totalTests} test cases completed successfully (${testCases.length} test cases × ${N_OPERATIONS_PER_TEST} operations each)`
     );
     console.log(
-      `Each test case validates 2-3 reply types: Sample (PUT) and ReplyError, optionally Sample (DELETE) depending on configuration`
+      `Each test case validates 2-3 reply types: Sample (PUT) and ReplyError always, optionally Sample (DELETE) depending on consolidation mode`
     );
   } finally {
     // Cleanup sessions
@@ -1033,6 +1028,44 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     await sleep(100);
   }
 });
+
+/**
+ * Verify that consolidation worked correctly based on the consolidation mode and number of replies
+ * @param replies Array of Reply objects received
+ * @param consolidationMode The consolidation mode used in the query
+ * @param description Test description for error messages
+ */
+function verifyConsolidation(
+  replies: Reply[],
+  consolidationMode: ConsolidationMode | undefined,
+  description: string
+): void {
+  // If consolidation is AUTO, don't perform the check as behavior is implementation-dependent
+  if (consolidationMode === ConsolidationMode.AUTO || consolidationMode === undefined) {
+    return;
+  }
+
+  // If consolidation is NONE, expect exactly 3 packets (PUT, DELETE, ERROR)
+  if (consolidationMode === ConsolidationMode.NONE) {
+    assertEquals(
+      replies.length,
+      3,
+      `Expected exactly 3 replies with NONE consolidation for ${description}, got ${replies.length}`
+    );
+    return;
+  }
+
+  // If consolidation is LATEST or MONOTONIC, expect exactly 2 packets
+  // DELETE sample may be consolidated away, leaving PUT and ERROR
+  if (consolidationMode === ConsolidationMode.LATEST || consolidationMode === ConsolidationMode.MONOTONIC) {
+    assertEquals(
+      replies.length,
+      2,
+      `Expected exactly 2 replies with ${consolidationMode} consolidation for ${description}, got ${replies.length}`
+    );
+    return;
+  }
+}
 
 /**
  * Categorize replies into separate lists for PUT samples, DELETE samples, and ReplyErrors
