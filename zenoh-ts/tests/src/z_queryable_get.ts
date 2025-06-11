@@ -885,21 +885,20 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           // Handle replies only if query was expected to be received
           if (queryExpected && receiver) {
-            // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
-            let reply1: Reply;
-            let reply2: Reply;
-            let reply3: Reply;
-            try{
-              reply1 = await receiver.receive();
-              reply2 = await receiver.receive();
-              reply3 = await receiver.receive();
-            } catch (error) {
-              throw new Error(`Failed to receive replies for ${fullDescription}: ${error}`);
+            for await (const reply of receiver) {
+              // Collect replies from the receiver
+              replies.push(reply);
             }
+            // verify that exactly 3 replies were received
+            assertEquals(
+              replies.length,
+              3,
+              `Expected exactly 3 replies for ${fullDescription}, got ${replies.length}`
+            );
 
+            // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
             // Categorize replies into separate lists
-            const allReplies: Reply[] = [reply1, reply2, reply3];
-            const { samplePut, sampleDelete, replyErrors } = categorizeReplies(allReplies);
+            const { samplePut, sampleDelete, replyErrors } = categorizeReplies(replies);
 
             // Verify we received exactly one of each reply type
             assertEquals(
