@@ -575,15 +575,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     await sleep(100);
 
     // Generate test cases using the generateTestCases function
-    const baseTestCase = new TestCase("zenoh/test/base", "ok", {});
-    const baseErrorTestCase = new TestCase("zenoh/test/error_base", "err", {});
+    const baseTestCase = new TestCase("zenoh/test/base", "test-params", {});
     
     // Generate comprehensive test cases by cycling through all available option values
-    const okTestCases = generateTestCases(baseTestCase);
-    const errorTestCases = generateTestCases(baseErrorTestCase);
-    
-    // Combine both OK and error test cases
-    const testCases: TestCase[] = [...okTestCases, ...errorTestCases];
+    const testCases: TestCase[] = generateTestCases(baseTestCase);
     let testCounter = 0;
 
     for (let i = 0; i < testCases.length; i++) {
@@ -657,20 +652,25 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             // Store the query for validation
             query = q;
 
-            if (q.parameters().toString().includes("ok")) {
-              q.reply(
-                // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
-                // The requested keyExpr in our case is "zenoh/test/**", but we want to reply with the specific keyExpr from the test case
-                keQueryable,
-                q.payload() ?? "",
-                testCase.toReplyOptions()
-              );
-            } else if (q.parameters().toString().includes("err")) {
-              // Use replyErr for error test cases - echo back the query payload like sample reply does
-              q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
-            } else {
-              q.replyErr("unknown parameter");
-            }
+            // Verify the parameters were received correctly
+            assertEquals(
+              q.parameters().toString(),
+              testCase.parameters.toString(),
+              `Query parameters should match for ${fullDescription}`
+            );
+
+            // Always send both a normal reply and an error reply to accelerate testing
+            q.reply(
+              // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
+              // The requested keyExpr in our case is "zenoh/test/**", but we want to reply with the specific keyExpr from the test case
+              keQueryable,
+              q.payload() ?? "",
+              testCase.toReplyOptions()
+            );
+            
+            // Also send an error reply
+            q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
+            
             q.finalize();
           },
         });
@@ -754,33 +754,40 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           // Handle replies only if query was expected to be received
           if (queryExpected && receiver) {
-            const reply = await receiver.receive();
+            // Expect two replies: one Sample and one ReplyError
+            const reply1 = await receiver.receive();
+            const reply2 = await receiver.receive();
             
-            if (testCase.parameters.toString().includes("err")) {
-              // For error test cases, expect ReplyError
-              assertEquals(
-                reply.result() instanceof ReplyError,
-                true,
-                `Reply should be ReplyError for ${fullDescription}`
+            // Sort replies to handle them consistently (Sample first, then ReplyError)
+            const replies = [reply1, reply2].sort((a, b) => {
+              if (a.result() instanceof Sample && b.result() instanceof ReplyError) return -1;
+              if (a.result() instanceof ReplyError && b.result() instanceof Sample) return 1;
+              return 0;
+            });
+            
+            // Verify Sample reply
+            assertEquals(
+              replies[0].result() instanceof Sample,
+              true,
+              `First reply should be Sample for ${fullDescription}`
+            );
+            if (replies[0].result() instanceof Sample) {
+              compareSample(
+                replies[0].result() as Sample,
+                testCase.expectedSample(),
+                fullDescription
               );
-              if (reply.result() instanceof ReplyError) {
-                const expectedError = testCase.expectedReplyError();
-                compareReplyError(reply.result() as ReplyError, expectedError, fullDescription);
-              }
-            } else {
-              // For success test cases, expect Sample
-              assertEquals(
-                reply.result() instanceof Sample,
-                true,
-                `Reply should be Sample for ${fullDescription}`
-              );
-              if (reply.result() instanceof Sample) {
-                compareSample(
-                  reply.result() as Sample,
-                  testCase.expectedSample(),
-                  fullDescription
-                );
-              }
+            }
+            
+            // Verify ReplyError reply
+            assertEquals(
+              replies[1].result() instanceof ReplyError,
+              true,
+              `Second reply should be ReplyError for ${fullDescription}`
+            );
+            if (replies[1].result() instanceof ReplyError) {
+              const expectedError = testCase.expectedReplyError();
+              compareReplyError(replies[1].result() as ReplyError, expectedError, fullDescription);
             }
           } else if (!queryExpected && receiver) {
             // Query was not expected due to locality restrictions - verify no reply is received
@@ -788,40 +795,42 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             // This is expected behavior - the receiver would block waiting for a reply that never comes
             console.log(`  Query correctly blocked by locality restrictions for ${fullDescription}`);
           } else if (queryExpected) {
-            // For callback operations, wait for handler to be called
+            // For callback operations, wait for handlers to be called
             await sleep(100);
             assertEquals(
               replies.length,
-              1,
-              `Reply should be received via handler for ${fullDescription}`
+              2,
+              `Two replies should be received via handler for ${fullDescription}`
             );
-            const reply = replies[replies.length - 1];
             
-            if (testCase.parameters.toString().includes("err")) {
-              // For error test cases, expect ReplyError
-              assertEquals(
-                reply.result() instanceof ReplyError,
-                true,
-                `Reply should be ReplyError for ${fullDescription}`
-              );
-              if (reply.result() instanceof ReplyError) {
-                const expectedError = testCase.expectedReplyError();
-                compareReplyError(reply.result() as ReplyError, expectedError, fullDescription);
-              }
-            } else {
-              // For success test cases, expect Sample
-              assertEquals(
-                reply.result() instanceof Sample,
-                true,
-                `Reply should be Sample for ${fullDescription}`
-              );
-              if (reply.result() instanceof Sample) {
-                const sample = reply.result() as Sample;
-                const expectedSample = testCase.expectedSample();
-
-                // Validate all Sample fields against expected response
-                compareSample(sample, expectedSample, fullDescription);
-              }
+            // Sort replies to handle them consistently (Sample first, then ReplyError)
+            const sortedReplies = replies.sort((a, b) => {
+              if (a.result() instanceof Sample && b.result() instanceof ReplyError) return -1;
+              if (a.result() instanceof ReplyError && b.result() instanceof Sample) return 1;
+              return 0;
+            });
+            
+            // Verify Sample reply
+            assertEquals(
+              sortedReplies[0].result() instanceof Sample,
+              true,
+              `First reply should be Sample for ${fullDescription}`
+            );
+            if (sortedReplies[0].result() instanceof Sample) {
+              const sample = sortedReplies[0].result() as Sample;
+              const expectedSample = testCase.expectedSample();
+              compareSample(sample, expectedSample, fullDescription);
+            }
+            
+            // Verify ReplyError reply
+            assertEquals(
+              sortedReplies[1].result() instanceof ReplyError,
+              true,
+              `Second reply should be ReplyError for ${fullDescription}`
+            );
+            if (sortedReplies[1].result() instanceof ReplyError) {
+              const expectedError = testCase.expectedReplyError();
+              compareReplyError(sortedReplies[1].result() as ReplyError, expectedError, fullDescription);
             }
           } else {
             // Query was not expected due to locality restrictions - verify no replies were received
@@ -853,7 +862,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }
     }
 
-    const totalTests = testCases.length * 6; // 6 variants per test case (including new error test cases)
+    const totalTests = testCases.length * 8; // 8 variants per test case (all operation combinations)
     console.log(`All ${totalTests} test cases completed successfully`);
   } finally {
     // Cleanup sessions
