@@ -31,6 +31,7 @@ import {
   QuerierOptions,
   ReplyOptions,
   ReplyErrOptions,
+  ReplyDelOptions,
   Encoding,
   Priority,
   CongestionControl,
@@ -269,6 +270,19 @@ class TestCase {
     };
   }
 
+  /**
+   * Convert parameters to reply delete options for queryable's replyDel method
+   * @returns ReplyDelOptions object containing options for the Query.replyDel method
+   */
+  toReplyDelOptions(): ReplyDelOptions {
+    return {
+      congestionControl: this.getOptions.congestionControl,
+      priority: this.getOptions.priority,
+      express: this.getOptions.express,
+      attachment: this.getOptions.attachment,
+    };
+  }
+
   expectedQuery(): ExpectedQuery {
     return new ExpectedQuery(
       this.getOptions.payload ? new ZBytes(this.getOptions.payload) : undefined,
@@ -331,6 +345,32 @@ class TestCase {
       this.getOptions.encoding
         ? Encoding.from(this.getOptions.encoding)
         : Encoding.default()
+    );
+  }
+
+  /**
+   * Create expected Sample object for delete reply validation
+   * @returns Sample object with expected properties using DELETE kind and no payload
+   */
+  expectedDeleteSample(): Sample {
+    // Create expected delete Sample with the test case's keyexpr and DELETE kind
+    // Delete samples typically have no payload, so we use an empty ZBytes
+    return new Sample(
+      new KeyExpr(this.keyexpr),
+      new ZBytes(""), // Delete samples typically have no payload
+      SampleKind.DELETE, // Sample kind for delete replies is DELETE
+      Encoding.default(), // Delete samples use default encoding
+      this.getOptions.attachment
+        ? new ZBytes(this.getOptions.attachment)
+        : undefined,
+      undefined, // Timestamp is not set in test responses
+      this.getOptions.priority === undefined
+        ? Priority.DEFAULT
+        : this.getOptions.priority,
+      this.getOptions.congestionControl === undefined
+        ? CongestionControl.DEFAULT_RESPONSE
+        : this.getOptions.congestionControl,
+      this.getOptions.express === undefined ? false : this.getOptions.express
     );
   }
 }
@@ -712,7 +752,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Query parameters should match for ${fullDescription}`
             );
 
-            // Always send both a normal reply and an error reply to accelerate testing
+            // Always send a normal reply, an error reply, and try to send a delete reply to accelerate testing
             q.reply(
               // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
               // The requested keyExpr in our case is "zenoh/test/**", but we want to reply with the specific keyExpr from the test case
@@ -723,6 +763,15 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             // Also send an error reply
             q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
+
+            // Try to send a delete reply - EXPERIMENTAL
+            // try {
+            //   await q.replyDel(keQueryable, testCase.toReplyDelOptions());
+            //   console.log(`ReplyDel sent successfully for ${keQueryable}`);
+            // } catch (error) {
+            //   console.warn(`ReplyDel failed for ${keQueryable}: ${error}`);
+            //   // Continue without failing the test for now
+            // }
 
             q.finalize();
           },
@@ -830,53 +879,52 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
           // Handle replies only if query was expected to be received
           if (queryExpected && receiver) {
-            // Expect two replies: one Sample and one ReplyError
+            // Expect three replies: one Sample, one ReplyError, and one Delete Sample
             const reply1 = await receiver.receive();
             const reply2 = await receiver.receive();
+            const reply3 = await receiver.receive();
 
-            // Sort replies to handle them consistently (Sample first, then ReplyError)
-            const replies = [reply1, reply2].sort((a, b) => {
-              if (
-                a.result() instanceof Sample &&
-                b.result() instanceof ReplyError
-              )
-                return -1;
-              if (
-                a.result() instanceof ReplyError &&
-                b.result() instanceof Sample
-              )
-                return 1;
-              return 0;
-            });
+            // Categorize replies into separate lists
+            const { samplePut, sampleDelete, replyErrors } = categorizeReplies([reply1, reply2, reply3]);
 
-            // Verify Sample reply
+            // Verify we received exactly one of each type
             assertEquals(
-              replies[0].result() instanceof Sample,
-              true,
-              `First reply should be Sample for ${fullDescription}`
+              samplePut.length,
+              1,
+              `Should receive exactly one PUT sample for ${fullDescription}`
             );
-            if (replies[0].result() instanceof Sample) {
-              compareSample(
-                replies[0].result() as Sample,
-                testCase.expectedSample(),
-                fullDescription
-              );
-            }
+            assertEquals(
+              sampleDelete.length,
+              1,
+              `Should receive exactly one DELETE sample for ${fullDescription}`
+            );
+            assertEquals(
+              replyErrors.length,
+              1,
+              `Should receive exactly one ReplyError for ${fullDescription}`
+            );
+
+            // Verify Sample reply (PUT)
+            compareSample(
+              samplePut[0],
+              testCase.expectedSample(),
+              fullDescription
+            );
+
+            // Verify Delete Sample reply
+            compareSample(
+              sampleDelete[0],
+              testCase.expectedDeleteSample(),
+              fullDescription
+            );
 
             // Verify ReplyError reply
-            assertEquals(
-              replies[1].result() instanceof ReplyError,
-              true,
-              `Second reply should be ReplyError for ${fullDescription}`
+            const expectedError = testCase.expectedReplyError();
+            compareReplyError(
+              replyErrors[0],
+              expectedError,
+              fullDescription
             );
-            if (replies[1].result() instanceof ReplyError) {
-              const expectedError = testCase.expectedReplyError();
-              compareReplyError(
-                replies[1].result() as ReplyError,
-                expectedError,
-                fullDescription
-              );
-            }
           } else if (!queryExpected && receiver) {
             // Query was not expected due to locality restrictions - verify no reply is received
             // For channel operations, we can't easily check if no reply was received without waiting
@@ -889,51 +937,45 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             await sleep(100);
             assertEquals(
               replies.length,
-              2,
-              `Two replies should be received via handler for ${fullDescription}`
+              3,
+              `Three replies should be received via handler for ${fullDescription}`
             );
 
-            // Sort replies to handle them consistently (Sample first, then ReplyError)
-            const sortedReplies = replies.sort((a, b) => {
-              if (
-                a.result() instanceof Sample &&
-                b.result() instanceof ReplyError
-              )
-                return -1;
-              if (
-                a.result() instanceof ReplyError &&
-                b.result() instanceof Sample
-              )
-                return 1;
-              return 0;
-            });
+            // Categorize replies into separate lists
+            const { samplePut, sampleDelete, replyErrors } = categorizeReplies(replies);
 
-            // Verify Sample reply
+            // Verify we received exactly one of each type
             assertEquals(
-              sortedReplies[0].result() instanceof Sample,
-              true,
-              `First reply should be Sample for ${fullDescription}`
+              samplePut.length,
+              1,
+              `Should receive exactly one PUT sample for ${fullDescription}`
             );
-            if (sortedReplies[0].result() instanceof Sample) {
-              const sample = sortedReplies[0].result() as Sample;
-              const expectedSample = testCase.expectedSample();
-              compareSample(sample, expectedSample, fullDescription);
-            }
+            assertEquals(
+              sampleDelete.length,
+              1,
+              `Should receive exactly one DELETE sample for ${fullDescription}`
+            );
+            assertEquals(
+              replyErrors.length,
+              1,
+              `Should receive exactly one ReplyError for ${fullDescription}`
+            );
+
+            // Verify Sample reply (PUT)
+            const expectedSample = testCase.expectedSample();
+            compareSample(samplePut[0], expectedSample, fullDescription);
+
+            // Verify Delete Sample reply
+            const expectedDeleteSample = testCase.expectedDeleteSample();
+            compareSample(sampleDelete[0], expectedDeleteSample, fullDescription);
 
             // Verify ReplyError reply
-            assertEquals(
-              sortedReplies[1].result() instanceof ReplyError,
-              true,
-              `Second reply should be ReplyError for ${fullDescription}`
+            const expectedError = testCase.expectedReplyError();
+            compareReplyError(
+              replyErrors[0],
+              expectedError,
+              fullDescription
             );
-            if (sortedReplies[1].result() instanceof ReplyError) {
-              const expectedError = testCase.expectedReplyError();
-              compareReplyError(
-                sortedReplies[1].result() as ReplyError,
-                expectedError,
-                fullDescription
-              );
-            }
           } else {
             // Query was not expected due to locality restrictions - verify no replies were received
             await sleep(100);
@@ -968,6 +1010,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     console.log(
       `All ${totalTests} test cases completed successfully (${testCases.length} test cases × ${N_OPERATIONS_PER_TEST} operations each)`
     );
+    console.log(
+      `Each test case validates 3 reply types: Sample (PUT), Sample (DELETE), and ReplyError`
+    );
   } finally {
     // Cleanup sessions
     if (session2) {
@@ -979,3 +1024,34 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     await sleep(100);
   }
 });
+
+/**
+ * Categorize replies into separate lists for PUT samples, DELETE samples, and ReplyErrors
+ * @param replies Array of Reply objects to categorize
+ * @returns Object containing three arrays: samplePut, sampleDelete, and replyErrors
+ */
+function categorizeReplies(replies: Reply[]): {
+  samplePut: Sample[];
+  sampleDelete: Sample[];
+  replyErrors: ReplyError[];
+} {
+  const samplePut: Sample[] = [];
+  const sampleDelete: Sample[] = [];
+  const replyErrors: ReplyError[] = [];
+
+  for (const reply of replies) {
+    const result = reply.result();
+    
+    if (result instanceof Sample) {
+      if (result.kind() === SampleKind.PUT) {
+        samplePut.push(result);
+      } else if (result.kind() === SampleKind.DELETE) {
+        sampleDelete.push(result);
+      }
+    } else if (result instanceof ReplyError) {
+      replyErrors.push(result);
+    }
+  }
+
+  return { samplePut, sampleDelete, replyErrors };
+}
