@@ -25,6 +25,7 @@ import {
   QueryTarget,
   ChannelReceiver,
   Querier,
+  Queryable,
   GetOptions,
   QuerierGetOptions,
   QuerierOptions,
@@ -412,6 +413,29 @@ function compareQuerierProperties(
 }
 
 /**
+ * Helper function to compare queryable properties with expected values
+ * @param queryable The Queryable object to test
+ * @param expectedKeyExpr The expected key expression
+ * @param description Test description to include in error messages
+ */
+function compareQueryableProperties(
+  queryable: Queryable,
+  expectedKeyExpr: KeyExpr,
+  description: string
+) {
+  // Test keyExpr() method
+  assertEquals(
+    queryable.keyExpr().toString(),
+    expectedKeyExpr.toString(),
+    `Queryable keyExpr should match for ${description}`
+  );
+
+  // Note: Unlike Querier, Queryable class doesn't expose methods to access
+  // the 'complete' and 'allowedOrigin' properties that were set during creation.
+  // These properties are used internally but not accessible for testing.
+}
+
+/**
  * Generate a list of TestCase objects by cycling through available values of each option
  * @param baseCase Initial test case with the parameters to keep constant
  * @returns Array of TestCase objects with different option combinations
@@ -703,6 +727,13 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             q.finalize();
           },
         });
+
+        // Test queryable properties
+        compareQueryableProperties(
+          queryable,
+          new KeyExpr(keQueryable),
+          fullDescription
+        );
 
         // Short delay to ensure queryable is ready
         await sleep(100);
