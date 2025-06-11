@@ -44,7 +44,7 @@ import {
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { Duration } from "typed-duration";
-import { StableRandom } from "./commonTestUtils.ts";
+import { StableRandom, receiveWithTimeout } from "./commonTestUtils.ts";
 
 /**
  * Helper function to determine if a query should be received based on locality settings
@@ -886,16 +886,13 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           // Handle replies only if query was expected to be received
           if (queryExpected && receiver) {
             // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
-            const reply1 = await receiver.receive();
-            const reply2 = await receiver.receive();
+            const reply1 = await receiveWithTimeout(receiver, 1000, "first reply");
+            const reply2 = await receiveWithTimeout(receiver, 1000, "second reply");
             
             // Add a timeout for the third reply to avoid hanging indefinitely
             let reply3: Reply;
             try {
-              const timeoutPromise = new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error("Timeout waiting for third reply")), 1000);
-              });
-              reply3 = await Promise.race([receiver.receive(), timeoutPromise]);
+              reply3 = await receiveWithTimeout(receiver, 1000, "third reply (DELETE sample)");
             } catch (error) {
               throw new Error(`Expected exactly 3 replies but only received 2. Missing third reply (likely DELETE sample). Error: ${error}`);
             }

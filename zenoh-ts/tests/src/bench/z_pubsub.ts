@@ -25,6 +25,7 @@ import {
   Encoding,
 } from "@eclipse-zenoh/zenoh-ts";
 import { FifoChannel } from "@eclipse-zenoh/zenoh-ts";
+import { receiveWithTimeout } from "../commonTestUtils.ts";
 
 /**
  * Configuration for the pub/sub performance tests
@@ -112,7 +113,7 @@ for (const packetSize of PACKET_SIZES) {
       // Send fixed amount of data using multiple packets
       for (let i = 0; i < testData.iterations; i++) {
         await globalPublisher.put(testData.payload);
-        await (globalSubscriber.receiver() as ChannelReceiver<Sample>).receive();
+        await receiveWithTimeout(globalSubscriber.receiver() as ChannelReceiver<Sample>, 5000, "sample in benchmark");
       }
     },
   });
