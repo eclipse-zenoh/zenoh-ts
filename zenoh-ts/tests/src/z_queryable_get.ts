@@ -205,6 +205,11 @@ class TestCase {
     public getOptions: GetOptions
   ) {}
 
+
+  toString(): string {
+    return `TestCase(keyexpr=${this.keyexpr}, parameters=${this.parameters}, getOptions=${JSON.stringify(this.getOptions)})`;
+  }
+
   /**
    * Convert parameters to QuerierOptions for Querier creation
    * @returns QuerierOptions object populated with the TestCase parameters
@@ -395,6 +400,168 @@ function compareQuerierProperties(
   );
 }
 
+/**
+ * Generate a list of TestCase objects by cycling through available values of each option
+ * @param baseCase Initial test case with the parameters to keep constant
+ * @returns Array of TestCase objects with different option combinations
+ */
+function generateTestCases(baseCase: TestCase): TestCase[] {
+  const testCases: TestCase[] = [];
+  
+  // Define available values for each enum option
+  const priorityValues = [
+    undefined,
+    Priority.REAL_TIME,
+    Priority.INTERACTIVE_HIGH,
+    Priority.INTERACTIVE_LOW,
+    Priority.DATA_HIGH,
+    Priority.DATA,
+    Priority.DATA_LOW,
+    Priority.BACKGROUND,
+  ];
+  
+  const congestionControlValues = [
+    undefined,
+    CongestionControl.DROP,
+    CongestionControl.BLOCK,
+  ];
+  
+  const localityValues = [
+    undefined,
+    Locality.SESSION_LOCAL,
+    Locality.REMOTE,
+    Locality.ANY,
+  ];
+  
+  const queryTargetValues = [
+    undefined,
+    QueryTarget.BEST_MATCHING,
+    QueryTarget.ALL,
+    QueryTarget.ALL_COMPLETE,
+  ];
+  
+  const consolidationModeValues = [
+    undefined,
+    ConsolidationMode.AUTO,
+    ConsolidationMode.NONE,
+    ConsolidationMode.MONOTONIC,
+    ConsolidationMode.LATEST,
+  ];
+  
+  const replyKeyExprValues = [
+    undefined,
+    ReplyKeyExpr.ANY,
+    ReplyKeyExpr.MATCHING_QUERY,
+  ];
+  
+  const encodingValues = [
+    undefined,
+    Encoding.default(),
+    Encoding.TEXT_PLAIN,
+    Encoding.APPLICATION_JSON,
+  ];
+  
+  const payloadValues = [
+    undefined,
+    "test-payload",
+  ];
+  
+  const attachmentValues = [
+    undefined,
+    new ZBytes("test-attachment"),
+  ];
+  
+  const expressValues = [
+    undefined,
+    false,
+    true,
+  ];
+  
+  const timeoutValues = [
+    undefined,
+    Duration.milliseconds.of(1000),
+  ];
+  
+  // Generate test cases for priority
+  for (const priority of priorityValues) {
+    const keyexpr = `zenoh/test/priority/${priority ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, priority };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for congestionControl
+  for (const congestionControl of congestionControlValues) {
+    const keyexpr = `zenoh/test/congestionControl/${congestionControl ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, congestionControl };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for express
+  for (const express of expressValues) {
+    const keyexpr = `zenoh/test/express/${express ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, express };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for allowedDestinaton (locality)
+  for (const allowedDestinaton of localityValues) {
+    const keyexpr = `zenoh/test/allowedDestinaton/${allowedDestinaton ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, allowedDestinaton };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for encoding
+  for (const encoding of encodingValues) {
+    const keyexpr = `zenoh/test/encoding/${encoding?.toString() ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, encoding };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for payload
+  for (const payload of payloadValues) {
+    const keyexpr = `zenoh/test/payload/${payload ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, payload };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for attachment
+  for (const attachment of attachmentValues) {
+    const keyexpr = `zenoh/test/attachment/${attachment?.toString() ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, attachment };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for timeout
+  for (const timeout of timeoutValues) {
+    const keyexpr = `zenoh/test/timeout/${timeout?.toString() ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, timeout };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for target
+  for (const target of queryTargetValues) {
+    const keyexpr = `zenoh/test/target/${target ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, target };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for consolidation
+  for (const consolidation of consolidationModeValues) {
+    const keyexpr = `zenoh/test/consolidation/${consolidation ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, consolidation };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  // Generate test cases for acceptReplies
+  for (const acceptReplies of replyKeyExprValues) {
+    const keyexpr = `zenoh/test/acceptReplies/${acceptReplies ?? 'undefined'}`;
+    const options = { ...baseCase.getOptions, acceptReplies };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
+  
+  return testCases;
+}
+
 Deno.test("API - Comprehensive Query Operations with Options", async () => {
   let session1: Session | undefined;
   let session2: Session | undefined;
@@ -407,170 +574,27 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     // Delay to ensure sessions are ready
     await sleep(100);
 
-    // Define test cases for various GetOptions combinations
-    const attachmentData = new ZBytes("query metadata");
-    const fullOptionsAttachment = new ZBytes("full-options-metadata");
-
-    const testCases: TestCase[] = [
-      // Basic test without options
-      new TestCase("zenoh/test/basic", "ok", {}),
-
-      // Test with empty payload
-      new TestCase("zenoh/test/empty_payload", "ok", {
-        payload: "",
-      }),
-
-      // Test without payload field - using default encoding since no payload is specified
-      new TestCase("zenoh/test/no_payload", "ok", {
-        // Note: Even though we might specify another encoding, the actual behavior
-        // returns zenoh/bytes when no payload is provided
-        encoding: Encoding.default(),
-      }),
-
-      // Test with encoding only
-      new TestCase("zenoh/test/encoding", "ok", {
-        // Note: Even with a payload, the actual behavior seems to use the default encoding
-        encoding: Encoding.default(),
-        payload: "encoded-payload",
-      }),
-
-      // Test with querier options (priority, congestion control, etc.)
-      new TestCase("zenoh/test/priority_congestion", "ok", {
-        priority: Priority.REAL_TIME,
-        congestionControl: CongestionControl.BLOCK,
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.default(),
-        payload: "priority-payload",
-      }),
-
-      // Test with express flag
-      new TestCase("zenoh/test/express", "ok", {
-        express: true,
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.default(),
-        payload: "express-payload",
-      }),
-
-      // Test with attachment
-      new TestCase("zenoh/test/attachment", "ok", {
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.default(),
-        attachment: attachmentData,
-        payload: "attachment-payload",
-      }),
-
-      // Test with timeout
-      new TestCase("zenoh/test/timeout", "ok", {
-        timeout: Duration.milliseconds.of(2000),
-        priority: Priority.DATA_HIGH,
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.default(),
-        payload: "timeout-payload",
-      }),
-
-      // Test with target
-      new TestCase("zenoh/test/target", "ok", {
-        target: QueryTarget.ALL,
-        priority: Priority.INTERACTIVE_HIGH,
-        encoding: Encoding.default(),
-        payload: "target-payload",
-      }),
-
-      // Test with consolidation
-      new TestCase("zenoh/test/consolidation", "ok", {
-        consolidation: ConsolidationMode.NONE,
-        priority: Priority.DATA_LOW,
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.default(),
-        payload: "consolidation-payload",
-      }),
-
-      // Test with all options combined
-      new TestCase("zenoh/test/all_options", "ok", {
-        congestionControl: CongestionControl.DROP,
-        priority: Priority.BACKGROUND,
-        express: true,
-        timeout: Duration.milliseconds.of(5000),
-        target: QueryTarget.BEST_MATCHING,
-        consolidation: ConsolidationMode.LATEST,
-        encoding: Encoding.default(),
-        attachment: fullOptionsAttachment,
-        payload: "all-options-payload",
-      }),
-
-      // Test with all options but empty payload
-      new TestCase("zenoh/test/all_options_empty", "ok", {
-        congestionControl: CongestionControl.BLOCK,
-        priority: Priority.REAL_TIME,
-        express: true,
-        allowedDestinaton: Locality.REMOTE, // This will be adjusted based on same/different session usage
-        encoding: Encoding.default(),
-        payload: "",
-        attachment: attachmentData,
-        timeout: Duration.milliseconds.of(1000),
-        target: QueryTarget.ALL,
-        consolidation: ConsolidationMode.LATEST,
-        acceptReplies: ReplyKeyExpr.ANY,
-      }),
-
-      // Test with all options but no payload
-      new TestCase("zenoh/test/all_options_no_payload", "ok", {
-        congestionControl: CongestionControl.DROP,
-        priority: Priority.DATA_HIGH,
-        express: false,
-        timeout: Duration.milliseconds.of(3000),
-        target: QueryTarget.BEST_MATCHING,
-        consolidation: ConsolidationMode.NONE,
-        encoding: Encoding.default(),
-        attachment: fullOptionsAttachment,
-      }),
-
-      // ERROR TEST CASES - Test replyErr functionality with different encodings
-      
-      // Basic error test with default encoding (explicitly set)
-      new TestCase("zenoh/test/error_basic", "err", {
-        encoding: Encoding.default(),
-        payload: "error-payload",
-      }),
-
-      // Error test with specific encoding
-      new TestCase("zenoh/test/error_encoding", "err", {
-        encoding: Encoding.TEXT_PLAIN,
-        payload: "error-text-payload",
-      }),
-
-      // Error test with complex options
-      new TestCase("zenoh/test/error_complex", "err", {
-        priority: Priority.REAL_TIME,
-        congestionControl: CongestionControl.BLOCK,
-        target: QueryTarget.BEST_MATCHING,
-        encoding: Encoding.APPLICATION_JSON,
-        payload: '{"error": "test error"}',
-      }),
-    ];
-
-    // Execute all operations - run all 6 variants for each test case
+    // Generate test cases using the generateTestCases function
+    const baseTestCase = new TestCase("zenoh/test/base", "ok", {});
+    const baseErrorTestCase = new TestCase("zenoh/test/error_base", "err", {});
+    
+    // Generate comprehensive test cases by cycling through all available option values
+    const okTestCases = generateTestCases(baseTestCase);
+    const errorTestCases = generateTestCases(baseErrorTestCase);
+    
+    // Combine both OK and error test cases
+    const testCases: TestCase[] = [...okTestCases, ...errorTestCases];
     let testCounter = 0;
 
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
 
-      // Define the 6 operation types
+      // Define the 8 operation types, comment out some for faster execution
       const operations = [
         {
-          useQuerier: true,
-          useCallback: true,
-          useSameSession: true,
-        },
-        {
-          useQuerier: true,
-          useCallback: false,
-          useSameSession: true,
-        },
-        {
           useQuerier: false,
-          useCallback: true,
-          useSameSession: true,
+          useCallback: false,
+          useSameSession: false,
         },
         {
           useQuerier: false,
@@ -584,8 +608,28 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         },
         {
           useQuerier: false,
+          useCallback: true,
+          useSameSession: true,
+        },
+        {
+          useQuerier: true,
           useCallback: false,
           useSameSession: false,
+        },
+        {
+          useQuerier: true,
+          useCallback: false,
+          useSameSession: true,
+        },
+        {
+          useQuerier: true,
+          useCallback: true,
+          useSameSession: false,
+        },
+        {
+          useQuerier: true,
+          useCallback: true,
+          useSameSession: true,
         },
       ];
 
@@ -596,7 +640,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
       for (const operation of operations) {
         // Generate description based on operation properties
-        const sessionType = operation.useQuerier ? "Querier" : "Session";
+        const sessionType = operation.useQuerier ? "Querier" : "Get";
         const callbackType = operation.useCallback ? "Callback" : "Channel";
         const sessionMode = operation.useSameSession ? "Same" : "Different";
         const fullDescription = `${testCase.keyexpr.toString()} - ${sessionType} ${callbackType} ${sessionMode}Session`;
@@ -616,7 +660,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             if (q.parameters().toString().includes("ok")) {
               q.reply(
                 // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
-                // The requested keyExpr in our case is "zenoh/test/*", but we want to reply with the specific keyExpr from the test case
+                // The requested keyExpr in our case is "zenoh/test/**", but we want to reply with the specific keyExpr from the test case
                 keQueryable,
                 q.payload() ?? "",
                 testCase.toReplyOptions()
@@ -636,7 +680,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
         // Declare a querier for this specific test if needed
         try {
-          const keGet = new KeyExpr(`zenoh/test/*`);
+          const keGet = new KeyExpr(`zenoh/test/**`);
           
           // Choose session based on useSameSession flag
           const clientSession = operation.useSameSession ? session1 : session2;
@@ -693,7 +737,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           assertEquals(
             query !== undefined,
             queryExpected,
-            `Query should ${queryExpected ? 'be' : 'NOT be'} received for ${fullDescription} (locality: ${testCase.getOptions.allowedDestinaton})`
+            `Query should ${queryExpected ? 'be' : 'NOT be'} received for ${fullDescription} (locality ${testCase.getOptions.allowedDestinaton ?? "is default"})`
           );
 
           if (query && queryExpected) {
