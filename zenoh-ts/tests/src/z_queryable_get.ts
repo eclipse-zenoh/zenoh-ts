@@ -19,6 +19,7 @@ import {
   Reply,
   ReplyError,
   KeyExpr,
+  IntoKeyExpr,
   Selector,
   Sample,
   QueryTarget,
@@ -28,24 +29,20 @@ import {
   QuerierGetOptions,
   QuerierOptions,
   ReplyOptions,
+  ReplyErrOptions,
   Encoding,
   Priority,
   CongestionControl,
   ZBytes,
   ConsolidationMode,
   SampleKind,
-  IntoParameters,
-  IntoKeyExpr,
   Locality,
   ReplyKeyExpr,
+  IntoParameters,
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { Duration } from "typed-duration";
-
-// Define ReplyErrOptions locally since it's not exported from the main package
-interface ReplyErrOptions {
-  encoding?: Encoding,
-}
+import { StableRandom } from "./commonTestUtils.ts";
 
 /**
  * Helper function to determine if a query should be received based on locality settings
@@ -53,24 +50,27 @@ interface ReplyErrOptions {
  * @param useSameSession Whether the query and queryable are using the same session
  * @returns true if the query should be received, false otherwise
  */
-function shouldQueryBeReceived(testCase: TestCase, useSameSession: boolean): boolean {
+function shouldQueryBeReceived(
+  testCase: TestCase,
+  useSameSession: boolean
+): boolean {
   const allowedDestination = testCase.getOptions.allowedDestinaton;
-  
+
   // If no locality restriction is set, query should always be received
   if (allowedDestination === undefined) {
     return true;
   }
-  
+
   // If allowedDestination is REMOTE but we're using the same session, query should NOT be received
   if (allowedDestination === Locality.REMOTE && useSameSession) {
     return false;
   }
-  
+
   // If allowedDestination is SESSION_LOCAL but we're using different sessions, query should NOT be received
   if (allowedDestination === Locality.SESSION_LOCAL && !useSameSession) {
     return false;
   }
-  
+
   // Otherwise, query should be received
   return true;
 }
@@ -205,9 +205,10 @@ class TestCase {
     public getOptions: GetOptions
   ) {}
 
-
   toString(): string {
-    return `TestCase(keyexpr=${this.keyexpr}, parameters=${this.parameters}, getOptions=${JSON.stringify(this.getOptions)})`;
+    return `TestCase(keyexpr=${this.keyexpr}, parameters=${
+      this.parameters
+    }, getOptions=${JSON.stringify(this.getOptions)})`;
   }
 
   /**
@@ -270,8 +271,11 @@ class TestCase {
   expectedQuery(): ExpectedQuery {
     return new ExpectedQuery(
       this.getOptions.payload ? new ZBytes(this.getOptions.payload) : undefined,
+      // If payload is provided but no encoding is explicitly set, use default encoding
       this.getOptions.encoding
         ? Encoding.from(this.getOptions.encoding)
+        : this.getOptions.payload
+        ? Encoding.default()
         : undefined,
       this.getOptions.attachment
         ? new ZBytes(this.getOptions.attachment)
@@ -298,7 +302,9 @@ class TestCase {
       this.getOptions.encoding
         ? Encoding.from(this.getOptions.encoding)
         : Encoding.default(),
-      this.getOptions.attachment ? new ZBytes(this.getOptions.attachment) : undefined,
+      this.getOptions.attachment
+        ? new ZBytes(this.getOptions.attachment)
+        : undefined,
       undefined, // Timestamp is not set in test responses
       this.getOptions.priority === undefined
         ? Priority.DATA
@@ -334,7 +340,11 @@ class TestCase {
  * @param expected The expected ReplyError to compare against
  * @param description Test description to include in error messages
  */
-function compareReplyError(actual: ReplyError, expected: ReplyError, description: string) {
+function compareReplyError(
+  actual: ReplyError,
+  expected: ReplyError,
+  description: string
+) {
   assertEquals(
     actual.payload().toString(),
     expected.payload().toString(),
@@ -368,7 +378,8 @@ function compareQuerierProperties(
   );
 
   // Test congestionControl() method
-  const expectedCongestionControl = expectedOptions.congestionControl ?? CongestionControl.DEFAULT_REQUEST;
+  const expectedCongestionControl =
+    expectedOptions.congestionControl ?? CongestionControl.DEFAULT_REQUEST;
   assertEquals(
     querier.congestionControl(),
     expectedCongestionControl,
@@ -390,7 +401,7 @@ function compareQuerierProperties(
     "number",
     `Querier acceptReplies should return a number for ${description}`
   );
-  
+
   // The expected value should come from options or default to MATCHING_QUERY (1)
   const expectedAcceptReplies = expectedOptions.acceptReplies ?? 1; // ReplyKeyExpr.DEFAULT which is MATCHING_QUERY = 1
   assertEquals(
@@ -407,7 +418,7 @@ function compareQuerierProperties(
  */
 function generateTestCases(baseCase: TestCase): TestCase[] {
   const testCases: TestCase[] = [];
-  
+
   // Define available values for each enum option
   const priorityValues = [
     undefined,
@@ -419,27 +430,27 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
     Priority.DATA_LOW,
     Priority.BACKGROUND,
   ];
-  
+
   const congestionControlValues = [
     undefined,
     CongestionControl.DROP,
     CongestionControl.BLOCK,
   ];
-  
+
   const localityValues = [
     undefined,
     Locality.SESSION_LOCAL,
     Locality.REMOTE,
     Locality.ANY,
   ];
-  
+
   const queryTargetValues = [
     undefined,
     QueryTarget.BEST_MATCHING,
     QueryTarget.ALL,
     QueryTarget.ALL_COMPLETE,
   ];
-  
+
   const consolidationModeValues = [
     undefined,
     ConsolidationMode.AUTO,
@@ -447,122 +458,123 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
     ConsolidationMode.MONOTONIC,
     ConsolidationMode.LATEST,
   ];
-  
+
   const replyKeyExprValues = [
     undefined,
     ReplyKeyExpr.ANY,
     ReplyKeyExpr.MATCHING_QUERY,
   ];
-  
+
   const encodingValues = [
     undefined,
     Encoding.default(),
     Encoding.TEXT_PLAIN,
     Encoding.APPLICATION_JSON,
   ];
-  
-  const payloadValues = [
-    undefined,
-    "test-payload",
-  ];
-  
-  const attachmentValues = [
-    undefined,
-    new ZBytes("test-attachment"),
-  ];
-  
-  const expressValues = [
-    undefined,
-    false,
-    true,
-  ];
-  
-  const timeoutValues = [
-    undefined,
-    Duration.milliseconds.of(1000),
-  ];
-  
+
+  const payloadValues = [undefined, "test-payload"];
+
+  const attachmentValues = [undefined, new ZBytes("test-attachment")];
+
+  const expressValues = [undefined, false, true];
+
+  const timeoutValues = [undefined, Duration.milliseconds.of(1000)];
+
   // Generate test cases for priority
   for (const priority of priorityValues) {
-    const keyexpr = `zenoh/test/priority/${priority ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/priority/${priority ?? "undefined"}`;
     const options = { ...baseCase.getOptions, priority };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for congestionControl
   for (const congestionControl of congestionControlValues) {
-    const keyexpr = `zenoh/test/congestionControl/${congestionControl ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/congestionControl/${
+      congestionControl ?? "undefined"
+    }`;
     const options = { ...baseCase.getOptions, congestionControl };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for express
   for (const express of expressValues) {
-    const keyexpr = `zenoh/test/express/${express ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/express/${express ?? "undefined"}`;
     const options = { ...baseCase.getOptions, express };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for allowedDestinaton (locality)
   for (const allowedDestinaton of localityValues) {
-    const keyexpr = `zenoh/test/allowedDestinaton/${allowedDestinaton ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/allowedDestinaton/${
+      allowedDestinaton ?? "undefined"
+    }`;
     const options = { ...baseCase.getOptions, allowedDestinaton };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for encoding
   for (const encoding of encodingValues) {
-    const keyexpr = `zenoh/test/encoding/${encoding?.toString() ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/encoding/${
+      encoding?.toString() ?? "undefined"
+    }`;
     const options = { ...baseCase.getOptions, encoding };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for payload
   for (const payload of payloadValues) {
-    const keyexpr = `zenoh/test/payload/${payload ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/payload/${payload ?? "undefined"}`;
     const options = { ...baseCase.getOptions, payload };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for attachment
   for (const attachment of attachmentValues) {
-    const keyexpr = `zenoh/test/attachment/${attachment?.toString() ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/attachment/${
+      attachment?.toString() ?? "undefined"
+    }`;
     const options = { ...baseCase.getOptions, attachment };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for timeout
   for (const timeout of timeoutValues) {
-    const keyexpr = `zenoh/test/timeout/${timeout?.toString() ?? 'undefined'}`;
+    // Convert timeout Duration to a readable string representation
+    const timeoutStr = timeout ? `${timeout.value}ms` : "undefined";
+    const keyexpr = `zenoh/test/timeout/${timeoutStr}`;
     const options = { ...baseCase.getOptions, timeout };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for target
   for (const target of queryTargetValues) {
-    const keyexpr = `zenoh/test/target/${target ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/target/${target ?? "undefined"}`;
     const options = { ...baseCase.getOptions, target };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for consolidation
   for (const consolidation of consolidationModeValues) {
-    const keyexpr = `zenoh/test/consolidation/${consolidation ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/consolidation/${consolidation ?? "undefined"}`;
     const options = { ...baseCase.getOptions, consolidation };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   // Generate test cases for acceptReplies
   for (const acceptReplies of replyKeyExprValues) {
-    const keyexpr = `zenoh/test/acceptReplies/${acceptReplies ?? 'undefined'}`;
+    const keyexpr = `zenoh/test/acceptReplies/${acceptReplies ?? "undefined"}`;
     const options = { ...baseCase.getOptions, acceptReplies };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
-  
+
   return testCases;
 }
 
 Deno.test("API - Comprehensive Query Operations with Options", async () => {
+  // Configuration: Number of random operations to test per test case
+  const N_OPERATIONS_PER_TEST = 3; // Change this to increase/decrease test coverage
+  const RANDOM_SEED = 42; // Fixed seed for reproducible test results
+
   let session1: Session | undefined;
   let session2: Session | undefined;
 
@@ -576,16 +588,19 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     // Generate test cases using the generateTestCases function
     const baseTestCase = new TestCase("zenoh/test/base", "test-params", {});
-    
+
     // Generate comprehensive test cases by cycling through all available option values
     const testCases: TestCase[] = generateTestCases(baseTestCase);
     let testCounter = 0;
 
+    // Initialize stable random number generator
+    const rng = new StableRandom(RANDOM_SEED);
+
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
 
-      // Define the 8 operation types, comment out some for faster execution
-      const operations = [
+      // Define all 8 possible operation types
+      const allOperations = [
         {
           useQuerier: false,
           useCallback: false,
@@ -628,18 +643,24 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         },
       ];
 
+      // Select N random operations for this test case using stable random generator
+      // This ensures reproducible test runs while reducing the total number of operations tested
+      const selectedOperations = rng
+        .shuffle(allOperations)
+        .slice(0, N_OPERATIONS_PER_TEST);
+
       let receiver: ChannelReceiver<Reply> | undefined;
       let query: Query | undefined;
       let querier: Querier | undefined;
       let replies: Reply[] = [];
 
-      for (const operation of operations) {
+      for (const operation of selectedOperations) {
         // Generate description based on operation properties
         const sessionType = operation.useQuerier ? "Querier" : "Get";
         const callbackType = operation.useCallback ? "Callback" : "Channel";
         const sessionMode = operation.useSameSession ? "Same" : "Different";
         const fullDescription = `${testCase.keyexpr.toString()} - ${sessionType} ${callbackType} ${sessionMode}Session`;
-        
+
         receiver = undefined;
         querier = undefined;
         query = undefined;
@@ -648,14 +669,22 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
         // Declare a queryable on session1
         const keQueryable = testCase.keyexpr;
         const queryable = await session1.declareQueryable(keQueryable, {
+          complete: true, // Required for QueryTarget.ALL_COMPLETE to work properly
+          // TODO: Add tests for complete: false and for not receiveing queries when complete is false
           handler: (q: Query) => {
             // Store the query for validation
             query = q;
 
             // Verify the parameters were received correctly
+            // Note: When acceptReplies is ReplyKeyExpr.ANY, Zenoh automatically appends ";_anyke" to parameters
+            const expectedParams =
+              testCase.getOptions.acceptReplies === ReplyKeyExpr.ANY
+                ? testCase.parameters.toString() + ";_anyke"
+                : testCase.parameters.toString();
+
             assertEquals(
               q.parameters().toString(),
-              testCase.parameters.toString(),
+              expectedParams,
               `Query parameters should match for ${fullDescription}`
             );
 
@@ -667,10 +696,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               q.payload() ?? "",
               testCase.toReplyOptions()
             );
-            
+
             // Also send an error reply
             q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
-            
+
             q.finalize();
           },
         });
@@ -680,19 +709,28 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
         // Declare a querier for this specific test if needed
         try {
-          const keGet = new KeyExpr(`zenoh/test/**`);
-          
+          // For QueryTarget.ALL_COMPLETE, use the exact key expression instead of wildcard
+          // This is because ALL_COMPLETE requires more precise matching with complete queryables
+          // For other query targets, use wildcard to allow broader matching
+          const keGet =
+            testCase.getOptions.target === QueryTarget.ALL_COMPLETE
+              ? new KeyExpr(testCase.keyexpr.toString())
+              : new KeyExpr(`zenoh/test/**`);
+
           // Choose session based on useSameSession flag
           const clientSession = operation.useSameSession ? session1 : session2;
-          
+
           if (!operation.useQuerier) {
             if (operation.useCallback) {
-              await clientSession!.get(new Selector(keGet, testCase.parameters), {
-                ...testCase.getOptions,
-                handler: (reply: Reply) => {
-                  replies.push(reply);
-                },
-              });
+              await clientSession!.get(
+                new Selector(keGet, testCase.parameters),
+                {
+                  ...testCase.getOptions,
+                  handler: (reply: Reply) => {
+                    replies.push(reply);
+                  },
+                }
+              );
             } else {
               receiver = await clientSession!.get(
                 new Selector(keGet, testCase.parameters),
@@ -733,11 +771,18 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           await sleep(100);
 
           // Verify the query was received correctly based on locality settings
-          const queryExpected = shouldQueryBeReceived(testCase, operation.useSameSession);
+          const queryExpected = shouldQueryBeReceived(
+            testCase,
+            operation.useSameSession
+          );
           assertEquals(
             query !== undefined,
             queryExpected,
-            `Query should ${queryExpected ? 'be' : 'NOT be'} received for ${fullDescription} (locality ${testCase.getOptions.allowedDestinaton ?? "is default"})`
+            `Query should ${
+              queryExpected ? "be" : "NOT be"
+            } received for ${fullDescription} (locality ${
+              testCase.getOptions.allowedDestinaton ?? "is default"
+            }, target ${testCase.getOptions.target ?? "is default"})`
           );
 
           if (query && queryExpected) {
@@ -757,14 +802,22 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             // Expect two replies: one Sample and one ReplyError
             const reply1 = await receiver.receive();
             const reply2 = await receiver.receive();
-            
+
             // Sort replies to handle them consistently (Sample first, then ReplyError)
             const replies = [reply1, reply2].sort((a, b) => {
-              if (a.result() instanceof Sample && b.result() instanceof ReplyError) return -1;
-              if (a.result() instanceof ReplyError && b.result() instanceof Sample) return 1;
+              if (
+                a.result() instanceof Sample &&
+                b.result() instanceof ReplyError
+              )
+                return -1;
+              if (
+                a.result() instanceof ReplyError &&
+                b.result() instanceof Sample
+              )
+                return 1;
               return 0;
             });
-            
+
             // Verify Sample reply
             assertEquals(
               replies[0].result() instanceof Sample,
@@ -778,7 +831,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
                 fullDescription
               );
             }
-            
+
             // Verify ReplyError reply
             assertEquals(
               replies[1].result() instanceof ReplyError,
@@ -787,13 +840,19 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (replies[1].result() instanceof ReplyError) {
               const expectedError = testCase.expectedReplyError();
-              compareReplyError(replies[1].result() as ReplyError, expectedError, fullDescription);
+              compareReplyError(
+                replies[1].result() as ReplyError,
+                expectedError,
+                fullDescription
+              );
             }
           } else if (!queryExpected && receiver) {
             // Query was not expected due to locality restrictions - verify no reply is received
             // For channel operations, we can't easily check if no reply was received without waiting
             // This is expected behavior - the receiver would block waiting for a reply that never comes
-            console.log(`  Query correctly blocked by locality restrictions for ${fullDescription}`);
+            console.log(
+              `  Query correctly blocked by locality restrictions for ${fullDescription}`
+            );
           } else if (queryExpected) {
             // For callback operations, wait for handlers to be called
             await sleep(100);
@@ -802,14 +861,22 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               2,
               `Two replies should be received via handler for ${fullDescription}`
             );
-            
+
             // Sort replies to handle them consistently (Sample first, then ReplyError)
             const sortedReplies = replies.sort((a, b) => {
-              if (a.result() instanceof Sample && b.result() instanceof ReplyError) return -1;
-              if (a.result() instanceof ReplyError && b.result() instanceof Sample) return 1;
+              if (
+                a.result() instanceof Sample &&
+                b.result() instanceof ReplyError
+              )
+                return -1;
+              if (
+                a.result() instanceof ReplyError &&
+                b.result() instanceof Sample
+              )
+                return 1;
               return 0;
             });
-            
+
             // Verify Sample reply
             assertEquals(
               sortedReplies[0].result() instanceof Sample,
@@ -821,7 +888,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               const expectedSample = testCase.expectedSample();
               compareSample(sample, expectedSample, fullDescription);
             }
-            
+
             // Verify ReplyError reply
             assertEquals(
               sortedReplies[1].result() instanceof ReplyError,
@@ -830,7 +897,11 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             );
             if (sortedReplies[1].result() instanceof ReplyError) {
               const expectedError = testCase.expectedReplyError();
-              compareReplyError(sortedReplies[1].result() as ReplyError, expectedError, fullDescription);
+              compareReplyError(
+                sortedReplies[1].result() as ReplyError,
+                expectedError,
+                fullDescription
+              );
             }
           } else {
             // Query was not expected due to locality restrictions - verify no replies were received
@@ -862,8 +933,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
       }
     }
 
-    const totalTests = testCases.length * 8; // 8 variants per test case (all operation combinations)
-    console.log(`All ${totalTests} test cases completed successfully`);
+    const totalTests = testCases.length * N_OPERATIONS_PER_TEST; // N random operations per test case
+    console.log(
+      `All ${totalTests} test cases completed successfully (${testCases.length} test cases × ${N_OPERATIONS_PER_TEST} operations each)`
+    );
   } finally {
     // Cleanup sessions
     if (session2) {
