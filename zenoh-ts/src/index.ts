@@ -26,7 +26,6 @@ import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
 import { Querier, QuerierGetOptions } from './querier.js'
-import { QuerierOptions } from './session.js'
 import { FifoChannel, RingChannel, ChannelReceiver, ChannelSender, TryReceived, TryReceivedKind, ChannelState } from "./channels.js";
 
 // Re-export duration external library
@@ -40,7 +39,7 @@ export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, 
 export { Timestamp };
 export { Publisher, Subscriber};
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, ReplyErrOptions, ReplyDelOptions, Selector, ReplyOptions };
-export { Session, DeleteOptions, PutOptions, GetOptions, QueryableOptions, QuerierOptions, PublisherOptions, ZenohId, SessionInfo};
+export { Session, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo};
 export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
