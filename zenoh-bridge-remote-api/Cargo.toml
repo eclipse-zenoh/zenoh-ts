@@ -80,7 +80,6 @@ rustc_version = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-jsonschema = { workspace = true }
 cargo-run-bin = { workspace = true }
 
 [package.metadata.deb]

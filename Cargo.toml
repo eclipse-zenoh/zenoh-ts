@@ -16,7 +16,6 @@ description = "Remote API Plugin for Zenoh using Websockets"
 async-liveliness-monitor = "0.1.1"
 clap = { version = "4.5.40", features = ["derive"] }
 rustc_version = "0.4.0"
-jsonschema = "0.30.0"
 tokio = { version = "1.45.1", features = ["rt", "macros", "time"] }
 tokio-tungstenite = "0.27.0"
 tokio-rustls = { version = "0.26.2", default-features = false }
@@ -36,11 +35,12 @@ ts-rs = { version = "11.0.1", features = [
 ] }
 lru = "0.14.0"
 tracing = "0.1.41"
-schemars = { version = "0.9" }
+schemars = { version = "0.8.21" } # do not switch to 0.9, it's not supported by rust 1.75
 serde = { version = "1.0.219", default-features = false, features = [
   "derive",
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = "1.0.140"
+jsonschema = { version = "0.18.0", default-features = false }
 zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
     "plugins",
 ], version = "1.4.0" }
