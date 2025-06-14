@@ -46,6 +46,112 @@ import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { Duration } from "typed-duration";
 import { StableRandom } from "./commonTestUtils.ts";
 
+const N_OPERATIONS_PER_TEST = 3; // Change this to increase/decrease test coverage
+const RANDOM_SEED = 42; // Fixed seed for reproducible test results
+
+//
+// Define all 8 possible operation types, only N_OPERATIONS_PER_TEST of them will be used in each test case
+//
+const allOperations = [
+  {
+    useQuerier: false,
+    useCallback: false,
+    useSameSession: false,
+  },
+  {
+    useQuerier: false,
+    useCallback: false,
+    useSameSession: true,
+  },
+  {
+    useQuerier: false,
+    useCallback: true,
+    useSameSession: false,
+  },
+  {
+    useQuerier: false,
+    useCallback: true,
+    useSameSession: true,
+  },
+  {
+    useQuerier: true,
+    useCallback: false,
+    useSameSession: false,
+  },
+  {
+    useQuerier: true,
+    useCallback: false,
+    useSameSession: true,
+  },
+  {
+    useQuerier: true,
+    useCallback: true,
+    useSameSession: false,
+  },
+  {
+    useQuerier: true,
+    useCallback: true,
+    useSameSession: true,
+  },
+];
+
+//
+// Define all possible option variants for testing. Each option is iterated over
+// One test case is generated for each option. Combination are not generated to
+// avoid combinatorial explosion of test cases.
+//
+const optionVariants = {
+  priorityValues: [
+    undefined,
+    Priority.REAL_TIME,
+    Priority.INTERACTIVE_HIGH,
+    Priority.INTERACTIVE_LOW,
+    Priority.DATA_HIGH,
+    Priority.DATA,
+    Priority.DATA_LOW,
+    Priority.BACKGROUND,
+  ],
+  congestionControlValues: [
+    undefined,
+    CongestionControl.DROP,
+    CongestionControl.BLOCK,
+  ],
+  localityValues: [
+    undefined,
+    Locality.SESSION_LOCAL,
+    Locality.REMOTE,
+    Locality.ANY,
+  ],
+  queryTargetValues: [
+    undefined,
+    QueryTarget.BEST_MATCHING,
+    QueryTarget.ALL,
+    QueryTarget.ALL_COMPLETE,
+  ],
+  consolidationModeValues: [
+    undefined,
+    ConsolidationMode.AUTO,
+    ConsolidationMode.NONE,
+    ConsolidationMode.MONOTONIC,
+    ConsolidationMode.LATEST,
+  ],
+  replyKeyExprValues: [
+    undefined,
+    ReplyKeyExpr.ANY,
+    ReplyKeyExpr.MATCHING_QUERY,
+  ],
+  encodingValues: [
+    undefined,
+    Encoding.default(),
+    Encoding.TEXT_PLAIN,
+    Encoding.APPLICATION_JSON,
+  ],
+  payloadValues: [undefined, "test-payload"],
+  attachmentValues: [undefined, new ZBytes("test-attachment")],
+  expressValues: [undefined, false, true],
+  timeoutValues: [undefined, Duration.milliseconds.of(1000)],
+};
+
 /**
  * Helper function to assert if a query should be received based on locality settings and return the expected query
  * @param testCase The test case containing the locality settings
@@ -500,7 +606,7 @@ function compareQueryableProperties(
  * Options for configuring which values to test for each option type
  */
 interface GenerateTestCasesOptions {
-  priorityValues: (Priority | undefined)[],
+  priorityValues: (Priority | undefined)[];
   congestionControlValues: (CongestionControl | undefined)[];
   localityValues: (Locality | undefined)[];
   queryTargetValues: (QueryTarget | undefined)[];
@@ -519,7 +625,10 @@ interface GenerateTestCasesOptions {
  * @param options Optional configuration for which values to test for each option type
  * @returns Array of TestCase objects with different option combinations
  */
-function generateTestCases(baseCase: TestCase, options: GenerateTestCasesOptions): TestCase[] {
+function generateTestCases(
+  baseCase: TestCase,
+  options: GenerateTestCasesOptions
+): TestCase[] {
   const testCases: TestCase[] = [];
   // Generate test cases for priority
   for (const priority of options.priorityValues) {
@@ -613,9 +722,6 @@ function generateTestCases(baseCase: TestCase, options: GenerateTestCasesOptions
 
 Deno.test("API - Comprehensive Query Operations with Options", async () => {
   // Configuration: Number of random operations to test per test case
-  const N_OPERATIONS_PER_TEST = 3; // Change this to increase/decrease test coverage
-  const RANDOM_SEED = 42; // Fixed seed for reproducible test results
-
   let session1: Session | undefined;
   let session2: Session | undefined;
 
@@ -632,62 +738,10 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     // Generate comprehensive test cases by cycling through all available option values
     // const testCases: TestCase[] = generateTestCases(baseTestCase);
-    const optionnVariants = {
-      priorityValues: [
-        undefined,
-        Priority.REAL_TIME,
-        Priority.INTERACTIVE_HIGH,
-        Priority.INTERACTIVE_LOW,
-        Priority.DATA_HIGH,
-        Priority.DATA,
-        Priority.DATA_LOW,
-        Priority.BACKGROUND,
-      ],
-      congestionControlValues: [
-        undefined,
-        CongestionControl.DROP,
-        CongestionControl.BLOCK,
-      ],
-      localityValues: [
-        undefined,
-        Locality.SESSION_LOCAL,
-        Locality.REMOTE,
-        Locality.ANY,
-      ],
-      queryTargetValues: [
-        undefined,
-        QueryTarget.BEST_MATCHING,
-        QueryTarget.ALL,
-        QueryTarget.ALL_COMPLETE,
-      ],
-      consolidationModeValues: [
-        undefined,
-        ConsolidationMode.AUTO,
-        ConsolidationMode.NONE,
-        ConsolidationMode.MONOTONIC,
-        ConsolidationMode.LATEST,
-      ],
-      replyKeyExprValues: [undefined, ReplyKeyExpr.ANY, ReplyKeyExpr.MATCHING_QUERY],
-      encodingValues: [undefined, Encoding.default(), Encoding.TEXT_PLAIN, Encoding.APPLICATION_JSON],
-      payloadValues: [undefined, "test-payload"],
-      attachmentValues: [undefined, new ZBytes("test-attachment")],
-      expressValues: [undefined, false, true],
-      timeoutValues: [undefined, Duration.milliseconds.of(1000)],
-    };
-    const optionnVariantsFailures: GenerateTestCasesOptions = {
-      priorityValues: [],
-      congestionControlValues: [],
-      localityValues: [],
-      queryTargetValues: [QueryTarget.ALL],
-      consolidationModeValues: [],
-      replyKeyExprValues: [],
-      encodingValues: [],
-      payloadValues: [],
-      attachmentValues: [],
-      expressValues: [],
-      timeoutValues: [],
-    };
-    const testCases: TestCase[] = generateTestCases(baseTestCase, optionnVariantsFailures);
+    const testCases: TestCase[] = generateTestCases(
+      baseTestCase,
+      optionVariants
+    );
     let testCounter = 0;
 
     // Initialize stable random number generator
@@ -695,50 +749,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
     for (let i = 0; i < testCases.length; i++) {
       const testCase = testCases[i];
-
-      // Define all 8 possible operation types
-      const allOperations = [
-        {
-          useQuerier: false,
-          useCallback: false,
-          useSameSession: false,
-        },
-        {
-          useQuerier: false,
-          useCallback: false,
-          useSameSession: true,
-        },
-        {
-          useQuerier: false,
-          useCallback: true,
-          useSameSession: false,
-        },
-        {
-          useQuerier: false,
-          useCallback: true,
-          useSameSession: true,
-        },
-        {
-          useQuerier: true,
-          useCallback: false,
-          useSameSession: false,
-        },
-        {
-          useQuerier: true,
-          useCallback: false,
-          useSameSession: true,
-        },
-        {
-          useQuerier: true,
-          useCallback: true,
-          useSameSession: false,
-        },
-        {
-          useQuerier: true,
-          useCallback: true,
-          useSameSession: true,
-        },
-      ];
 
       // Select N random operations for this test case using stable random generator
       // This ensures reproducible test runs while reducing the total number of operations tested
@@ -794,25 +804,31 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
             try {
               q.replyDel(keQueryable, testCase.toReplyDelOptions());
             } catch (error) {
-              throw new Error(`Delete reply failed for ${fullDescription}: ${error}`);
+              throw new Error(
+                `Delete reply failed for ${fullDescription}: ${error}`
+              );
             }
 
             // Send normal reply second
             try {
               q.reply(
-               keQueryable,
+                keQueryable,
                 q.payload() ?? "",
                 testCase.toReplyOptions()
               );
             } catch (error) {
-              throw new Error(`Normal reply failed for ${fullDescription}: ${error}`);
+              throw new Error(
+                `Normal reply failed for ${fullDescription}: ${error}`
+              );
             }
 
             // Send also an error reply
             try {
               q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
             } catch (error) {
-              throw new Error(`Error reply failed for ${fullDescription}: ${error}`);
+              throw new Error(
+                `Error reply failed for ${fullDescription}: ${error}`
+              );
             }
 
             q.finalize();
@@ -911,13 +927,18 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               // Collect replies from the receiver
               replies.push(reply);
             }
-            
+
             // Verify consolidation worked correctly based on the consolidation mode
-            verifyConsolidation(replies, testCase.getOptions.consolidation, fullDescription);
-            
+            verifyConsolidation(
+              replies,
+              testCase.getOptions.consolidation,
+              fullDescription
+            );
+
             // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
             // Categorize replies into separate lists
-            const { samplePut, sampleDelete, replyErrors } = categorizeReplies(replies);
+            const { samplePut, sampleDelete, replyErrors } =
+              categorizeReplies(replies);
 
             // Verify we received exactly one PUT sample and one ReplyError
             // DELETE samples may or may not be received depending on consolidation
@@ -934,7 +955,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             // DELETE sample is optional - it may be consolidated away
             if (sampleDelete.length > 1) {
-              throw new Error(`Should receive at most one DELETE sample for ${fullDescription}, got ${sampleDelete.length}`);
+              throw new Error(
+                `Should receive at most one DELETE sample for ${fullDescription}, got ${sampleDelete.length}`
+              );
             }
 
             // Verify Sample reply (PUT)
@@ -955,11 +978,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             // Verify ReplyError reply
             const expectedError = testCase.expectedReplyError();
-            compareReplyError(
-              replyErrors[0],
-              expectedError,
-              fullDescription
-            );
+            compareReplyError(replyErrors[0], expectedError, fullDescription);
           } else if (!receivedQuery && receiver) {
             // Query was not expected due to locality restrictions - verify no reply is received
             // For channel operations, we can't easily check if no reply was received without waiting
@@ -970,12 +989,20 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
           } else if (receivedQuery) {
             // For callback operations, wait for handlers to be called
             await sleep(100);
-            
+
             // Verify consolidation worked correctly based on the consolidation mode
-            verifyConsolidation(replies, testCase.getOptions.consolidation, fullDescription);
+            verifyConsolidation(
+              replies,
+              testCase.getOptions.consolidation,
+              fullDescription
+            );
 
             // Categorize replies into separate lists
-            const { samplePut, sampleDelete: _sampleDelete, replyErrors } = categorizeReplies(replies);
+            const {
+              samplePut,
+              sampleDelete: _sampleDelete,
+              replyErrors,
+            } = categorizeReplies(replies);
 
             // Verify we received exactly one PUT sample and one ReplyError
             // DELETE replies may or may not be received depending on configuration
@@ -996,11 +1023,7 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
 
             // Verify ReplyError reply
             const expectedError = testCase.expectedReplyError();
-            compareReplyError(
-              replyErrors[0],
-              expectedError,
-              fullDescription
-            );
+            compareReplyError(replyErrors[0], expectedError, fullDescription);
           } else {
             // Query was not expected due to locality restrictions - verify no replies were received
             await sleep(100);
@@ -1062,7 +1085,10 @@ function verifyConsolidation(
   description: string
 ): void {
   // If consolidation is AUTO, don't perform the check as behavior is implementation-dependent
-  if (consolidationMode === ConsolidationMode.AUTO || consolidationMode === undefined) {
+  if (
+    consolidationMode === ConsolidationMode.AUTO ||
+    consolidationMode === undefined
+  ) {
     return;
   }
 
@@ -1078,7 +1104,10 @@ function verifyConsolidation(
 
   // If consolidation is LATEST or MONOTONIC, expect exactly 2 packets
   // DELETE sample may be consolidated away, leaving PUT and ERROR
-  if (consolidationMode === ConsolidationMode.LATEST || consolidationMode === ConsolidationMode.MONOTONIC) {
+  if (
+    consolidationMode === ConsolidationMode.LATEST ||
+    consolidationMode === ConsolidationMode.MONOTONIC
+  ) {
     assertEquals(
       replies.length,
       2,
@@ -1104,7 +1133,7 @@ function categorizeReplies(replies: Reply[]): {
 
   for (const reply of replies) {
     const result = reply.result();
-    
+
     if (result instanceof Sample) {
       if (result.kind() === SampleKind.PUT) {
         samplePut.push(result);
