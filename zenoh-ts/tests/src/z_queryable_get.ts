@@ -497,83 +497,39 @@ function compareQueryableProperties(
 }
 
 /**
+ * Options for configuring which values to test for each option type
+ */
+interface GenerateTestCasesOptions {
+  priorityValues: (Priority | undefined)[],
+  congestionControlValues: (CongestionControl | undefined)[];
+  localityValues: (Locality | undefined)[];
+  queryTargetValues: (QueryTarget | undefined)[];
+  consolidationModeValues: (ConsolidationMode | undefined)[];
+  replyKeyExprValues: (ReplyKeyExpr | undefined)[];
+  encodingValues: (Encoding | undefined)[];
+  payloadValues: (string | undefined)[];
+  attachmentValues: (ZBytes | undefined)[];
+  expressValues: (boolean | undefined)[];
+  timeoutValues: (ReturnType<typeof Duration.milliseconds.of> | undefined)[];
+}
+
+/**
  * Generate a list of TestCase objects by cycling through available values of each option
  * @param baseCase Initial test case with the parameters to keep constant
+ * @param options Optional configuration for which values to test for each option type
  * @returns Array of TestCase objects with different option combinations
  */
-function generateTestCases(baseCase: TestCase): TestCase[] {
+function generateTestCases(baseCase: TestCase, options: GenerateTestCasesOptions): TestCase[] {
   const testCases: TestCase[] = [];
-
-  // Define available values for each enum option
-  const priorityValues = [
-    undefined,
-    Priority.REAL_TIME,
-    Priority.INTERACTIVE_HIGH,
-    Priority.INTERACTIVE_LOW,
-    Priority.DATA_HIGH,
-    Priority.DATA,
-    Priority.DATA_LOW,
-    Priority.BACKGROUND,
-  ];
-
-  const congestionControlValues = [
-    undefined,
-    CongestionControl.DROP,
-    CongestionControl.BLOCK,
-  ];
-
-  const localityValues = [
-    undefined,
-    Locality.SESSION_LOCAL,
-    Locality.REMOTE,
-    Locality.ANY,
-  ];
-
-  const queryTargetValues = [
-    undefined,
-    QueryTarget.BEST_MATCHING,
-    // QueryTarget.ALL,
-    QueryTarget.ALL_COMPLETE,
-  ];
-
-  const consolidationModeValues = [
-    undefined,
-    ConsolidationMode.AUTO,
-    ConsolidationMode.NONE,
-    // ConsolidationMode.MONOTONIC,
-    ConsolidationMode.LATEST,
-  ];
-
-  const replyKeyExprValues = [
-    undefined,
-    ReplyKeyExpr.ANY,
-    ReplyKeyExpr.MATCHING_QUERY,
-  ];
-
-  const encodingValues = [
-    undefined,
-    Encoding.default(),
-    Encoding.TEXT_PLAIN,
-    Encoding.APPLICATION_JSON,
-  ];
-
-  const payloadValues = [undefined, "test-payload"];
-
-  const attachmentValues = [undefined, new ZBytes("test-attachment")];
-
-  const expressValues = [undefined, false, true];
-
-  const timeoutValues = [undefined, Duration.milliseconds.of(1000)];
-
   // Generate test cases for priority
-  for (const priority of priorityValues) {
+  for (const priority of options.priorityValues) {
     const keyexpr = `zenoh/test/priority/${priority ?? "undefined"}`;
     const options = { ...baseCase.getOptions, priority };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for congestionControl
-  for (const congestionControl of congestionControlValues) {
+  for (const congestionControl of options.congestionControlValues) {
     const keyexpr = `zenoh/test/congestionControl/${
       congestionControl ?? "undefined"
     }`;
@@ -582,14 +538,14 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   }
 
   // Generate test cases for express
-  for (const express of expressValues) {
+  for (const express of options.expressValues) {
     const keyexpr = `zenoh/test/express/${express ?? "undefined"}`;
     const options = { ...baseCase.getOptions, express };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for allowedDestinaton (locality)
-  for (const allowedDestinaton of localityValues) {
+  for (const allowedDestinaton of options.localityValues) {
     const keyexpr = `zenoh/test/allowedDestinaton/${
       allowedDestinaton ?? "undefined"
     }`;
@@ -598,7 +554,7 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   }
 
   // Generate test cases for encoding
-  for (const encoding of encodingValues) {
+  for (const encoding of options.encodingValues) {
     const keyexpr = `zenoh/test/encoding/${
       encoding?.toString() ?? "undefined"
     }`;
@@ -607,14 +563,14 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   }
 
   // Generate test cases for payload
-  for (const payload of payloadValues) {
+  for (const payload of options.payloadValues) {
     const keyexpr = `zenoh/test/payload/${payload ?? "undefined"}`;
     const options = { ...baseCase.getOptions, payload };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for attachment
-  for (const attachment of attachmentValues) {
+  for (const attachment of options.attachmentValues) {
     const keyexpr = `zenoh/test/attachment/${
       attachment?.toString() ?? "undefined"
     }`;
@@ -623,7 +579,7 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   }
 
   // Generate test cases for timeout
-  for (const timeout of timeoutValues) {
+  for (const timeout of options.timeoutValues) {
     // Convert timeout Duration to a readable string representation
     const timeoutStr = timeout ? `${timeout.value}ms` : "undefined";
     const keyexpr = `zenoh/test/timeout/${timeoutStr}`;
@@ -632,21 +588,21 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   }
 
   // Generate test cases for target
-  for (const target of queryTargetValues) {
+  for (const target of options.queryTargetValues) {
     const keyexpr = `zenoh/test/target/${target ?? "undefined"}`;
     const options = { ...baseCase.getOptions, target };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for consolidation
-  for (const consolidation of consolidationModeValues) {
+  for (const consolidation of options.consolidationModeValues) {
     const keyexpr = `zenoh/test/consolidation/${consolidation ?? "undefined"}`;
     const options = { ...baseCase.getOptions, consolidation };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for acceptReplies
-  for (const acceptReplies of replyKeyExprValues) {
+  for (const acceptReplies of options.replyKeyExprValues) {
     const keyexpr = `zenoh/test/acceptReplies/${acceptReplies ?? "undefined"}`;
     const options = { ...baseCase.getOptions, acceptReplies };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
@@ -675,7 +631,63 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     const baseTestCase = new TestCase("zenoh/test/base", "test-params", {});
 
     // Generate comprehensive test cases by cycling through all available option values
-    const testCases: TestCase[] = generateTestCases(baseTestCase);
+    // const testCases: TestCase[] = generateTestCases(baseTestCase);
+    const optionnVariants = {
+      priorityValues: [
+        undefined,
+        Priority.REAL_TIME,
+        Priority.INTERACTIVE_HIGH,
+        Priority.INTERACTIVE_LOW,
+        Priority.DATA_HIGH,
+        Priority.DATA,
+        Priority.DATA_LOW,
+        Priority.BACKGROUND,
+      ],
+      congestionControlValues: [
+        undefined,
+        CongestionControl.DROP,
+        CongestionControl.BLOCK,
+      ],
+      localityValues: [
+        undefined,
+        Locality.SESSION_LOCAL,
+        Locality.REMOTE,
+        Locality.ANY,
+      ],
+      queryTargetValues: [
+        undefined,
+        QueryTarget.BEST_MATCHING,
+        QueryTarget.ALL,
+        QueryTarget.ALL_COMPLETE,
+      ],
+      consolidationModeValues: [
+        undefined,
+        ConsolidationMode.AUTO,
+        ConsolidationMode.NONE,
+        ConsolidationMode.MONOTONIC,
+        ConsolidationMode.LATEST,
+      ],
+      replyKeyExprValues: [undefined, ReplyKeyExpr.ANY, ReplyKeyExpr.MATCHING_QUERY],
+      encodingValues: [undefined, Encoding.default(), Encoding.TEXT_PLAIN, Encoding.APPLICATION_JSON],
+      payloadValues: [undefined, "test-payload"],
+      attachmentValues: [undefined, new ZBytes("test-attachment")],
+      expressValues: [undefined, false, true],
+      timeoutValues: [undefined, Duration.milliseconds.of(1000)],
+    };
+    const optionnVariantsFailures: GenerateTestCasesOptions = {
+      priorityValues: [],
+      congestionControlValues: [],
+      localityValues: [],
+      queryTargetValues: [QueryTarget.ALL],
+      consolidationModeValues: [],
+      replyKeyExprValues: [],
+      encodingValues: [],
+      payloadValues: [],
+      attachmentValues: [],
+      expressValues: [],
+      timeoutValues: [],
+    };
+    const testCases: TestCase[] = generateTestCases(baseTestCase, optionnVariantsFailures);
     let testCounter = 0;
 
     // Initialize stable random number generator
