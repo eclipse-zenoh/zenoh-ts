@@ -21,11 +21,15 @@ use serde::{
 };
 
 const DEFAULT_HTTP_INTERFACE: &str = "[::]";
+const DEFAULT_WEBSOCKET_PORT: &str = "10000";
 
 #[derive(JsonSchema, Deserialize, serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    #[serde(deserialize_with = "deserialize_ws_port")]
+    #[serde(
+        default = "default_websocket_port",
+        deserialize_with = "deserialize_ws_port"
+    )]
     pub websocket_port: String,
 
     pub secure_websocket: Option<SecureWebsocket>,
@@ -47,6 +51,10 @@ impl From<&Config> for serde_json::Value {
     fn from(c: &Config) -> Self {
         serde_json::to_value(c).unwrap()
     }
+}
+
+fn default_websocket_port() -> String {
+    format!("{}:{}", DEFAULT_HTTP_INTERFACE, DEFAULT_WEBSOCKET_PORT)
 }
 
 fn deserialize_ws_port<'de, D>(deserializer: D) -> Result<String, D::Error>
@@ -154,7 +162,7 @@ impl<'de> serde::de::Visitor<'de> for PathVisitor {
 
 #[cfg(test)]
 mod tests {
-    use super::{Config, DEFAULT_HTTP_INTERFACE};
+    use super::{Config, DEFAULT_HTTP_INTERFACE, DEFAULT_WEBSOCKET_PORT};
 
     #[test]
     fn test_path_field() {
@@ -228,6 +236,27 @@ mod tests {
         } = config.unwrap();
 
         assert_eq!(websocket_port, format!("{DEFAULT_HTTP_INTERFACE}:8080"));
+        assert_eq!(__path__, None);
+        assert_eq!(__required__, None);
+    }
+
+    #[test]
+    fn test_default_websocket_port() {
+        // Test that the default websocket_port is used when not specified
+        let config = serde_json::from_str::<Config>(r#"{}"#);
+
+        assert!(config.is_ok());
+        let Config {
+            websocket_port,
+            __required__,
+            __path__,
+            ..
+        } = config.unwrap();
+
+        assert_eq!(
+            websocket_port,
+            format!("{DEFAULT_HTTP_INTERFACE}:{DEFAULT_WEBSOCKET_PORT}")
+        );
         assert_eq!(__path__, None);
         assert_eq!(__required__, None);
     }

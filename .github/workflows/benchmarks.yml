@@ -1,0 +1,74 @@
+#
+# Copyright (c) 2024 ZettaScale Technology
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+#
+name: Benchmarks
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  benchmarks:
+    name: Run performance benchmarks on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macOS-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-bin: false
+
+      - name: Build typescript plugin
+        run: cargo build --release --all-targets
+
+      - name: Install zenohd for testing
+        run: |
+          cargo install cargo-run-bin
+          cargo bin --install zenohd
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "21"
+
+      - name: Install Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: latest
+
+      - name: Verify build of zenoh-ts
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: build library
+          dir: "zenoh-ts"
+
+      - name: Run benchmarks
+        uses: borales/actions-yarn@v4
+        with:
+          cmd: start DAEMON test BENCH JSON
+          dir: "zenoh-ts"
+
+      - name: Upload benchmark results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: benchmark-results-${{ matrix.os }}
+          path: |
+            zenoh-ts/tests/benchmark_results/
+          retention-days: 30

@@ -193,9 +193,9 @@ impl QuerySettings {
     pub(crate) fn target(&self) -> QueryTarget {
         let t = self.inner & 0b11u8;
         match t {
-            0 => QueryTarget::All,
-            1 => QueryTarget::AllComplete,
-            2 => QueryTarget::BestMatching,
+            0 => QueryTarget::BestMatching,
+            1 => QueryTarget::All,
+            2 => QueryTarget::AllComplete,
             _ => QueryTarget::default(),
         }
     }
