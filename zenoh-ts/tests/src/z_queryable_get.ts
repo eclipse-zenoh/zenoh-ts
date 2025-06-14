@@ -532,14 +532,14 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   const queryTargetValues = [
     undefined,
     QueryTarget.BEST_MATCHING,
-    QueryTarget.ALL,
+    // QueryTarget.ALL,
     QueryTarget.ALL_COMPLETE,
   ];
 
   const consolidationModeValues = [
-    // undefined,
-    // ConsolidationMode.AUTO,
-    // ConsolidationMode.NONE,
+    undefined,
+    ConsolidationMode.AUTO,
+    ConsolidationMode.NONE,
     // ConsolidationMode.MONOTONIC,
     ConsolidationMode.LATEST,
   ];
@@ -566,77 +566,77 @@ function generateTestCases(baseCase: TestCase): TestCase[] {
   const timeoutValues = [undefined, Duration.milliseconds.of(1000)];
 
   // Generate test cases for priority
-  // for (const priority of priorityValues) {
-  //   const keyexpr = `zenoh/test/priority/${priority ?? "undefined"}`;
-  //   const options = { ...baseCase.getOptions, priority };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  for (const priority of priorityValues) {
+    const keyexpr = `zenoh/test/priority/${priority ?? "undefined"}`;
+    const options = { ...baseCase.getOptions, priority };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for congestionControl
-  // for (const congestionControl of congestionControlValues) {
-  //   const keyexpr = `zenoh/test/congestionControl/${
-  //     congestionControl ?? "undefined"
-  //   }`;
-  //   const options = { ...baseCase.getOptions, congestionControl };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for congestionControl
+  for (const congestionControl of congestionControlValues) {
+    const keyexpr = `zenoh/test/congestionControl/${
+      congestionControl ?? "undefined"
+    }`;
+    const options = { ...baseCase.getOptions, congestionControl };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for express
-  // for (const express of expressValues) {
-  //   const keyexpr = `zenoh/test/express/${express ?? "undefined"}`;
-  //   const options = { ...baseCase.getOptions, express };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for express
+  for (const express of expressValues) {
+    const keyexpr = `zenoh/test/express/${express ?? "undefined"}`;
+    const options = { ...baseCase.getOptions, express };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for allowedDestinaton (locality)
-  // for (const allowedDestinaton of localityValues) {
-  //   const keyexpr = `zenoh/test/allowedDestinaton/${
-  //     allowedDestinaton ?? "undefined"
-  //   }`;
-  //   const options = { ...baseCase.getOptions, allowedDestinaton };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for allowedDestinaton (locality)
+  for (const allowedDestinaton of localityValues) {
+    const keyexpr = `zenoh/test/allowedDestinaton/${
+      allowedDestinaton ?? "undefined"
+    }`;
+    const options = { ...baseCase.getOptions, allowedDestinaton };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for encoding
-  // for (const encoding of encodingValues) {
-  //   const keyexpr = `zenoh/test/encoding/${
-  //     encoding?.toString() ?? "undefined"
-  //   }`;
-  //   const options = { ...baseCase.getOptions, encoding };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for encoding
+  for (const encoding of encodingValues) {
+    const keyexpr = `zenoh/test/encoding/${
+      encoding?.toString() ?? "undefined"
+    }`;
+    const options = { ...baseCase.getOptions, encoding };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for payload
-  // for (const payload of payloadValues) {
-  //   const keyexpr = `zenoh/test/payload/${payload ?? "undefined"}`;
-  //   const options = { ...baseCase.getOptions, payload };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for payload
+  for (const payload of payloadValues) {
+    const keyexpr = `zenoh/test/payload/${payload ?? "undefined"}`;
+    const options = { ...baseCase.getOptions, payload };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for attachment
-  // for (const attachment of attachmentValues) {
-  //   const keyexpr = `zenoh/test/attachment/${
-  //     attachment?.toString() ?? "undefined"
-  //   }`;
-  //   const options = { ...baseCase.getOptions, attachment };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for attachment
+  for (const attachment of attachmentValues) {
+    const keyexpr = `zenoh/test/attachment/${
+      attachment?.toString() ?? "undefined"
+    }`;
+    const options = { ...baseCase.getOptions, attachment };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for timeout
-  // for (const timeout of timeoutValues) {
-  //   // Convert timeout Duration to a readable string representation
-  //   const timeoutStr = timeout ? `${timeout.value}ms` : "undefined";
-  //   const keyexpr = `zenoh/test/timeout/${timeoutStr}`;
-  //   const options = { ...baseCase.getOptions, timeout };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for timeout
+  for (const timeout of timeoutValues) {
+    // Convert timeout Duration to a readable string representation
+    const timeoutStr = timeout ? `${timeout.value}ms` : "undefined";
+    const keyexpr = `zenoh/test/timeout/${timeoutStr}`;
+    const options = { ...baseCase.getOptions, timeout };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
-  // // Generate test cases for target
-  // for (const target of queryTargetValues) {
-  //   const keyexpr = `zenoh/test/target/${target ?? "undefined"}`;
-  //   const options = { ...baseCase.getOptions, target };
-  //   testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
-  // }
+  // Generate test cases for target
+  for (const target of queryTargetValues) {
+    const keyexpr = `zenoh/test/target/${target ?? "undefined"}`;
+    const options = { ...baseCase.getOptions, target };
+    testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
+  }
 
   // Generate test cases for consolidation
   for (const consolidation of consolidationModeValues) {
@@ -773,21 +773,19 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               `Query parameters should match for ${fullDescription}`
             );
 
-            // IMPORTANT: queryable should return the specific keyExpr for the reply, not the keyexpr requested (q.keyexpr())
-            // Send delete reply second
+            //
+            // IMPORTANT: queryable should return the queryable's keyExpr for the reply, not the keyexpr requested (q.keyexpr())
+            // E.g. requet may be "zenoh/test/*" and reply should contain keyexpr "zenoh/test/testcase1"
+            //
+
+            // Send delete reply first
             try {
               q.replyDel(keQueryable, testCase.toReplyDelOptions());
             } catch (error) {
               throw new Error(`Delete reply failed for ${fullDescription}: ${error}`);
             }
 
-            // // Send error reply last
-            // try {
-            //   q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
-            // } catch (error) {
-            //   throw new Error(`Error reply failed for ${fullDescription}: ${error}`);
-            // }
-            // Send normal reply first
+            // Send normal reply second
             try {
               q.reply(
                keQueryable,
@@ -798,7 +796,12 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               throw new Error(`Normal reply failed for ${fullDescription}: ${error}`);
             }
 
-
+            // Send also an error reply
+            try {
+              q.replyErr(q.payload() ?? "", testCase.toReplyErrOptions());
+            } catch (error) {
+              throw new Error(`Error reply failed for ${fullDescription}: ${error}`);
+            }
 
             q.finalize();
           },
@@ -1067,7 +1070,7 @@ function verifyConsolidation(
     assertEquals(
       replies.length,
       2,
-      `Expected exactly 2 replies with ${consolidationMode} consolidation for ${description}, got ${replies.length}`
+      `Expected exactly 2 replies with consolidation=${consolidationMode} consolidation for ${description}, got ${replies.length}`
     );
     return;
   }
