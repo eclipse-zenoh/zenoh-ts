@@ -118,7 +118,7 @@ jobs:
       - name: Run tests
         uses: borales/actions-yarn@v4
         with:
-          cmd: start DAEMON test ALL
+          cmd: start DAEMON test TESTS COVERAGE
           dir: "zenoh-ts"
 
   markdown_lint:

@@ -165,7 +165,7 @@ export interface QuerierOptions {
     priority?: Priority,
     express?: boolean,
     consolidation?: ConsolidationMode,
-    target: QueryTarget
+    target?: QueryTarget
     timeout?: TimeDuration,
     allowedDestination?: Locality
     acceptReplies?: ReplyKeyExpr

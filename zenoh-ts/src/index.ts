@@ -15,17 +15,18 @@
 // API Layer Files
 import { KeyExpr, IntoKeyExpr } from "./key_expr.js";
 import { ZBytes, IntoZBytes } from "./z_bytes.js";
-import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr, SampleKind } from "./enums.js";
+import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, SampleKind, ReplyKeyExpr } from "./enums.js";
 import { Sample } from "./sample.js";
 import { Timestamp } from "./timestamp.js";
 import { ZenohId } from "./zid.js";
 import { Publisher, Subscriber } from "./pubsub.js";
-import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyOptions, ReplyErrOptions,ReplyError, Selector } from "./query.js";
-import { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SubscriberOptions, SessionInfo } from "./session.js";
+import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, ReplyOptions, ReplyErrOptions, ReplyDelOptions, Selector } from "./query.js";
+import { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SessionInfo } from "./session.js";
 import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
 import { Querier, QuerierGetOptions } from './querier.js'
+import { QuerierOptions } from './session.js'
 import { FifoChannel, RingChannel, ChannelReceiver, ChannelSender, TryReceived, TryReceivedKind, ChannelState } from "./channels.js";
 
 // Re-export duration external library
@@ -35,14 +36,14 @@ import { Duration } from 'typed-duration'
 // Exports
 export { KeyExpr, IntoKeyExpr };
 export { ZBytes, IntoZBytes };
-export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr, Sample, SampleKind };
+export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, Sample, SampleKind, ReplyKeyExpr };
+export { Timestamp };
 export { Publisher, Subscriber};
-export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyOptions, ReplyErrOptions, ReplyError, Selector };
-export { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SubscriberOptions, SessionInfo};
-export { ZenohId, Timestamp }
+export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, ReplyErrOptions, ReplyDelOptions, Selector, ReplyOptions };
+export { Session, DeleteOptions, PutOptions, GetOptions, QueryableOptions, QuerierOptions, PublisherOptions, ZenohId, SessionInfo};
 export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
 export { Duration };
-export { Querier, QuerierGetOptions }
+export { Querier, QuerierOptions, QuerierGetOptions }
 export { FifoChannel, RingChannel, ChannelReceiver, ChannelSender, TryReceived, TryReceivedKind, ChannelState}
