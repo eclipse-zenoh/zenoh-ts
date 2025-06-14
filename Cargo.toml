@@ -41,15 +41,15 @@ serde = { version = "1.0.219", default-features = false, features = [
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", features = [
     "plugins",
 ], version = "1.4.0" }
-zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
+zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
+zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
+zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
+zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
 zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.4.0" }
 
 uuid = { version = "1.17.0", default-features = false, features = [
@@ -60,7 +60,7 @@ uhlc = { version = "0.8.0", default-features = false } # Default features are di
 cargo-run-bin = "1.7.4"
 
 [workspace.metadata.bin]
-zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
+zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "monotonic_fix", version = "1.4.0" }
 
 [profile.release.package.zenoh-keyexpr-wasm]
 # Tell `rustc` to optimize for small code size for wasm project

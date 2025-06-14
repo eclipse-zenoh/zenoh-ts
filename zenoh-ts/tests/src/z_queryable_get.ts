@@ -135,21 +135,21 @@ const optionVariants = {
     ConsolidationMode.MONOTONIC,
     ConsolidationMode.LATEST,
   ],
-  replyKeyExprValues: [
-    undefined,
-    ReplyKeyExpr.ANY,
-    ReplyKeyExpr.MATCHING_QUERY,
-  ],
-  encodingValues: [
-    undefined,
-    Encoding.default(),
-    Encoding.TEXT_PLAIN,
-    Encoding.APPLICATION_JSON,
-  ],
-  payloadValues: [undefined, "test-payload"],
-  attachmentValues: [undefined, new ZBytes("test-attachment")],
-  expressValues: [undefined, false, true],
-  timeoutValues: [undefined, Duration.milliseconds.of(1000)],
+    replyKeyExprValues: [
+      undefined,
+      ReplyKeyExpr.ANY,
+      ReplyKeyExpr.MATCHING_QUERY,
+    ],
+    encodingValues: [
+      undefined,
+      Encoding.default(),
+      Encoding.TEXT_PLAIN,
+      Encoding.APPLICATION_JSON,
+    ],
+    payloadValues: [undefined, "test-payload"],
+    attachmentValues: [undefined, new ZBytes("test-attachment")],
+    expressValues: [undefined, false, true],
+    timeoutValues: [undefined, Duration.milliseconds.of(1000)],
 };
 
 /**
@@ -606,17 +606,17 @@ function compareQueryableProperties(
  * Options for configuring which values to test for each option type
  */
 interface GenerateTestCasesOptions {
-  priorityValues: (Priority | undefined)[];
-  congestionControlValues: (CongestionControl | undefined)[];
-  localityValues: (Locality | undefined)[];
-  queryTargetValues: (QueryTarget | undefined)[];
-  consolidationModeValues: (ConsolidationMode | undefined)[];
-  replyKeyExprValues: (ReplyKeyExpr | undefined)[];
-  encodingValues: (Encoding | undefined)[];
-  payloadValues: (string | undefined)[];
-  attachmentValues: (ZBytes | undefined)[];
-  expressValues: (boolean | undefined)[];
-  timeoutValues: (ReturnType<typeof Duration.milliseconds.of> | undefined)[];
+  priorityValues?: (Priority | undefined)[];
+  congestionControlValues?: (CongestionControl | undefined)[];
+  localityValues?: (Locality | undefined)[];
+  queryTargetValues?: (QueryTarget | undefined)[];
+  consolidationModeValues?: (ConsolidationMode | undefined)[];
+  replyKeyExprValues?: (ReplyKeyExpr | undefined)[];
+  encodingValues?: (Encoding | undefined)[];
+  payloadValues?: (string | undefined)[];
+  attachmentValues?: (ZBytes | undefined)[];
+  expressValues?: (boolean | undefined)[];
+  timeoutValues?: (ReturnType<typeof Duration.milliseconds.of> | undefined)[];
 }
 
 /**
@@ -631,14 +631,14 @@ function generateTestCases(
 ): TestCase[] {
   const testCases: TestCase[] = [];
   // Generate test cases for priority
-  for (const priority of options.priorityValues) {
+  for (const priority of options.priorityValues ?? []) {
     const keyexpr = `zenoh/test/priority/${priority ?? "undefined"}`;
     const options = { ...baseCase.getOptions, priority };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for congestionControl
-  for (const congestionControl of options.congestionControlValues) {
+  for (const congestionControl of options.congestionControlValues ?? []) {
     const keyexpr = `zenoh/test/congestionControl/${
       congestionControl ?? "undefined"
     }`;
@@ -647,14 +647,14 @@ function generateTestCases(
   }
 
   // Generate test cases for express
-  for (const express of options.expressValues) {
+  for (const express of options.expressValues ?? []) {
     const keyexpr = `zenoh/test/express/${express ?? "undefined"}`;
     const options = { ...baseCase.getOptions, express };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for allowedDestinaton (locality)
-  for (const allowedDestinaton of options.localityValues) {
+  for (const allowedDestinaton of options.localityValues ?? []) {
     const keyexpr = `zenoh/test/allowedDestinaton/${
       allowedDestinaton ?? "undefined"
     }`;
@@ -663,7 +663,7 @@ function generateTestCases(
   }
 
   // Generate test cases for encoding
-  for (const encoding of options.encodingValues) {
+  for (const encoding of options.encodingValues ?? []) {
     const keyexpr = `zenoh/test/encoding/${
       encoding?.toString() ?? "undefined"
     }`;
@@ -672,14 +672,14 @@ function generateTestCases(
   }
 
   // Generate test cases for payload
-  for (const payload of options.payloadValues) {
+  for (const payload of options.payloadValues ?? []) {
     const keyexpr = `zenoh/test/payload/${payload ?? "undefined"}`;
     const options = { ...baseCase.getOptions, payload };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for attachment
-  for (const attachment of options.attachmentValues) {
+  for (const attachment of options.attachmentValues ?? []) {
     const keyexpr = `zenoh/test/attachment/${
       attachment?.toString() ?? "undefined"
     }`;
@@ -688,7 +688,7 @@ function generateTestCases(
   }
 
   // Generate test cases for timeout
-  for (const timeout of options.timeoutValues) {
+  for (const timeout of options.timeoutValues ?? []) {
     // Convert timeout Duration to a readable string representation
     const timeoutStr = timeout ? `${timeout.value}ms` : "undefined";
     const keyexpr = `zenoh/test/timeout/${timeoutStr}`;
@@ -697,21 +697,21 @@ function generateTestCases(
   }
 
   // Generate test cases for target
-  for (const target of options.queryTargetValues) {
+  for (const target of options.queryTargetValues ?? []) {
     const keyexpr = `zenoh/test/target/${target ?? "undefined"}`;
     const options = { ...baseCase.getOptions, target };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for consolidation
-  for (const consolidation of options.consolidationModeValues) {
+  for (const consolidation of options.consolidationModeValues ?? []) {
     const keyexpr = `zenoh/test/consolidation/${consolidation ?? "undefined"}`;
     const options = { ...baseCase.getOptions, consolidation };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
   }
 
   // Generate test cases for acceptReplies
-  for (const acceptReplies of options.replyKeyExprValues) {
+  for (const acceptReplies of options.replyKeyExprValues ?? []) {
     const keyexpr = `zenoh/test/acceptReplies/${acceptReplies ?? "undefined"}`;
     const options = { ...baseCase.getOptions, acceptReplies };
     testCases.push(new TestCase(keyexpr, baseCase.parameters, options));
@@ -935,7 +935,9 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               fullDescription
             );
 
-            // Always expect exactly 3 replies: PUT sample, ERROR reply, and DELETE sample
+            // Always expect 2 or 3 replies: PUT sample, ERROR reply, and DELETE sample
+            // DELETE sample goes first, then PUT sample
+            // So in case of consolidation, we may receive only PUT and ERROR replies
             // Categorize replies into separate lists
             const { samplePut, sampleDelete, replyErrors } =
               categorizeReplies(replies);
@@ -952,7 +954,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               1,
               `Should receive exactly one ReplyError for ${fullDescription}`
             );
-
             // DELETE sample is optional - it may be consolidated away
             if (sampleDelete.length > 1) {
               throw new Error(
@@ -1058,9 +1059,6 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
     console.log(
       `All ${totalTests} test cases completed successfully (${testCases.length} test cases × ${N_OPERATIONS_PER_TEST} operations each)`
     );
-    console.log(
-      `Each test case validates 2-3 reply types: Sample (PUT) and ReplyError always, optionally Sample (DELETE) depending on consolidation mode`
-    );
   } finally {
     // Cleanup sessions
     if (session2) {
@@ -1084,36 +1082,34 @@ function verifyConsolidation(
   consolidationMode: ConsolidationMode | undefined,
   description: string
 ): void {
-  // If consolidation is AUTO, don't perform the check as behavior is implementation-dependent
+  // If consolidation is undefined, AUTO or MONOTONIC, expect 2 or 3 replies
+  // If consolidation is NONE, expect exactly 3 replies (PUT, DELETE, ERROR)
+  // If consolidation is LATEST, expect 2 replies (PUT, ERROR) as DELETE must be consolidated away
   if (
+    consolidationMode === undefined ||
     consolidationMode === ConsolidationMode.AUTO ||
-    consolidationMode === undefined
+    consolidationMode === ConsolidationMode.MONOTONIC
   ) {
-    return;
-  }
-
-  // If consolidation is NONE, expect exactly 3 packets (PUT, DELETE, ERROR)
-  if (consolidationMode === ConsolidationMode.NONE) {
+    // Expect 2 or 3 replies (PUT, DELETE, ERROR)
+    assertEquals(
+      replies.length >= 2 && replies.length <= 3,
+      true,
+      `Expected 2 or 3 replies for ${description}, but got ${replies.length}`
+    );
+  } else if (consolidationMode === ConsolidationMode.NONE) {
+    // Expect exactly 3 replies (PUT, DELETE, ERROR)
     assertEquals(
       replies.length,
       3,
-      `Expected exactly 3 replies with NONE consolidation for ${description}, got ${replies.length}`
+      `Expected exactly 3 replies for ${description}, but got ${replies.length}`
     );
-    return;
-  }
-
-  // If consolidation is LATEST or MONOTONIC, expect exactly 2 packets
-  // DELETE sample may be consolidated away, leaving PUT and ERROR
-  if (
-    consolidationMode === ConsolidationMode.LATEST ||
-    consolidationMode === ConsolidationMode.MONOTONIC
-  ) {
+  } else if (consolidationMode === ConsolidationMode.LATEST) {
+    // Expect exactly 2 replies (PUT, ERROR)
     assertEquals(
       replies.length,
       2,
-      `Expected exactly 2 replies with consolidation=${consolidationMode} consolidation for ${description}, got ${replies.length}`
+      `Expected exactly 2 replies for ${description}, but got ${replies.length}`
     );
-    return;
   }
 }
 
