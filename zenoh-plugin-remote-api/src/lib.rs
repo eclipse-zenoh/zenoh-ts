@@ -552,7 +552,9 @@ async fn run_websocket_server(
 
             let ch_rx_stream = ws_ch_rx
                 .into_stream()
-                .map(|(out_msg, sequence_id)| Ok(Message::Binary(out_msg.to_wire(sequence_id).into())))
+                .map(|(out_msg, sequence_id)| {
+                    Ok(Message::Binary(out_msg.to_wire(sequence_id).into()))
+                })
                 .forward(ws_tx);
 
             // send confirmation that session was successfully opened

@@ -127,15 +127,13 @@ fn parse_args() -> (Config, Option<f32>) {
 
     // apply zenoh related arguments over config
     if let Some(id) = &args.id {
-        config
-            .set_id(Some(ZenohId::from_str(id).unwrap()))
-            .unwrap();
+        config.set_id(Some(ZenohId::from_str(id).unwrap())).unwrap();
     }
     // Always set mode since it has a default value
     config
         .set_mode(Some(args.mode.to_string().parse().unwrap()))
         .unwrap();
-    
+
     if !args.connect.is_empty() {
         config
             .connect
@@ -166,16 +164,25 @@ fn parse_args() -> (Config, Option<f32>) {
     // apply Remote API related arguments over config
     if let Some(ws_port) = &args.ws_port {
         config
-            .insert_json5("plugins/remote_api/websocket_port", &format!(r#""{ws_port}""#))
+            .insert_json5(
+                "plugins/remote_api/websocket_port",
+                &format!(r#""{ws_port}""#),
+            )
             .unwrap();
     }
     if let Some(cert_path) = &args.cert {
         if let Some(key_path) = &args.key {
             config
-                .insert_json5("plugins/remote_api/secure_websocket/certificate_path", &format!(r#""{cert_path}""#))
+                .insert_json5(
+                    "plugins/remote_api/secure_websocket/certificate_path",
+                    &format!(r#""{cert_path}""#),
+                )
                 .unwrap();
             config
-                .insert_json5("plugins/remote_api/secure_websocket/private_key_path", &format!(r#""{key_path}""#))
+                .insert_json5(
+                    "plugins/remote_api/secure_websocket/private_key_path",
+                    &format!(r#""{key_path}""#),
+                )
                 .unwrap();
         }
     }
@@ -188,7 +195,10 @@ fn parse_args() -> (Config, Option<f32>) {
 #[tokio::main]
 async fn main() {
     zenoh::init_log_from_env_or("z=info");
-    tracing::info!("zenoh-bridge-remote-api {}", RemoteApiPlugin::PLUGIN_LONG_VERSION);
+    tracing::info!(
+        "zenoh-bridge-remote-api {}",
+        RemoteApiPlugin::PLUGIN_LONG_VERSION
+    );
 
     let (config, watchdog_period) = parse_args();
     tracing::info!("Zenoh {config:?}");
@@ -200,7 +210,10 @@ async fn main() {
     let mut plugins_mgr = PluginsManager::static_plugins_only();
 
     // declare Remote API plugin
-    plugins_mgr.declare_static_plugin::<zenoh_plugin_remote_api::RemoteApiPlugin, &str>("remote_api", true);
+    plugins_mgr.declare_static_plugin::<zenoh_plugin_remote_api::RemoteApiPlugin, &str>(
+        "remote_api",
+        true,
+    );
 
     // create a zenoh Runtime.
     let mut runtime = match RuntimeBuilder::new(config)

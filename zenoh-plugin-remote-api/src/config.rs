@@ -26,7 +26,10 @@ const DEFAULT_WEBSOCKET_PORT: &str = "10000";
 #[derive(JsonSchema, Deserialize, serde::Serialize, Clone, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Config {
-    #[serde(default = "default_websocket_port", deserialize_with = "deserialize_ws_port")]
+    #[serde(
+        default = "default_websocket_port",
+        deserialize_with = "deserialize_ws_port"
+    )]
     pub websocket_port: String,
 
     pub secure_websocket: Option<SecureWebsocket>,
@@ -250,7 +253,10 @@ mod tests {
             ..
         } = config.unwrap();
 
-        assert_eq!(websocket_port, format!("{DEFAULT_HTTP_INTERFACE}:{DEFAULT_WEBSOCKET_PORT}"));
+        assert_eq!(
+            websocket_port,
+            format!("{DEFAULT_HTTP_INTERFACE}:{DEFAULT_WEBSOCKET_PORT}")
+        );
         assert_eq!(__path__, None);
         assert_eq!(__required__, None);
     }
