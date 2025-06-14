@@ -27,13 +27,12 @@ fn main() {
     );
 
     let schema = serde_json::to_value(schema_for!(Config)).unwrap();
-    let schema = jsonschema::JSONSchema::compile(&schema).unwrap();
-    println!("{schema:#?}");
+    let validator = jsonschema::Validator::new(&schema).unwrap();
+    println!("{validator:#?}");
     let config = std::fs::read_to_string("config.json5").unwrap();
     let config: serde_json::Value = serde_json::from_str(&config).unwrap();
 
-    if let Err(es) = schema.validate(&config) {
-        let es = es.map(|e| format!("{}", e)).collect::<Vec<_>>().join("\n");
-        panic!("config.json5 schema validation error: {}", es);
-    };
+    if let Err(validation_error) = validator.validate(&config) {
+        panic!("config.json5 schema validation error: {}", validation_error);
+    }
 }

@@ -17,7 +17,7 @@ use std::{
 };
 
 use async_liveliness_monitor::LivelinessMonitor;
-use clap::{App, Arg};
+use clap::Parser;
 use zenoh::{
     config::Config,
     internal::{plugins::PluginsManager, runtime::RuntimeBuilder},
@@ -26,74 +26,97 @@ use zenoh::{
 use zenoh_plugin_remote_api::RemoteApiPlugin;
 use zenoh_plugin_trait::Plugin;
 
+#[derive(Parser, Debug)]
+#[command(name = "zenoh bridge for Remote API")]
+#[command(version = RemoteApiPlugin::PLUGIN_VERSION)]
+#[command(long_version = RemoteApiPlugin::PLUGIN_LONG_VERSION)]
+struct Args {
+    /// The identifier (as an hexadecimal string, with odd number of chars - e.g.: 0A0B23...)
+    /// that zenohd must use. WARNING: this identifier must be unique in the system and must be
+    /// 16 bytes maximum (32 chars)! If not set, a random UUIDv4 will be used.
+    #[arg(short, long, value_name = "HEX_STRING")]
+    id: Option<String>,
+
+    /// The zenoh session mode
+    #[arg(short, long, value_enum, default_value = "peer")]
+    mode: SessionMode,
+
+    /// The configuration file. Currently, this file must be a valid JSON5 file.
+    #[arg(short, long, value_name = "FILE")]
+    config: Option<String>,
+
+    /// A locator on which this router will listen for incoming sessions.
+    /// Repeat this option to open several listeners.
+    #[arg(short, long, value_name = "ENDPOINT")]
+    listen: Vec<String>,
+
+    /// A peer locator this router will try to connect to.
+    /// Repeat this option to connect to several peers.
+    #[arg(short = 'e', long, value_name = "ENDPOINT")]
+    connect: Vec<String>,
+
+    /// By default the zenoh bridge listens and replies to UDP multicast scouting messages
+    /// for being discovered by peers and routers. This option disables this feature.
+    #[arg(long)]
+    no_multicast_scouting: bool,
+
+    /// Configures HTTP interface for the REST API (disabled by default, setting this option
+    /// enables it). Accepted values: a port number or a string with format `<local_ip>:<port_number>`
+    /// (to bind the HTTP server to a specific interface).
+    #[arg(long, value_name = "PORT | IP:PORT")]
+    rest_http_port: Option<String>,
+
+    /// WebSocket port for the Remote API (default: 10000). Accepted values: a port number
+    /// or a string with format `<local_ip>:<port_number>` (to bind the WebSocket server to a specific interface).
+    #[arg(long, value_name = "PORT | IP:PORT")]
+    ws_port: Option<String>,
+
+    /// Path to the TLS certificate file for secure WebSocket connections.
+    #[arg(long, value_name = "PATH")]
+    cert: Option<String>,
+
+    /// Path to the TLS private key file for secure WebSocket connections.
+    #[arg(long, value_name = "PATH")]
+    key: Option<String>,
+
+    /// Experimental!! Run a watchdog thread that monitors the bridge's async executor
+    /// and reports as error log any stalled status during the specified period (default: 1.0 second)
+    #[arg(long, value_name = "PERIOD", default_value = "1.0")]
+    watchdog: f32,
+}
+
+#[derive(clap::ValueEnum, Clone, Debug)]
+enum SessionMode {
+    Peer,
+    Client,
+}
+
+impl std::fmt::Display for SessionMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SessionMode::Peer => write!(f, "peer"),
+            SessionMode::Client => write!(f, "client"),
+        }
+    }
+}
+
+impl std::str::FromStr for SessionMode {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_str() {
+            "peer" => Ok(SessionMode::Peer),
+            "client" => Ok(SessionMode::Client),
+            _ => Err(format!("Invalid session mode: {}", s)),
+        }
+    }
+}
+
 fn parse_args() -> (Config, Option<f32>) {
-    let app = App::new("zenoh bridge for Remote API")
-        .version(RemoteApiPlugin::PLUGIN_VERSION)
-        .long_version(RemoteApiPlugin::PLUGIN_LONG_VERSION)
-        //
-        // zenoh related arguments:
-        //
-        .arg(Arg::from_usage(
-r"-i, --id=[HEX_STRING] \
-'The identifier (as an hexadecimal string, with odd number of chars - e.g.: 0A0B23...) that zenohd must use.
-WARNING: this identifier must be unique in the system and must be 16 bytes maximum (32 chars)!
-If not set, a random UUIDv4 will be used.'",
-            ))
-        .arg(Arg::from_usage(
-r#"-m, --mode=[MODE]  'The zenoh session mode.'"#)
-            .possible_values(&["peer", "client"])
-            .default_value("peer")
-        )
-        .arg(Arg::from_usage(
-r"-c, --config=[FILE] \
-'The configuration file. Currently, this file must be a valid JSON5 file.'",
-            ))
-        .arg(Arg::from_usage(
-r"-l, --listen=[ENDPOINT]... \
-'A locator on which this router will listen for incoming sessions.
-Repeat this option to open several listeners.'",
-                ),
-            )
-        .arg(Arg::from_usage(
-r"-e, --connect=[ENDPOINT]... \
-'A peer locator this router will try to connect to.
-Repeat this option to connect to several peers.'",
-            ))
-        .arg(Arg::from_usage(
-r"--no-multicast-scouting \
-'By default the zenoh bridge listens and replies to UDP multicast scouting messages for being discovered by peers and routers.
-This option disables this feature.'"
-        ))
-        .arg(Arg::from_usage(
-r"--rest-http-port=[PORT | IP:PORT] \
-'Configures HTTP interface for the REST API (disabled by default, setting this option enables it). Accepted values:'
-  - a port number
-  - a string with format `<local_ip>:<port_number>` (to bind the HTTP server to a specific interface)."
-        ))
-        //
-        // Remote API related arguments:
-        //
-        .arg(Arg::from_usage(
-r"--ws-port=[PORT | IP:PORT] \
-'WebSocket port for the Remote API (default: 10000). Accepted values:'
-  - a port number
-  - a string with format `<local_ip>:<port_number>` (to bind the WebSocket server to a specific interface)."
-        ))
-        .arg(Arg::from_usage(
-r"--cert=[PATH] \
-'Path to the TLS certificate file for secure WebSocket connections.'"
-        ))
-        .arg(Arg::from_usage(
-r"--key=[PATH] \
-'Path to the TLS private key file for secure WebSocket connections.'"
-        ))
-        .arg(Arg::from_usage(
-r#"--watchdog=[PERIOD]   'Experimental!! Run a watchdog thread that monitors the bridge's async executor and reports as error log any stalled status during the specified period (default: 1.0 second)'"#
-        ).default_value("1.0"));
-    let args = app.get_matches();
+    let args = Args::parse();
 
     // load config file at first
-    let mut config = match args.value_of("config") {
+    let mut config = match &args.config {
         Some(conf_file) => Config::from_file(conf_file).unwrap(),
         None => Config::default(),
     };
@@ -103,35 +126,34 @@ r#"--watchdog=[PERIOD]   'Experimental!! Run a watchdog thread that monitors the
     }
 
     // apply zenoh related arguments over config
-    // NOTE: only if args.occurrences_of()>0 to avoid overriding config with the default arg value
-    if args.occurrences_of("id") > 0 {
+    if let Some(id) = &args.id {
         config
-            .set_id(Some(ZenohId::from_str(args.value_of("id").unwrap()).unwrap()))
+            .set_id(Some(ZenohId::from_str(id).unwrap()))
             .unwrap();
     }
-    if args.occurrences_of("mode") > 0 {
-        config
-            .set_mode(Some(args.value_of("mode").unwrap().parse().unwrap()))
-            .unwrap();
-    }
-    if let Some(endpoints) = args.values_of("connect") {
+    // Always set mode since it has a default value
+    config
+        .set_mode(Some(args.mode.to_string().parse().unwrap()))
+        .unwrap();
+    
+    if !args.connect.is_empty() {
         config
             .connect
             .endpoints
-            .set(endpoints.map(|p| p.parse().unwrap()).collect())
+            .set(args.connect.iter().map(|p| p.parse().unwrap()).collect())
             .unwrap();
     }
-    if let Some(endpoints) = args.values_of("listen") {
+    if !args.listen.is_empty() {
         config
             .listen
             .endpoints
-            .set(endpoints.map(|p| p.parse().unwrap()).collect())
+            .set(args.listen.iter().map(|p| p.parse().unwrap()).collect())
             .unwrap();
     }
-    if args.is_present("no-multicast-scouting") {
+    if args.no_multicast_scouting {
         config.scouting.multicast.set_enabled(Some(false)).unwrap();
     }
-    if let Some(port) = args.value_of("rest-http-port") {
+    if let Some(port) = &args.rest_http_port {
         config
             .insert_json5("plugins/rest/http_port", &format!(r#""{port}""#))
             .unwrap();
@@ -142,13 +164,13 @@ r#"--watchdog=[PERIOD]   'Experimental!! Run a watchdog thread that monitors the
     config.plugins_loading.set_enabled(true).unwrap();
 
     // apply Remote API related arguments over config
-    if let Some(ws_port) = args.value_of("ws-port") {
+    if let Some(ws_port) = &args.ws_port {
         config
             .insert_json5("plugins/remote_api/websocket_port", &format!(r#""{ws_port}""#))
             .unwrap();
     }
-    if let Some(cert_path) = args.value_of("cert") {
-        if let Some(key_path) = args.value_of("key") {
+    if let Some(cert_path) = &args.cert {
+        if let Some(key_path) = &args.key {
             config
                 .insert_json5("plugins/remote_api/secure_websocket/certificate_path", &format!(r#""{cert_path}""#))
                 .unwrap();
@@ -158,11 +180,7 @@ r#"--watchdog=[PERIOD]   'Experimental!! Run a watchdog thread that monitors the
         }
     }
 
-    let watchdog_period = if args.is_present("watchdog") {
-        args.value_of("watchdog").map(|s| s.parse::<f32>().unwrap())
-    } else {
-        None
-    };
+    let watchdog_period = Some(args.watchdog);
 
     (config, watchdog_period)
 }

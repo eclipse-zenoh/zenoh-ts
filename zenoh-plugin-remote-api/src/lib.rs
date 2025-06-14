@@ -552,7 +552,7 @@ async fn run_websocket_server(
 
             let ch_rx_stream = ws_ch_rx
                 .into_stream()
-                .map(|(out_msg, sequence_id)| Ok(Message::Binary(out_msg.to_wire(sequence_id))))
+                .map(|(out_msg, sequence_id)| Ok(Message::Binary(out_msg.to_wire(sequence_id).into())))
                 .forward(ws_tx);
 
             // send confirmation that session was successfully opened
@@ -597,7 +597,7 @@ async fn handle_message(
     state: &mut RemoteState,
 ) -> Option<(OutRemoteMessage, Option<SequenceId>)> {
     match msg {
-        Message::Binary(val) => match InRemoteMessage::from_wire(val) {
+        Message::Binary(val) => match InRemoteMessage::from_wire(val.to_vec()) {
             Ok((header, msg)) => {
                 match state.handle_message(msg).await {
                     Ok(Some(msg)) => Some((msg, header.sequence_id)),
