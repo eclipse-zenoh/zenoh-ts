@@ -1,0 +1,95 @@
+#
+# Copyright (c) 2024 ZettaScale Technology
+#
+# This program and the accompanying materials are made available under the
+# terms of the Eclipse Public License 2.0 which is available at
+# http://www.eclipse.org/legal/epl-2.0, or the Apache License, Version 2.0
+# which is available at https://www.apache.org/licenses/LICENSE-2.0.
+#
+# SPDX-License-Identifier: EPL-2.0 OR Apache-2.0
+#
+# Contributors:
+#   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
+#
+[package]
+rust-version = "1.75.0"
+name = "zenoh-bridge-remote-api"
+version = "1.4.0"
+repository = "https://github.com/eclipse-zenoh/zenoh-ts"
+homepage = "http://zenoh.io"
+authors = [
+    "Charles Schleich <charles.schleich@zettascale.tech>",
+    "Olivier Hécart <olivier.hecart@zettascale.tech>",
+    "Luca Cominardi <luca.cominardi@zettascale.tech>",
+    "Pierre Avital <pierre.avital@zettascale.tech>",
+]
+edition = "2021"
+license = "EPL-2.0 OR Apache-2.0"
+categories = [
+    "network-programming",
+    "web-programming::websocket",
+]
+description = "Zenoh: The Zero Overhead Pub/Sub/Query Protocol."
+
+[features]
+default = ["dynamic_plugin"]
+dynamic_plugin = []
+
+[[bin]]
+name = "zenoh-bridge-remote-api"
+path = "src/main.rs"
+
+[dependencies]
+async-liveliness-monitor = "0.1"
+clap = "2.34"
+tokio = { workspace = true }
+tokio-tungstenite = { workspace = true }
+tokio-rustls = { workspace = true }
+futures-util = { workspace = true }
+rustls-pemfile = { workspace = true }
+base64 = { workspace = true }
+flume = { workspace = true }
+futures = { workspace = true }
+git-version = { workspace = true }
+lazy_static = { workspace = true }
+ts-rs = { workspace = true, features = [
+    "serde-compat",
+    "uuid-impl",
+    "serde-json-impl",
+    "no-serde-warnings",
+] }
+tracing = { workspace = true }
+schemars = { workspace = true }
+serde = { workspace = true, default-features = false, features = [
+    "derive",
+] } # Default features are disabled due to usage in no_std crates
+serde_json = { workspace = true }
+zenoh = { workspace = true, features = ["plugins"] }
+zenoh-ext = { workspace = true }
+zenoh_backend_traits = { workspace = true }
+zenoh-plugin-trait = { workspace = true }
+zenoh-util = { workspace = true }
+zenoh-result = { workspace = true }
+zenoh-plugin-remote-api = {workspace = true }
+uuid = { workspace=true, default-features = false, features = [
+    "v4",
+    "serde",
+] }
+uhlc = { workspace=true, default-features = false } # Default features are disabled due to usage in no_std crates
+lru = { workspace = true }
+
+[build-dependencies]
+rustc_version = "0.4.0"
+schemars = { version = "0.8.12", features = ["either"] }
+serde = { version = "1.0.154", default-features = false, features = ["derive"] }
+serde_json = "1.0.114"
+jsonschema = { version = "0.18.0", default-features = false }
+cargo-run-bin = { workspace = true }
+
+[package.metadata.deb]
+name = "zenoh-bridge-remote-api"
+maintainer = "zenoh-dev@eclipse.org"
+copyright = "2024 ZettaScale Technology"
+section = "net"
+license-file = ["../zenoh-ts/LICENSE", "0"]
+depends = "zenohd (=1.4.0)"
