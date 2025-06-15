@@ -21,7 +21,7 @@ import { Timestamp } from "./timestamp.js";
 import { ZenohId } from "./zid.js";
 import { Publisher, Subscriber } from "./pubsub.js";
 import { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, ReplyOptions, ReplyErrOptions, ReplyDelOptions, Selector } from "./query.js";
-import { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SessionInfo } from "./session.js";
+import { Session, DeleteOptions, PutOptions, GetOptions, QuerierOptions, QueryableOptions, PublisherOptions, SessionInfo, SubscriberOptions } from "./session.js";
 import { Config } from "./config.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Liveliness, LivelinessToken } from "./liveliness.js";
@@ -39,7 +39,7 @@ export { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, 
 export { Timestamp };
 export { Publisher, Subscriber};
 export { IntoSelector, Parameters, IntoParameters, Query, Queryable, Reply, ReplyError, ReplyErrOptions, ReplyDelOptions, Selector, ReplyOptions };
-export { Session, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo};
+export { Session, DeleteOptions, PutOptions, GetOptions, QueryableOptions, PublisherOptions, ZenohId, SessionInfo, SubscriberOptions};
 export { Config };
 export { Encoding, IntoEncoding };
 export { Liveliness, LivelinessToken };
