@@ -13,20 +13,7 @@
           <!-- Open Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>
-                Open
-                <span v-if="!sessionOptionsExpanded" class="header-keyexpr">
-                  <template v-if="activeSessions.length > 0">
-                    - {{ activeSessions.length }} session{{ activeSessions.length > 1 ? 's' : '' }}
-                  </template>
-                  <template v-else-if="isConnecting">
-                    - Connecting...
-                  </template>
-                  <template v-else>
-                    - {{ serverUrl || 'ws://localhost:10000' }}
-                  </template>
-                </span>
-              </h4>
+              <h4>Open</h4>
               <div class="header-actions">
                 <button 
                   @click="connect" 
@@ -49,22 +36,6 @@
                   v-model="serverUrl"
                   :disabled="false"
                 />
-              </div>
-              
-              <!-- Connection Status -->
-              <div class="status-indicator" :class="{ connected: isConnected, connecting: isConnecting }">
-                <span class="status-dot"></span>
-                <span class="status-text">
-                  <template v-if="activeSessions.length > 0">
-                    {{ activeSessions.length }} Active Session{{ activeSessions.length > 1 ? 's' : '' }}
-                  </template>
-                  <template v-else-if="isConnecting">
-                    Connecting...
-                  </template>
-                  <template v-else>
-                    Disconnected
-                  </template>
-                </span>
               </div>
             </div>
             
@@ -635,7 +606,10 @@
       <!-- Log Panel -->
       <div class="log-panel">
         <div class="log-header">
-          <h3>Operations Log</h3>
+          <h3>
+            <span class="status-dot" :class="{ connected: isConnected, connecting: isConnecting }"></span>
+            Activity Log
+          </h3>
           <button @click="clearLog" class="compact-button btn-warning">Clear</button>
         </div>
         <div class="log-content" ref="logContent">
@@ -887,26 +861,26 @@ watch(activeQueryables, (queryables) => {
   color: #555;
 }
 
-/* Status indicator styles for session section */
-.status-indicator {
-  display: flex;
-  align-items: center;
-  gap: var(--compact-gap);
-  margin-top: var(--compact-gap);
-  padding: var(--compact-gap);
-  background-color: #f8f9fa;
-  border-radius: var(--compact-border-radius);
-  border: 1px solid #e9ecef;
-}
-
 .status-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   background-color: #ccc;
   transition: background-color 0.3s;
+  display: inline-block;
+  margin-right: 8px;
 }
 
+.status-dot.connecting {
+  background-color: #ff9800;
+  animation: pulse 1s infinite;
+}
+
+.status-dot.connected {
+  background-color: #4CAF50;
+}
+
+/* Legacy styles for status-indicator context (if still used elsewhere) */
 .status-indicator.connecting .status-dot {
   background-color: #ff9800;
   animation: pulse 1s infinite;
@@ -919,11 +893,6 @@ watch(activeQueryables, (queryables) => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
-}
-
-.status-text {
-  font-weight: bold;
-  color: #333;
 }
 
 /* Button group styling - app-specific */
