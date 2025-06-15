@@ -323,12 +323,15 @@ class ZenohDemo extends ZenohDemoEmpty {
     return this.activeSessions.value.some((s) => s.displayId === sessionId);
   }
 
-  private removeSubscriber(displayId: string): SubscriberState | undefined {
+  private removeSubscriber(displayId: string): void {
     const subscriberIndex = this.activeSubscribers.value.findIndex(
       (sub: SubscriberState) => sub.displayId === displayId
     );
-    const [sub] = this.activeSubscribers.value.splice(subscriberIndex, 1);
-    return sub;
+    if (subscriberIndex === -1) {
+      this.addLogEntry("info", `Subscriber ${displayId} already removed or not found`);
+      return;
+    }
+    this.activeSubscribers.value.splice(subscriberIndex, 1);
   }
 
   private getSubscriber(displayId: string): SubscriberState | undefined {
@@ -576,6 +579,8 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (!sessionWithId || !this.subscriberParameters.key.value) return;
 
     const { session: currentSession, sessionId } = sessionWithId;
+    
+    let displayId: string | undefined;
 
     try {
       const keyExpr = new KeyExpr(this.subscriberParameters.key.value);
@@ -587,8 +592,8 @@ class ZenohDemo extends ZenohDemoEmpty {
         subscriberOptions
       );
 
-      // Generate sequential display ID for this subscriber
-      const displayId = `sub${this.subscriberIdCounter++}`;
+      // Generate sequential display ID only after successful subscriber creation
+      displayId = `sub${this.subscriberIdCounter++}`;
 
       const subscriberState: SubscriberState = {
         displayId: displayId,
@@ -606,67 +611,44 @@ class ZenohDemo extends ZenohDemoEmpty {
       });
 
       // Handle incoming data
-      async () => {
-        const receiver = subscriber.receiver();
-        if (!receiver) return;
+      const receiver = subscriber.receiver();
+      if (!receiver) {
+        this.addErrorLogEntry(
+          `Subscriber ${displayId} receiver is not available`
+        );
+        return;
+      }
 
-        try {
-          for await (const sample of receiver as ChannelReceiver<Sample>) {
-            try {
-              // Use JSON formatting for sample display with multiple parameters
-              this.addLogEntry(
-                "data",
-                `Subscriber ${displayId} received data`,
-                {
-                  Sample: sampleToJSON(sample),
-                }
-              );
-            } catch (sampleError) {
-              this.addErrorLogEntry(
-                "Error processing subscription sample",
-                sampleError
-              );
-            }
-          }
-          let sub = this.removeSubscriber(displayId);
-          if (sub) {
-            this.addLogEntry(
-              "info",
-              `Subscriber ${displayId} closed after receiving null sample`
-            );
-          } else {
+      try {
+        for await (const sample of receiver as ChannelReceiver<Sample>) {
+          try {
+            // Use JSON formatting for sample display with multiple parameters
+            this.addLogEntry("data", `Subscriber ${displayId} received data`, {
+              Sample: sampleToJSON(sample),
+            });
+          } catch (sampleError) {
             this.addErrorLogEntry(
-              `Subscriber ${displayId} not found when trying to remove after null sample`
-            );
-          }
-        } catch (subscriptionError) {
-          let sub = this.removeSubscriber(displayId);
-          if (!sub) {
-            this.addErrorLogEntry(
-              `Subscriber ${displayId} not found when trying to remove after exception${
-                subscriptionError ? "with error:" : "with empty error"
-              }`,
-              subscriptionError
-            );
-          } else {
-            if (subscriptionError) {
-              this.addErrorLogEntry(
-                `Subscription error for ${displayId}`,
-                subscriptionError
-              );
-            }
-            this.addLogEntry(
-              "info",
-              `Subscriber ${displayId} closed due to exception`
+              "Error processing subscription sample",
+              sampleError
             );
           }
         }
-      }; // end of subscriber handler closure
+      } catch (subscriptionError) {
+        this.addErrorLogEntry(
+          `Subscription error for ${displayId}`,
+          subscriptionError
+        );
+      }
     } catch (error) {
       this.addErrorLogEntry(
         `Subscribe failed for "${this.subscriberParameters.key.value}"`,
         error
       );
+    } finally {
+      // Only remove subscriber if displayId was assigned (subscriber was successfully created)
+      if (displayId) {
+        this.removeSubscriber(displayId);
+      }
     }
   }
 
@@ -829,13 +811,9 @@ class ZenohDemo extends ZenohDemoEmpty {
             await query.replyErr(errorPayload, replyErrOptions);
           } else if (responseParameters.replyType === "ignore") {
             // Handle ignore case - just log that the query is being ignored
-            this.addLogEntry(
-              "data",
-              `Queryable ${displayId} ignoring query:`,
-              {
-                Query: queryToJSON(query),
-              }
-            );
+            this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
+              Query: queryToJSON(query),
+            });
             // No reply sent, just continue to finalize
           }
 
