@@ -633,6 +633,10 @@ class ZenohDemo extends ZenohDemoEmpty {
             );
           }
         }
+        this.addLogEntry(
+          "success",
+          `Subscriber ${displayId} (${subscriberState.keyExpr}) closed`
+        );
       } catch (subscriptionError) {
         this.addErrorLogEntry(
           `Subscription error for ${displayId}`,
@@ -660,10 +664,6 @@ class ZenohDemo extends ZenohDemoEmpty {
     }
     try {
       await subscriberState.subscriber.undeclare();
-      this.addLogEntry(
-        "success",
-        `Undeclared subscriber ${subscriberId} (${subscriberState.keyExpr})`
-      );
     } catch (error) {
       this.addErrorLogEntry(`Undeclare failed for ${subscriberId}`, error);
     }
