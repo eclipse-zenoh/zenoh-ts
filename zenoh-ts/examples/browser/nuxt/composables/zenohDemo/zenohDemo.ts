@@ -454,12 +454,6 @@ class ZenohDemo extends ZenohDemoEmpty {
         }
       }
 
-      // Clear subscribers and queryables if no sessions remain
-      if (this.activeSessions.value.length === 0) {
-        this.activeSubscribers.value = [];
-        this.activeQueryables.value = [];
-      }
-
       this.addLogEntry(
         "success",
         `Disconnected from session ${sessionId} (${sessionState.serverUrl})`
