@@ -318,11 +318,6 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.isConnected.value = this.activeSessions.value.length > 0;
   }
 
-  // Helper method to check if a session still exists
-  private sessionExists(sessionId: string): boolean {
-    return this.activeSessions.value.some((s) => s.displayId === sessionId);
-  }
-
   private removeSubscriber(displayId: string): void {
     const subscriberIndex = this.activeSubscribers.value.findIndex(
       (sub: SubscriberState) => sub.displayId === displayId
@@ -334,27 +329,21 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.activeSubscribers.value.splice(subscriberIndex, 1);
   }
 
+  private removeQueryable(displayId: string): void {
+    const queryableIndex = this.activeQueryables.value.findIndex(
+      (qry: QueryableState) => qry.displayId === displayId
+    );
+    if (queryableIndex === -1) {
+      this.addLogEntry("info", `Queryable ${displayId} already removed or not found`);
+      return;
+    }
+    this.activeQueryables.value.splice(queryableIndex, 1);
+  }
+
   private getSubscriber(displayId: string): SubscriberState | undefined {
     return this.activeSubscribers.value.find(
       (sub: SubscriberState) => sub.displayId === displayId
     );
-  }
-
-  // Helper method to automatically remove a queryable when its session disconnects
-  private autoRemoveQueryable(displayId: string, sessionId: string): void {
-    // Only remove if session no longer exists
-    if (!this.sessionExists(sessionId)) {
-      const queryableIndex = this.activeQueryables.value.findIndex(
-        (qry: QueryableState) => qry.displayId === displayId
-      );
-      if (queryableIndex !== -1) {
-        this.activeQueryables.value.splice(queryableIndex, 1);
-        this.addLogEntry(
-          "info",
-          `Queryable ${displayId} automatically removed due to session ${sessionId} disconnection`
-        );
-      }
-    }
   }
 
   override async getSessionInfo(): Promise<void> {
@@ -674,15 +663,22 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (!sessionWithId || !this.queryableParameters.key.value) return;
 
     const { session: currentSession, sessionId } = sessionWithId;
+    
+    let displayId: string | undefined;
 
     try {
-      // Generate sequential display ID for this queryable
-      const displayId = `qry${this.queryableIdCounter++}`;
-
       const keyExpr = new KeyExpr(this.queryableParameters.key.value);
       const queryableOptions = queryableParametersStateToQueryableOptions(
         this.queryableParameters
       );
+
+      const queryable = await currentSession.declareQueryable(
+        keyExpr,
+        queryableOptions
+      );
+
+      // Generate sequential display ID only after successful queryable creation
+      displayId = `qry${this.queryableIdCounter++}`;
 
       // Create individual response parameters for this queryable
       const responseParameters = createDefaultResponseParameters();
@@ -711,143 +707,6 @@ class ZenohDemo extends ZenohDemoEmpty {
       responseParameters.replyErr.payload = `Error processing query from ${displayId} on session ${sessionId} created at ${createdAtStr}`;
       responseParameters.replyErr.payloadEmpty = false;
 
-      // Set up handler for queries
-      queryableOptions.handler = async (query: Query) => {
-        try {
-          // First check if the session still exists and auto-remove if disconnected
-          this.autoRemoveQueryable(displayId, sessionId);
-          if (!this.sessionExists(sessionId)) {
-            // Send error reply and finalize
-            try {
-              await query.replyErr("Session disconnected");
-              await query.finalize();
-            } catch (replyError) {
-              // Ignore reply errors during disconnection
-            }
-            return;
-          }
-
-          // Handle reply based on configured reply type
-          if (responseParameters.replyType === "reply") {
-            // Get reply parameters
-            const replyParams = responseParameters.reply;
-
-            // Determine the key expression for the reply
-            const replyKeyExpr = replyParams.keyExpr
-              ? new KeyExpr(replyParams.keyExpr)
-              : keyExpr;
-
-            // Get the payload (use empty if marked as empty)
-            const replyPayload = replyParams.payloadEmpty
-              ? ""
-              : replyParams.payload;
-
-            // Get timestamp if useTimestamp is enabled
-            let timestamp: Timestamp | undefined = undefined;
-            if (replyParams.useTimestamp && currentSession) {
-              try {
-                timestamp = await currentSession.newTimestamp();
-              } catch (error) {
-                this.addLogEntry(
-                  "error",
-                  `Failed to get timestamp for reply: ${error}`
-                );
-              }
-            }
-
-            // Build reply options with timestamp if available
-            const replyOptions = await replyParametersStateToReplyOptions(
-              replyParams,
-              currentSession
-            );
-
-            // Log the reply details with timestamp information
-            const logData: Record<string, any> = {
-              Query: queryToJSON(query),
-              "reply keyexpr": replyKeyExpr.toString(),
-              "reply payload": replyPayload,
-              ReplyOptions: replyOptionsToJSON(replyOptions),
-            };
-
-            // Add timestamp info to logs if enabled
-            if (replyParams.useTimestamp) {
-              logData["timestamp requested"] = true;
-              logData["timestamp included"] = timestamp !== undefined;
-              if (timestamp) {
-                logData["timestamp value"] = timestamp.asDate().toISOString();
-              }
-            }
-
-            this.addLogEntry(
-              "data",
-              `Queryable ${displayId} replying to query:`,
-              logData
-            );
-
-            await query.reply(replyKeyExpr, replyPayload, replyOptions);
-          } else if (responseParameters.replyType === "replyErr") {
-            // Handle error reply
-            const replyErrParams = responseParameters.replyErr;
-
-            // Get the error payload (use empty if marked as empty)
-            const errorPayload = replyErrParams.payloadEmpty
-              ? ""
-              : replyErrParams.payload;
-
-            // Build reply error options
-            const replyErrOptions =
-              replyErrParametersStateToReplyErrOptions(replyErrParams);
-
-            // Log the reply details
-            this.addLogEntry(
-              "data",
-              `Queryable ${displayId} replying error to query:`,
-              {
-                Query: queryToJSON(query),
-                "error payload": errorPayload,
-                ReplyErrOptions: replyOptionsToJSON(replyErrOptions),
-              }
-            );
-            await query.replyErr(errorPayload, replyErrOptions);
-          } else if (responseParameters.replyType === "ignore") {
-            // Handle ignore case - just log that the query is being ignored
-            this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
-              Query: queryToJSON(query),
-            });
-            // No reply sent, just continue to finalize
-          }
-
-          // Finalize the query to signal no more replies will be sent
-          await query.finalize();
-        } catch (queryError) {
-          // Auto-remove queryable if session disconnected, otherwise handle error
-          this.autoRemoveQueryable(displayId, sessionId);
-          if (!this.sessionExists(sessionId)) {
-            // Don't log error during disconnection, just try to clean up
-            try {
-              await query.replyErr("Session disconnected");
-              await query.finalize();
-            } catch (replyError) {
-              // Ignore reply errors during disconnection
-            }
-          } else {
-            // Only log errors if session still exists
-            this.addErrorLogEntry("Error handling query", queryError);
-            try {
-              await query.replyErr("Internal error handling query");
-              await query.finalize();
-            } catch (replyError) {
-              this.addErrorLogEntry("Error sending error reply", replyError);
-            }
-          }
-        }
-      };
-
-      const queryable = await currentSession.declareQueryable(
-        keyExpr,
-        queryableOptions
-      );
-
       const queryableState: QueryableState = {
         displayId: displayId,
         keyExpr: this.queryableParameters.key.value,
@@ -863,36 +722,147 @@ class ZenohDemo extends ZenohDemoEmpty {
         keyexpr: keyExpr.toString(),
         QueryableOptions: queryableOptionsToJSON(queryableOptions),
       });
+
+      // Handle incoming queries
+      const receiver = queryable.receiver();
+      if (!receiver) {
+        this.addErrorLogEntry(
+          `Queryable ${displayId} receiver is not available`
+        );
+        return;
+      }
+
+      try {
+        for await (const query of receiver as ChannelReceiver<Query>) {
+          try {
+            // Handle reply based on configured reply type
+            if (responseParameters.replyType === "reply") {
+              // Get reply parameters
+              const replyParams = responseParameters.reply;
+
+              // Determine the key expression for the reply
+              const replyKeyExpr = replyParams.keyExpr
+                ? new KeyExpr(replyParams.keyExpr)
+                : keyExpr;
+
+              // Get the payload (use empty if marked as empty)
+              const replyPayload = replyParams.payloadEmpty
+                ? ""
+                : replyParams.payload;
+
+              // Get timestamp if useTimestamp is enabled
+              let timestamp: Timestamp | undefined = undefined;
+              if (replyParams.useTimestamp && currentSession) {
+                try {
+                  timestamp = await currentSession.newTimestamp();
+                } catch (error) {
+                  this.addLogEntry(
+                    "error",
+                    `Failed to get timestamp for reply: ${error}`
+                  );
+                }
+              }
+
+              // Build reply options with timestamp if available
+              const replyOptions = await replyParametersStateToReplyOptions(
+                replyParams,
+                currentSession
+              );
+
+              // Log the reply details with timestamp information
+              const logData: Record<string, any> = {
+                Query: queryToJSON(query),
+                "reply keyexpr": replyKeyExpr.toString(),
+                "reply payload": replyPayload,
+                ReplyOptions: replyOptionsToJSON(replyOptions),
+              };
+
+              // Add timestamp info to logs if enabled
+              if (replyParams.useTimestamp) {
+                logData["timestamp requested"] = true;
+                logData["timestamp included"] = timestamp !== undefined;
+                if (timestamp) {
+                  logData["timestamp value"] = timestamp.asDate().toISOString();
+                }
+              }
+
+              this.addLogEntry(
+                "data",
+                `Queryable ${displayId} replying to query:`,
+                logData
+              );
+
+              await query.reply(replyKeyExpr, replyPayload, replyOptions);
+            } else if (responseParameters.replyType === "replyErr") {
+              // Handle error reply
+              const replyErrParams = responseParameters.replyErr;
+
+              // Get the error payload (use empty if marked as empty)
+              const errorPayload = replyErrParams.payloadEmpty
+                ? ""
+                : replyErrParams.payload;
+
+              // Build reply error options
+              const replyErrOptions =
+                replyErrParametersStateToReplyErrOptions(replyErrParams);
+
+              // Log the reply details
+              this.addLogEntry(
+                "data",
+                `Queryable ${displayId} replying error to query:`,
+                {
+                  Query: queryToJSON(query),
+                  "error payload": errorPayload,
+                  ReplyErrOptions: replyOptionsToJSON(replyErrOptions),
+                }
+              );
+              await query.replyErr(errorPayload, replyErrOptions);
+            } else if (responseParameters.replyType === "ignore") {
+              // Handle ignore case - just log that the query is being ignored
+              this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
+                Query: queryToJSON(query),
+              });
+              // No reply sent, just continue to finalize
+            }
+            // Finalize the query to signal no more replies will be sent
+            await query.finalize();
+          } catch (queryError) {
+              this.addErrorLogEntry("Error handling query", queryError);
+          }
+        }
+        this.addLogEntry(
+          "success",
+          `Queryable ${displayId} (${queryableState.keyExpr}) closed`
+        );
+      } catch (queryableError) {
+        this.addErrorLogEntry(
+          `Queryable error for ${displayId}`,
+          queryableError
+        );
+      }
     } catch (error) {
       this.addErrorLogEntry(
         `Declare queryable failed for "${this.queryableParameters.key.value}"`,
         error
       );
+    } finally {
+      // Only remove queryable if displayId was assigned (queryable was successfully created)
+      if (displayId) {
+        this.removeQueryable(displayId);
+      }
     }
   }
 
   override async undeclareQueryable(queryableId: string): Promise<void> {
-    const queryableIndex = this.activeQueryables.value.findIndex(
+    const queryableState = this.activeQueryables.value.find(
       (qry: QueryableState) => qry.displayId === queryableId
     );
-    if (queryableIndex === -1) {
+    if (!queryableState) {
       this.addErrorLogEntry(`Queryable ${queryableId} not found`);
       return;
     }
-
-    const queryableState = this.activeQueryables.value[queryableIndex];
-    if (!queryableState) {
-      this.addErrorLogEntry(`Queryable info for ${queryableId} is invalid`);
-      return;
-    }
-
     try {
       await queryableState.queryable.undeclare();
-      this.activeQueryables.value.splice(queryableIndex, 1);
-      this.addLogEntry(
-        "success",
-        `Undeclared queryable "${queryableState.keyExpr}" (${queryableId})`
-      );
     } catch (error) {
       this.addErrorLogEntry(
         `Undeclare queryable failed for ${queryableId}`,
