@@ -4,11 +4,16 @@
       <!-- Main Operations Panel -->
     <div class="main-panel">
       <!-- Operations Controls -->
-      <div class="operations-panel" :class="{ disabled: !isConnected }">
+      <div class="operations-panel">">">
         
-        <!-- Session Block -->
-        <div class="operation-block">
-          <h3 class="block-title">Session</h3>
+        <!-- Session Section -->
+        <div class="operation-section session-section">
+          <div class="section-header">
+            <div class="section-icon">🔗</div>
+            <h3 class="section-title">Session</h3>
+          </div>
+          <div class="section-content">
+            <div class="operation-block">
           
           <!-- Open Operation -->
           <div class="operation-group">
@@ -75,7 +80,7 @@
               <div class="header-actions">
                 <button 
                   @click="getSessionInfo" 
-                  :disabled="activeSessions.length === 0"
+                  :disabled="!selectedSessionId"
                   class="compact-button btn-primary"
                 >
                   Run
@@ -83,11 +88,18 @@
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
-        
-        <!-- Publish / Subscribe Block -->
-        <div class="operation-block">
-          <h3 class="block-title">Publish / Subscribe Operations</h3>
+
+        <!-- Publish/Subscribe Section -->
+        <div class="operation-section pubsub-section" :class="{ disabled: !selectedSessionId }">
+          <div class="section-header">
+            <div class="section-icon">📡</div>
+            <h3 class="section-title">Publish / Subscribe</h3>
+          </div>
+          <div class="section-content">
+            <div class="operation-block">
           
           <!-- Declare Subscriber Operation -->
           <div class="operation-group">
@@ -99,7 +111,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="subscribe" :disabled="!isConnected || !subscriberParameters.key.value" class="compact-button btn-primary">
+                <button @click="subscribe" :disabled="!selectedSessionId || !subscriberParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
                 <CollapseButton
@@ -115,11 +127,11 @@
                   v-model="subscriberParameters.key.value" 
                   label="Key Expression"
                   placeholder="Key expression (e.g., demo/example/**)"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 <AllowedDestinationSelect
                   v-model="subscriberParameters.allowedOrigin.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="localityOptions"
                   label="Allowed Origin"
                 />
@@ -139,7 +151,7 @@
                     <button 
                       @click="unsubscribe(subscriberState.displayId)" 
                       class="compact-button btn-danger"
-                      :disabled="!isConnected"
+                      :disabled="!selectedSessionId"
                     >
                       Undeclare
                     </button>
@@ -177,7 +189,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="performPut" :disabled="!isConnected || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
+                <button @click="performPut" :disabled="!selectedSessionId || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
                   Run
                 </button>
                 <CollapseButton
@@ -193,50 +205,50 @@
                   v-model="putParameters.key.value" 
                   label="Key Expression"
                   placeholder="Key expression (e.g., demo/example/test)"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 <PayloadInput
                   v-model="putParameters.value.value"
                   v-model:is-empty="putParameters.valueEmpty.value"
                   label="Payload"
                   placeholder="Value to put"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <EncodingSelect 
                   v-model="putParameters.encoding.value"
                   v-model:custom-encoding="putParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <PrioritySelect 
                   v-model="putParameters.priority.value" 
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
                   v-model="putParameters.congestionControl.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="congestionControlOptions"
                 />
                 
                 <ReliabilitySelect
                   v-model="putParameters.reliability.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="reliabilityOptions"
                 />
                 
                 <AllowedDestinationSelect
                   v-model="putParameters.allowedDestination.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="localityOptions"
                 />
                 
                 <ExpressSelect
                   v-model="putParameters.express.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <PayloadInput
@@ -244,16 +256,23 @@
                   v-model:is-empty="putParameters.attachmentEmpty.value"
                   label="Attachment"
                   placeholder="Optional attachment data"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
               </div>
             </div>
           </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Query / Reply Block -->
-        <div class="operation-block">
-          <h3 class="block-title">Query / Reply Operations</h3>
+        <!-- Query/Reply Section -->
+        <div class="operation-section query-section" :class="{ disabled: !selectedSessionId }">
+          <div class="section-header">
+            <div class="section-icon">🔍</div>
+            <h3 class="section-title">Query / Reply</h3>
+          </div>
+          <div class="section-content">
+            <div class="operation-block">
           
           <!-- Declare Queryable Operation -->
           <div class="operation-group">
@@ -265,7 +284,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="declareQueryable" :disabled="!isConnected || !queryableParameters.key.value" class="compact-button btn-primary">
+                <button @click="declareQueryable" :disabled="!selectedSessionId || !queryableParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
                 <CollapseButton
@@ -281,17 +300,17 @@
                   v-model="queryableParameters.key.value" 
                   label="Key Expression"
                   placeholder="Key expression (e.g., demo/example/computation/**)"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 <TriStateCheckbox
                   v-model="queryableParameters.complete.value"
                   label="Complete"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <AllowedDestinationSelect
                   v-model="queryableParameters.allowedOrigin.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="localityOptions"
                   label="Allowed Origin"
                 />
@@ -322,7 +341,7 @@
                     <button 
                       @click="undeclareQueryable(queryableState.displayId)" 
                       class="compact-button btn-danger"
-                      :disabled="!isConnected"
+                      :disabled="!selectedSessionId"
                     >
                       Undeclare
                     </button>
@@ -345,7 +364,7 @@
                         <ResponseTypeSelect
                           v-model="queryableState.responseParameters.replyType"
                           :name="`response-type-${queryableState.displayId}`"
-                          :disabled="!isConnected"
+                          :disabled="!selectedSessionId"
                         />
                         
                         <!-- Reply Fields -->
@@ -354,7 +373,7 @@
                             v-model="queryableState.responseParameters.reply.keyExpr"
                             label="Key Expression"
                             placeholder="Normally the queryable keyexpr"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                           
                           <PayloadInput
@@ -362,37 +381,37 @@
                             v-model:is-empty="queryableState.responseParameters.reply.payloadEmpty"
                             label="Payload"
                             placeholder="Payload content for successful reply"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                           
                           <EncodingSelect 
                             v-model="queryableState.responseParameters.reply.encoding"
                             v-model:custom-encoding="queryableState.responseParameters.reply.customEncoding"
                             :encoding-options="encodingOptions"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                           
                           <PrioritySelect 
                             v-model="queryableState.responseParameters.reply.priority" 
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                             :options="priorityOptions"
                           />
                           
                           <CongestionControlSelect
                             v-model="queryableState.responseParameters.reply.congestionControl"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                             :options="congestionControlOptions"
                           />
                           
                           <ExpressSelect
                             v-model="queryableState.responseParameters.reply.express"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                           
                           <CheckBox
                             v-model="queryableState.responseParameters.reply.useTimestamp"
                             label="Use timestamp"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                             :three-state="false"
                           />
                           
@@ -401,7 +420,7 @@
                             v-model:is-empty="queryableState.responseParameters.reply.attachmentEmpty"
                             label="Attachment"
                             placeholder="Optional attachment data"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                         </template>
                         
@@ -412,14 +431,14 @@
                             v-model:is-empty="queryableState.responseParameters.replyErr.payloadEmpty"
                             label="Error Payload"
                             placeholder="Error message or payload"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                           
                           <EncodingSelect 
                             v-model="queryableState.responseParameters.replyErr.encoding"
                             v-model:custom-encoding="queryableState.responseParameters.replyErr.customEncoding"
                             :encoding-options="encodingOptions"
-                            :disabled="!isConnected"
+                            :disabled="!selectedSessionId"
                           />
                         </template>
                         
@@ -508,7 +527,7 @@
                 </span>
               </h4>
               <div class="header-actions">
-                <button @click="performGet" :disabled="!isConnected || !getParameters.key.value" class="compact-button btn-primary">
+                <button @click="performGet" :disabled="!selectedSessionId || !getParameters.key.value" class="compact-button btn-primary">
                   Run
                 </button>
                 <CollapseButton
@@ -524,36 +543,36 @@
                   v-model="getParameters.key.value" 
                   label="Selector"
                   placeholder="Selector (e.g., demo/example/*)"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 <EncodingSelect 
                   v-model="getParameters.encoding.value"
                   v-model:custom-encoding="getParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <PrioritySelect 
                   v-model="getParameters.priority.value" 
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="priorityOptions"
                 />
                 
                 <CongestionControlSelect
                   v-model="getParameters.congestionControl.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="congestionControlOptions"
                 />
                 
                 <AllowedDestinationSelect
                   v-model="getParameters.allowedDestination.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="localityOptions"
                 />
                 
                 <ExpressSelect
                   v-model="getParameters.express.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <PayloadInput
@@ -561,7 +580,7 @@
                   v-model:is-empty="getParameters.payloadEmpty.value"
                   label="Payload"
                   placeholder="Optional query payload"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <PayloadInput
@@ -569,34 +588,36 @@
                   v-model:is-empty="getParameters.attachmentEmpty.value"
                   label="Attachment"
                   placeholder="Optional attachment data"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <TimeoutInput
                   v-model="getParameters.timeout.value"
                   v-model:is-empty="getParameters.timeoutEmpty.value"
                   placeholder="Timeout (ms)"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                 />
                 
                 <TargetSelect
                   v-model="getParameters.target.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="targetOptions"
                 />
                 
                 <ConsolidationSelect
                   v-model="getParameters.consolidation.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="consolidationOptions"
                 />
                 
                 <AcceptRepliesSelect
                   v-model="getParameters.acceptReplies.value"
-                  :disabled="!isConnected"
+                  :disabled="!selectedSessionId"
                   :options="acceptRepliesOptions"
                 />
               </div>
+            </div>
+          </div>
             </div>
           </div>
         </div>
@@ -660,6 +681,17 @@ import TimeoutInput from './components/TimeoutInput.vue'
 import TargetSelect from './components/TargetSelect.vue'
 import ConsolidationSelect from './components/ConsolidationSelect.vue'
 import AcceptRepliesSelect from './components/AcceptRepliesSelect.vue'
+import KeyExprInput from './components/KeyExprInput.vue'
+import AllowedDestinationSelect from './components/AllowedDestinationSelect.vue'
+import PayloadInput from './components/PayloadInput.vue'
+import EncodingSelect from './components/EncodingSelect.vue'
+import PrioritySelect from './components/PrioritySelect.vue'
+import CongestionControlSelect from './components/CongestionControlSelect.vue'
+import ReliabilitySelect from './components/ReliabilitySelect.vue'
+import ExpressSelect from './components/ExpressSelect.vue'
+import TriStateCheckbox from './components/TriStateCheckbox.vue'
+import CheckBox from './components/CheckBox.vue'
+import ParameterDisplay from './components/ParameterDisplay.vue'
 
 // Use the Zenoh composable
 const {
@@ -815,10 +847,6 @@ watch(activeQueryables, (queryables) => {
   overflow-y: auto;
 }
 
-.operations-panel.disabled {
-  opacity: 0.6;
-}
-
 .operations-panel h3 {
   margin-top: 0;
   color: #333;
@@ -845,14 +873,90 @@ watch(activeQueryables, (queryables) => {
   background: transparent;
 }
 
-.block-title {
+/* Section Styling */
+.operation-section {
+  margin-bottom: 20px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+  transition: opacity 0.3s ease;
+}
+
+.operation-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.section-icon {
+  font-size: 1.5em;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.section-title {
   color: #495057;
   font-size: 1.1em;
   font-weight: 600;
-  margin: 0 0 10px 0;
-  padding-bottom: 6px;
-  border-bottom: 2px solid #e9ecef;
+  margin: 0;
   letter-spacing: 0.5px;
+}
+
+.section-content {
+  padding: 16px 20px;
+}
+
+/* Section-specific colors */
+.session-section .section-header {
+  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+.session-section .section-icon {
+  background: rgba(33, 150, 243, 0.1);
+  color: #1976d2;
+}
+
+.pubsub-section .section-header {
+  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+}
+
+.pubsub-section .section-icon {
+  background: rgba(76, 175, 80, 0.1);
+  color: #388e3c;
+}
+
+.query-section .section-header {
+  background: linear-gradient(135deg, #fff3e0, #ffcc02);
+}
+
+.query-section .section-icon {
+  background: rgba(255, 152, 0, 0.1);
+  color: #f57c00;
+}
+
+.block-title {
+  color: #495057;
+  font-size: 1.0em;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #e9ecef;
+  letter-spacing: 0.3px;
 }
 
 .operation-group h4 {
