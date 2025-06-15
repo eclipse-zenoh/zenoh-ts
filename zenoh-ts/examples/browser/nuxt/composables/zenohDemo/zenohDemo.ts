@@ -1,4 +1,5 @@
 import {
+  // en      }) // end of subscriber handler closure
   type ZenohDemoState,
   ZenohDemoEmpty,
   type LogEntry,
@@ -110,7 +111,10 @@ function queryableParametersStateToQueryableOptions(
   return opts;
 }
 
-async function replyParametersStateToReplyOptions(parameters: ReplyParametersState, session?: Session) {
+async function replyParametersStateToReplyOptions(
+  parameters: ReplyParametersState,
+  session?: Session
+) {
   let opts: ReplyOptions = {};
   if (parameters.encoding) {
     opts.encoding = Encoding.fromString(parameters.encoding);
@@ -256,35 +260,8 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   // Error logging method with JSON formatting for error details
   override addErrorLogEntry(message: string, errorDetails?: any): void {
-    if (errorDetails) {
-      // Create formatted error object
-      const errorObject = {
-        type: "ERROR",
-        message: message,
-        details: errorDetails,
-        timestamp: new Date().toISOString(),
-      };
-
-      console.error(`[ERROR] ${message}`, errorDetails);
-
-      // Store the message and error object in data record
-      const logEntry: LogEntry = {
-        type: "error",
-        message,
-        data: { "Error Details": errorObject },
-        timestamp: new Date(),
-      };
-
-      this.logEntries.value.push(logEntry);
-    } else {
-      // Simple string error logging
-      console.error(`[ERROR] ${message}`);
-      this.logEntries.value.push({
-        type: "error",
-        message,
-        timestamp: new Date(),
-      });
-    }
+    console.error(`[ERROR] ${message}`, errorDetails);
+    this.addLogEntry("error", message, errorDetails);
   }
 
   override clearLog(): void {
@@ -292,21 +269,29 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   // Helper method to get current session with its ID for tracking purposes
-  private getCurrentSessionWithId(): { session: Session; sessionId: string } | undefined {
+  private getCurrentSessionWithId():
+    | { session: Session; sessionId: string }
+    | undefined {
     // Prioritize selected session if available
     if (this.selectedSessionId.value) {
       const selectedSession = this.activeSessions.value.find(
-        session => session.displayId === this.selectedSessionId.value
+        (session) => session.displayId === this.selectedSessionId.value
       );
       if (selectedSession) {
-        return { session: selectedSession.session, sessionId: selectedSession.displayId };
+        return {
+          session: selectedSession.session,
+          sessionId: selectedSession.displayId,
+        };
       }
     }
     // Fallback to first session if no selection or selected session not found
     if (this.activeSessions.value.length > 0) {
       const firstSession = this.activeSessions.value[0];
       if (firstSession) {
-        return { session: firstSession.session, sessionId: firstSession.displayId };
+        return {
+          session: firstSession.session,
+          sessionId: firstSession.displayId,
+        };
       }
     }
     return undefined;
@@ -314,10 +299,15 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   // Method to select a session
   override selectSession(sessionId: string): void {
-    const session = this.activeSessions.value.find(s => s.displayId === sessionId);
+    const session = this.activeSessions.value.find(
+      (s) => s.displayId === sessionId
+    );
     if (session) {
       this.selectedSessionId.value = sessionId;
-      this.addLogEntry("info", `Selected session ${sessionId} as current session`);
+      this.addLogEntry(
+        "info",
+        `Selected session ${sessionId} as current session`
+      );
     } else {
       this.addErrorLogEntry(`Session ${sessionId} not found`);
     }
@@ -326,6 +316,42 @@ class ZenohDemo extends ZenohDemoEmpty {
   // Update isConnected to reflect if we have any active sessions
   private updateConnectionStatus(): void {
     this.isConnected.value = this.activeSessions.value.length > 0;
+  }
+
+  // Helper method to check if a session still exists
+  private sessionExists(sessionId: string): boolean {
+    return this.activeSessions.value.some((s) => s.displayId === sessionId);
+  }
+
+  private removeSubscriber(displayId: string): SubscriberState | undefined {
+    const subscriberIndex = this.activeSubscribers.value.findIndex(
+      (sub: SubscriberState) => sub.displayId === displayId
+    );
+    const [sub] = this.activeSubscribers.value.splice(subscriberIndex, 1);
+    return sub;
+  }
+
+  private getSubscriber(displayId: string): SubscriberState | undefined {
+    return this.activeSubscribers.value.find(
+      (sub: SubscriberState) => sub.displayId === displayId
+    );
+  }
+
+  // Helper method to automatically remove a queryable when its session disconnects
+  private autoRemoveQueryable(displayId: string, sessionId: string): void {
+    // Only remove if session no longer exists
+    if (!this.sessionExists(sessionId)) {
+      const queryableIndex = this.activeQueryables.value.findIndex(
+        (qry: QueryableState) => qry.displayId === displayId
+      );
+      if (queryableIndex !== -1) {
+        this.activeQueryables.value.splice(queryableIndex, 1);
+        this.addLogEntry(
+          "info",
+          `Queryable ${displayId} automatically removed due to session ${sessionId} disconnection`
+        );
+      }
+    }
   }
 
   override async getSessionInfo(): Promise<void> {
@@ -338,17 +364,23 @@ class ZenohDemo extends ZenohDemoEmpty {
     const { session: currentSession, sessionId } = sessionWithId;
 
     try {
-      this.addLogEntry("info", `Retrieving session information from ${sessionId}...`);
+      this.addLogEntry(
+        "info",
+        `Retrieving session information from ${sessionId}...`
+      );
       const sessionInfo = await currentSession.info();
       const sessionInfoJson = sessionInfoToJSON(sessionInfo);
-      
+
       this.addLogEntry(
-        "success", 
+        "success",
         `Session information retrieved successfully from ${sessionId}`,
-        { "SessionInfo": sessionInfoJson }
+        { SessionInfo: sessionInfoJson }
       );
     } catch (error) {
-      this.addErrorLogEntry(`Failed to retrieve session information from ${sessionId}`, error);
+      this.addErrorLogEntry(
+        `Failed to retrieve session information from ${sessionId}`,
+        error
+      );
     }
   }
 
@@ -364,10 +396,10 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       const config = new Config(this.serverUrl.value);
       const session = await Session.open(config);
-      
+
       // Generate sequential display ID for this session
       const displayId = `ses${this.sessionIdCounter++}`;
-      
+
       const sessionState: SessionState = {
         displayId: displayId,
         serverUrl: this.serverUrl.value,
@@ -378,12 +410,12 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       this.activeSessions.value.push(sessionState);
       this.updateConnectionStatus();
-      
+
       // Auto-select the first session if none is selected
       if (!this.selectedSessionId.value) {
         this.selectedSessionId.value = displayId;
       }
-      
+
       this.addLogEntry(
         "success",
         `Successfully connected to ${this.serverUrl.value} (${displayId})`
@@ -417,7 +449,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       await sessionState.session.close();
       this.activeSessions.value.splice(sessionIndex, 1);
       this.updateConnectionStatus();
-      
+
       // Clear selected session if it's the one being disconnected
       if (this.selectedSessionId.value === sessionId) {
         this.selectedSessionId.value = null;
@@ -429,16 +461,22 @@ class ZenohDemo extends ZenohDemoEmpty {
           }
         }
       }
-      
+
       // Clear subscribers and queryables if no sessions remain
       if (this.activeSessions.value.length === 0) {
         this.activeSubscribers.value = [];
         this.activeQueryables.value = [];
       }
-      
-      this.addLogEntry("success", `Disconnected from session ${sessionId} (${sessionState.serverUrl})`);
+
+      this.addLogEntry(
+        "success",
+        `Disconnected from session ${sessionId} (${sessionState.serverUrl})`
+      );
     } catch (error) {
-      this.addErrorLogEntry(`Error during disconnect of session ${sessionId}`, error);
+      this.addErrorLogEntry(
+        `Error during disconnect of session ${sessionId}`,
+        error
+      );
     }
   }
 
@@ -568,15 +606,12 @@ class ZenohDemo extends ZenohDemoEmpty {
       });
 
       // Handle incoming data
-      (async () => {
+      async () => {
         const receiver = subscriber.receiver();
         if (!receiver) return;
 
         try {
-          while (true) {
-            const sample: Sample | null = await receiver.receive();
-            if (!sample) break; // Normal end of subscription
-
+          for await (const sample of receiver as ChannelReceiver<Sample>) {
             try {
               // Use JSON formatting for sample display with multiple parameters
               this.addLogEntry(
@@ -593,17 +628,40 @@ class ZenohDemo extends ZenohDemoEmpty {
               );
             }
           }
-          // Normal end of subscription - no error logging needed
-        } catch (subscriptionError) {
-          // Only log actual errors, not normal disconnections
-          if (subscriptionError) {
+          let sub = this.removeSubscriber(displayId);
+          if (sub) {
+            this.addLogEntry(
+              "info",
+              `Subscriber ${displayId} closed after receiving null sample`
+            );
+          } else {
             this.addErrorLogEntry(
-              `Subscription error for ${displayId}`,
+              `Subscriber ${displayId} not found when trying to remove after null sample`
+            );
+          }
+        } catch (subscriptionError) {
+          let sub = this.removeSubscriber(displayId);
+          if (!sub) {
+            this.addErrorLogEntry(
+              `Subscriber ${displayId} not found when trying to remove after exception${
+                subscriptionError ? "with error:" : "with empty error"
+              }`,
               subscriptionError
+            );
+          } else {
+            if (subscriptionError) {
+              this.addErrorLogEntry(
+                `Subscription error for ${displayId}`,
+                subscriptionError
+              );
+            }
+            this.addLogEntry(
+              "info",
+              `Subscriber ${displayId} closed due to exception`
             );
           }
         }
-      })();
+      }; // end of subscriber handler closure
     } catch (error) {
       this.addErrorLogEntry(
         `Subscribe failed for "${this.subscriberParameters.key.value}"`,
@@ -613,29 +671,19 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   override async unsubscribe(subscriberId: string): Promise<void> {
-    const subscriberIndex = this.activeSubscribers.value.findIndex(
-      (sub: SubscriberState) => sub.displayId === subscriberId
-    );
-    if (subscriberIndex === -1) {
-      this.addErrorLogEntry(`Subscriber ${subscriberId} not found`);
-      return;
-    }
-
-    const subscriberState = this.activeSubscribers.value[subscriberIndex];
+    const subscriberState = this.getSubscriber(subscriberId);
     if (!subscriberState) {
-      this.addErrorLogEntry(`Subscriber info for ${subscriberId} is invalid`);
+      this.addErrorLogEntry(`Subscriber ${subscriberId} is not found`);
       return;
     }
-
     try {
       await subscriberState.subscriber.undeclare();
-      this.activeSubscribers.value.splice(subscriberIndex, 1);
       this.addLogEntry(
         "success",
-        `Unsubscribed from "${subscriberState.keyExpr}" (${subscriberId})`
+        `Undeclared subscriber ${subscriberId} (${subscriberState.keyExpr})`
       );
     } catch (error) {
-      this.addErrorLogEntry(`Unsubscribe failed for ${subscriberId}`, error);
+      this.addErrorLogEntry(`Undeclare failed for ${subscriberId}`, error);
     }
   }
 
@@ -658,7 +706,9 @@ class ZenohDemo extends ZenohDemoEmpty {
       const responseParameters = createDefaultResponseParameters();
       responseParameters.replyErr.updateReplyErrOptionsJSON = () => {
         responseParameters.replyErr.replyErrOptionsJSON =
-          replyErrParametersStateToReplyErrOptionsJSON(responseParameters.replyErr);
+          replyErrParametersStateToReplyErrOptionsJSON(
+            responseParameters.replyErr
+          );
       };
       responseParameters.reply.updateReplyOptionsJSON = () => {
         responseParameters.reply.replyOptionsJSON =
@@ -670,8 +720,8 @@ class ZenohDemo extends ZenohDemoEmpty {
 
       // Create a single timestamp for both payload and QueryableState consistency
       const createdAt = new Date();
-      const createdAtStr =createdAt.toISOString().slice(11, 19);
-      
+      const createdAtStr = createdAt.toISOString().slice(11, 19);
+
       // Set payload explicitly with queryable ID, session ID, and creation time
       responseParameters.reply.payload = `Hello from queryable ${displayId} on session ${sessionId} created at ${createdAtStr}`;
       responseParameters.reply.payloadEmpty = false;
@@ -682,6 +732,19 @@ class ZenohDemo extends ZenohDemoEmpty {
       // Set up handler for queries
       queryableOptions.handler = async (query: Query) => {
         try {
+          // First check if the session still exists and auto-remove if disconnected
+          this.autoRemoveQueryable(displayId, sessionId);
+          if (!this.sessionExists(sessionId)) {
+            // Send error reply and finalize
+            try {
+              await query.replyErr("Session disconnected");
+              await query.finalize();
+            } catch (replyError) {
+              // Ignore reply errors during disconnection
+            }
+            return;
+          }
+
           // Handle reply based on configured reply type
           if (responseParameters.replyType === "reply") {
             // Get reply parameters
@@ -711,8 +774,10 @@ class ZenohDemo extends ZenohDemoEmpty {
             }
 
             // Build reply options with timestamp if available
-            const replyOptions =
-              await replyParametersStateToReplyOptions(replyParams, currentSession);
+            const replyOptions = await replyParametersStateToReplyOptions(
+              replyParams,
+              currentSession
+            );
 
             // Log the reply details with timestamp information
             const logData: Record<string, any> = {
@@ -777,12 +842,25 @@ class ZenohDemo extends ZenohDemoEmpty {
           // Finalize the query to signal no more replies will be sent
           await query.finalize();
         } catch (queryError) {
-          this.addErrorLogEntry("Error handling query", queryError);
-          try {
-            await query.replyErr("Internal error handling query");
-            await query.finalize();
-          } catch (replyError) {
-            this.addErrorLogEntry("Error sending error reply", replyError);
+          // Auto-remove queryable if session disconnected, otherwise handle error
+          this.autoRemoveQueryable(displayId, sessionId);
+          if (!this.sessionExists(sessionId)) {
+            // Don't log error during disconnection, just try to clean up
+            try {
+              await query.replyErr("Session disconnected");
+              await query.finalize();
+            } catch (replyError) {
+              // Ignore reply errors during disconnection
+            }
+          } else {
+            // Only log errors if session still exists
+            this.addErrorLogEntry("Error handling query", queryError);
+            try {
+              await query.replyErr("Internal error handling query");
+              await query.finalize();
+            } catch (replyError) {
+              this.addErrorLogEntry("Error sending error reply", replyError);
+            }
           }
         }
       };
