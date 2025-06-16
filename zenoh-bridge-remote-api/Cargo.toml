@@ -13,15 +13,12 @@
 #
 [package]
 rust-version = "1.75.0"
-name = "zenoh-plugin-remote-api"
+name = "zenoh-bridge-remote-api"
 version = "1.4.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = [
-    "Charles Schleich <charles.schleich@zettascale.tech>",
-    "Olivier Hécart <olivier.hecart@zettascale.tech>",
-    "Luca Cominardi <luca.cominardi@zettascale.tech>",
-    "Pierre Avital <pierre.avital@zettascale.tech>",
+    "Michael Ilyin <michael.ilyin@zettascale.tech>",
 ]
 edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
@@ -35,12 +32,13 @@ description = "Zenoh: The Zero Overhead Pub/Sub/Query Protocol."
 default = ["dynamic_plugin"]
 dynamic_plugin = []
 
-[lib]
-name = "zenoh_plugin_remote_api"
-crate-type = ["cdylib", "rlib"]
+[[bin]]
+name = "zenoh-bridge-remote-api"
+path = "src/main.rs"
 
 [dependencies]
-bytes = { workspace = true }
+async-liveliness-monitor = { workspace = true }
+clap = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
 tokio-rustls = { workspace = true }
@@ -69,6 +67,7 @@ zenoh_backend_traits = { workspace = true }
 zenoh-plugin-trait = { workspace = true }
 zenoh-util = { workspace = true }
 zenoh-result = { workspace = true }
+zenoh-plugin-remote-api = {workspace = true }
 uuid = { workspace=true, default-features = false, features = [
     "v4",
     "serde",
@@ -81,11 +80,10 @@ rustc_version = { workspace = true }
 schemars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-jsonschema = { workspace = true }
 cargo-run-bin = { workspace = true }
 
 [package.metadata.deb]
-name = "zenoh-plugin-remote-api"
+name = "zenoh-bridge-remote-api"
 maintainer = "zenoh-dev@eclipse.org"
 copyright = "2024 ZettaScale Technology"
 section = "net"
