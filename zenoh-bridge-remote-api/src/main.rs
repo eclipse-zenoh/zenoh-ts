@@ -11,12 +11,8 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
-use std::{
-    str::FromStr,
-    time::{Duration, SystemTime},
-};
+use std::str::FromStr;
 
-use async_liveliness_monitor::LivelinessMonitor;
 use clap::Parser;
 use zenoh::{
     config::Config,
@@ -78,11 +74,6 @@ struct Args {
     /// Path to the TLS private key file for secure WebSocket connections.
     #[arg(long, value_name = "PATH")]
     key: Option<String>,
-
-    /// Experimental!! Run a watchdog thread that monitors the bridge's async executor
-    /// and reports as error log any stalled status during the specified period (default: 1.0 second)
-    #[arg(long, value_name = "PERIOD", default_value = "1.0")]
-    watchdog: f32,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -112,7 +103,7 @@ impl std::str::FromStr for SessionMode {
     }
 }
 
-fn parse_args() -> (Config, Option<f32>) {
+fn parse_args() -> Config {
     let args = Args::parse();
 
     // load config file at first
@@ -187,9 +178,7 @@ fn parse_args() -> (Config, Option<f32>) {
         }
     }
 
-    let watchdog_period = Some(args.watchdog);
-
-    (config, watchdog_period)
+    config
 }
 
 #[tokio::main]
@@ -200,12 +189,8 @@ async fn main() {
         RemoteApiPlugin::PLUGIN_LONG_VERSION
     );
 
-    let (config, watchdog_period) = parse_args();
+    let config = parse_args();
     tracing::info!("Zenoh {config:?}");
-
-    if let Some(period) = watchdog_period {
-        run_watchdog(period);
-    }
 
     let mut plugins_mgr = PluginsManager::static_plugins_only();
 
@@ -233,62 +218,4 @@ async fn main() {
     }
 
     futures::future::pending::<()>().await;
-}
-
-fn run_watchdog(period: f32) {
-    let sleep_time = Duration::from_secs_f32(period);
-    // max delta accepted for watchdog thread sleep period
-    let max_sleep_delta = Duration::from_millis(50);
-    // 1st threshold of duration since last report => debug info if exceeded
-    let report_threshold_1 = Duration::from_millis(10);
-    // 2nd threshold of duration since last report => debug warn if exceeded
-    let report_threshold_2 = Duration::from_millis(100);
-
-    assert!(
-        sleep_time > report_threshold_2,
-        "Watchdog period must be greater than {} seconds",
-        report_threshold_2.as_secs_f32()
-    );
-
-    // Start a Liveliness Monitor thread for tokio Runtime
-    let (_task, monitor) = LivelinessMonitor::start(tokio::spawn);
-    std::thread::spawn(move || {
-        tracing::debug!(
-            "Watchdog started with period {} sec",
-            sleep_time.as_secs_f32()
-        );
-        loop {
-            let before = SystemTime::now();
-            std::thread::sleep(sleep_time);
-            let elapsed = SystemTime::now().duration_since(before).unwrap();
-
-            // Monitor watchdog thread itself
-            if elapsed > sleep_time + max_sleep_delta {
-                tracing::warn!(
-                    "Watchdog thread slept more than configured: {} seconds",
-                    elapsed.as_secs_f32()
-                );
-            }
-            // check last LivelinessMonitor's report
-            let report = monitor.latest_report();
-            if report.elapsed() > report_threshold_1 {
-                if report.elapsed() > sleep_time {
-                    tracing::error!(
-                        "Watchdog detecting tokio is stalled! No task scheduling since {} seconds",
-                        report.elapsed().as_secs_f32()
-                    );
-                } else if report.elapsed() > report_threshold_2 {
-                    tracing::warn!(
-                        "Watchdog detecting tokio was not scheduling tasks during the last {} ms",
-                        report.elapsed().as_micros()
-                    );
-                } else {
-                    tracing::info!(
-                        "Watchdog detecting tokio was not scheduling tasks during the last {} ms",
-                        report.elapsed().as_micros()
-                    );
-                }
-            }
-        }
-    });
 }
