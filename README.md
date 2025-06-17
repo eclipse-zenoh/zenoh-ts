@@ -107,7 +107,7 @@ For simplicity, the examples can be executed from the `zenoh-ts` directory. You
 may also go directly to the `zenoh-ts/examples` directory to explore and run
 examples there.
 
-The examples are configured to access the remote-api plugin on `ws://localhost:10000`. To run it, just execute `cargo run` or pass the `DAEMON` parameter to yarn as shown below.
+The examples are configured to access the remote-api plugin on `ws://localhost:10000`. To run it, just execute `cargo run` or pass the `DAEMON` parameter to yarn. One daemon for all examples is sufficient, so running it separately with cargo is easier.
 
 To run an example, execute the command `yarn start [DAEMON] example deno [example_name]` or `yarn start [DAEMON] example browser [example_name]`.
 
@@ -117,15 +117,19 @@ The following examples are available:
   - Publisher and subscriber:
 
     ```sh
-    yarn start DAEMON example deno z_pub
-    yarn start DAEMON example deno z_sub
+    cargo run
+    cd zenoh-ts
+    yarn start example deno z_pub
+    yarn start example deno z_sub
     ```
 
   - Queryable and get:
 
     ```sh
-    yarn start DAEMON example deno z_queryable
-    yarn start DAEMON example deno z_get
+    cargo run
+    cd zenoh-ts
+    yarn start example deno z_queryable
+    yarn start example deno z_get
     ```
 
     and many more
