@@ -4,7 +4,7 @@ members = ["zenoh-plugin-remote-api", "zenoh-keyexpr-wasm"]
 resolver = "1"
 
 [workspace.package]
-version = "1.4.0"
+version = "1.4.0-17-g8c09291"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = ["Charles Schleich <charles.schleich@zettascale.tech>"]
@@ -56,7 +56,7 @@ uhlc = { version = "0.8.0", default-features = false } # Default features are di
 cargo-run-bin = "1.7.4"
 
 [workspace.metadata.bin]
-zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
+zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0-17-g8c09291" }
 
 [profile.release.package.zenoh-keyexpr-wasm]
 # Tell `rustc` to optimize for small code size for wasm project
