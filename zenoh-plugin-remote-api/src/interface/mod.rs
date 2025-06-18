@@ -193,9 +193,9 @@ impl QuerySettings {
     pub(crate) fn target(&self) -> QueryTarget {
         let t = self.inner & 0b11u8;
         match t {
-            0 => QueryTarget::All,
-            1 => QueryTarget::AllComplete,
-            2 => QueryTarget::BestMatching,
+            0 => QueryTarget::BestMatching,
+            1 => QueryTarget::All,
+            2 => QueryTarget::AllComplete,
             _ => QueryTarget::default(),
         }
     }
@@ -911,7 +911,7 @@ macro_rules! remote_message {
         }
 
         impl $name {
-            $access fn from_wire(data: Vec<u8>) -> Result<(Header, $name), FromWireError> {
+            $access fn from_wire(data: bytes::Bytes) -> Result<(Header, $name), FromWireError> {
                 let z_bytes: ZBytes = data.into();
                 let mut deserializer = ZDeserializer::new(&z_bytes);
                 let t: $typ = deserializer.deserialize()?;
@@ -943,7 +943,7 @@ macro_rules! remote_message {
     ) => {
         remote_message_inner!{$typ, $enum_name, $name, $access, $( #[$meta] )*  $($val,)* }
         impl $name {
-            $access fn to_wire(&self, sequence_id: Option<SequenceId>) -> Vec<u8> {
+            $access fn to_wire(&self, sequence_id: Option<SequenceId>) -> bytes::Bytes {
                 let mut serializer = ZSerializer::new();
                 match self {
                     $($name::$val(x) => {
@@ -959,7 +959,8 @@ macro_rules! remote_message {
                             }
                         }
                         x.to_wire(&mut serializer);
-                        serializer.finish().to_bytes().to_vec()
+                        // TODO: optimize after https://github.com/eclipse-zenoh/zenoh/issues/2001
+                        serializer.finish().to_bytes().to_vec().into()
                     },)*
                 }
             }
