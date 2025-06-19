@@ -18,7 +18,12 @@
           <!-- Open Operation -->
           <div class="operation-group">
             <div class="operation-header">
-              <h4>Open</h4>
+              <h4>
+                Open
+                <span v-if="!sessionOptionsExpanded && serverUrl" class="header-keyexpr">
+                  - {{ serverUrl }}
+                </span>
+              </h4>
               <div class="header-actions">
                 <CollapseButton
                   collapsedText="Edit..."
