@@ -7,49 +7,34 @@
       <div class="operations-panel">
         
         <!-- Session Section -->
-        <div class="operation-section session-section">
-          <div class="section-header">
-            <div class="section-icon">🔗</div>
-            <h3 class="section-title">Session</h3>
-          </div>
-          <div class="section-content">
-            <div class="operation-block">
-          
+        <OperationSection 
+          title="Session" 
+          icon="🔗" 
+          section-class="session-section"
+        >
           <!-- Open Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>
-                Open
-                <span v-if="!sessionOptionsExpanded && serverUrl" class="header-keyexpr">
-                  - {{ serverUrl }}
-                </span>
-              </h4>
-              <div class="header-actions">
-                <CollapseButton
-                  collapsedText="Edit..."
-                  expandedText="Close edit"
-                  v-model:expanded="sessionOptionsExpanded"
-                />
-                <button 
-                  @click="connect" 
-                  :disabled="isConnecting"
-                  class="compact-button btn-success"
-                >
-                  <span v-if="isConnecting">Connecting...</span>
-                  <span v-else>Connect</span>
-                </button>
-              </div>
-            </div>
+          <OperationGroup 
+            title="Open" 
+            :key-expr="serverUrl"
+            v-model:options-expanded="sessionOptionsExpanded"
+          >
+            <template #actions>
+              <button 
+                @click="connect" 
+                :disabled="isConnecting"
+                class="compact-button btn-success"
+              >
+                <span v-if="isConnecting">Connecting...</span>
+                <span v-else>Connect</span>
+              </button>
+            </template>
             
-            <!-- Session Options Panel -->
-            <div v-if="sessionOptionsExpanded" class="options-panel">
-              <div class="options-grid">
-                <ServerInput 
-                  v-model="serverUrl"
-                  :disabled="false"
-                />
-              </div>
-            </div>
+            <template #options>
+              <ServerInput 
+                v-model="serverUrl"
+                :disabled="false"
+              />
+            </template>
             
             <!-- Active Sessions List -->
             <div v-if="activeSessions.length > 0" class="active-items-list">
@@ -78,74 +63,58 @@
                 </div>
               </div>
             </div>
-          </div>
+          </OperationGroup>
           
           <!-- Info Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>Info</h4>
-              <div class="header-actions">
-                <button 
-                  @click="getSessionInfo" 
-                  :disabled="!selectedSessionId"
-                  class="compact-button btn-primary"
-                >
-                  Run
-                </button>
-              </div>
-            </div>
-          </div>
-            </div>
-          </div>
-        </div>
+          <OperationGroup 
+            title="Info"
+            :show-options-toggle="false"
+          >
+            <template #actions>
+              <button 
+                @click="getSessionInfo" 
+                :disabled="!selectedSessionId"
+                class="compact-button btn-primary"
+              >
+                Run
+              </button>
+            </template>
+          </OperationGroup>
+        </OperationSection>
 
         <!-- Publish/Subscribe Section -->
-        <div class="operation-section pubsub-section" :class="{ disabled: !selectedSessionId }">
-          <div class="section-header">
-            <div class="section-icon">📡</div>
-            <h3 class="section-title">Publish / Subscribe</h3>
-          </div>
-          <div class="section-content">
-            <div class="operation-block">
-          
+        <OperationSection 
+          title="Publish / Subscribe" 
+          icon="📡" 
+          section-class="pubsub-section"
+          :disabled="!selectedSessionId"
+        >
           <!-- Declare Subscriber Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>
-                Subscriber
-                <span v-if="!subscriberOptionsExpanded && subscriberParameters.key.value" class="header-keyexpr">
-                  - {{ subscriberParameters.key.value }}
-                </span>
-              </h4>
-              <div class="header-actions">
-                <CollapseButton
-                  collapsedText="Edit..."
-                  expandedText="Close edit"
-                  v-model:expanded="subscriberOptionsExpanded"
-                />
-                <button @click="subscribe" :disabled="!selectedSessionId || !subscriberParameters.key.value" class="compact-button btn-primary">
-                  Declare
-                </button>
-              </div>
-            </div>
+          <OperationGroup 
+            title="Subscriber" 
+            :key-expr="subscriberParameters.key.value"
+            v-model:options-expanded="subscriberOptionsExpanded"
+          >
+            <template #actions>
+              <button @click="subscribe" :disabled="!selectedSessionId || !subscriberParameters.key.value" class="compact-button btn-primary">
+                Declare
+              </button>
+            </template>
             
-            <!-- Subscriber Options Panel -->
-            <div v-if="subscriberOptionsExpanded" class="options-panel">
-              <div class="options-grid">
-                <KeyExprInput 
-                  v-model="subscriberParameters.key.value" 
-                  label="Key Expression"
-                  placeholder="Key expression (e.g., demo/example/**)"
-                  :disabled="!selectedSessionId"
-                />
-                <AllowedDestinationSelect
-                  v-model="subscriberParameters.allowedOrigin.value"
-                  :disabled="!selectedSessionId"
-                  :options="localityOptions"
-                  label="Allowed Origin"
-                />
-              </div>
-            </div>
+            <template #options>
+              <KeyExprInput 
+                v-model="subscriberParameters.key.value" 
+                label="Key Expression"
+                placeholder="Key expression (e.g., demo/example/**)"
+                :disabled="!selectedSessionId"
+              />
+              <AllowedDestinationSelect
+                v-model="subscriberParameters.allowedOrigin.value"
+                :disabled="!selectedSessionId"
+                :options="localityOptions"
+                label="Allowed Origin"
+              />
+            </template>
             
             <!-- Active Subscribers List -->
             <div v-if="activeSubscribers.length > 0" class="active-items-list">
@@ -188,149 +157,121 @@
                 </div>
               </div>
             </div>
-          </div>
+          </OperationGroup>
 
           <!-- Put Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>
-                Put
-                <span v-if="!putOptionsExpanded && putParameters.key.value" class="header-keyexpr">
-                  - {{ putParameters.key.value }}
-                </span>
-              </h4>
-              <div class="header-actions">
-                <CollapseButton
-                  collapsedText="Edit..."
-                  expandedText="Close edit"
-                  v-model:expanded="putOptionsExpanded"
-                />
-                <button @click="performPut" :disabled="!selectedSessionId || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
-                  Run
-                </button>
-              </div>
-            </div>
+          <OperationGroup 
+            title="Put" 
+            :key-expr="putParameters.key.value"
+            v-model:options-expanded="putOptionsExpanded"
+          >
+            <template #actions>
+              <button @click="performPut" :disabled="!selectedSessionId || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
+                Run
+              </button>
+            </template>
             
-            <!-- Put Options Panel -->
-            <div v-if="putOptionsExpanded" class="options-panel">
-              <div class="options-grid">
-                <KeyExprInput 
-                  v-model="putParameters.key.value" 
-                  label="Key Expression"
-                  placeholder="Key expression (e.g., demo/example/test)"
-                  :disabled="!selectedSessionId"
-                />
-                <PayloadInput
-                  v-model="putParameters.value.value"
-                  v-model:is-empty="putParameters.valueEmpty.value"
-                  label="Payload"
-                  placeholder="Value to put"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <EncodingSelect 
-                  v-model="putParameters.encoding.value"
-                  v-model:custom-encoding="putParameters.customEncoding.value"
-                  :encoding-options="encodingOptions"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <PrioritySelect 
-                  v-model="putParameters.priority.value" 
-                  :disabled="!selectedSessionId"
-                  :options="priorityOptions"
-                />
-                
-                <CongestionControlSelect
-                  v-model="putParameters.congestionControl.value"
-                  :disabled="!selectedSessionId"
-                  :options="congestionControlOptions"
-                />
-                
-                <ReliabilitySelect
-                  v-model="putParameters.reliability.value"
-                  :disabled="!selectedSessionId"
-                  :options="reliabilityOptions"
-                />
-                
-                <AllowedDestinationSelect
-                  v-model="putParameters.allowedDestination.value"
-                  :disabled="!selectedSessionId"
-                  :options="localityOptions"
-                />
-                
-                <ExpressSelect
-                  v-model="putParameters.express.value"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <PayloadInput
-                  v-model="putParameters.attachment.value"
-                  v-model:is-empty="putParameters.attachmentEmpty.value"
-                  label="Attachment"
-                  placeholder="Optional attachment data"
-                  :disabled="!selectedSessionId"
-                />
-              </div>
-            </div>
-          </div>
-            </div>
-          </div>
-        </div>
+            <template #options>
+              <KeyExprInput 
+                v-model="putParameters.key.value" 
+                label="Key Expression"
+                placeholder="Key expression (e.g., demo/example/test)"
+                :disabled="!selectedSessionId"
+              />
+              <PayloadInput
+                v-model="putParameters.value.value"
+                v-model:is-empty="putParameters.valueEmpty.value"
+                label="Payload"
+                placeholder="Value to put"
+                :disabled="!selectedSessionId"
+              />
+              
+              <EncodingSelect 
+                v-model="putParameters.encoding.value"
+                v-model:custom-encoding="putParameters.customEncoding.value"
+                :encoding-options="encodingOptions"
+                :disabled="!selectedSessionId"
+              />
+              
+              <PrioritySelect 
+                v-model="putParameters.priority.value" 
+                :disabled="!selectedSessionId"
+                :options="priorityOptions"
+              />
+              
+              <CongestionControlSelect
+                v-model="putParameters.congestionControl.value"
+                :disabled="!selectedSessionId"
+                :options="congestionControlOptions"
+              />
+              
+              <ReliabilitySelect
+                v-model="putParameters.reliability.value"
+                :disabled="!selectedSessionId"
+                :options="reliabilityOptions"
+              />
+              
+              <AllowedDestinationSelect
+                v-model="putParameters.allowedDestination.value"
+                :disabled="!selectedSessionId"
+                :options="localityOptions"
+              />
+              
+              <ExpressSelect
+                v-model="putParameters.express.value"
+                :disabled="!selectedSessionId"
+              />
+              
+              <PayloadInput
+                v-model="putParameters.attachment.value"
+                v-model:is-empty="putParameters.attachmentEmpty.value"
+                label="Attachment"
+                placeholder="Optional attachment data"
+                :disabled="!selectedSessionId"
+              />
+            </template>
+          </OperationGroup>
+        </OperationSection>
 
         <!-- Query/Reply Section -->
-        <div class="operation-section query-section" :class="{ disabled: !selectedSessionId }">
-          <div class="section-header">
-            <div class="section-icon">🔍</div>
-            <h3 class="section-title">Query / Reply</h3>
-          </div>
-          <div class="section-content">
-            <div class="operation-block">
-          
+        <OperationSection 
+          title="Query / Reply" 
+          icon="🔍" 
+          section-class="query-section"
+          :disabled="!selectedSessionId"
+        >
           <!-- Declare Queryable Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>
-                Queryable
-                <span v-if="!queryableOptionsExpanded && queryableParameters.key.value" class="header-keyexpr">
-                  - {{ queryableParameters.key.value }}
-                </span>
-              </h4>
-              <div class="header-actions">
-                <CollapseButton
-                  collapsedText="Edit..."
-                  expandedText="Close edit"
-                  v-model:expanded="queryableOptionsExpanded"
-                />
-                <button @click="declareQueryable" :disabled="!selectedSessionId || !queryableParameters.key.value" class="compact-button btn-primary">
-                  Declare
-                </button>
-              </div>
-            </div>
+          <OperationGroup 
+            title="Queryable" 
+            :key-expr="queryableParameters.key.value"
+            v-model:options-expanded="queryableOptionsExpanded"
+          >
+            <template #actions>
+              <button @click="declareQueryable" :disabled="!selectedSessionId || !queryableParameters.key.value" class="compact-button btn-primary">
+                Declare
+              </button>
+            </template>
             
-            <!-- Queryable Options Panel -->
-            <div v-if="queryableOptionsExpanded" class="options-panel">
-              <div class="options-grid">
-                <KeyExprInput 
-                  v-model="queryableParameters.key.value" 
-                  label="Key Expression"
-                  placeholder="Key expression (e.g., demo/example/computation/**)"
-                  :disabled="!selectedSessionId"
-                />
-                <TriStateCheckbox
-                  v-model="queryableParameters.complete.value"
-                  label="Complete"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <AllowedDestinationSelect
-                  v-model="queryableParameters.allowedOrigin.value"
-                  :disabled="!selectedSessionId"
-                  :options="localityOptions"
-                  label="Allowed Origin"
-                />
-              </div>
-            </div>
+            <template #options>
+              <KeyExprInput 
+                v-model="queryableParameters.key.value" 
+                label="Key Expression"
+                placeholder="Key expression (e.g., demo/example/computation/**)"
+                :disabled="!selectedSessionId"
+              />
+              <TriStateCheckbox
+                v-model="queryableParameters.complete.value"
+                label="Complete"
+                :disabled="!selectedSessionId"
+              />
+              
+              <AllowedDestinationSelect
+                v-model="queryableParameters.allowedOrigin.value"
+                :disabled="!selectedSessionId"
+                :options="localityOptions"
+                label="Allowed Origin"
+              />
+            </template>
             
             <!-- Active Queryables List -->
             <div v-if="activeQueryables.length > 0" class="active-items-list">
@@ -532,114 +473,100 @@
                 </div>
               </div>
             </div>
-          </div>
+          </OperationGroup>
 
           <!-- Get Operation -->
-          <div class="operation-group">
-            <div class="operation-header">
-              <h4>
-                Get
-                <span v-if="!getOptionsExpanded && getParameters.key.value" class="header-keyexpr">
-                  - {{ getParameters.key.value }}
-                </span>
-              </h4>
-              <div class="header-actions">
-                <CollapseButton
-                  collapsedText="Edit..."
-                  expandedText="Close edit"
-                  v-model:expanded="getOptionsExpanded"
-                />
-                <button @click="performGet" :disabled="!selectedSessionId || !getParameters.key.value" class="compact-button btn-primary">
-                  Run
-                </button>
-              </div>
-            </div>
+          <OperationGroup 
+            title="Get" 
+            :key-expr="getParameters.key.value"
+            v-model:options-expanded="getOptionsExpanded"
+          >
+            <template #actions>
+              <button @click="performGet" :disabled="!selectedSessionId || !getParameters.key.value" class="compact-button btn-primary">
+                Run
+              </button>
+            </template>
             
-            <!-- Get Options Panel -->
-            <div v-if="getOptionsExpanded" class="options-panel">
-              <div class="options-grid">
-                <KeyExprInput 
-                  v-model="getParameters.key.value" 
-                  label="Selector"
-                  placeholder="Selector (e.g., demo/example/*)"
-                  :disabled="!selectedSessionId"
-                />
-                <EncodingSelect 
-                  v-model="getParameters.encoding.value"
-                  v-model:custom-encoding="getParameters.customEncoding.value"
-                  :encoding-options="encodingOptions"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <PrioritySelect 
-                  v-model="getParameters.priority.value" 
-                  :disabled="!selectedSessionId"
-                  :options="priorityOptions"
-                />
-                
-                <CongestionControlSelect
-                  v-model="getParameters.congestionControl.value"
-                  :disabled="!selectedSessionId"
-                  :options="congestionControlOptions"
-                />
-                
-                <AllowedDestinationSelect
-                  v-model="getParameters.allowedDestination.value"
-                  :disabled="!selectedSessionId"
-                  :options="localityOptions"
-                />
-                
-                <ExpressSelect
-                  v-model="getParameters.express.value"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <PayloadInput
-                  v-model="getParameters.payload.value"
-                  v-model:is-empty="getParameters.payloadEmpty.value"
-                  label="Payload"
-                  placeholder="Optional query payload"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <PayloadInput
-                  v-model="getParameters.attachment.value"
-                  v-model:is-empty="getParameters.attachmentEmpty.value"
-                  label="Attachment"
-                  placeholder="Optional attachment data"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <TimeoutInput
-                  v-model="getParameters.timeout.value"
-                  v-model:is-empty="getParameters.timeoutEmpty.value"
-                  placeholder="Timeout (ms)"
-                  :disabled="!selectedSessionId"
-                />
-                
-                <TargetSelect
-                  v-model="getParameters.target.value"
-                  :disabled="!selectedSessionId"
-                  :options="targetOptions"
-                />
-                
-                <ConsolidationSelect
-                  v-model="getParameters.consolidation.value"
-                  :disabled="!selectedSessionId"
-                  :options="consolidationOptions"
-                />
-                
-                <AcceptRepliesSelect
-                  v-model="getParameters.acceptReplies.value"
-                  :disabled="!selectedSessionId"
-                  :options="acceptRepliesOptions"
-                />
-              </div>
-            </div>
-          </div>
-            </div>
-          </div>
-        </div>
+            <template #options>
+              <KeyExprInput 
+                v-model="getParameters.key.value" 
+                label="Selector"
+                placeholder="Selector (e.g., demo/example/*)"
+                :disabled="!selectedSessionId"
+              />
+              <EncodingSelect 
+                v-model="getParameters.encoding.value"
+                v-model:custom-encoding="getParameters.customEncoding.value"
+                :encoding-options="encodingOptions"
+                :disabled="!selectedSessionId"
+              />
+              
+              <PrioritySelect 
+                v-model="getParameters.priority.value" 
+                :disabled="!selectedSessionId"
+                :options="priorityOptions"
+              />
+              
+              <CongestionControlSelect
+                v-model="getParameters.congestionControl.value"
+                :disabled="!selectedSessionId"
+                :options="congestionControlOptions"
+              />
+              
+              <AllowedDestinationSelect
+                v-model="getParameters.allowedDestination.value"
+                :disabled="!selectedSessionId"
+                :options="localityOptions"
+              />
+              
+              <ExpressSelect
+                v-model="getParameters.express.value"
+                :disabled="!selectedSessionId"
+              />
+              
+              <PayloadInput
+                v-model="getParameters.payload.value"
+                v-model:is-empty="getParameters.payloadEmpty.value"
+                label="Payload"
+                placeholder="Optional query payload"
+                :disabled="!selectedSessionId"
+              />
+              
+              <PayloadInput
+                v-model="getParameters.attachment.value"
+                v-model:is-empty="getParameters.attachmentEmpty.value"
+                label="Attachment"
+                placeholder="Optional attachment data"
+                :disabled="!selectedSessionId"
+              />
+              
+              <TimeoutInput
+                v-model="getParameters.timeout.value"
+                v-model:is-empty="getParameters.timeoutEmpty.value"
+                placeholder="Timeout (ms)"
+                :disabled="!selectedSessionId"
+              />
+              
+              <TargetSelect
+                v-model="getParameters.target.value"
+                :disabled="!selectedSessionId"
+                :options="targetOptions"
+              />
+              
+              <ConsolidationSelect
+                v-model="getParameters.consolidation.value"
+                :disabled="!selectedSessionId"
+                :options="consolidationOptions"
+              />
+              
+              <AcceptRepliesSelect
+                v-model="getParameters.acceptReplies.value"
+                :disabled="!selectedSessionId"
+                :options="acceptRepliesOptions"
+              />
+            </template>
+          </OperationGroup>
+        </OperationSection>
         
       </div>
 
@@ -840,6 +767,68 @@ watch(activeQueryables, (queryables) => {
   });
 }, { deep: true, immediate: true })
 </script>
+
+<style>
+:root {
+  --compact-gap: 8px;
+  --compact-margin: 4px;
+  --compact-button-padding: 3px 8px;
+  --compact-button-padding-h: 8px;
+  --compact-button-padding-v: 3px;
+}
+
+/* Global button styles */
+.compact-button {
+  padding: var(--compact-button-padding);
+  font-size: 11px;
+  font-family: 'MS Sans Serif', sans-serif;
+  background: #f0f0f0;
+  border: 1px outset #c0c0c0;
+  border-radius: 0;
+  cursor: pointer;
+  color: #000;
+}
+
+.compact-button:hover:not(:disabled) {
+  background: #e8e8e8;
+}
+
+.compact-button:active:not(:disabled) {
+  border: 1px inset #c0c0c0;
+  background: #d8d8d8;
+}
+
+.compact-button:disabled {
+  color: #808080;
+  background: #f0f0f0;
+  cursor: not-allowed;
+}
+
+.compact-button.btn-success {
+  background: #90ee90;
+  border-color: #7fdd7f;
+}
+
+.compact-button.btn-primary {
+  background: #add8e6;
+  border-color: #87ceeb;
+}
+
+.compact-button.btn-danger {
+  background: #ffb6c1;
+  border-color: #ff9fac;
+}
+
+.compact-button.btn-warning {
+  background: #ffd700;
+  border-color: #ffcc00;
+}
+
+.compact-button.btn-info {
+  background: #b0e0e6;
+  border-color: #87ceeb;
+}
+</style>
 
 <style scoped>
 .zenoh-container {
