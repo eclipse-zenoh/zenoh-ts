@@ -769,18 +769,10 @@ watch(activeQueryables, (queryables) => {
 </script>
 
 <style>
-:root {
-  --compact-gap: 8px;
-  --compact-margin: 4px;
-  --compact-button-padding: 3px 8px;
-  --compact-button-padding-h: 8px;
-  --compact-button-padding-v: 3px;
-}
-
-/* Global button styles */
+/* Global button style overrides for Windows-style appearance */
 .compact-button {
   padding: var(--compact-button-padding);
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-family: 'MS Sans Serif', sans-serif;
   background: #f0f0f0;
   border: 1px outset #c0c0c0;
@@ -835,7 +827,7 @@ watch(activeQueryables, (queryables) => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 10px;
+  padding: var(--compact-gap);
   font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
@@ -843,14 +835,14 @@ watch(activeQueryables, (queryables) => {
 .main-panel {
   display: flex;
   flex: 1;
-  gap: 10px;
+  gap: var(--compact-gap);
   overflow: hidden;
 }
 
 .operations-panel {
   width: 40%;
   background-color: white;
-  padding: 15px;
+  padding: calc(var(--compact-gap) * 1.875); /* 15px with 8px base */
   border: none;
   border-radius: 0;
   overflow-y: auto;
@@ -863,7 +855,7 @@ watch(activeQueryables, (queryables) => {
 }
 
 .operation-group {
-  margin-bottom: 12px;
+  margin-bottom: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
   padding: var(--compact-gap);
   background-color: #f0f0f0;
   border: none;
@@ -876,84 +868,14 @@ watch(activeQueryables, (queryables) => {
   margin-top: var(--compact-gap);
 }
 
-/* Remove the extra padding-bottom that was added to options-panel */
-
 .operation-block {
-  margin-bottom: 16px;
+  margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
   padding: 0;
   background: #f0f0f0;
   font-family: 'MS Sans Serif', sans-serif;
 }
 
-/* Section Styling - Classic Windows Dialog Boxes */
-.operation-section {
-  margin-bottom: 30px;
-  background: #f0f0f0;
-  border: 2px outset #c0c0c0;
-  border-radius: 0;
-  overflow: hidden;
-  transition: opacity 0.3s ease;
-  font-family: 'MS Sans Serif', sans-serif;
-  /* Add window-like shadow and spacing */
-  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.operation-section.disabled {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 4px 8px;
-  /* Classic Windows title bar gradient */
-  background: linear-gradient(to bottom, #0054e3, #0054e3 50%, #1e6bc4 50%, #3a7bd4);
-  border-bottom: 1px solid #000080;
-  font-family: 'MS Sans Serif', sans-serif;
-  color: white;
-  font-size: 11px;
-  font-weight: bold;
-  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
-}
-
-.section-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  color: white;
-  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
-}
-
-.section-title {
-  color: white !important;
-  font-size: 11px;
-  font-weight: bold;
-  margin: 0;
-  letter-spacing: 0px;
-  font-family: 'MS Sans Serif', sans-serif;
-  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
-}
-
-.section-content {
-  padding: 12px;
-  background: #f0f0f0;
-  font-family: 'MS Sans Serif', sans-serif;
-}
-
-/* Section-specific styles removed - using consistent classic Windows styling */
-
-.query-section .section-icon {
-  background: rgba(255, 152, 0, 0.1);
-  color: #f57c00;
-}
+/* Legacy operation-section styles - now handled by OperationSection component */
 
 .block-title {
   color: #495057;

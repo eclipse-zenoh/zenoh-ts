@@ -28,7 +28,7 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .operation-section {
-  margin-bottom: 30px;
+  margin-bottom: calc(var(--compact-gap) * 3.75); /* 30px with 8px base */
   background: #f0f0f0;
   border: 2px outset #c0c0c0;
   border-radius: 0;
@@ -46,21 +46,21 @@ withDefaults(defineProps<Props>(), {
 .section-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 4px 8px;
+  gap: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
+  padding: var(--compact-margin) var(--compact-gap);
   background: linear-gradient(to bottom, #0054e3, #0054e3 50%, #1e6bc4 50%, #3a7bd4);
   border-bottom: 1px solid #000080;
   font-family: 'MS Sans Serif', sans-serif;
   color: white;
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-weight: bold;
   text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 .section-icon {
-  font-size: 16px;
-  width: 16px;
-  height: 16px;
+  font-size: calc(var(--compact-label-font-size) * 1.23); /* ~16px with 13px base */
+  width: calc(var(--compact-label-font-size) * 1.23);
+  height: calc(var(--compact-label-font-size) * 1.23);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -73,7 +73,7 @@ withDefaults(defineProps<Props>(), {
 
 .section-title {
   color: white !important;
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-weight: bold;
   margin: 0;
   letter-spacing: 0px;
@@ -82,13 +82,13 @@ withDefaults(defineProps<Props>(), {
 }
 
 .section-content {
-  padding: 12px;
+  padding: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
   background: #f0f0f0;
   font-family: 'MS Sans Serif', sans-serif;
 }
 
 .operation-block {
-  margin-bottom: 16px;
+  margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
   padding: 0;
   background: #f0f0f0;
   font-family: 'MS Sans Serif', sans-serif;

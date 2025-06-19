@@ -55,8 +55,8 @@ const optionsExpanded = defineModel<boolean>('optionsExpanded', { default: false
 
 <style scoped>
 .operation-group {
-  margin-bottom: 12px;
-  padding: var(--compact-gap, 8px);
+  margin-bottom: var(--compact-gap);
+  padding: var(--compact-gap);
   background-color: #f0f0f0;
   border: none;
   border-radius: 0;
@@ -74,14 +74,14 @@ const optionsExpanded = defineModel<boolean>('optionsExpanded', { default: false
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--compact-gap, 8px);
+  margin-bottom: var(--compact-gap);
   transition: all 0.2s ease;
 }
 
 /* When in dialog mode, the header becomes the title bar */
 .operation-header.dialog-title-bar {
   margin-bottom: 0;
-  padding: 4px 8px;
+  padding: var(--compact-margin) var(--compact-gap);
   background: linear-gradient(to bottom, #0054e3, #0054e3 50%, #1e6bc4 50%, #3a7bd4);
   border-bottom: 1px solid #000080;
   color: white;
@@ -92,7 +92,7 @@ const optionsExpanded = defineModel<boolean>('optionsExpanded', { default: false
 
 .operation-header h4 {
   margin: 0;
-  font-size: 11px;
+  font-size: var(--compact-label-font-size);
   font-weight: bold;
   color: #333;
   font-family: 'MS Sans Serif', sans-serif;
@@ -112,13 +112,13 @@ const optionsExpanded = defineModel<boolean>('optionsExpanded', { default: false
 
 .header-actions {
   display: flex;
-  gap: var(--compact-gap, 8px);
+  gap: var(--compact-gap);
   align-items: center;
 }
 
 /* Dialog content area */
 .dialog-content {
-  padding: 12px;
+  padding: var(--compact-gap);
   background: #f0f0f0;
   border-left: 2px outset #c0c0c0;
   border-right: 2px outset #c0c0c0;
@@ -129,54 +129,54 @@ const optionsExpanded = defineModel<boolean>('optionsExpanded', { default: false
 .options-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--compact-gap, 8px);
-  margin-bottom: 12px;
+  gap: var(--compact-gap);
+  margin-bottom: var(--compact-gap);
 }
 
 /* Action buttons at bottom of dialog */
 .dialog-actions {
   display: flex;
-  gap: var(--compact-gap, 8px);
+  gap: var(--compact-gap);
   justify-content: flex-end;
-  padding-top: 8px;
+  padding-top: var(--compact-gap);
   border-top: 1px solid #c0c0c0;
-  margin-top: 8px;
+  margin-top: var(--compact-gap);
 }
 
-/* Match button sizes to title size */
+/* Match button sizes to title size using shared variables */
 .header-actions :deep(button),
 .header-actions :deep(.compact-button) {
-  font-size: 11px !important;
+  font-size: var(--compact-label-font-size) !important;
   height: auto;
   line-height: 1.2;
-  padding: 2px 6px;
+  padding: var(--compact-margin) var(--compact-padding-v);
 }
 
 /* Specific styling for CollapseButton in header */
 .header-actions :deep(.collapse-button) {
-  font-size: 11px !important;
+  font-size: var(--compact-label-font-size) !important;
   height: auto;
   min-height: auto;
-  padding: 2px 4px;
+  padding: var(--compact-margin) var(--compact-margin);
 }
 
 /* Ensure triangle symbols match title size */
 .header-actions :deep(.button-triangle) {
-  font-size: 11px !important;
+  font-size: var(--compact-label-font-size) !important;
 }
 
 /* Match action buttons in dialog actions to title size too */
 .dialog-actions :deep(button),
 .dialog-actions :deep(.compact-button) {
-  font-size: 11px !important;
+  font-size: var(--compact-label-font-size) !important;
   height: auto;
   line-height: 1.2;
-  padding: 2px 6px;
+  padding: var(--compact-margin) var(--compact-padding-v);
 }
 
 /* Add spacing between operation-header and any following content */
 .operation-header + * {
-  margin-top: var(--compact-gap, 8px);
+  margin-top: var(--compact-gap);
 }
 
 /* Override spacing when in dialog mode */
