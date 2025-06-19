@@ -21,7 +21,8 @@
               <h4>Open</h4>
               <div class="header-actions">
                 <CollapseButton
-                  label="Edit"
+                  collapsedText="Edit..."
+                  expandedText="Close edit"
                   v-model:expanded="sessionOptionsExpanded"
                 />
                 <button 
@@ -113,7 +114,8 @@
               </h4>
               <div class="header-actions">
                 <CollapseButton
-                  label="Edit"
+                  collapsedText="Edit..."
+                  expandedText="Close edit"
                   v-model:expanded="subscriberOptionsExpanded"
                 />
                 <button @click="subscribe" :disabled="!selectedSessionId || !subscriberParameters.key.value" class="compact-button btn-primary">
@@ -192,7 +194,8 @@
               </h4>
               <div class="header-actions">
                 <CollapseButton
-                  label="Edit"
+                  collapsedText="Edit..."
+                  expandedText="Close edit"
                   v-model:expanded="putOptionsExpanded"
                 />
                 <button @click="performPut" :disabled="!selectedSessionId || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
@@ -288,7 +291,8 @@
               </h4>
               <div class="header-actions">
                 <CollapseButton
-                  label="Edit"
+                  collapsedText="Edit..."
+                  expandedText="Close edit"
                   v-model:expanded="queryableOptionsExpanded"
                 />
                 <button @click="declareQueryable" :disabled="!selectedSessionId || !queryableParameters.key.value" class="compact-button btn-primary">
@@ -532,7 +536,8 @@
               </h4>
               <div class="header-actions">
                 <CollapseButton
-                  label="Edit"
+                  collapsedText="Edit..."
+                  expandedText="Close edit"
                   v-model:expanded="getOptionsExpanded"
                 />
                 <button @click="performGet" :disabled="!selectedSessionId || !getParameters.key.value" class="compact-button btn-primary">
