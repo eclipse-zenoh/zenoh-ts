@@ -8,35 +8,29 @@ cd "$SCRIPTDIR/.."
 start_daemon() {
   CURRENT_DIR="$(pwd)"
   cd "$SCRIPTDIR/../.."
-  cargo build --release
-  cargo bin -i zenohd
-  ZENOHD=$(find ./.bin/rust-* -name "zenohd" -type f | head -n 2)
-  if [ $(echo "$ZENOHD" | wc -l) -ne 1 ]; then
-    echo "Error: More than one or no 'zenohd' file found in ./.bin/rust-* directories:"
-    echo "$ZENOHD"
-    exit 1
-  fi
-  echo "\"$ZENOHD\" --config EXAMPLE_CONFIG.json5"
-  "$ZENOHD" --config EXAMPLE_CONFIG.json5 &
+  
+  # Start cargo run in background
+  cargo build --release || exit 1
+  ./target/release/zenoh-bridge-remote-api &
 
   ZPID=$!
-  echo "zenohd started with PID $ZPID"
+  echo "zenoh-bridge-remote-api started with PID $ZPID"
   sleep 5
 
   if ! ps -p $ZPID > /dev/null; then
-    echo "Error: zenohd process not found"
+    echo "Error: zenoh-bridge-remote-api process not found after 10 seconds"
     exit 1
   fi
 
-  # Trap SIGINT to ensure zenohd is killed on ^C
-  trap "echo 'Stopping zenohd with PID $ZPID'; kill $ZPID; exit 1" SIGINT
+  # Trap SIGINT to ensure both processes are killed on ^C
+  trap "echo 'Stopping zenoh-bridge-remote-api with PID $ZPID'; kill $ZPID; exit 1" SIGINT
 
   cd "$CURRENT_DIR"
 }
 
 stop_daemon() {
   if [ ! -z "$ZPID" ]; then
-    echo "Stopping zenohd with PID $ZPID"
+    echo "Stopping zenoh-bridge-remote-api with PID $ZPID"
     kill "$ZPID"
   fi
 }
