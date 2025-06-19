@@ -860,10 +860,12 @@ watch(activeQueryables, (queryables) => {
 
 .operations-panel {
   width: 40%;
-  background-color: #f0f0f0;
+  background-color: white;
   padding: 15px;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   overflow-y: auto;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
 .operations-panel h3 {
@@ -874,9 +876,10 @@ watch(activeQueryables, (queryables) => {
 .operation-group {
   margin-bottom: 12px;
   padding: var(--compact-gap);
-  background-color: white;
-  border-radius: var(--compact-gap);
-  border: 1px solid #ddd;
+  background-color: #f0f0f0;
+  border: none;
+  border-radius: 0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
 /* Add spacing between operation-header and any following content */
@@ -889,18 +892,21 @@ watch(activeQueryables, (queryables) => {
 .operation-block {
   margin-bottom: 16px;
   padding: 0;
-  background: transparent;
+  background: #f0f0f0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
-/* Section Styling */
+/* Section Styling - Classic Windows Dialog Boxes */
 .operation-section {
-  margin-bottom: 20px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  background: #f0f0f0;
+  border: 2px outset #c0c0c0;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid #e9ecef;
   transition: opacity 0.3s ease;
+  font-family: 'MS Sans Serif', sans-serif;
+  /* Add window-like shadow and spacing */
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .operation-section.disabled {
@@ -912,56 +918,48 @@ watch(activeQueryables, (queryables) => {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-  border-bottom: 1px solid #dee2e6;
+  padding: 4px 8px;
+  /* Classic Windows title bar gradient */
+  background: linear-gradient(to bottom, #0054e3, #0054e3 50%, #1e6bc4 50%, #3a7bd4);
+  border-bottom: 1px solid #000080;
+  font-family: 'MS Sans Serif', sans-serif;
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 .section-icon {
-  font-size: 1.5em;
-  width: 32px;
-  height: 32px;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.8);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: white;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 .section-title {
-  color: #495057;
-  font-size: 1.1em;
-  font-weight: 600;
+  color: white !important;
+  font-size: 11px;
+  font-weight: bold;
   margin: 0;
-  letter-spacing: 0.5px;
+  letter-spacing: 0px;
+  font-family: 'MS Sans Serif', sans-serif;
+  text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.5);
 }
 
 .section-content {
-  padding: 16px 20px;
+  padding: 12px;
+  background: #f0f0f0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
-/* Section-specific colors */
-.session-section .section-header {
-  background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-}
-
-.session-section .section-icon {
-  background: rgba(33, 150, 243, 0.1);
-  color: #1976d2;
-}
-
-.pubsub-section .section-header {
-  background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
-}
-
-.pubsub-section .section-icon {
-  background: rgba(76, 175, 80, 0.1);
-  color: #388e3c;
-}
-
-.query-section .section-header {
-  background: linear-gradient(135deg, #fff3e0, #ffcc02);
-}
+/* Section-specific styles removed - using consistent classic Windows styling */
 
 .query-section .section-icon {
   background: rgba(255, 152, 0, 0.1);
@@ -1127,22 +1125,24 @@ watch(activeQueryables, (queryables) => {
 /* Details expansion section */
 .item-details {
   margin-top: var(--compact-gap);
-  padding-top: var(--compact-gap);
-  border-top: 1px solid #e9ecef;
-  background: rgba(248, 249, 250, 0.5);
-  border-radius: var(--compact-border-radius);
   padding: var(--compact-gap);
+  /* Classic Microsoft dialog box styling for info panels */
+  background-color: #c0c0c0;
+  border: 2px inset #c0c0c0;
+  border-radius: 0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
 /* Edit reply section styling */
 .edit-reply-section {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.edit-reply-section {
   margin-top: var(--compact-gap);
+  margin-bottom: 12px;
+  padding: var(--compact-gap);
+  /* Classic Microsoft dialog box styling for edit panels */
+  background-color: #c0c0c0;
+  border: 2px inset #c0c0c0;
+  border-radius: 0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 
 .response-config-content {
