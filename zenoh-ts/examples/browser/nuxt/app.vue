@@ -4,7 +4,7 @@
       <!-- Main Operations Panel -->
     <div class="main-panel">
       <!-- Operations Controls -->
-      <div class="operations-panel">">">
+      <div class="operations-panel">
         
         <!-- Session Section -->
         <div class="operation-section session-section">
@@ -20,6 +20,10 @@
             <div class="operation-header">
               <h4>Open</h4>
               <div class="header-actions">
+                <CollapseButton
+                  label="Edit"
+                  v-model:expanded="sessionOptionsExpanded"
+                />
                 <button 
                   @click="connect" 
                   :disabled="isConnecting"
@@ -28,9 +32,6 @@
                   <span v-if="isConnecting">Connecting...</span>
                   <span v-else>Connect</span>
                 </button>
-                <CollapseButton
-                  v-model:expanded="sessionOptionsExpanded"
-                />
               </div>
             </div>
             
@@ -111,12 +112,13 @@
                 </span>
               </h4>
               <div class="header-actions">
+                <CollapseButton
+                  label="Edit"
+                  v-model:expanded="subscriberOptionsExpanded"
+                />
                 <button @click="subscribe" :disabled="!selectedSessionId || !subscriberParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
-                <CollapseButton
-                  v-model:expanded="subscriberOptionsExpanded"
-                />
               </div>
             </div>
             
@@ -189,12 +191,13 @@
                 </span>
               </h4>
               <div class="header-actions">
+                <CollapseButton
+                  label="Edit"
+                  v-model:expanded="putOptionsExpanded"
+                />
                 <button @click="performPut" :disabled="!selectedSessionId || !putParameters.key.value || putParameters.valueEmpty.value" class="compact-button btn-primary">
                   Run
                 </button>
-                <CollapseButton
-                  v-model:expanded="putOptionsExpanded"
-                />
               </div>
             </div>
             
@@ -284,12 +287,13 @@
                 </span>
               </h4>
               <div class="header-actions">
+                <CollapseButton
+                  label="Edit"
+                  v-model:expanded="queryableOptionsExpanded"
+                />
                 <button @click="declareQueryable" :disabled="!selectedSessionId || !queryableParameters.key.value" class="compact-button btn-primary">
                   Declare
                 </button>
-                <CollapseButton
-                  v-model:expanded="queryableOptionsExpanded"
-                />
               </div>
             </div>
             
@@ -527,12 +531,13 @@
                 </span>
               </h4>
               <div class="header-actions">
+                <CollapseButton
+                  label="Edit"
+                  v-model:expanded="getOptionsExpanded"
+                />
                 <button @click="performGet" :disabled="!selectedSessionId || !getParameters.key.value" class="compact-button btn-primary">
                   Run
                 </button>
-                <CollapseButton
-                  v-model:expanded="getOptionsExpanded"
-                />
               </div>
             </div>
             
