@@ -157,14 +157,9 @@
                     <span class="item-key">{{ subscriberState.keyExpr }}</span>
                   </div>
                   <div class="item-actions">
-                    <button 
-                      @click="unsubscribe(subscriberState.displayId)" 
-                      class="compact-button btn-danger"
-                      :disabled="!selectedSessionId"
-                    >
-                      Undeclare
-                    </button>
                     <CollapseButton
+                      collapsedText="Info..."
+                      expandedText="Close info"
                       :expanded="expandedSubscriberDetails.has(subscriberState.displayId)"
                       @update:expanded="(value: boolean) => { if (value) { 
                         expandedSubscriberDetails.add(subscriberState.displayId) 
@@ -172,6 +167,13 @@
                         expandedSubscriberDetails.delete(subscriberState.displayId) 
                       } }"
                     />
+                    <button 
+                      @click="unsubscribe(subscriberState.displayId)" 
+                      class="compact-button btn-danger"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
                   </div>
                 </div>
                 
@@ -341,6 +343,16 @@
                   </div>
                   <div class="item-actions">
                     <CollapseButton
+                      collapsedText="Info..."
+                      expandedText="Close info"
+                      :expanded="expandedQueryableDetails.has(queryableState.displayId)"
+                      @update:expanded="(value: boolean) => { if (value) { 
+                        expandedQueryableDetails.add(queryableState.displayId) 
+                      } else { 
+                        expandedQueryableDetails.delete(queryableState.displayId) 
+                      } }"
+                    />
+                    <CollapseButton
                       label="Edit reply"
                       :expanded="expandedResponseConfig.has(queryableState.displayId)"
                       expanded-text="Close edit"
@@ -358,14 +370,6 @@
                     >
                       Undeclare
                     </button>
-                    <CollapseButton
-                      :expanded="expandedQueryableDetails.has(queryableState.displayId)"
-                      @update:expanded="(value: boolean) => { if (value) { 
-                        expandedQueryableDetails.add(queryableState.displayId) 
-                      } else { 
-                        expandedQueryableDetails.delete(queryableState.displayId) 
-                      } }"
-                    />
                   </div>
                 </div>
                 
