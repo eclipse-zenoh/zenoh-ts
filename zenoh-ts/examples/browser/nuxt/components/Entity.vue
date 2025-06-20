@@ -11,7 +11,7 @@
         <div v-if="!optionsExpanded" class="header-actions">
           <slot name="actions" />
           <CollapseButton
-            v-if="props.parametersData || $slots['parameters']"
+            v-if="$slots['parameters']"
             v-model:expanded="parametersExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
@@ -23,7 +23,7 @@
         </div>
         <div v-else-if="$slots['options']" class="header-actions">
           <CollapseButton
-            v-if="props.parametersData || $slots['parameters']"
+            v-if="$slots['parameters']"
             v-model:expanded="parametersExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
@@ -44,15 +44,10 @@
 
     <!-- Parameters section -->
     <div
-      v-if="(props.parametersData || $slots['parameters']) && parametersExpanded"
+      v-if="$slots['parameters'] && parametersExpanded"
       class="parameters-section"
     >
-      <ParameterDisplay 
-        v-if="props.parametersData"
-        type="neutral" 
-        :data="props.parametersData" 
-      />
-      <slot v-else name="parameters" />
+      <slot name="parameters" />
     </div>
 
     <!-- Special slot for sub-entities -->
@@ -63,17 +58,12 @@
 </template>
 
 <script setup lang="ts">
-import ParameterDisplay from "./ParameterDisplay.vue";
-
 interface Props {
   title: string;
   keyExpr?: string;
-  parametersData?: Record<string, any>;
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  keyExpr: "",
-});
+defineProps<Props>();
 
 const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   default: false,
