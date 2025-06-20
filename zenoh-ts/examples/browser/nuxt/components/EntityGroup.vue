@@ -1,11 +1,11 @@
 <template>
-  <div class="operation-section" :class="[sectionClass, { disabled: disabled }]">
+  <div class="entity-group" :class="[sectionClass, { disabled: disabled }]">
     <div class="section-header">
       <div class="section-icon">{{ icon }}</div>
       <h3 class="section-title">{{ title }}</h3>
     </div>
     <div class="section-content">
-      <div class="operation-block">
+      <div class="entity-block">
         <slot />
       </div>
     </div>
@@ -27,7 +27,7 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <style scoped>
-.operation-section {
+.entity-group {
   margin-bottom: calc(var(--compact-gap) * 3.75); /* 30px with 8px base */
   background: #f0f0f0;
   border: 2px outset #c0c0c0;
@@ -38,7 +38,7 @@ withDefaults(defineProps<Props>(), {
   box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.operation-section.disabled {
+.entity-group.disabled {
   opacity: 0.6;
   pointer-events: none;
 }
@@ -87,7 +87,7 @@ withDefaults(defineProps<Props>(), {
   font-family: 'MS Sans Serif', sans-serif;
 }
 
-.operation-block {
+.entity-block {
   margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
   padding: 0;
   background: #f0f0f0;

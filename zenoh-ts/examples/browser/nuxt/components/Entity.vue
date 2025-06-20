@@ -1,7 +1,7 @@
 <template>
-  <div class="operation-group">
-    <div class="operation-edits" :class="{ 'edits-expanded': optionsExpanded }">
-      <div class="operation-header">
+  <div class="entity">
+    <div class="entity-edits" :class="{ 'edits-expanded': optionsExpanded }">
+      <div class="entity-header">
         <h4>
           {{ title }}
           <span v-if="!optionsExpanded && keyExpr" class="header-keyexpr">
@@ -49,7 +49,7 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
 </script>
 
 <style scoped>
-.operation-group {
+.entity {
   margin-bottom: var(--compact-gap);
   padding: var(--compact-gap);
   background-color: #f0f0f0;
@@ -58,8 +58,8 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   font-family: "MS Sans Serif", sans-serif;
 }
 
-/* Operation header */
-.operation-header {
+/* Entity header */
+.entity-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -68,7 +68,7 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   height: 1.5em; /* Fixed height to prevent position changes */
 }
 
-.operation-header h4 {
+.entity-header h4 {
   margin: 0;
   font-size: var(--compact-label-font-size);
   font-weight: bold;
@@ -96,7 +96,7 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
 }
 
 /* Options content - styling depends on expanded state */
-.operation-edits {
+.entity-edits {
   background: #f0f0f0;
   margin-bottom: var(--compact-gap);
   padding: var(--compact-gap);
@@ -151,18 +151,18 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   padding: var(--compact-margin) var(--compact-padding-v);
 }
 
-/* Add spacing between operation-header and any following content */
-.operation-header + * {
+/* Add spacing between entity-header and any following content */
+.entity-header + * {
   margin-top: var(--compact-gap);
 }
 
 /* Conditional styling based on fold/unfold status */
-/* When folded - no border around operation-edits */
-.operation-edits {
+/* When folded - no border around entity-edits */
+.entity-edits {
   border: none;
 }
 
-/* When unfolded - make operation-edits look like embossed out panel */
+/* When unfolded - make entity-edits look like embossed out panel */
 .edits-expanded {
   border: 2px outset #c0c0c0;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);

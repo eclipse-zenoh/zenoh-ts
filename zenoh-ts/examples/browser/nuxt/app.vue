@@ -3,17 +3,17 @@
     <div class="zenoh-container">
       <!-- Main Operations Panel -->
     <div class="main-panel">
-      <!-- Operations Controls -->
-      <div class="operations-panel">
+      <!-- Entity Controls -->
+      <div class="entity-panel">
         
         <!-- Session Section -->
-        <OperationSection 
+        <EntityGroup 
           title="Session" 
           icon="🔗" 
           section-class="session-section"
         >
           <!-- Open Operation -->
-          <OperationGroup 
+          <Entity 
             title="Open" 
             :key-expr="serverUrl"
             v-model:options-expanded="sessionOptionsExpanded"
@@ -63,10 +63,10 @@
                 </div>
               </div>
             </div>
-          </OperationGroup>
+          </Entity>
           
           <!-- Info Operation -->
-          <OperationGroup 
+          <Entity 
             title="Info"
             :show-options-toggle="false"
           >
@@ -79,18 +79,18 @@
                 Run
               </button>
             </template>
-          </OperationGroup>
-        </OperationSection>
+          </Entity>
+        </EntityGroup>
 
         <!-- Publish/Subscribe Section -->
-        <OperationSection 
+        <EntityGroup 
           title="Publish / Subscribe" 
           icon="📡" 
           section-class="pubsub-section"
           :disabled="!selectedSessionId"
         >
           <!-- Declare Subscriber Operation -->
-          <OperationGroup 
+          <Entity 
             title="Subscriber" 
             :key-expr="subscriberParameters.key.value"
             v-model:options-expanded="subscriberOptionsExpanded"
@@ -157,10 +157,10 @@
                 </div>
               </div>
             </div>
-          </OperationGroup>
+          </Entity>
 
           <!-- Put Operation -->
-          <OperationGroup 
+          <Entity 
             title="Put" 
             :key-expr="putParameters.key.value"
             v-model:options-expanded="putOptionsExpanded"
@@ -230,18 +230,18 @@
                 :disabled="!selectedSessionId"
               />
             </template>
-          </OperationGroup>
-        </OperationSection>
+          </Entity>
+        </EntityGroup>
 
         <!-- Query/Reply Section -->
-        <OperationSection 
+        <EntityGroup 
           title="Query / Reply" 
           icon="🔍" 
           section-class="query-section"
           :disabled="!selectedSessionId"
         >
           <!-- Declare Queryable Operation -->
-          <OperationGroup 
+          <Entity 
             title="Queryable" 
             :key-expr="queryableParameters.key.value"
             v-model:options-expanded="queryableOptionsExpanded"
@@ -473,10 +473,10 @@
                 </div>
               </div>
             </div>
-          </OperationGroup>
+          </Entity>
 
           <!-- Get Operation -->
-          <OperationGroup 
+          <Entity 
             title="Get" 
             :key-expr="getParameters.key.value"
             v-model:options-expanded="getOptionsExpanded"
@@ -565,8 +565,8 @@
                 :options="acceptRepliesOptions"
               />
             </template>
-          </OperationGroup>
-        </OperationSection>
+          </Entity>
+        </EntityGroup>
         
       </div>
 
@@ -839,7 +839,7 @@ watch(activeQueryables, (queryables) => {
   overflow: hidden;
 }
 
-.operations-panel {
+.entity-panel {
   width: 40%;
   background-color: white;
   padding: calc(var(--compact-gap) * 1.875); /* 15px with 8px base */
@@ -849,12 +849,12 @@ watch(activeQueryables, (queryables) => {
   font-family: 'MS Sans Serif', sans-serif;
 }
 
-.operations-panel h3 {
+.entity-panel h3 {
   margin-top: 0;
   color: #333;
 }
 
-.operation-group {
+.entity {
   margin-bottom: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
   padding: var(--compact-gap);
   background-color: #f0f0f0;
@@ -863,19 +863,19 @@ watch(activeQueryables, (queryables) => {
   font-family: 'MS Sans Serif', sans-serif;
 }
 
-/* Add spacing between operation-header and any following content */
-.operation-header + * {
+/* Add spacing between entity-header and any following content */
+.entity-header + * {
   margin-top: var(--compact-gap);
 }
 
-.operation-block {
+.entity-block {
   margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
   padding: 0;
   background: #f0f0f0;
   font-family: 'MS Sans Serif', sans-serif;
 }
 
-/* Legacy operation-section styles - now handled by OperationSection component */
+/* Legacy entity-group styles - now handled by EntityGroup component */
 
 .block-title {
   color: #495057;
@@ -887,7 +887,7 @@ watch(activeQueryables, (queryables) => {
   letter-spacing: 0.3px;
 }
 
-.operation-group h4 {
+.entity h4 {
   margin-top: 0;
   margin-bottom: 10px;
   color: #555;
@@ -1235,7 +1235,7 @@ watch(activeQueryables, (queryables) => {
 }
 
 /* PUT Options Styling */
-.operation-header {
+.entity-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1243,7 +1243,7 @@ watch(activeQueryables, (queryables) => {
   padding: 0;
 }
 
-.operation-header h4 {
+.entity-header h4 {
   margin: 0;
 }
 
