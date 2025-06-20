@@ -11,11 +11,23 @@
         <div v-if="!optionsExpanded" class="header-actions">
           <slot name="actions" />
           <CollapseButton
+            v-if="props.parametersData"
+            v-model:expanded="parametersExpanded"
+            collapsed-text="Info..."
+            expanded-text="Close info"
+          />
+          <CollapseButton
             v-if="showOptionsToggle"
             v-model:expanded="optionsExpanded"
           />
         </div>
         <div v-else-if="showOptionsToggle" class="header-actions">
+          <CollapseButton
+            v-if="props.parametersData"
+            v-model:expanded="parametersExpanded"
+            collapsed-text="Info..."
+            expanded-text="Close info"
+          />
           <CollapseButton v-model:expanded="optionsExpanded" />
         </div>
       </div>
@@ -30,6 +42,14 @@
     <!-- Default slot for general content -->
     <slot />
     
+    <!-- Parameters section -->
+    <div v-if="props.parametersData && parametersExpanded" class="parameters-section">
+      <ParameterDisplay 
+        type="neutral" 
+        :data="props.parametersData"
+      />
+    </div>
+    
     <!-- Special slot for sub-entities -->
     <div v-if="$slots['sub-entities']" class="sub-entities">
       <slot name="sub-entities" />
@@ -38,13 +58,16 @@
 </template>
 
 <script setup lang="ts">
+import ParameterDisplay from './ParameterDisplay.vue'
+
 interface Props {
   title: string;
   keyExpr?: string;
   showOptionsToggle?: boolean;
+  parametersData?: Record<string, any>;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   keyExpr: "",
   showOptionsToggle: true,
 });
@@ -52,6 +75,8 @@ withDefaults(defineProps<Props>(), {
 const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   default: false,
 });
+
+const parametersExpanded = ref(false);
 </script>
 
 <style scoped>
@@ -197,5 +222,15 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
 .sub-entities .entity .header-keyexpr {
   font-size: calc(var(--compact-label-font-size) * 0.8);
   color: #777;
+}
+
+/* Parameters section styling */
+.parameters-section {
+  margin-top: var(--compact-gap);
+  padding: var(--compact-gap);
+  background-color: #c0c0c0;
+  border: 2px inset #c0c0c0;
+  border-radius: 0;
+  font-family: 'MS Sans Serif', sans-serif;
 }
 </style>

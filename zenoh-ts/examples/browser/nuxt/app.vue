@@ -124,18 +124,9 @@
                 :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
                 :key-expr="subscriberState.keyExpr"
                 :show-options-toggle="false"
+                :parameters-data="{ 'SubscriberOptions': subscriberState.options }"
               >
                 <template #actions>
-                  <CollapseButton
-                    collapsedText="Info..."
-                    expandedText="Close info"
-                    :expanded="expandedSubscriberDetails.has(subscriberState.displayId)"
-                    @update:expanded="(value: boolean) => { if (value) { 
-                      expandedSubscriberDetails.add(subscriberState.displayId) 
-                    } else { 
-                      expandedSubscriberDetails.delete(subscriberState.displayId) 
-                    } }"
-                  />
                   <button 
                     @click="unsubscribe(subscriberState.displayId)" 
                     class="compact-button btn-danger"
@@ -144,16 +135,6 @@
                     Undeclare
                   </button>
                 </template>
-                
-                <!-- Custom details section in default slot -->
-                <div v-if="expandedSubscriberDetails.has(subscriberState.displayId)" class="item-details">
-                  <div class="details-content">
-                    <ParameterDisplay 
-                      type="neutral" 
-                      :data="{ 'SubscriberOptions': subscriberState.options }"
-                    />
-                  </div>
-                </div>
               </Entity>
             </template>
           </Entity>
@@ -716,8 +697,7 @@ if (import.meta.client) {
 // Template ref for log content
 const logContent = ref<HTMLElement>()
 
-// State to track expanded details for subscribers and queryables
-const expandedSubscriberDetails = ref<Set<string>>(new Set())
+// State to track expanded details for queryables
 const expandedQueryableDetails = ref<Set<string>>(new Set())
 const expandedResponseConfig = ref<Set<string>>(new Set())
 
