@@ -60,8 +60,8 @@
                     </button>
                   </template>
 
-                  <!-- Parameters as reactive slot -->
-                  <template #parameters>
+                  <!-- Info as reactive slot -->
+                  <template #info>
                     <ParameterDisplay 
                       type="neutral" 
                       :data="{
@@ -151,8 +151,8 @@
                     </button>
                   </template>
 
-                  <!-- Parameters as reactive slot -->
-                  <template #parameters>
+                  <!-- Info as reactive slot -->
+                  <template #info>
                     <ParameterDisplay 
                       type="neutral" 
                       :data="{ 'SubscriberOptions': subscriberState.options }"
@@ -308,8 +308,8 @@
                     </button>
                   </template>
 
-                  <!-- Parameters as reactive slot -->
-                  <template #parameters>
+                  <!-- Info as reactive slot -->
+                  <template #info>
                     <ParameterDisplay 
                       type="neutral" 
                       :data="{ 'QueryableOptions': queryableState.options }"

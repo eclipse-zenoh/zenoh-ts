@@ -11,8 +11,8 @@
         <div v-if="!optionsExpanded" class="header-actions">
           <slot name="actions" />
           <CollapseButton
-            v-if="$slots['parameters']"
-            v-model:expanded="parametersExpanded"
+            v-if="$slots['info']"
+            v-model:expanded="infoExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
           />
@@ -23,8 +23,8 @@
         </div>
         <div v-else-if="$slots['options']" class="header-actions">
           <CollapseButton
-            v-if="$slots['parameters']"
-            v-model:expanded="parametersExpanded"
+            v-if="$slots['info']"
+            v-model:expanded="infoExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
           />
@@ -42,12 +42,12 @@
     <!-- Default slot for general content -->
     <slot />
 
-    <!-- Parameters section -->
+    <!-- Info section -->
     <div
-      v-if="$slots['parameters'] && parametersExpanded"
-      class="parameters-section"
+      v-if="$slots['info'] && infoExpanded"
+      class="info-section"
     >
-      <slot name="parameters" />
+      <slot name="info" />
     </div>
 
     <!-- Special slot for sub-entities -->
@@ -69,7 +69,7 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
   default: false,
 });
 
-const parametersExpanded = ref(false);
+const infoExpanded = ref(false);
 </script>
 
 <style scoped>
@@ -217,8 +217,8 @@ const parametersExpanded = ref(false);
   color: #777;
 }
 
-/* Parameters section styling */
-.parameters-section {
+/* Info section styling */
+.info-section {
   margin-top: var(--compact-gap);
   padding: var(--compact-gap);
   background-color: #c0c0c0;
