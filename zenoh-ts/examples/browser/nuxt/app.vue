@@ -117,36 +117,35 @@
             </template>
             
             <!-- Active Subscribers List -->
-            <div v-if="activeSubscribers.length > 0" class="active-items-list">
-              <div class="item-entry" v-for="subscriberState in activeSubscribers" :key="subscriberState.displayId">
-                <div class="item-row">
-                  <div class="item-info">
-                    <span class="item-session">{{ subscriberState.sessionId }}</span>
-                    <span class="item-id">{{ subscriberState.displayId }}</span>
-                    <span class="item-key">{{ subscriberState.keyExpr }}</span>
-                  </div>
-                  <div class="item-actions">
-                    <CollapseButton
-                      collapsedText="Info..."
-                      expandedText="Close info"
-                      :expanded="expandedSubscriberDetails.has(subscriberState.displayId)"
-                      @update:expanded="(value: boolean) => { if (value) { 
-                        expandedSubscriberDetails.add(subscriberState.displayId) 
-                      } else { 
-                        expandedSubscriberDetails.delete(subscriberState.displayId) 
-                      } }"
-                    />
-                    <button 
-                      @click="unsubscribe(subscriberState.displayId)" 
-                      class="compact-button btn-danger"
-                      :disabled="!selectedSessionId"
-                    >
-                      Undeclare
-                    </button>
-                  </div>
-                </div>
+            <template v-if="activeSubscribers.length > 0">
+              <Entity
+                v-for="subscriberState in activeSubscribers"
+                :key="subscriberState.displayId"
+                :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
+                :key-expr="subscriberState.keyExpr"
+                :show-options-toggle="false"
+              >
+                <template #actions>
+                  <CollapseButton
+                    collapsedText="Info..."
+                    expandedText="Close info"
+                    :expanded="expandedSubscriberDetails.has(subscriberState.displayId)"
+                    @update:expanded="(value: boolean) => { if (value) { 
+                      expandedSubscriberDetails.add(subscriberState.displayId) 
+                    } else { 
+                      expandedSubscriberDetails.delete(subscriberState.displayId) 
+                    } }"
+                  />
+                  <button 
+                    @click="unsubscribe(subscriberState.displayId)" 
+                    class="compact-button btn-danger"
+                    :disabled="!selectedSessionId"
+                  >
+                    Undeclare
+                  </button>
+                </template>
                 
-                <!-- Expanded Details Section -->
+                <!-- Custom details section in default slot -->
                 <div v-if="expandedSubscriberDetails.has(subscriberState.displayId)" class="item-details">
                   <div class="details-content">
                     <ParameterDisplay 
@@ -155,8 +154,8 @@
                     />
                   </div>
                 </div>
-              </div>
-            </div>
+              </Entity>
+            </template>
           </Entity>
 
           <!-- Put Operation -->
