@@ -116,8 +116,8 @@
               />
             </template>
             
-            <!-- Active Subscribers List -->
-            <template v-if="activeSubscribers.length > 0">
+            <!-- Active Subscribers as Sub-entities -->
+            <template #sub-entities>
               <Entity
                 v-for="subscriberState in activeSubscribers"
                 :key="subscriberState.displayId"

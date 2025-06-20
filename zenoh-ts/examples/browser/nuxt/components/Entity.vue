@@ -27,7 +27,13 @@
       </div>
     </div>
 
+    <!-- Default slot for general content -->
     <slot />
+    
+    <!-- Special slot for sub-entities -->
+    <div v-if="$slots['sub-entities']" class="sub-entities">
+      <slot name="sub-entities" />
+    </div>
   </div>
 </template>
 
@@ -166,5 +172,30 @@ const optionsExpanded = defineModel<boolean>("optionsExpanded", {
 .edits-expanded {
   border: 2px outset #c0c0c0;
   box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Sub-entities styling */
+.sub-entities {
+  margin-top: var(--compact-gap);
+  padding-top: var(--compact-gap);
+  border-top: 1px solid #d0d0d0;
+}
+
+/* Nested entity styling for sub-entities */
+.sub-entities .entity {
+  background-color: #f8f8f8;
+  border: 1px solid #d0d0d0;
+  margin-bottom: calc(var(--compact-gap) * 0.75);
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.sub-entities .entity .entity-header h4 {
+  font-size: calc(var(--compact-label-font-size) * 0.9);
+  color: #555;
+}
+
+.sub-entities .entity .header-keyexpr {
+  font-size: calc(var(--compact-label-font-size) * 0.8);
+  color: #777;
 }
 </style>
