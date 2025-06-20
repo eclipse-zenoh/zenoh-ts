@@ -41,15 +41,15 @@
 
     <!-- Default slot for general content -->
     <slot />
-    
+
     <!-- Parameters section -->
-    <div v-if="props.parametersData && parametersExpanded" class="parameters-section">
-      <ParameterDisplay 
-        type="neutral" 
-        :data="props.parametersData"
-      />
+    <div
+      v-if="props.parametersData && parametersExpanded"
+      class="parameters-section"
+    >
+      <ParameterDisplay type="neutral" :data="props.parametersData" />
     </div>
-    
+
     <!-- Special slot for sub-entities -->
     <div v-if="$slots['sub-entities']" class="sub-entities">
       <slot name="sub-entities" />
@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import ParameterDisplay from './ParameterDisplay.vue'
+import ParameterDisplay from "./ParameterDisplay.vue";
 
 interface Props {
   title: string;
@@ -229,6 +229,6 @@ const parametersExpanded = ref(false);
   background-color: #c0c0c0;
   border: 2px inset #c0c0c0;
   border-radius: 0;
-  font-family: 'MS Sans Serif', sans-serif;
+  font-family: "MS Sans Serif", sans-serif;
 }
 </style>
