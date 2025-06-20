@@ -68,7 +68,6 @@
           <!-- Info Operation -->
           <Entity 
             title="Info"
-            :show-options-toggle="false"
           >
             <template #actions>
               <button 
@@ -123,7 +122,6 @@
                 :key="subscriberState.displayId"
                 :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
                 :key-expr="subscriberState.keyExpr"
-                :show-options-toggle="false"
                 :parameters-data="{ 'SubscriberOptions': subscriberState.options }"
               >
                 <template #actions>

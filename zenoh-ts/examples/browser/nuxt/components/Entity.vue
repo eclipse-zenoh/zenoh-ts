@@ -17,11 +17,11 @@
             expanded-text="Close info"
           />
           <CollapseButton
-            v-if="showOptionsToggle"
+            v-if="$slots['options']"
             v-model:expanded="optionsExpanded"
           />
         </div>
-        <div v-else-if="showOptionsToggle" class="header-actions">
+        <div v-else-if="$slots['options']" class="header-actions">
           <CollapseButton
             v-if="props.parametersData"
             v-model:expanded="parametersExpanded"
@@ -31,7 +31,7 @@
           <CollapseButton v-model:expanded="optionsExpanded" />
         </div>
       </div>
-      <div v-if="optionsExpanded && showOptionsToggle" class="options-grid">
+      <div v-if="optionsExpanded && $slots['options']" class="options-grid">
         <slot name="options" />
         <div class="expanded-actions">
           <slot name="actions" />
@@ -63,13 +63,11 @@ import ParameterDisplay from './ParameterDisplay.vue'
 interface Props {
   title: string;
   keyExpr?: string;
-  showOptionsToggle?: boolean;
   parametersData?: Record<string, any>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   keyExpr: "",
-  showOptionsToggle: true,
 });
 
 const optionsExpanded = defineModel<boolean>("optionsExpanded", {
