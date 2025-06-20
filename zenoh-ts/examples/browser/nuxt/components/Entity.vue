@@ -11,7 +11,7 @@
         <div v-if="!optionsExpanded" class="header-actions">
           <slot name="actions" />
           <CollapseButton
-            v-if="props.parametersData"
+            v-if="props.parametersData || $slots['parameters']"
             v-model:expanded="parametersExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
@@ -23,7 +23,7 @@
         </div>
         <div v-else-if="$slots['options']" class="header-actions">
           <CollapseButton
-            v-if="props.parametersData"
+            v-if="props.parametersData || $slots['parameters']"
             v-model:expanded="parametersExpanded"
             collapsed-text="Info..."
             expanded-text="Close info"
@@ -44,10 +44,15 @@
 
     <!-- Parameters section -->
     <div
-      v-if="props.parametersData && parametersExpanded"
+      v-if="(props.parametersData || $slots['parameters']) && parametersExpanded"
       class="parameters-section"
     >
-      <ParameterDisplay type="neutral" :data="props.parametersData" />
+      <ParameterDisplay 
+        v-if="props.parametersData"
+        type="neutral" 
+        :data="props.parametersData" 
+      />
+      <slot v-else name="parameters" />
     </div>
 
     <!-- Special slot for sub-entities -->

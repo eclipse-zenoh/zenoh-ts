@@ -43,15 +43,6 @@
                       : ''
                   }`"
                   :key-expr="sessionState.serverUrl"
-                  :parameters-data="{
-                    'Session ID': sessionState.displayId,
-                    'Server URL': sessionState.serverUrl,
-                    'Created At': sessionState.createdAt.toLocaleString(),
-                    Status:
-                      selectedSessionId === sessionState.displayId
-                        ? 'Selected'
-                        : 'Connected',
-                  }"
                 >
                   <template #actions>
                     <button
@@ -67,6 +58,22 @@
                     >
                       Disconnect
                     </button>
+                  </template>
+
+                  <!-- Parameters as reactive slot -->
+                  <template #parameters>
+                    <ParameterDisplay 
+                      type="neutral" 
+                      :data="{
+                        'Session ID': sessionState.displayId,
+                        'Server URL': sessionState.serverUrl,
+                        'Created At': sessionState.createdAt.toLocaleString(),
+                        Status:
+                          selectedSessionId === sessionState.displayId
+                            ? 'Selected'
+                            : 'Connected',
+                      }"
+                    />
                   </template>
                 </Entity>
               </template>
@@ -133,9 +140,6 @@
                   :key="subscriberState.displayId"
                   :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
                   :key-expr="subscriberState.keyExpr"
-                  :parameters-data="{
-                    SubscriberOptions: subscriberState.options,
-                  }"
                 >
                   <template #actions>
                     <button
@@ -145,6 +149,14 @@
                     >
                       Undeclare
                     </button>
+                  </template>
+
+                  <!-- Parameters as reactive slot -->
+                  <template #parameters>
+                    <ParameterDisplay 
+                      type="neutral" 
+                      :data="{ 'SubscriberOptions': subscriberState.options }"
+                    />
                   </template>
                 </Entity>
               </template>
@@ -285,22 +297,6 @@
                   :key="queryableState.displayId"
                   :title="`${queryableState.sessionId} - ${queryableState.displayId}`"
                   :key-expr="queryableState.keyExpr"
-                  :parameters-data="{ 
-                    'QueryableOptions': queryableState.options,
-                    'Reply Config': {
-                      'Reply Type': queryableState.responseParameters.replyType,
-                      ...(queryableState.responseParameters.replyType === 'reply' ? {
-                        'Reply Key': queryableState.responseParameters.reply.keyExpr,
-                        'Reply Options': queryableState.responseParameters.reply.replyOptionsJSON
-                      } : {}),
-                      ...(queryableState.responseParameters.replyType === 'replyErr' ? {
-                        'Error Options': queryableState.responseParameters.replyErr.replyErrOptionsJSON
-                      } : {}),
-                      ...(queryableState.responseParameters.replyType === 'ignore' ? {
-                        'Behavior': 'Queries received but no reply sent (only query.finalize() called)'
-                      } : {})
-                    }
-                  }"
                 >
                   <template #actions>
                     <button
@@ -310,6 +306,32 @@
                     >
                       Undeclare
                     </button>
+                  </template>
+
+                  <!-- Parameters as reactive slot -->
+                  <template #parameters>
+                    <ParameterDisplay 
+                      type="neutral" 
+                      :data="{ 'QueryableOptions': queryableState.options }"
+                    />
+                    <ParameterDisplay 
+                      type="neutral" 
+                      :data="{ 
+                        'Reply Config': {
+                          'Reply Type': queryableState.responseParameters.replyType,
+                          ...(queryableState.responseParameters.replyType === 'reply' ? {
+                            'Reply Key': queryableState.responseParameters.reply.keyExpr,
+                            'Reply Options': queryableState.responseParameters.reply.replyOptionsJSON
+                          } : {}),
+                          ...(queryableState.responseParameters.replyType === 'replyErr' ? {
+                            'Error Options': queryableState.responseParameters.replyErr.replyErrOptionsJSON
+                          } : {}),
+                          ...(queryableState.responseParameters.replyType === 'ignore' ? {
+                            'Behavior': 'Queries received but no reply sent (only query.finalize() called)'
+                          } : {})
+                        }
+                      }"
+                    />
                   </template>
 
                   <!-- Edit Reply Section as options slot -->
