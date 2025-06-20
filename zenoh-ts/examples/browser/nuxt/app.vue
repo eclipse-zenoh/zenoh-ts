@@ -278,326 +278,142 @@
                 />
               </template>
 
-              <!-- Active Queryables List -->
-              <div v-if="activeQueryables.length > 0" class="active-items-list">
-                <div
-                  class="item-entry"
+              <!-- Active Queryables as Sub-entities -->
+              <template #sub-entities>
+                <Entity
                   v-for="queryableState in activeQueryables"
                   :key="queryableState.displayId"
+                  :title="`${queryableState.sessionId} - ${queryableState.displayId}`"
+                  :key-expr="queryableState.keyExpr"
+                  :parameters-data="{ 
+                    'QueryableOptions': queryableState.options,
+                    'Reply Config': {
+                      'Reply Type': queryableState.responseParameters.replyType,
+                      ...(queryableState.responseParameters.replyType === 'reply' ? {
+                        'Reply Key': queryableState.responseParameters.reply.keyExpr,
+                        'Reply Options': queryableState.responseParameters.reply.replyOptionsJSON
+                      } : {}),
+                      ...(queryableState.responseParameters.replyType === 'replyErr' ? {
+                        'Error Options': queryableState.responseParameters.replyErr.replyErrOptionsJSON
+                      } : {}),
+                      ...(queryableState.responseParameters.replyType === 'ignore' ? {
+                        'Behavior': 'Queries received but no reply sent (only query.finalize() called)'
+                      } : {})
+                    }
+                  }"
                 >
-                  <div class="item-row">
-                    <div class="item-info">
-                      <span class="item-session">{{
-                        queryableState.sessionId
-                      }}</span>
-                      <span class="item-id">{{
-                        queryableState.displayId
-                      }}</span>
-                      <span class="item-key">{{ queryableState.keyExpr }}</span>
-                    </div>
-                    <div class="item-actions">
-                      <CollapseButton
-                        collapsedText="Info..."
-                        expandedText="Close info"
-                        :expanded="
-                          expandedQueryableDetails.has(queryableState.displayId)
-                        "
-                        @update:expanded="(value: boolean) => { if (value) { 
-                        expandedQueryableDetails.add(queryableState.displayId) 
-                      } else { 
-                        expandedQueryableDetails.delete(queryableState.displayId) 
-                      } }"
-                      />
-                      <CollapseButton
-                        label="Edit reply"
-                        :expanded="
-                          expandedResponseConfig.has(queryableState.displayId)
-                        "
-                        expanded-text="Close edit"
-                        collapsed-text=""
-                        @update:expanded="(value: boolean) => { if (value) { 
-                        expandedResponseConfig.add(queryableState.displayId) 
-                      } else { 
-                        expandedResponseConfig.delete(queryableState.displayId) 
-                      } }"
-                      />
-                      <button
-                        @click="undeclareQueryable(queryableState.displayId)"
-                        class="compact-button btn-danger"
+                  <template #actions>
+                    <button
+                      @click="undeclareQueryable(queryableState.displayId)"
+                      class="compact-button btn-danger"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
+                  </template>
+
+                  <!-- Edit Reply Section as options slot -->
+                  <template #options>
+                    <!-- Response Type Selection -->
+                    <ResponseTypeSelect
+                      v-model="queryableState.responseParameters.replyType"
+                      :name="`response-type-${queryableState.displayId}`"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <!-- Reply Fields -->
+                    <template
+                      v-if="queryableState.responseParameters.replyType === 'reply'"
+                    >
+                      <KeyExprInput
+                        v-model="queryableState.responseParameters.reply.keyExpr"
+                        label="Key Expression"
+                        placeholder="Normally the queryable keyexpr"
                         :disabled="!selectedSessionId"
-                      >
-                        Undeclare
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Edit Reply Section (Independent) -->
-                  <div
-                    v-if="expandedResponseConfig.has(queryableState.displayId)"
-                    class="edit-reply-section"
-                  >
-                    <div class="response-config-content">
-                      <div class="options-grid">
-                        <!-- Response Type Selection -->
-                        <ResponseTypeSelect
-                          v-model="queryableState.responseParameters.replyType"
-                          :name="`response-type-${queryableState.displayId}`"
-                          :disabled="!selectedSessionId"
-                        />
-
-                        <!-- Reply Fields -->
-                        <template
-                          v-if="
-                            queryableState.responseParameters.replyType ===
-                            'reply'
-                          "
-                        >
-                          <KeyExprInput
-                            v-model="
-                              queryableState.responseParameters.reply.keyExpr
-                            "
-                            label="Key Expression"
-                            placeholder="Normally the queryable keyexpr"
-                            :disabled="!selectedSessionId"
-                          />
-
-                          <PayloadInput
-                            v-model="
-                              queryableState.responseParameters.reply.payload
-                            "
-                            v-model:is-empty="
-                              queryableState.responseParameters.reply
-                                .payloadEmpty
-                            "
-                            label="Payload"
-                            placeholder="Payload content for successful reply"
-                            :disabled="!selectedSessionId"
-                          />
-
-                          <EncodingSelect
-                            v-model="
-                              queryableState.responseParameters.reply.encoding
-                            "
-                            v-model:custom-encoding="
-                              queryableState.responseParameters.reply
-                                .customEncoding
-                            "
-                            :encoding-options="encodingOptions"
-                            :disabled="!selectedSessionId"
-                          />
-
-                          <PrioritySelect
-                            v-model="
-                              queryableState.responseParameters.reply.priority
-                            "
-                            :disabled="!selectedSessionId"
-                            :options="priorityOptions"
-                          />
-
-                          <CongestionControlSelect
-                            v-model="
-                              queryableState.responseParameters.reply
-                                .congestionControl
-                            "
-                            :disabled="!selectedSessionId"
-                            :options="congestionControlOptions"
-                          />
-
-                          <ExpressSelect
-                            v-model="
-                              queryableState.responseParameters.reply.express
-                            "
-                            :disabled="!selectedSessionId"
-                          />
-
-                          <CheckBox
-                            v-model="
-                              queryableState.responseParameters.reply
-                                .useTimestamp
-                            "
-                            label="Use timestamp"
-                            :disabled="!selectedSessionId"
-                            :three-state="false"
-                          />
-
-                          <PayloadInput
-                            v-model="
-                              queryableState.responseParameters.reply.attachment
-                            "
-                            v-model:is-empty="
-                              queryableState.responseParameters.reply
-                                .attachmentEmpty
-                            "
-                            label="Attachment"
-                            placeholder="Optional attachment data"
-                            :disabled="!selectedSessionId"
-                          />
-                        </template>
-
-                        <!-- ReplyErr Fields -->
-                        <template
-                          v-if="
-                            queryableState.responseParameters.replyType ===
-                            'replyErr'
-                          "
-                        >
-                          <PayloadInput
-                            v-model="
-                              queryableState.responseParameters.replyErr.payload
-                            "
-                            v-model:is-empty="
-                              queryableState.responseParameters.replyErr
-                                .payloadEmpty
-                            "
-                            label="Error Payload"
-                            placeholder="Error message or payload"
-                            :disabled="!selectedSessionId"
-                          />
-
-                          <EncodingSelect
-                            v-model="
-                              queryableState.responseParameters.replyErr
-                                .encoding
-                            "
-                            v-model:custom-encoding="
-                              queryableState.responseParameters.replyErr
-                                .customEncoding
-                            "
-                            :encoding-options="encodingOptions"
-                            :disabled="!selectedSessionId"
-                          />
-                        </template>
-
-                        <!-- Ignore Fields -->
-                        <template
-                          v-if="
-                            queryableState.responseParameters.replyType ===
-                            'ignore'
-                          "
-                        >
-                          <div class="ignore-info">
-                            <p class="ignore-description">
-                              When <strong>Ignore</strong> is selected, queries
-                              will be received but no reply will be sent. Only
-                              <code>query.finalize()</code> will be called to
-                              acknowledge the query.
-                            </p>
-                          </div>
-                        </template>
-                      </div>
-                    </div>
-                    <!-- End response-config-content -->
-                  </div>
-
-                  <!-- Expanded Details Section -->
-                  <div
-                    v-if="
-                      expandedQueryableDetails.has(queryableState.displayId)
-                    "
-                    class="item-details"
-                  >
-                    <div class="details-content">
-                      <!-- Queryable Options Display -->
-                      <ParameterDisplay
-                        type="neutral"
-                        :data="{ QueryableOptions: queryableState.options }"
                       />
 
-                      <!-- Display Reply Parameters when reply type is "reply" -->
-                      <div
-                        v-if="
-                          queryableState.responseParameters.replyType ===
-                          'reply'
-                        "
-                        class="reply-parameters"
-                      >
-                        <!-- Key Expression Parameter -->
-                        <ParameterDisplay
-                          type="neutral"
-                          :data="{
-                            'reply keyexpr':
-                              queryableState.responseParameters.reply.keyExpr,
-                          }"
-                        />
+                      <PayloadInput
+                        v-model="queryableState.responseParameters.reply.payload"
+                        v-model:is-empty="queryableState.responseParameters.reply.payloadEmpty"
+                        label="Payload"
+                        placeholder="Payload content for successful reply"
+                        :disabled="!selectedSessionId"
+                      />
 
-                        <!-- Payload Parameter -->
-                        <ParameterDisplay
-                          v-if="
-                            !queryableState.responseParameters.reply
-                              .payloadEmpty
-                          "
-                          type="neutral"
-                          :data="{
-                            'reply payload':
-                              queryableState.responseParameters.reply.payload,
-                          }"
-                        />
+                      <EncodingSelect
+                        v-model="queryableState.responseParameters.reply.encoding"
+                        v-model:custom-encoding="queryableState.responseParameters.reply.customEncoding"
+                        :encoding-options="encodingOptions"
+                        :disabled="!selectedSessionId"
+                      />
 
-                        <!-- ReplyOptions Parameter -->
-                        <ParameterDisplay
-                          type="neutral"
-                          :data="{
-                            ReplyOptions:
-                              queryableState.responseParameters.reply
-                                .replyOptionsJSON,
-                          }"
-                        />
+                      <PrioritySelect
+                        v-model="queryableState.responseParameters.reply.priority"
+                        :disabled="!selectedSessionId"
+                        :options="priorityOptions"
+                      />
+
+                      <CongestionControlSelect
+                        v-model="queryableState.responseParameters.reply.congestionControl"
+                        :disabled="!selectedSessionId"
+                        :options="congestionControlOptions"
+                      />
+
+                      <ExpressSelect
+                        v-model="queryableState.responseParameters.reply.express"
+                        :disabled="!selectedSessionId"
+                      />
+
+                      <CheckBox
+                        v-model="queryableState.responseParameters.reply.useTimestamp"
+                        label="Use timestamp"
+                        :disabled="!selectedSessionId"
+                        :three-state="false"
+                      />
+
+                      <PayloadInput
+                        v-model="queryableState.responseParameters.reply.attachment"
+                        v-model:is-empty="queryableState.responseParameters.reply.attachmentEmpty"
+                        label="Attachment"
+                        placeholder="Optional attachment data"
+                        :disabled="!selectedSessionId"
+                      />
+                    </template>
+
+                    <!-- ReplyErr Fields -->
+                    <template
+                      v-if="queryableState.responseParameters.replyType === 'replyErr'"
+                    >
+                      <PayloadInput
+                        v-model="queryableState.responseParameters.replyErr.payload"
+                        v-model:is-empty="queryableState.responseParameters.replyErr.payloadEmpty"
+                        label="Error Payload"
+                        placeholder="Error message or payload"
+                        :disabled="!selectedSessionId"
+                      />
+
+                      <EncodingSelect
+                        v-model="queryableState.responseParameters.replyErr.encoding"
+                        v-model:custom-encoding="queryableState.responseParameters.replyErr.customEncoding"
+                        :encoding-options="encodingOptions"
+                        :disabled="!selectedSessionId"
+                      />
+                    </template>
+
+                    <!-- Ignore Fields -->
+                    <template
+                      v-if="queryableState.responseParameters.replyType === 'ignore'"
+                    >
+                      <div class="ignore-info">
+                        <p class="ignore-description">
+                          When <strong>Ignore</strong> is selected, queries will be received but no reply will be sent. 
+                          Only <code>query.finalize()</code> will be called to acknowledge the query.
+                        </p>
                       </div>
-
-                      <!-- Display ReplyErr Parameters when reply type is "replyErr" -->
-                      <div
-                        v-if="
-                          queryableState.responseParameters.replyType ===
-                          'replyErr'
-                        "
-                        class="reply-err-parameters"
-                      >
-                        <!-- Payload Parameter -->
-                        <ParameterDisplay
-                          v-if="
-                            !queryableState.responseParameters.replyErr
-                              .payloadEmpty
-                          "
-                          type="neutral"
-                          :data="{
-                            'reply error payload':
-                              queryableState.responseParameters.replyErr
-                                .payload,
-                          }"
-                        />
-
-                        <!-- ReplyErrOptions Parameter -->
-                        <ParameterDisplay
-                          type="neutral"
-                          :data="{
-                            ReplyErrOptions:
-                              queryableState.responseParameters.replyErr
-                                .replyErrOptionsJSON,
-                          }"
-                        />
-                      </div>
-
-                      <!-- Display Ignore Parameters when reply type is "ignore" -->
-                      <div
-                        v-if="
-                          queryableState.responseParameters.replyType ===
-                          'ignore'
-                        "
-                        class="ignore-parameters"
-                      >
-                        <!-- Info Parameter -->
-                        <ParameterDisplay
-                          type="neutral"
-                          :data="{
-                            behavior:
-                              'Queries will be received but no reply will be sent (only query.finalize() is called)',
-                          }"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+                    </template>
+                  </template>
+                </Entity>
+              </template>
             </Entity>
 
             <!-- Get Operation -->
@@ -756,7 +572,6 @@
 import { onBeforeUnmount, onUnmounted } from "vue";
 
 // Import components
-import CollapseButton from "./components/CollapseButton.vue";
 import ResponseTypeSelect from "./components/ResponseTypeSelect.vue";
 import ServerInput from "./components/ServerInput.vue";
 import TimeoutInput from "./components/TimeoutInput.vue";
@@ -852,10 +667,6 @@ if (import.meta.client) {
 
 // Template ref for log content
 const logContent = ref<HTMLElement>();
-
-// State to track expanded details for queryables
-const expandedQueryableDetails = ref<Set<string>>(new Set());
-const expandedResponseConfig = ref<Set<string>>(new Set());
 
 // State to track expanded options panels for operations
 const sessionOptionsExpanded = ref(false);
@@ -1076,153 +887,6 @@ watch(
 }
 
 /* Button group styling - app-specific */
-.active-items-list {
-  margin-top: var(--compact-gap);
-  padding-top: var(--compact-gap);
-  border-top: 1px solid #ddd;
-}
-
-.item-entry {
-  background: linear-gradient(135deg, #f8f9fa, #ffffff);
-  border: 1px solid #e9ecef;
-  border-radius: var(--compact-gap);
-  padding: var(--compact-gap) var(--compact-gap);
-  margin-bottom: var(--compact-margin);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.2s ease;
-}
-
-.item-entry:hover {
-  background: linear-gradient(135deg, #f1f3f4, #f8f9fa);
-  border-color: #dee2e6;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.item-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  width: 100%;
-  flex-wrap: wrap;
-  gap: var(--compact-gap);
-}
-
-.item-info {
-  flex: 1;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--compact-gap);
-  min-width: 0; /* Allow shrinking */
-}
-
-.item-actions {
-  display: flex;
-  gap: var(--compact-margin);
-  align-items: center;
-  flex-wrap: wrap;
-  flex-shrink: 1; /* Allow shrinking to enable wrapping */
-}
-
-.item-actions .compact-button {
-  min-height: calc(var(--compact-input-height) * 0.7);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: calc(var(--compact-button-padding-v) * 0.8)
-    calc(var(--compact-button-padding-h) * 0.8);
-  font-size: calc(var(--compact-font-size) * 0.85);
-  min-width: auto;
-  box-sizing: border-box;
-}
-
-.item-key {
-  font-family: "Courier New", monospace;
-  font-size: 13px;
-  font-weight: 600;
-  color: #495057;
-  margin: 0;
-}
-
-.item-id {
-  background: #e9ecef;
-  padding: var(--compact-margin) var(--compact-gap);
-  border-radius: var(--compact-border-radius);
-  font-family: "Courier New", monospace;
-  font-weight: 500;
-  font-size: var(--compact-font-size);
-  color: #6c757d;
-}
-
-.item-session {
-  background: #e3f2fd;
-  padding: var(--compact-margin) var(--compact-gap);
-  border-radius: var(--compact-border-radius);
-  font-family: "Courier New", monospace;
-  font-weight: 500;
-  font-size: var(--compact-font-size);
-  color: #1976d2;
-}
-
-.item-selected {
-  background: #c8e6c9;
-  padding: var(--compact-margin) var(--compact-gap);
-  border-radius: var(--compact-border-radius);
-  font-weight: 500;
-  font-size: var(--compact-font-size);
-  color: #388e3c;
-}
-
-.item-time {
-  font-style: italic;
-  font-size: var(--compact-font-size);
-  color: #6c757d;
-}
-
-/* Item action buttons now use shared compact-button classes */
-
-/* Details expansion section */
-.item-details {
-  margin-top: var(--compact-gap);
-  padding: var(--compact-gap);
-  /* Classic Microsoft dialog box styling for info panels */
-  background-color: #c0c0c0;
-  border: 2px inset #c0c0c0;
-  border-radius: 0;
-  font-family: "MS Sans Serif", sans-serif;
-}
-
-/* Edit reply section styling */
-.edit-reply-section {
-  margin-top: var(--compact-gap);
-  margin-bottom: 12px;
-  padding: var(--compact-gap);
-  /* Classic Microsoft dialog box styling for edit panels */
-  background-color: #c0c0c0;
-  border: 2px inset #c0c0c0;
-  border-radius: 0;
-  font-family: "MS Sans Serif", sans-serif;
-}
-
-.response-config-content {
-  margin-top: var(--compact-gap);
-}
-
-.details-header {
-  font-weight: 600;
-  font-size: var(--compact-font-size);
-  color: #495057;
-  margin-bottom: var(--compact-gap);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.details-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--compact-margin);
-}
 
 .log-panel {
   width: 60%;
