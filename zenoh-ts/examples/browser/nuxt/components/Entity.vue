@@ -8,7 +8,7 @@
             - {{ keyExpr }}
           </span>
         </h4>
-        <div v-if="!optionsExpanded" class="header-actions">
+        <div class="header-actions">
           <slot name="actions" />
           <CollapseButton
             v-if="$slots['info']"
@@ -21,21 +21,9 @@
             v-model:expanded="optionsExpanded"
           />
         </div>
-        <div v-else-if="$slots['options']" class="header-actions">
-          <CollapseButton
-            v-if="$slots['info']"
-            v-model:expanded="infoExpanded"
-            collapsed-text="Info..."
-            expanded-text="Close info"
-          />
-          <CollapseButton v-model:expanded="optionsExpanded" />
-        </div>
       </div>
       <div v-if="optionsExpanded && $slots['options']" class="options-grid">
         <slot name="options" />
-        <div class="expanded-actions">
-          <slot name="actions" />
-        </div>
       </div>
     </div>
 
@@ -43,10 +31,7 @@
     <slot />
 
     <!-- Info section -->
-    <div
-      v-if="$slots['info'] && infoExpanded"
-      class="info-section"
-    >
+    <div v-if="$slots['info'] && infoExpanded" class="info-section">
       <slot name="info" />
     </div>
 
@@ -134,16 +119,6 @@ const infoExpanded = ref(false);
   margin-bottom: var(--compact-gap);
 }
 
-/* Action buttons when expanded */
-.expanded-actions {
-  display: flex;
-  gap: var(--compact-gap);
-  justify-content: flex-end;
-  padding-top: var(--compact-gap);
-  border-top: 1px solid #c0c0c0;
-  margin-top: var(--compact-gap);
-}
-
 /* Match button sizes to title size using shared variables */
 .header-actions :deep(button),
 .header-actions :deep(.compact-button) {
@@ -164,15 +139,6 @@ const infoExpanded = ref(false);
 /* Ensure triangle symbols match title size */
 .header-actions :deep(.button-triangle) {
   font-size: var(--compact-label-font-size) !important;
-}
-
-/* Match action buttons in expanded actions to title size too */
-.expanded-actions :deep(button),
-.expanded-actions :deep(.compact-button) {
-  font-size: var(--compact-label-font-size) !important;
-  height: auto;
-  line-height: 1.2;
-  padding: var(--compact-margin) var(--compact-padding-v);
 }
 
 /* Add spacing between entity-header and any following content */
