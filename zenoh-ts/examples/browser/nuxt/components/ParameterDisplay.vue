@@ -16,22 +16,22 @@ const props = defineProps<Props>();
 
 // Color constants for different log types
 const LOG_COLORS: Record<string, string> = {
-  info: "#2563eb",      // blue
-  success: "#16a34a",   // green
-  error: "#dc2626",     // red
-  data: "#7c3aed",      // purple
-  warning: "#ea580c",   // orange
-  neutral: "#6b7280",   // gray
+  info: "var(--log-info-color)",
+  success: "var(--log-success-color)",
+  error: "var(--log-error-color)",
+  data: "var(--log-data-color)",
+  warning: "var(--log-warning-color)",
+  neutral: "var(--log-neutral-color)",
 };
 
 // Color constants for JSON syntax highlighting
 const JSON_COLORS = {
-  key: "#059669",       // emerald
-  string: "#dc2626",    // red
-  number: "#2563eb",    // blue
-  boolean: "#7c3aed",   // purple
-  null: "#6b7280",      // gray
-  bracket: "#374151",   // dark gray
+  key: "var(--json-key-color)",
+  string: "var(--json-string-color)",
+  number: "var(--json-number-color)",
+  boolean: "var(--json-boolean-color)",
+  null: "var(--json-null-color)",
+  bracket: "var(--json-bracket-color)",
 };
 
 /**
@@ -109,7 +109,7 @@ function formatTitleElement(title: string, typeColor: string): string {
 function getJsonPreStyles(typeColor: string): string {
   return props.type === 'neutral' 
     ? '' // Neutral mode: no styling at all (no padding, no background, no borders)
-    : `background: #f8f9fa; padding: 8px; border-radius: 4px; border-left: 3px solid ${typeColor}`; // Normal mode: full box styling
+    : `background: var(--log-background, #f8f9fa); padding: var(--compact-gap); border-radius: var(--compact-border-radius); border-left: var(--compact-border-width-thick) solid ${typeColor}`; // Normal mode: full box styling
 }
 
 /**
@@ -118,14 +118,14 @@ function getJsonPreStyles(typeColor: string): string {
 function formatValueElement(value: any, valueType: 'string' | 'number' | 'boolean' | 'object', typeColor: string): string {
   // Return appropriate element based on value type
   if (valueType === 'string') {
-    return `<div style="font-family: 'Courier New', monospace; color: #2e7d32;">"${value}"</div>`;
+    return `<div style="font-family: monospace; color: var(--json-string-color);">"${value}"</div>`;
   } else if (valueType === 'number') {
-    return `<div style="font-family: 'Courier New', monospace; color: #1976d2;">${value}</div>`;
+    return `<div style="font-family: monospace; color: var(--json-number-color);">${value}</div>`;
   } else if (valueType === 'boolean') {
-    return `<div style="font-family: 'Courier New', monospace; color: #7c3aed;">${value}</div>`;
+    return `<div style="font-family: monospace; color: var(--json-boolean-color);">${value}</div>`;
   } else {
     // For objects, arrays, etc., format as JSON
-    return `<pre style="flex: 1; margin: 0; font-family: 'Courier New', monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>`;
+    return `<pre style="flex: 1; margin: 0; font-family: monospace; ${getJsonPreStyles(typeColor)}; font-size: 0.9em;">${formatJSONWithColors(value)}</pre>`;
   }
 }
 
@@ -148,7 +148,7 @@ function formatSingleParameter(title: string, value: any, typeColor: string): st
   }
   
   // Build the common HTML structure using the new element formatters
-  return `<div style="display: flex; align-items: flex-start; gap: 8px; margin: 0;">
+  return `<div style="display: flex; align-items: flex-start; gap: var(--compact-gap); margin: 0;">
     ${formatTitleElement(title, typeColor)}
     ${formatValueElement(value, valueType, typeColor)}
   </div>`;
@@ -158,7 +158,7 @@ function formatSingleParameter(title: string, value: any, typeColor: string): st
  * Formats data with support for different types and multiple key-value records
  */
 function formatData(type: string, data: Record<string, any>): string {
-  const typeColor: string = LOG_COLORS[type] ?? LOG_COLORS["info"] ?? "#2563eb";
+  const typeColor: string = LOG_COLORS[type] ?? LOG_COLORS["info"] ?? "var(--log-info-color)";
   
   const entries = Object.entries(data);
   

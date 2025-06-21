@@ -114,20 +114,17 @@ watch(() => props.modelValue, () => {
   justify-content: flex-start;
   gap: var(--compact-gap);
   padding: var(--compact-button-padding);
-  border: 1px solid #ced4da;
+  border: var(--compact-border-width) solid;
   border-radius: var(--compact-border-radius);
-  background: white;
   box-sizing: border-box;
 }
 
 .express-control.disabled {
-  background: #f8f9fa;
-  color: #6c757d;
+  opacity: 0.6;
 }
 
 .express-state-label {
   font-size: var(--compact-font-size);
-  color: #495057;
   line-height: 1.4;
   flex: 1;
   text-align: left;
@@ -154,7 +151,6 @@ watch(() => props.modelValue, () => {
 
 .option-group label {
   font-weight: 600;
-  color: #495057;
   font-size: var(--compact-label-font-size);
   margin-bottom: var(--compact-margin);
   display: block;

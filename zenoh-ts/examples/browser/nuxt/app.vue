@@ -577,6 +577,9 @@
           </div>
         </div>
       </div>
+
+      <!-- Theme Selector at bottom -->
+      <ThemeSelector />
     </div>
 
     <template #fallback>
@@ -611,6 +614,7 @@ import ExpressSelect from "./components/ExpressSelect.vue";
 import TriStateCheckbox from "./components/TriStateCheckbox.vue";
 import CheckBox from "./components/CheckBox.vue";
 import ParameterDisplay from "./components/ParameterDisplay.vue";
+import ThemeSelector from "./components/ThemeSelector.vue";
 
 // Use the Zenoh composable
 const {
@@ -744,67 +748,13 @@ watch(
 );
 </script>
 
-<style>
-/* Global button style overrides for Windows-style appearance */
-.compact-button {
-  padding: var(--compact-button-padding);
-  font-size: var(--compact-label-font-size);
-  font-family: "MS Sans Serif", sans-serif;
-  background: #f0f0f0;
-  border: 1px outset #c0c0c0;
-  border-radius: 0;
-  cursor: pointer;
-  color: #000;
-}
-
-.compact-button:hover:not(:disabled) {
-  background: #e8e8e8;
-}
-
-.compact-button:active:not(:disabled) {
-  border: 1px inset #c0c0c0;
-  background: #d8d8d8;
-}
-
-.compact-button:disabled {
-  color: #808080;
-  background: #f0f0f0;
-  cursor: not-allowed;
-}
-
-.compact-button.btn-success {
-  background: #90ee90;
-  border-color: #7fdd7f;
-}
-
-.compact-button.btn-primary {
-  background: #add8e6;
-  border-color: #87ceeb;
-}
-
-.compact-button.btn-danger {
-  background: #ffb6c1;
-  border-color: #ff9fac;
-}
-
-.compact-button.btn-warning {
-  background: #ffd700;
-  border-color: #ffcc00;
-}
-
-.compact-button.btn-info {
-  background: #b0e0e6;
-  border-color: #87ceeb;
-}
-</style>
-
 <style scoped>
+/* Functional styles only - appearance controlled by themes */
 .zenoh-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
   padding: var(--compact-gap);
-  font-family: Arial, sans-serif;
   box-sizing: border-box;
 }
 
@@ -813,30 +763,22 @@ watch(
   flex: 1;
   gap: var(--compact-gap);
   overflow: hidden;
+  margin-bottom: var(--compact-gap);
 }
 
 .entity-panel {
   width: 40%;
-  background-color: white;
   padding: calc(var(--compact-gap) * 1.875); /* 15px with 8px base */
-  border: none;
-  border-radius: 0;
   overflow-y: auto;
-  font-family: "MS Sans Serif", sans-serif;
 }
 
 .entity-panel h3 {
   margin-top: 0;
-  color: #333;
 }
 
 .entity {
   margin-bottom: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
   padding: var(--compact-gap);
-  background-color: #f0f0f0;
-  border: none;
-  border-radius: 0;
-  font-family: "MS Sans Serif", sans-serif;
 }
 
 /* Add spacing between entity-header and any following content */
@@ -847,55 +789,37 @@ watch(
 .entity-block {
   margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
   padding: 0;
-  background: #f0f0f0;
-  font-family: "MS Sans Serif", sans-serif;
 }
 
-/* Legacy entity-group styles - now handled by EntityGroup component */
-
 .block-title {
-  color: #495057;
   font-size: 1em;
   font-weight: 500;
-  margin: 0 0 8px 0;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #e9ecef;
-  letter-spacing: 0.3px;
+  margin: 0 0 var(--compact-gap) 0;
+  padding-bottom: calc(var(--compact-margin) / 1);
+  letter-spacing: calc(var(--compact-margin) * 0.075);
 }
 
 .entity h4 {
   margin-top: 0;
-  margin-bottom: 10px;
-  color: #555;
+  margin-bottom: calc(var(--compact-gap) + var(--compact-margin) / 2);
 }
 
 .status-dot {
-  width: 12px;
-  height: 12px;
+  width: calc(var(--compact-gap) * 1.5);
+  height: calc(var(--compact-gap) * 1.5);
   border-radius: 50%;
-  background-color: #ccc;
   transition: background-color 0.3s;
   display: inline-block;
-  margin-right: 8px;
+  margin-right: var(--compact-gap);
 }
 
 .status-dot.connecting {
-  background-color: #ff9800;
   animation: pulse 1s infinite;
-}
-
-.status-dot.connected {
-  background-color: #4caf50;
 }
 
 /* Legacy styles for status-indicator context (if still used elsewhere) */
 .status-indicator.connecting .status-dot {
-  background-color: #ff9800;
   animation: pulse 1s infinite;
-}
-
-.status-indicator.connected .status-dot {
-  background-color: #4caf50;
 }
 
 @keyframes pulse {
@@ -908,12 +832,8 @@ watch(
   }
 }
 
-/* Button group styling - app-specific */
-
 .log-panel {
   width: 60%;
-  background-color: #f0f0f0;
-  border-radius: 8px;
   display: flex;
   flex-direction: column;
 }
@@ -922,8 +842,7 @@ watch(
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
+  padding: calc(var(--compact-gap) * 1.875);
 }
 
 .log-header .compact-button {
@@ -935,27 +854,19 @@ watch(
 
 .log-header h3 {
   margin: 0;
-  color: #333;
 }
-
-/* Clear button now uses shared btn-warning class */
 
 .log-content {
   flex: 1;
-  padding: 15px;
+  padding: calc(var(--compact-gap) * 1.875);
   overflow-y: auto;
-  background-color: white;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
 }
 
 .log-entry {
   display: flex;
-  gap: 10px;
+  gap: calc(var(--compact-gap) + var(--compact-margin) / 2);
   padding: var(--compact-gap) 0;
-  border-bottom: 1px solid #f0f0f0;
-  font-family: "Courier New", monospace;
-  font-size: 13px;
+  font-size: var(--compact-label-font-size);
 }
 
 .log-entry:last-child {
@@ -963,29 +874,12 @@ watch(
 }
 
 .timestamp {
-  color: #666;
-  min-width: 80px;
+  min-width: calc(var(--compact-input-height) * 2.5);
 }
 
 .log-type {
   font-weight: bold;
   min-width: 60px;
-}
-
-.log-entry.info .log-type {
-  color: #2196f3;
-}
-
-.log-entry.success .log-type {
-  color: #4caf50;
-}
-
-.log-entry.error .log-type {
-  color: #f44336;
-}
-
-.log-entry.data .log-type {
-  color: #ff9800;
 }
 
 .log-message {
@@ -1005,40 +899,17 @@ watch(
 }
 
 .log-message pre {
-  margin: 8px 0 !important;
-  padding: 12px !important;
-  background: #f8f9fa !important;
-  border-radius: var(--compact-gap) !important;
-  border-left: var(--compact-border-radius) solid var(--log-color, #ccc) !important;
-  font-family: "Courier New", Consolas, monospace !important;
-  font-size: var(--compact-font-size) !important;
+  margin: var(--compact-gap) 0 !important;
+  padding: calc(var(--compact-gap) * 1.5) !important;
   line-height: 1.4 !important;
   overflow-x: auto !important;
   white-space: pre-wrap !important;
 }
 
-/* Set CSS variables for log type colors */
-.log-entry.info .log-message pre {
-  --log-color: #2563eb;
-}
-
-.log-entry.success .log-message pre {
-  --log-color: #16a34a;
-}
-
-.log-entry.error .log-message pre {
-  --log-color: #dc2626;
-}
-
-.log-entry.data .log-message pre {
-  --log-color: #7c3aed;
-}
-
 .empty-log {
   text-align: center;
-  color: #999;
   font-style: italic;
-  padding: 40px;
+  padding: calc(var(--compact-input-height) * 1.25);
 }
 
 .loading-container {
@@ -1046,17 +917,11 @@ watch(
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .loading-message {
   text-align: center;
-  color: white;
   padding: 2rem;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .loading-message h2 {
@@ -1083,10 +948,8 @@ watch(
 }
 
 .header-keyexpr {
-  font-family: "Courier New", monospace;
   font-size: 0.85em;
   font-weight: 500;
-  color: #6c757d;
   margin-left: var(--compact-gap);
 }
 
@@ -1138,63 +1001,38 @@ watch(
 }
 
 .item-actions .compact-button .button-triangle {
-  font-size: 8px;
+  font-size: calc(var(--compact-gap) * 1);
 }
 
-/* Operation buttons now use shared compact-button classes */
-
 .options-toggle {
-  margin: 10px 0;
+  margin: calc(var(--compact-gap) + var(--compact-margin) / 2) 0;
 }
 
 .options-toggle-btn {
-  background: #f8f9fa;
-  border: 1px solid #dee2e6;
-  border-radius: var(--compact-gap);
   padding: var(--compact-padding);
-  font-size: 14px;
-  color: #495057;
+  font-size: var(--compact-font-size);
   cursor: pointer;
-  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   gap: var(--compact-margin);
 }
 
-.options-toggle-btn:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
-}
-
-.options-toggle-btn.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-/* App-specific styles that extend the shared components */
-
 /* Reply configuration styles */
 .reply-config-section {
-  margin-top: 16px;
-  padding-top: 12px;
-  border-top: 1px solid #dee2e6;
+  margin-top: calc(var(--compact-gap) * 2);
+  padding-top: calc(var(--compact-gap) * 1.5);
 }
 
 .section-subtitle {
   font-size: 1rem;
   font-weight: 600;
-  color: #495057;
-  margin: 0 0 12px 0;
+  margin: 0 0 calc(var(--compact-gap) * 1.5) 0;
 }
 
 .reply-fields,
 .reply-err-fields {
   padding: var(--compact-gap);
-  background-color: #f8f9fa;
-  border-radius: var(--compact-border-radius);
   margin-bottom: var(--compact-gap);
-  border: 1px solid #e9ecef;
 }
 
 .field-group {
@@ -1204,7 +1042,6 @@ watch(
 .field-group label {
   display: block;
   font-weight: 600;
-  color: #495057;
   margin-bottom: var(--compact-border-radius);
   font-size: var(--compact-label-font-size);
 }
@@ -1213,8 +1050,6 @@ watch(
 .field-group textarea {
   width: 100%;
   padding: var(--compact-margin);
-  border: 1px solid #ced4da;
-  border-radius: var(--compact-border-radius);
   font-size: var(--compact-font-size);
   box-sizing: border-box;
 }
@@ -1226,17 +1061,12 @@ watch(
 
 /* Individual Response Configuration Styles */
 .individual-response-config {
-  margin-top: 16px;
-  padding: 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
+  margin-top: calc(var(--compact-gap) * 2);
+  padding: calc(var(--compact-gap) * 2);
 }
 
 .individual-response-config .reply-fields,
 .individual-response-config .reply-err-fields {
-  background-color: #ffffff;
-  border: 1px solid #dee2e6;
   margin-bottom: 0;
 }
 
@@ -1250,24 +1080,17 @@ watch(
 /* Ignore info styling */
 .ignore-info {
   padding: var(--compact-gap);
-  background-color: #f8f9fa;
-  border-radius: var(--compact-border-radius);
-  border: 1px solid #e9ecef;
   margin-bottom: var(--compact-gap);
 }
 
 .ignore-description {
   margin: 0;
-  color: #495057;
   font-size: var(--compact-font-size);
   line-height: 1.5;
 }
 
 .ignore-description code {
-  background-color: #e9ecef;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: "Courier New", monospace;
+  padding: calc(var(--compact-margin) / 2) var(--compact-margin);
   font-size: 0.9em;
 }
 </style>
