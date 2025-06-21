@@ -33,6 +33,24 @@
   --log-data-color: inherit;
   --log-warning-color: inherit;
   --log-neutral-color: inherit;
+  
+  /* Layout variables (themed) */
+  --layout-entity-display: block;
+  --layout-entity-header-display: flex;
+  --layout-entity-header-direction: row;
+  --layout-entity-header-justify: space-between;
+  --layout-entity-header-align: center;
+  --layout-options-display: grid;
+  --layout-options-columns: repeat(auto-fit, minmax(200px, 1fr));
+  --layout-actions-display: flex;
+  --layout-actions-direction: row;
+  --layout-actions-gap: var(--compact-gap);
+  --layout-checkbox-display: flex;
+  --layout-checkbox-direction: row;
+  --layout-checkbox-align: center;
+  --layout-theme-selector-display: flex;
+  --layout-theme-selector-direction: row;
+  --layout-theme-selector-align: center;
 }
 
 /* ===== BASE FORM ELEMENTS ===== */

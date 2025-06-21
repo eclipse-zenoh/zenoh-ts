@@ -106,11 +106,11 @@ watch(() => props.modelValue, () => {
 <style scoped>
 /* Import shared CSS variables and ensure consistent height */
 .express-control {
-  /* These styles are defined in shared.css but we ensure they're applied */
   min-height: var(--compact-input-height);
   height: var(--compact-input-height);
-  display: flex;
-  align-items: center;
+  display: var(--layout-checkbox-display);
+  flex-direction: var(--layout-checkbox-direction);
+  align-items: var(--layout-checkbox-align);
   justify-content: flex-start;
   gap: var(--compact-gap);
   padding: var(--compact-button-padding);

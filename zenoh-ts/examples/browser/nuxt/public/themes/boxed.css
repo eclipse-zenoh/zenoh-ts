@@ -1,6 +1,24 @@
-/* Minimal theme - structural borders only for logical visibility */
+/* Boxed theme - structural borders only for logical visibility */
 :root {
-  --theme-name: "Minimal";
+  --theme-name: "Boxed";
+  
+  /* Layout variables - keep default layout for minimal theme */
+  --layout-entity-display: block;
+  --layout-entity-header-display: flex;
+  --layout-entity-header-direction: row;
+  --layout-entity-header-justify: space-between;
+  --layout-entity-header-align: center;
+  --layout-options-display: grid;
+  --layout-options-columns: repeat(auto-fit, minmax(200px, 1fr));
+  --layout-actions-display: flex;
+  --layout-actions-direction: row;
+  --layout-actions-gap: var(--compact-gap);
+  --layout-checkbox-display: flex;
+  --layout-checkbox-direction: row;
+  --layout-checkbox-align: center;
+  --layout-theme-selector-display: flex;
+  --layout-theme-selector-direction: row;
+  --layout-theme-selector-align: center;
   
   /* JSON syntax highlighting - no colors in minimal theme */
   --json-key-color: inherit;

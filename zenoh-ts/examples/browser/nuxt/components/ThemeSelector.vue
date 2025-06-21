@@ -39,8 +39,9 @@ onMounted(() => {
 
 <style scoped>
 .theme-selector {
-  display: flex;
-  align-items: center;
+  display: var(--layout-theme-selector-display);
+  flex-direction: var(--layout-theme-selector-direction);
+  align-items: var(--layout-theme-selector-align);
   gap: var(--compact-gap);
   padding: var(--compact-gap);
   border: var(--compact-border-width) solid;

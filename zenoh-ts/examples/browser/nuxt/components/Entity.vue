@@ -58,17 +58,19 @@ const infoExpanded = ref(false);
 </script>
 
 <style scoped>
-/* Minimal functional styles only */
+/* Layout controlled by CSS variables - themes can override these */
 .entity {
-  margin-bottom: 8px;
-  padding: 8px;
+  display: var(--layout-entity-display);
+  margin-bottom: var(--compact-gap);
+  padding: var(--compact-gap);
 }
 
 .entity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
+  display: var(--layout-entity-header-display);
+  flex-direction: var(--layout-entity-header-direction);
+  justify-content: var(--layout-entity-header-justify);
+  align-items: var(--layout-entity-header-align);
+  margin-bottom: var(--compact-gap);
   position: relative;
   min-height: 1.5em;
 }
@@ -82,8 +84,9 @@ const infoExpanded = ref(false);
 }
 
 .header-actions {
-  display: flex;
-  gap: 8px;
+  display: var(--layout-actions-display);
+  flex-direction: var(--layout-actions-direction);
+  gap: var(--layout-actions-gap);
   align-items: center;
   position: absolute;
   right: 0;
@@ -93,32 +96,32 @@ const infoExpanded = ref(false);
 }
 
 .entity-edits {
-  margin-bottom: 8px;
-  padding: 8px;
+  margin-bottom: var(--compact-gap);
+  padding: var(--compact-gap);
 }
 
 .options-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px;
-  margin-bottom: 8px;
+  display: var(--layout-options-display);
+  grid-template-columns: var(--layout-options-columns);
+  gap: var(--compact-gap);
+  margin-bottom: var(--compact-gap);
 }
 
 .entity-header + * {
-  margin-top: 8px;
+  margin-top: var(--compact-gap);
 }
 
 .sub-entities {
-  margin-top: 8px;
-  padding-top: 8px;
+  margin-top: var(--compact-gap);
+  padding-top: var(--compact-gap);
 }
 
 .sub-entities .entity {
-  margin-bottom: 6px;
+  margin-bottom: calc(var(--compact-gap) * 0.75);
 }
 
 .info-section {
-  margin-top: 8px;
-  padding: 8px;
+  margin-top: var(--compact-gap);
+  padding: var(--compact-gap);
 }
 </style>
