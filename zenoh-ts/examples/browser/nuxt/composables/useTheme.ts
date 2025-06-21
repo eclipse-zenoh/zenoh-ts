@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export type ThemeName = 'linear' | 'boxed' | 'windows95'
+export type ThemeName = 'none' | 'boxed' | 'windows95'
 
 interface Theme {
   name: string
@@ -9,10 +9,10 @@ interface Theme {
 }
 
 const themes: Record<ThemeName, Theme> = {
-  linear: {
-    name: 'linear',
-    displayName: 'Linear',
-    cssFile: '/themes/linear.css'
+  none: {
+    name: 'none',
+    displayName: 'None',
+    cssFile: '/themes/none.css'
   },
   boxed: {
     name: 'boxed',
