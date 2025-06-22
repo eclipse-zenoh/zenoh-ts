@@ -1,37 +1,38 @@
 <template>
   <div class="entity">
-    <div class="entity-edits" :class="{ 'edits-expanded': optionsExpanded }">
-      <div class="entity-header">
-        <h4>
-          {{ title }}
-          <span v-if="!optionsExpanded && keyExpr" class="header-keyexpr">
-            - {{ keyExpr }}
-          </span>
-        </h4>
-        <div class="header-actions">
-          <slot name="actions" />
-          <CollapseButton
-            v-if="$slots['info']"
-            v-model:expanded="infoExpanded"
-            collapsed-text="Info..."
-            expanded-text="Close info"
-          />
-          <CollapseButton
-            v-if="$slots['options']"
-            v-model:expanded="optionsExpanded"
-          />
-        </div>
+    <!-- Entity header - now at same level as entity-edits -->
+    <div class="entity-header">
+      <h4>
+        {{ title }}
+        <span v-if="!optionsExpanded && keyExpr" class="header-keyexpr">
+          - {{ keyExpr }}
+        </span>
+      </h4>
+      <div class="header-actions">
+        <slot name="actions" />
+        <CollapseButton
+          v-if="$slots['info']"
+          v-model:expanded="infoExpanded"
+          collapsed-text="Info..."
+          expanded-text="Close info"
+        />
+        <CollapseButton
+          v-if="$slots['options']"
+          v-model:expanded="optionsExpanded"
+        />
       </div>
-      <div v-if="optionsExpanded && $slots['options']" class="options-grid">
-        <slot name="options" />
-      </div>
+    </div>
+
+    <!-- Options grid - now at same level as entity-header -->
+    <div v-if="optionsExpanded && $slots['options']" class="entity-edits">
+      <slot name="options" />
     </div>
 
     <!-- Default slot for general content -->
     <slot />
 
-    <!-- Info section -->
-    <div v-if="$slots['info'] && infoExpanded" class="info-section">
+    <!-- Info section - now at same level as others -->
+    <div v-if="$slots['info'] && infoExpanded" class="entity-info">
       <slot name="info" />
     </div>
 

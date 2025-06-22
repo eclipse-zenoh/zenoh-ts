@@ -51,19 +51,22 @@
   padding: 6px;
   margin: 3px 0;
 }
-
-.entity-edits {
-  background-color: rgba(236, 254, 255, 0.7); /* Light cyan-white */
-}
-
 .entity-header {
   background-color: rgba(191, 219, 254, 0.6); /* Light blue */
   border-radius: 3px;
   padding: 4px 6px;
+  margin: 2px 0;
 }
 
 .entity-block {
   background-color: rgba(241, 245, 249, 0.5); /* Light gray-white */
+}
+
+.entity-edits {
+  background-color: rgba(243, 244, 246, 0.7); /* Light gray */
+  padding: 6px;
+  border-radius: 4px;
+  margin: 2px 0;
 }
 
 /* Section Components */
@@ -77,10 +80,11 @@
   background-color: rgba(226, 232, 240, 0.5); /* Light gray-blue */
 }
 
-.info-section {
+.entity-info {
   background-color: rgba(187, 247, 208, 0.6); /* Light green */
   border-radius: 4px;
   padding: 6px;
+  margin: 2px 0;
 }
 
 .sub-entities {
@@ -95,12 +99,6 @@
   border-radius: 3px;
   padding: 4px 6px;
   margin: 2px 0;
-}
-
-.options-grid {
-  background-color: rgba(243, 244, 246, 0.7); /* Light gray */
-  padding: 6px;
-  border-radius: 4px;
 }
 
 .theme-selector {
