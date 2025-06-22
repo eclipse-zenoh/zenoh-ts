@@ -15,7 +15,7 @@
             <Entity
               title="Open"
               :key-expr="serverUrl"
-              v-model:options-expanded="sessionOptionsExpanded"
+              v-model:edits-expanded="sessionOptionsExpanded"
             >
               <template #actions>
                 <button
@@ -28,7 +28,7 @@
                 </button>
               </template>
 
-              <template #options>
+              <template #edits>
                 <ServerInput v-model="serverUrl" :disabled="false" />
               </template>
 
@@ -104,7 +104,7 @@
             <Entity
               title="Subscriber"
               :key-expr="subscriberParameters.key.value"
-              v-model:options-expanded="subscriberOptionsExpanded"
+              v-model:edits-expanded="subscriberOptionsExpanded"
             >
               <template #actions>
                 <button
@@ -118,7 +118,7 @@
                 </button>
               </template>
 
-              <template #options>
+              <template #edits>
                 <KeyExprInput
                   v-model="subscriberParameters.key.value"
                   label="Key Expression"
@@ -166,7 +166,7 @@
             <Entity
               title="Put"
               :key-expr="putParameters.key.value"
-              v-model:options-expanded="putOptionsExpanded"
+              v-model:edits-expanded="putOptionsExpanded"
             >
               <template #actions>
                 <button
@@ -182,7 +182,7 @@
                 </button>
               </template>
 
-              <template #options>
+              <template #edits>
                 <KeyExprInput
                   v-model="putParameters.key.value"
                   label="Key Expression"
@@ -255,7 +255,7 @@
             <Entity
               title="Queryable"
               :key-expr="queryableParameters.key.value"
-              v-model:options-expanded="queryableOptionsExpanded"
+              v-model:edits-expanded="queryableOptionsExpanded"
             >
               <template #actions>
                 <button
@@ -269,7 +269,7 @@
                 </button>
               </template>
 
-              <template #options>
+              <template #edits>
                 <KeyExprInput
                   v-model="queryableParameters.key.value"
                   label="Key Expression"
@@ -334,8 +334,8 @@
                     />
                   </template>
 
-                  <!-- Edit Reply Section as options slot -->
-                  <template #options>
+                  <!-- Edit Reply Section as edits slot -->
+                  <template #edits>
                     <!-- Response Type Selection -->
                     <ResponseTypeSelect
                       v-model="queryableState.responseParameters.replyType"
@@ -442,7 +442,7 @@
             <Entity
               title="Get"
               :key-expr="getParameters.key.value"
-              v-model:options-expanded="getOptionsExpanded"
+              v-model:edits-expanded="getOptionsExpanded"
             >
               <template #actions>
                 <button
@@ -454,7 +454,7 @@
                 </button>
               </template>
 
-              <template #options>
+              <template #edits>
                 <KeyExprInput
                   v-model="getParameters.key.value"
                   label="Selector"

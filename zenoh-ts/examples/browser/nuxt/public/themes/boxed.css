@@ -2,24 +2,24 @@
 :root {
   --theme-name: "Boxed";
   
-  /* JSON syntax highlighting - no colors in minimal theme */
-  --json-key-color: inherit;
-  --json-string-color: inherit;
-  --json-number-color: inherit;
-  --json-boolean-color: inherit;
-  --json-null-color: inherit;
-  --json-bracket-color: inherit;
+  /* JSON syntax highlighting - colorful for better readability */
+  --json-key-color: #059669;
+  --json-string-color: #dc2626;
+  --json-number-color: #2563eb;
+  --json-boolean-color: #7c3aed;
+  --json-null-color: #6b7280;
+  --json-bracket-color: #374151;
   
-  /* Log type colors - no colors in minimal theme */
-  --log-info-color: inherit;
-  --log-success-color: inherit;
-  --log-error-color: inherit;
-  --log-data-color: inherit;
-  --log-warning-color: inherit;
-  --log-neutral-color: inherit;
+  /* Log type colors - colorful for better distinction */
+  --log-info-color: #2563eb;
+  --log-success-color: #16a34a;
+  --log-error-color: #dc2626;
+  --log-data-color: #7c3aed;
+  --log-warning-color: #ea580c;
+  --log-neutral-color: #6b7280;
   
-  /* Log background - transparent in minimal theme */
-  --log-background: transparent;
+  /* Log background - styled background */
+  --log-background: #f8f9fa;
 }
 
 /* ===== COMPONENT BACKGROUND STYLES ===== */
@@ -56,6 +56,34 @@
   border-radius: 3px;
   padding: 4px 6px;
   margin: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.entity-header-title {
+  background-color: rgba(203, 213, 225, 0.5); /* Light gray for title */
+  border-radius: 2px;
+  padding: 2px 4px;
+  font-weight: bold;
+}
+
+.entity-header-keyexpr {
+  background-color: rgba(156, 163, 175, 0.4); /* Light gray for keyexpr */
+  border-radius: 2px;
+  padding: 1px 3px;
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.entity-actions {
+  background-color: rgba(165, 180, 252, 0.5); /* Light indigo for actions */
+  border-radius: 3px;
+  padding: 3px 5px;
+  margin: 2px 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
 }
 
 .entity-block {
@@ -74,6 +102,24 @@
   background-color: rgba(147, 197, 253, 0.6); /* Medium blue */
   border-radius: 4px;
   padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-header-icon {
+  background-color: rgba(99, 102, 241, 0.2); /* Light indigo for icon */
+  border-radius: 50%;
+  padding: 4px;
+  font-size: 1.2em;
+}
+
+.section-header-title {
+  background-color: rgba(219, 234, 254, 0.6); /* Light blue for title */
+  border-radius: 3px;
+  padding: 3px 6px;
+  font-weight: bold;
+  font-size: 1.1em;
 }
 
 .section-content {

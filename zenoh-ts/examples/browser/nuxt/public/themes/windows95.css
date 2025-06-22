@@ -1,23 +1,9 @@
-/* Windows 95-style theme - colors only */
+/* Windows 95-style theme - derived from boxed theme */
+@import url('./boxed.css');
+
 :root {
   --theme-name: "Windows 95";
   
-  /* JSON syntax highlighting - colorful for Windows 95 */
-  --json-key-color: #059669;
-  --json-string-color: #dc2626;
-  --json-number-color: #2563eb;
-  --json-boolean-color: #7c3aed;
-  --json-null-color: #6b7280;
-  --json-bracket-color: #374151;
-  
-  /* Log type colors - colorful for Windows 95 */
-  --log-info-color: #2563eb;
-  --log-success-color: #16a34a;
-  --log-error-color: #dc2626;
-  --log-data-color: #7c3aed;
-  --log-warning-color: #ea580c;
-  --log-neutral-color: #6b7280;
-  
-  /* Log background - styled for Windows 95 */
-  --log-background: #f8f9fa;
+  /* Inherits all JSON and log colors from boxed theme */
+  /* Inherits all component background styles from boxed theme */
 }

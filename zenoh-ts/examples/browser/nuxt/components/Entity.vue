@@ -2,30 +2,32 @@
   <div class="entity">
     <!-- Entity header - now at same level as entity-edits -->
     <div class="entity-header">
-      <h4>
+      <div class="entity-header-title">
         {{ title }}
-        <span v-if="!optionsExpanded && keyExpr" class="header-keyexpr">
-          - {{ keyExpr }}
-        </span>
-      </h4>
-      <div class="header-actions">
-        <slot name="actions" />
-        <CollapseButton
-          v-if="$slots['info']"
-          v-model:expanded="infoExpanded"
-          collapsed-text="Info..."
-          expanded-text="Close info"
-        />
-        <CollapseButton
-          v-if="$slots['options']"
-          v-model:expanded="optionsExpanded"
-        />
+      </div>
+      <div v-if="!editsExpanded && keyExpr" class="entity-header-keyexpr">
+        - {{ keyExpr }}
       </div>
     </div>
 
-    <!-- Options grid - now at same level as entity-header -->
-    <div v-if="optionsExpanded && $slots['options']" class="entity-edits">
-      <slot name="options" />
+    <!-- Entity actions - moved outside of header -->
+    <div class="entity-actions">
+      <slot name="actions" />
+      <CollapseButton
+        v-if="$slots['info']"
+        v-model:expanded="infoExpanded"
+        collapsed-text="Info..."
+        expanded-text="Close info"
+      />
+      <CollapseButton
+        v-if="$slots['edits']"
+        v-model:expanded="editsExpanded"
+      />
+    </div>
+
+    <!-- Entity edits - now at same level as entity-header -->
+    <div v-if="editsExpanded && $slots['edits']" class="entity-edits">
+      <slot name="edits" />
     </div>
 
     <!-- Default slot for general content -->
@@ -51,7 +53,7 @@ interface Props {
 
 defineProps<Props>();
 
-const optionsExpanded = defineModel<boolean>("optionsExpanded", {
+const editsExpanded = defineModel<boolean>("editsExpanded", {
   default: false,
 });
 

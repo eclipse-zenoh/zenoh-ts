@@ -1,8 +1,8 @@
 <template>
   <div class="entity-group" :class="[sectionClass, { disabled: disabled }]">
     <div class="section-header">
-      <div class="section-icon">{{ icon }}</div>
-      <h3 class="section-title">{{ title }}</h3>
+      <div class="section-header-icon">{{ icon }}</div>
+      <div class="section-header-title">{{ title }}</div>
     </div>
     <div class="section-content">
       <div class="entity-block">
