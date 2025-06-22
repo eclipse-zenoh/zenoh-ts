@@ -86,10 +86,6 @@
   align-items: center;
 }
 
-.entity-block {
-  background-color: rgba(241, 245, 249, 0.5); /* Light gray-white */
-}
-
 .entity-edits {
   background-color: rgba(243, 244, 246, 0.7); /* Light gray */
   padding: 6px;

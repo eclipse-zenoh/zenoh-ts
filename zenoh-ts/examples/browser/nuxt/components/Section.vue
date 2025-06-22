@@ -5,9 +5,7 @@
       <div class="section-header-title">{{ title }}</div>
     </div>
     <div class="section-content">
-      <div class="entity-block">
-        <slot />
-      </div>
+      <slot />
     </div>
   </div>
 </template>

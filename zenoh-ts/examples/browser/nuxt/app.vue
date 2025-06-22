@@ -6,7 +6,7 @@
         <!-- Entity Controls -->
         <div class="entity-panel">
           <!-- Session Section -->
-          <EntityGroup
+          <Section
             title="Session"
             icon="🔗"
             section-class="session-section"
@@ -91,10 +91,10 @@
                 </button>
               </template>
             </Entity>
-          </EntityGroup>
+          </Section>
 
           <!-- Publish/Subscribe Section -->
-          <EntityGroup
+          <Section
             title="Publish / Subscribe"
             icon="📡"
             section-class="pubsub-section"
@@ -242,10 +242,10 @@
                 />
               </template>
             </Entity>
-          </EntityGroup>
+          </Section>
 
           <!-- Query/Reply Section -->
-          <EntityGroup
+          <Section
             title="Query / Reply"
             icon="🔍"
             section-class="query-section"
@@ -533,7 +533,7 @@
                 />
               </template>
             </Entity>
-          </EntityGroup>
+          </Section>
         </div>
 
         <!-- Log Panel -->
