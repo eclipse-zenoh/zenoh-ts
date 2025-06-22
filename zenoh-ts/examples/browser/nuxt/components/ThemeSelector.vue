@@ -36,26 +36,3 @@ onMounted(() => {
   initTheme()
 })
 </script>
-
-<style scoped>
-.theme-selector {
-  display: var(--layout-theme-selector-display);
-  flex-direction: var(--layout-theme-selector-direction);
-  align-items: var(--layout-theme-selector-align);
-  gap: var(--compact-gap);
-  padding: var(--compact-gap);
-  border: var(--compact-border-width) solid;
-  font-size: var(--compact-font-size);
-}
-
-.theme-select {
-  padding: calc(var(--compact-gap) / 4) calc(var(--compact-gap) / 2);
-  border: var(--compact-border-width) solid;
-  font-size: var(--compact-font-size);
-  min-width: calc(var(--compact-input-height) * 6);
-}
-
-.theme-select:focus {
-  outline: var(--compact-border-width) solid;
-}
-</style>

@@ -182,22 +182,3 @@ const formattedData = computed(() => {
   return formatData(props.type, props.data);
 });
 </script>
-
-<style scoped>
-.parameter-display {
-  /* Base styles for the component */
-  line-height: 1.4;
-}
-
-/* Ensure proper spacing for nested elements */
-.parameter-display :deep(div) {
-  word-break: break-word;
-}
-
-/* Ensure proper font rendering for code elements */
-.parameter-display :deep(pre) {
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-x: auto;
-}
-</style>

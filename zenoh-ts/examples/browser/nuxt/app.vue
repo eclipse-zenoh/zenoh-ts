@@ -749,87 +749,22 @@ watch(
 </script>
 
 <style scoped>
-/* Functional styles only - appearance controlled by themes */
+/* Essential 2-panel layout styles */
 .zenoh-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: var(--compact-gap);
-  box-sizing: border-box;
 }
 
 .main-panel {
   display: flex;
   flex: 1;
-  gap: var(--compact-gap);
   overflow: hidden;
-  margin-bottom: var(--compact-gap);
 }
 
 .entity-panel {
   width: 40%;
-  padding: calc(var(--compact-gap) * 1.875); /* 15px with 8px base */
   overflow-y: auto;
-}
-
-.entity-panel h3 {
-  margin-top: 0;
-}
-
-.entity {
-  margin-bottom: calc(var(--compact-gap) * 1.5); /* 12px with 8px base */
-  padding: var(--compact-gap);
-}
-
-/* Add spacing between entity-header and any following content */
-.entity-header + * {
-  margin-top: var(--compact-gap);
-}
-
-.entity-block {
-  margin-bottom: calc(var(--compact-gap) * 2); /* 16px with 8px base */
-  padding: 0;
-}
-
-.block-title {
-  font-size: 1em;
-  font-weight: 500;
-  margin: 0 0 var(--compact-gap) 0;
-  padding-bottom: calc(var(--compact-margin) / 1);
-  letter-spacing: calc(var(--compact-margin) * 0.075);
-}
-
-.entity h4 {
-  margin-top: 0;
-  margin-bottom: calc(var(--compact-gap) + var(--compact-margin) / 2);
-}
-
-.status-dot {
-  width: calc(var(--compact-gap) * 1.5);
-  height: calc(var(--compact-gap) * 1.5);
-  border-radius: 50%;
-  transition: background-color 0.3s;
-  display: inline-block;
-  margin-right: var(--compact-gap);
-}
-
-.status-dot.connecting {
-  animation: pulse 1s infinite;
-}
-
-/* Legacy styles for status-indicator context (if still used elsewhere) */
-.status-indicator.connecting .status-dot {
-  animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
 }
 
 .log-panel {
@@ -838,259 +773,16 @@ watch(
   flex-direction: column;
 }
 
-.log-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: calc(var(--compact-gap) * 1.875);
-}
-
-.log-header .compact-button {
-  min-height: var(--compact-input-height);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.log-header h3 {
-  margin: 0;
-}
-
 .log-content {
   flex: 1;
-  padding: calc(var(--compact-gap) * 1.875);
   overflow-y: auto;
 }
 
-.log-entry {
-  display: flex;
-  gap: calc(var(--compact-gap) + var(--compact-margin) / 2);
-  padding: var(--compact-gap) 0;
-  font-size: var(--compact-label-font-size);
-}
-
-.log-entry:last-child {
-  border-bottom: none;
-}
-
-.timestamp {
-  min-width: calc(var(--compact-input-height) * 2.5);
-}
-
-.log-type {
-  font-weight: bold;
-  min-width: 60px;
-}
-
-.log-message {
-  flex: 1;
-  word-break: break-word;
-}
-
-.log-message > span {
-  margin-bottom: var(--compact-gap);
-  display: block;
-}
-
-/* Styles for HTML-formatted JSON log messages */
-.log-message div[style*="margin: 4px 0"] {
-  margin: 0 !important;
-  padding: 0;
-}
-
-.log-message pre {
-  margin: var(--compact-gap) 0 !important;
-  padding: calc(var(--compact-gap) * 1.5) !important;
-  line-height: 1.4 !important;
-  overflow-x: auto !important;
-  white-space: pre-wrap !important;
-}
-
-.empty-log {
-  text-align: center;
-  font-style: italic;
-  padding: calc(var(--compact-input-height) * 1.25);
-}
-
+/* Loading screen layout */
 .loading-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-}
-
-.loading-message {
-  text-align: center;
-  padding: 2rem;
-}
-
-.loading-message h2 {
-  margin: 0 0 1rem 0;
-  font-size: 1.5rem;
-}
-
-.loading-message p {
-  margin: 0;
-  opacity: 0.8;
-}
-
-/* PUT Options Styling */
-.entity-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-}
-
-.entity-header h4 {
-  margin: 0;
-}
-
-.header-keyexpr {
-  font-size: 0.85em;
-  font-weight: 500;
-  margin-left: var(--compact-gap);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--compact-gap);
-}
-
-.header-actions .compact-button {
-  min-height: var(--compact-input-height);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Container-specific sizing for CollapseButton components using compact-button */
-.header-actions .compact-button {
-  width: auto;
-  height: auto;
-  padding: var(--compact-button-padding);
-  font-size: var(--compact-font-size);
-}
-
-.item-actions .compact-button {
-  /* Ensure consistent sizing with other item action buttons */
-  height: auto;
-  padding: calc(var(--compact-button-padding-v) * 0.8)
-    calc(var(--compact-button-padding-h) * 0.6);
-  font-size: calc(var(--compact-font-size) * 0.85);
-  font-weight: 500;
-  min-width: auto;
-  width: auto;
-  min-height: calc(var(--compact-input-height) * 0.7);
-  border-radius: var(--compact-border-radius);
-  flex-shrink: 0;
-  line-height: normal;
-  box-sizing: border-box;
-}
-
-.item-actions .compact-button .button-label {
-  font-size: calc(var(--compact-label-font-size) * 0.9);
-  font-weight: 500;
-}
-
-.item-actions .compact-button .button-text {
-  font-size: calc(var(--compact-label-font-size) * 0.9);
-  font-weight: 500;
-}
-
-.item-actions .compact-button .button-triangle {
-  font-size: calc(var(--compact-gap) * 1);
-}
-
-.options-toggle {
-  margin: calc(var(--compact-gap) + var(--compact-margin) / 2) 0;
-}
-
-.options-toggle-btn {
-  padding: var(--compact-padding);
-  font-size: var(--compact-font-size);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: var(--compact-margin);
-}
-
-/* Reply configuration styles */
-.reply-config-section {
-  margin-top: calc(var(--compact-gap) * 2);
-  padding-top: calc(var(--compact-gap) * 1.5);
-}
-
-.section-subtitle {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 calc(var(--compact-gap) * 1.5) 0;
-}
-
-.reply-fields,
-.reply-err-fields {
-  padding: var(--compact-gap);
-  margin-bottom: var(--compact-gap);
-}
-
-.field-group {
-  margin-bottom: var(--compact-gap);
-}
-
-.field-group label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: var(--compact-border-radius);
-  font-size: var(--compact-label-font-size);
-}
-
-.field-group input,
-.field-group textarea {
-  width: 100%;
-  padding: var(--compact-margin);
-  font-size: var(--compact-font-size);
-  box-sizing: border-box;
-}
-
-.field-group textarea {
-  resize: vertical;
-  font-family: inherit;
-}
-
-/* Individual Response Configuration Styles */
-.individual-response-config {
-  margin-top: calc(var(--compact-gap) * 2);
-  padding: calc(var(--compact-gap) * 2);
-}
-
-.individual-response-config .reply-fields,
-.individual-response-config .reply-err-fields {
-  margin-bottom: 0;
-}
-
-/* Remove extra spacing from reply parameter sections */
-.reply-parameters,
-.reply-err-parameters {
-  margin: 0;
-  padding: 0;
-}
-
-/* Ignore info styling */
-.ignore-info {
-  padding: var(--compact-gap);
-  margin-bottom: var(--compact-gap);
-}
-
-.ignore-description {
-  margin: 0;
-  font-size: var(--compact-font-size);
-  line-height: 1.5;
-}
-
-.ignore-description code {
-  padding: calc(var(--compact-margin) / 2) var(--compact-margin);
-  font-size: 0.9em;
 }
 </style>

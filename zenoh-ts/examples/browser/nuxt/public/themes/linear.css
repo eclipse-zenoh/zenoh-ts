@@ -1,8 +1,8 @@
-/* Boxed theme - minimal colors only */
+/* Linear theme - minimal colors only */
 :root {
-  --theme-name: "Boxed";
+  --theme-name: "Linear";
   
-  /* JSON syntax highlighting - no colors in minimal theme */
+  /* JSON syntax highlighting - no colors in linear theme */
   --json-key-color: inherit;
   --json-string-color: inherit;
   --json-number-color: inherit;
@@ -10,7 +10,7 @@
   --json-null-color: inherit;
   --json-bracket-color: inherit;
   
-  /* Log type colors - no colors in minimal theme */
+  /* Log type colors - no colors in linear theme */
   --log-info-color: inherit;
   --log-success-color: inherit;
   --log-error-color: inherit;
@@ -18,6 +18,6 @@
   --log-warning-color: inherit;
   --log-neutral-color: inherit;
   
-  /* Log background - transparent in minimal theme */
+  /* Log background - transparent in linear theme */
   --log-background: transparent;
 }
