@@ -1,28 +1,30 @@
 <template>
   <div class="entity">
-    <!-- Entity header - now at same level as entity-edits -->
-    <div class="entity-header">
-      <div class="entity-header-title">
-        {{ title }}
+    <!-- Wrapper to make header and actions share horizontal space -->
+    <div class="entity-header-row">
+      <div class="entity-header">
+        <div class="entity-header-title">
+          {{ title }}
+        </div>
+        <div v-if="!editsExpanded && keyExpr" class="entity-header-keyexpr">
+          - {{ keyExpr }}
+        </div>
       </div>
-      <div v-if="!editsExpanded && keyExpr" class="entity-header-keyexpr">
-        - {{ keyExpr }}
-      </div>
-    </div>
 
-    <!-- Entity actions - moved outside of header -->
-    <div class="entity-actions">
-      <slot name="actions" />
-      <CollapseButton
-        v-if="$slots['info']"
-        v-model:expanded="infoExpanded"
-        collapsed-text="Info..."
-        expanded-text="Close info"
-      />
-      <CollapseButton
-        v-if="$slots['edits']"
-        v-model:expanded="editsExpanded"
-      />
+      <!-- Entity actions - separate but sharing horizontal space -->
+      <div class="entity-actions">
+        <slot name="actions" />
+        <CollapseButton
+          v-if="$slots['info']"
+          v-model:expanded="infoExpanded"
+          collapsed-text="Info..."
+          expanded-text="Close info"
+        />
+        <CollapseButton
+          v-if="$slots['edits']"
+          v-model:expanded="editsExpanded"
+        />
+      </div>
     </div>
 
     <!-- Entity edits - now at same level as entity-header -->

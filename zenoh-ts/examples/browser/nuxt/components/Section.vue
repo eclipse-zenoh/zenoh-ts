@@ -1,13 +1,16 @@
 <template>
   <div class="entity-group" :class="[sectionClass, { disabled: disabled }]">
-    <div class="section-header">
-      <div class="section-header-icon">{{ icon }}</div>
-      <div class="section-header-title">{{ title }}</div>
-    </div>
-    
-    <!-- Section actions - similar to entity actions -->
-    <div v-if="$slots['actions']" class="section-actions">
-      <slot name="actions" />
+    <!-- Wrapper to make header and actions share horizontal space -->
+    <div class="section-header-row">
+      <div class="section-header">
+        <div class="section-header-icon">{{ icon }}</div>
+        <div class="section-header-title">{{ title }}</div>
+      </div>
+      
+      <!-- Section actions - separate but sharing horizontal space -->
+      <div v-if="$slots['actions']" class="section-actions">
+        <slot name="actions" />
+      </div>
     </div>
     
     <div class="section-content">

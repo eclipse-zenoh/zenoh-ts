@@ -59,6 +59,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  flex: 1; /* Take remaining space in the row */
+}
+
+.entity-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between header and actions */
 }
 
 .entity-header-title {
@@ -82,8 +89,9 @@
   padding: 3px 5px;
   margin: 2px 0;
   display: flex;
+  flex-wrap: wrap; /* Allow actions to wrap to new line when needed */
   gap: 4px;
-  align-items: center;
+  /* No justify-content - let actions take only needed space */
 }
 
 .entity-edits {
@@ -94,6 +102,12 @@
 }
 
 /* Section Components */
+.section-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Space between header and actions */
+}
+
 .section-header {
   background-color: rgba(147, 197, 253, 0.6); /* Medium blue */
   border-radius: 4px;
@@ -101,6 +115,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1; /* Take remaining space in the row */
 }
 
 .section-header-icon {
@@ -124,9 +139,10 @@
   padding: 3px 5px;
   margin: 2px 0;
   display: flex;
+  flex-wrap: wrap; /* Allow actions to wrap to new line when needed */
   gap: 4px;
   align-items: center;
-  justify-content: flex-end;
+  /* No justify-content - let actions take only needed space */
 }
 
 .section-content {
