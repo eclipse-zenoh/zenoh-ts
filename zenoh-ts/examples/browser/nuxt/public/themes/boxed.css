@@ -118,6 +118,17 @@
   font-size: 1.1em;
 }
 
+.section-actions {
+  background-color: rgba(165, 180, 252, 0.5); /* Light indigo for actions */
+  border-radius: 3px;
+  padding: 3px 5px;
+  margin: 2px 0;
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
 .section-content {
   background-color: rgba(226, 232, 240, 0.5); /* Light gray-blue */
 }
@@ -181,20 +192,6 @@
 }
 
 /* Log Panel Components */
-.log-panel {
-  background-color: rgba(220, 252, 231, 0.6); /* Light mint green */
-  border-radius: 6px;
-  padding: 8px;
-  margin: 4px 0;
-}
-
-.log-header {
-  background-color: rgba(34, 197, 94, 0.15); /* Very light green */
-  border-radius: 4px;
-  padding: 6px 8px;
-  margin-bottom: 6px;
-}
-
 .log-content {
   background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white */
   border-radius: 4px;

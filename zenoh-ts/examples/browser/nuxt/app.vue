@@ -536,20 +536,18 @@
           </Section>
         </div>
 
-        <!-- Log Panel -->
-        <div class="log-panel">
-          <div class="log-header">
-            <h3>
-              <span
-                class="status-dot"
-                :class="{ connected: isConnected, connecting: isConnecting }"
-              ></span>
-              Activity Log
-            </h3>
+        <!-- Activity Log Section -->
+        <Section
+          title="Activity Log"
+          icon="📜"
+          section-class="log-section"
+        >
+          <template #actions>
             <button @click="clearLog" class="compact-button btn-warning">
               Clear
             </button>
-          </div>
+          </template>
+          
           <div class="log-content" ref="logContent">
             <div
               v-for="(entry, index) in logEntries"
@@ -575,7 +573,7 @@
               operations!
             </div>
           </div>
-        </div>
+        </Section>
       </div>
 
       <!-- Theme Selector at bottom -->
@@ -620,7 +618,6 @@ import ThemeSelector from "./components/ThemeSelector.vue";
 const {
   // State
   serverUrl,
-  isConnected,
   isConnecting,
   activeSessions,
   selectedSessionId,

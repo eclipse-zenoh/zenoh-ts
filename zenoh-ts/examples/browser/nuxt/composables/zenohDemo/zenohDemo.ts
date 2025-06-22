@@ -313,11 +313,6 @@ class ZenohDemo extends ZenohDemoEmpty {
     }
   }
 
-  // Update isConnected to reflect if we have any active sessions
-  private updateConnectionStatus(): void {
-    this.isConnected.value = this.activeSessions.value.length > 0;
-  }
-
   private removeSubscriber(displayId: string): void {
     const subscriberIndex = this.activeSubscribers.value.findIndex(
       (sub: SubscriberState) => sub.displayId === displayId
@@ -401,7 +396,6 @@ class ZenohDemo extends ZenohDemoEmpty {
       };
 
       this.activeSessions.value.push(sessionState);
-      this.updateConnectionStatus();
 
       // Auto-select the first session if none is selected
       if (!this.selectedSessionId.value) {
@@ -440,7 +434,6 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       await sessionState.session.close();
       this.activeSessions.value.splice(sessionIndex, 1);
-      this.updateConnectionStatus();
 
       // Clear selected session if it's the one being disconnected
       if (this.selectedSessionId.value === sessionId) {

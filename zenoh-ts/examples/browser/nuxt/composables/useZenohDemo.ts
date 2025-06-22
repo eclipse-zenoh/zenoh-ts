@@ -143,7 +143,6 @@ export interface GetParametersState {
 // Zenoh Demo state interface combining UI state and operations
 export interface ZenohDemoState {
   serverUrl: Ref<string>;
-  isConnected: Ref<boolean>;
   isConnecting: Ref<boolean>;
   putParameters: PutParametersState;
   subscriberParameters: SubscriberParametersState;
@@ -216,7 +215,6 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   // state fields only; operations are bound in the super constructor
   serverUrl = ref("ws://localhost:10000");
-  isConnected = ref(false);
   isConnecting = ref(false);
   putParameters = {
     key: ref("demo/example/test"),
