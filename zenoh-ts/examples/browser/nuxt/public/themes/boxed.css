@@ -52,31 +52,20 @@
   margin: 3px 0;
 }
 .entity-header {
-  background-color: rgba(191, 219, 254, 0.6); /* Light blue */
-  border-radius: 3px;
-  padding: 4px 6px;
-  margin: 2px 0;
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex: 1; /* Take remaining space in the row */
+  gap: 8px; /* Space between title, description and actions */
 }
 
-.entity-header-row {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Space between header and actions */
-}
-
-.entity-header-title {
+.entity-title {
   background-color: rgba(203, 213, 225, 0.5); /* Light gray for title */
   border-radius: 2px;
   padding: 2px 4px;
   font-weight: bold;
 }
 
-.entity-header-keyexpr {
-  background-color: rgba(156, 163, 175, 0.4); /* Light gray for keyexpr */
+.entity-descr {
+  background-color: rgba(156, 163, 175, 0.4); /* Light gray for description */
   border-radius: 2px;
   padding: 1px 3px;
   font-size: 0.9em;
@@ -102,20 +91,10 @@
 }
 
 /* Section Components */
-.section-header-row {
-  display: flex;
-  align-items: center;
-  gap: 8px; /* Space between header and actions */
-}
-
 .section-header {
-  background-color: rgba(147, 197, 253, 0.6); /* Medium blue */
-  border-radius: 4px;
-  padding: 6px 8px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1; /* Take remaining space in the row */
+  gap: 8px; /* Space between icon, title and actions */
 }
 
 .section-icon {
@@ -125,7 +104,7 @@
   font-size: 1.2em;
 }
 
-.section-header-title {
+.section-title {
   background-color: rgba(219, 234, 254, 0.6); /* Light blue for title */
   border-radius: 3px;
   padding: 3px 6px;

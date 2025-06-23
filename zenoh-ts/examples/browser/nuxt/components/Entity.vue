@@ -1,14 +1,12 @@
 <template>
   <div class="entity">
     <!-- Wrapper to make header and actions share horizontal space -->
-    <div class="entity-header-row">
-      <div class="entity-header">
-        <div class="entity-header-title">
-          {{ title }}
-        </div>
-        <div v-if="!editsExpanded && keyExpr" class="entity-header-keyexpr">
-          - {{ keyExpr }}
-        </div>
+    <div class="entity-header">
+      <div class="entity-title">
+        {{ title }}
+      </div>
+      <div v-if="!editsExpanded && descr" class="entity-descr">
+        - {{ descr }}
       </div>
 
       <!-- Entity actions - separate but sharing horizontal space -->
@@ -50,7 +48,7 @@
 <script setup lang="ts">
 interface Props {
   title: string;
-  keyExpr?: string;
+  descr?: string;
 }
 
 defineProps<Props>();

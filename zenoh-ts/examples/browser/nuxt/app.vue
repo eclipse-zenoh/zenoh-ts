@@ -14,7 +14,7 @@
             <!-- Open Operation -->
             <Entity
               title="Open"
-              :key-expr="serverUrl"
+              :descr="serverUrl"
               v-model:edits-expanded="sessionOptionsExpanded"
             >
               <template #actions>
@@ -42,7 +42,7 @@
                       ? ' (selected)'
                       : ''
                   }`"
-                  :key-expr="sessionState.serverUrl"
+                  :descr="sessionState.serverUrl"
                 >
                   <template #actions>
                     <button
@@ -103,7 +103,7 @@
             <!-- Declare Subscriber Operation -->
             <Entity
               title="Subscriber"
-              :key-expr="subscriberParameters.key.value"
+              :descr="subscriberParameters.key.value"
               v-model:edits-expanded="subscriberOptionsExpanded"
             >
               <template #actions>
@@ -139,7 +139,7 @@
                   v-for="subscriberState in activeSubscribers"
                   :key="subscriberState.displayId"
                   :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
-                  :key-expr="subscriberState.keyExpr"
+                  :descr="subscriberState.keyExpr"
                 >
                   <template #actions>
                     <button
@@ -165,7 +165,7 @@
             <!-- Put Operation -->
             <Entity
               title="Put"
-              :key-expr="putParameters.key.value"
+              :descr="putParameters.key.value"
               v-model:edits-expanded="putOptionsExpanded"
             >
               <template #actions>
@@ -254,7 +254,7 @@
             <!-- Declare Queryable Operation -->
             <Entity
               title="Queryable"
-              :key-expr="queryableParameters.key.value"
+              :descr="queryableParameters.key.value"
               v-model:edits-expanded="queryableOptionsExpanded"
             >
               <template #actions>
@@ -296,7 +296,7 @@
                   v-for="queryableState in activeQueryables"
                   :key="queryableState.displayId"
                   :title="`${queryableState.sessionId} - ${queryableState.displayId}`"
-                  :key-expr="queryableState.keyExpr"
+                  :descr="queryableState.keyExpr"
                 >
                   <template #actions>
                     <button
@@ -441,7 +441,7 @@
             <!-- Get Operation -->
             <Entity
               title="Get"
-              :key-expr="getParameters.key.value"
+              :descr="getParameters.key.value"
               v-model:edits-expanded="getOptionsExpanded"
             >
               <template #actions>
