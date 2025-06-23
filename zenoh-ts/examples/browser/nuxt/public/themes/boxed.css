@@ -118,7 +118,7 @@
   flex: 1; /* Take remaining space in the row */
 }
 
-.section-header-icon {
+.section-icon {
   background-color: rgba(99, 102, 241, 0.2); /* Light indigo for icon */
   border-radius: 50%;
   padding: 4px;

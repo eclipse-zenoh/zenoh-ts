@@ -1,9 +1,9 @@
 <template>
   <div class="entity-group" :class="[sectionClass, { disabled: disabled }]">
+    <div class="section-icon">{{ icon }}</div>
     <!-- Wrapper to make header and actions share horizontal space -->
     <div class="section-header-row">
       <div class="section-header">
-        <div class="section-header-icon">{{ icon }}</div>
         <div class="section-header-title">{{ title }}</div>
       </div>
       
