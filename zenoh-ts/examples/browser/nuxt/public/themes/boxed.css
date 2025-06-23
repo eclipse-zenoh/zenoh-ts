@@ -55,7 +55,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px; /* Space between title, description and actions */
 }
 
@@ -64,6 +64,7 @@
   border-radius: 2px;
   padding: 2px 4px;
   font-weight: bold;
+  text-align: left;
 }
 
 .entity-descr {
@@ -84,6 +85,7 @@
   gap: 4px;
   min-width: 0; /* Allow shrinking */
   max-width: 200px; /* Force wrapping of buttons before header wraps */
+  margin-left: auto; /* Push actions to the right */
 }
 
 .entity-edits {
@@ -98,7 +100,7 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 8px; /* Space between icon, title and actions */
 }
 
@@ -115,6 +117,7 @@
   padding: 3px 6px;
   font-weight: bold;
   font-size: 1.1em;
+  text-align: left;
 }
 
 .section-actions {
@@ -128,6 +131,7 @@
   align-items: center;
   min-width: 0; /* Allow shrinking */
   max-width: 200px; /* Force wrapping of buttons before header wraps */
+  margin-left: auto; /* Push actions to the right */
 }
 
 .section-content {
