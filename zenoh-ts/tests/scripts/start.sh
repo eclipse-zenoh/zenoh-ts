@@ -19,7 +19,6 @@ if [ "$1" = "" ]; then
 else
   EXIT_CODE=0
   COVERAGE_OPTS=""
-  JSON_OUTPUT=false
   
   if [ "$2" = "COVERAGE" ]; then
     COVERAGE_OPTS="--coverage=coverage_profile"
@@ -30,6 +29,7 @@ else
     EXIT_CODE=$?
     if [ $EXIT_CODE -eq 0 ]; then
       deno test -A $COVERAGE_OPTS src/bench/*.ts
+      EXIT_CODE=$?
     fi
   else
     TEST_PATH="src/$1.ts"

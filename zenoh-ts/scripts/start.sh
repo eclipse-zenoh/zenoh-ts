@@ -84,7 +84,7 @@ else
   echo
   echo "Available options:"
   echo
-  echo "yarn start [DAEMON] test [test-name|ALL|TESTS|BENCH] [COVERAGE|JSON]"
+  echo "yarn start [DAEMON] test [test-name|ALL] [COVERAGE]"
   echo "yarn start [DAEMON] example deno [example-name]"
   echo "yarn start [DAEMON] example browser [chat|nuxt]"
   echo
