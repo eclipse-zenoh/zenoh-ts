@@ -14,36 +14,34 @@
         Custom
       </label>
     </label>
-    <div class="encoding-control">
-      <!-- Predefined Encoding Dropdown -->
-      <select 
-        v-if="!customEncoding"
-        :value="modelValue" 
-        @input="handleEncodingChange"
-        :disabled="disabled || false"
-        class="encoding-select"
+    <!-- Predefined Encoding Dropdown -->
+    <select 
+      v-if="!customEncoding"
+      :value="modelValue" 
+      @input="handleEncodingChange"
+      :disabled="disabled || false"
+      class="encoding-select"
+    >
+      <option value="">(default)</option>
+      <option 
+        v-for="option in encodingOptions" 
+        :key="option.value" 
+        :value="option.value"
       >
-        <option value="">(default)</option>
-        <option 
-          v-for="option in encodingOptions" 
-          :key="option.value" 
-          :value="option.value"
-        >
-          {{ option.label }}
-        </option>
-      </select>
-      
-      <!-- Custom Encoding Input -->
-      <input 
-        v-else
-        type="text" 
-        :value="modelValue" 
-        @input="handleEncodingChange"
-        :disabled="disabled || false"
-        placeholder="e.g., text/plain"
-        class="encoding-text-input"
-      >
-    </div>
+        {{ option.label }}
+      </option>
+    </select>
+    
+    <!-- Custom Encoding Input -->
+    <input 
+      v-else
+      type="text" 
+      :value="modelValue" 
+      @input="handleEncodingChange"
+      :disabled="disabled || false"
+      placeholder="e.g., text/plain"
+      class="encoding-text-input"
+    >
   </div>
 </template>
 

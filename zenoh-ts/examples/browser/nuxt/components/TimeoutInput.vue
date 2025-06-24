@@ -12,17 +12,15 @@
         (empty)
       </label>
     </label>
-    <div class="input-row">
-      <input 
-        type="number" 
-        :value="modelValue" 
-        @input="handleInput"
-        :placeholder="placeholder || '10000'"
-        :min="min || 0"
-        :disabled="disabled || isEmpty"
-        class="compact-input"
-      >
-    </div>
+    <input 
+      type="number" 
+      :value="modelValue" 
+      @input="handleInput"
+      :placeholder="placeholder || '10000'"
+      :min="min || 0"
+      :disabled="disabled || isEmpty"
+      class="compact-input"
+    >
   </div>
 </template>
 

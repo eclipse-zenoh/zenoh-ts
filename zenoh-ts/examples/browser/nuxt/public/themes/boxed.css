@@ -116,10 +116,7 @@
 }
 
 /* Also ensure other full-width classes work properly */
-.entity-edits .fullwidth-input-row {
-  flex: 1 1 100%;
-  width: 100%;
-}
+/* Note: fullwidth-input-row wrapper was removed, controls are now direct children */
 
 /* Remove the duplicate margin rules since they're handled above */
 
@@ -211,13 +208,11 @@
 }
 
 /* Control container styling */
-.option-group .express-control,
-.option-group .encoding-control,
-.option-group .input-row,
-.option-group .fullwidth-input-row {
+.option-group .express-control {
   display: flex;
-  flex-direction: column;
-  width: 100%;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
   box-sizing: border-box;
   margin: 0;
 }
@@ -232,20 +227,7 @@
   max-width: 100%;
 }
 
-/* Special handling for EncodingSelect with custom checkbox */
-.option-group .encoding-control {
-  position: relative;
-}
-
-/* Custom checkbox styling for EncodingSelect - now handled in title row */
-.option-group .custom-checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.9em;
-  margin: 0;
-  font-weight: normal;
-}
+/* Special handling for EncodingSelect - no longer needed since wrapper removed */
 
 /* For controls that have checkboxes in the control area (like TriStateCheckbox) */
 .option-group .express-control {
@@ -262,8 +244,9 @@
   flex-grow: 1;
 }
 
-/* Special handling for inline checkboxes in title (like TimeoutInput) */
-.option-group .checkbox-label.inline-checkbox {
+/* Special handling for inline checkboxes in title (like TimeoutInput, EncodingSelect) */
+.option-group .checkbox-label.inline-checkbox,
+.option-group .custom-checkbox-label {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -272,21 +255,7 @@
   font-weight: normal;
 }
 
-/* Ensure input-row and fullwidth-input-row containers take full width */
-.option-group .input-row,
-.option-group .fullwidth-input-row {
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-  box-sizing: border-box;
-}
-
-.option-group .input-row input,
-.option-group .fullwidth-input-row input {
-  flex-grow: 1;
-  max-width: calc(100% - 20px); /* Account for gap and checkbox space */
-  box-sizing: border-box;
-}
+/* Ensure input containers that still exist work properly */
 
 .theme-selector {
   background-color: rgba(165, 243, 252, 0.6); /* Light cyan */
@@ -305,30 +274,6 @@
   background-color: rgba(254, 215, 170, 0.6); /* Light orange */
   border-radius: 3px;
   padding: 4px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.encoding-control {
-  background-color: rgba(244, 164, 245, 0.6); /* Light pink */
-  border-radius: 3px;
-  padding: 4px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.fullwidth-input-row {
-  background-color: rgba(153, 246, 228, 0.6); /* Light teal */
-  border-radius: 3px;
-  padding: 4px;
-  box-sizing: border-box;
-  width: 100%;
-}
-
-.input-row {
-  background-color: rgba(253, 186, 116, 0.6); /* Light peach */
-  border-radius: 3px;
-  padding: 3px;
   box-sizing: border-box;
   width: 100%;
 }

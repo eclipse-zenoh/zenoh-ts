@@ -12,15 +12,13 @@
         (empty)
       </label>
     </label>
-    <div class="fullwidth-input-row">
-      <input 
-        type="text" 
-        :value="modelValue" 
-        @input="handleInput"
-        :placeholder="placeholder || ''"
-        :disabled="disabled || isEmpty"
-      >
-    </div>
+    <input 
+      type="text" 
+      :value="modelValue" 
+      @input="handleInput"
+      :placeholder="placeholder || ''"
+      :disabled="disabled || isEmpty"
+    >
   </div>
 </template>
 
