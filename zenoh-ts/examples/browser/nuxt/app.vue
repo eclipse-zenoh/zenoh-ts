@@ -36,7 +36,7 @@
                 <Entity
                   v-for="sessionState in activeSessions"
                   :key="sessionState.displayId"
-                  title="Session"
+                  :title="sessionState.displayId"
                   :session="sessionState.displayId"
                   :selected-session="selectedSessionId"
                   :descr="sessionState.serverUrl"
@@ -75,7 +75,11 @@
             </Entity>
 
             <!-- Info Operation -->
-            <Entity title="Info">
+            <Entity 
+              title="Info"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+            >
               <template #actions>
                 <button
                   @click="getSessionInfo"
@@ -97,6 +101,8 @@
             <!-- Declare Subscriber Operation -->
             <Entity
               title="Subscriber"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
               :descr="subscriberParameters.key.value"
               v-model:editsExpanded="subscriberOptionsCollapsed"
             >
@@ -159,6 +165,8 @@
             <!-- Put Operation -->
             <Entity
               title="Put"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
               :descr="putParameters.key.value"
               v-model:editsExpanded="putOptionsCollapsed"
             >
@@ -247,6 +255,8 @@
             <!-- Declare Queryable Operation -->
             <Entity
               title="Queryable"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
               :descr="queryableParameters.key.value"
               v-model:editsExpanded="queryableOptionsCollapsed"
             >
@@ -434,6 +444,8 @@
             <!-- Get Operation -->
             <Entity
               title="Get"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
               :descr="getParameters.key.value"
               v-model:editsExpanded="getOptionsCollapsed"
             >

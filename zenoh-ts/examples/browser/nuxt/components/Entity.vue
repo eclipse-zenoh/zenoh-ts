@@ -51,7 +51,7 @@
 interface Props {
   title: string;
   descr?: string;
-  session?: string;
+  session?: string | null;
   selectedSession?: string | null;
 }
 
