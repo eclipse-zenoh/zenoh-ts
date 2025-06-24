@@ -19,7 +19,6 @@ if [ "$1" = "" ]; then
 else
   EXIT_CODE=0
   COVERAGE_OPTS=""
-  
   if [ "$2" = "COVERAGE" ]; then
     COVERAGE_OPTS="--coverage=coverage_profile"
   fi
