@@ -7,7 +7,7 @@
   --base-font-size: 14px;
   
   /* Derived font sizes */
-  --font-size-small: calc(var(--base-font-size) * 0.8);
+  --font-size-small: calc(var(--base-font-size) * 0.9);
   --font-size-smaller: calc(var(--base-font-size) * 0.7);
   --font-size-normal: var(--base-font-size);
   --font-size-medium: calc(var(--base-font-size) * 1.1);
