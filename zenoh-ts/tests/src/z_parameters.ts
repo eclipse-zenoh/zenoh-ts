@@ -147,3 +147,39 @@ Deno.test("Parameters - Duplicates", () => {
   assertEquals(params.get("key1"), "newvalue", "Insert should remove duplicates");
   assertEquals(params.toString().split("key1").length - 1, 1, "Should only have one occurrence of key1 after insert");
 });
+
+// Only run this test when performance testing is needed
+Deno.test("Parameters - Performance", { ignore: true }, () => {
+  const numOperations = 10000;
+  const params = Parameters.empty();
+
+  // Test insert performance
+  const insertStart = performance.now();
+  for (let i = 0; i < numOperations; i++) {
+    params.insert(`key${i}`, `value${i}`);
+  }
+  const insertEnd = performance.now();
+  const insertTime = insertEnd - insertStart;
+  console.log(`Insert ${numOperations} parameters took ${insertTime.toFixed(2)}ms (${(insertTime/numOperations).toFixed(3)}ms per operation)`);
+
+  // Verify all insertions were successful
+  for (let i = 0; i < numOperations; i++) {
+    assertEquals(params.get(`key${i}`), `value${i}`, `Insert verification failed for key${i}`);
+  }
+
+  // Test remove performance
+  const removeStart = performance.now();
+  for (let i = 0; i < numOperations; i++) {
+    params.remove(`key${i}`);
+  }
+  const removeEnd = performance.now();
+  const removeTime = removeEnd - removeStart;
+  console.log(`Remove ${numOperations} parameters took ${removeTime.toFixed(2)}ms (${(removeTime/numOperations).toFixed(3)}ms per operation)`);
+
+  // Verify all removals were successful
+  for (let i = 0; i < numOperations; i++) {
+    assertEquals(params.get(`key${i}`), undefined, `Remove verification failed for key${i}`);
+  }
+
+  assert(params.isEmpty(), "Parameters should be empty after removing all entries");
+});
