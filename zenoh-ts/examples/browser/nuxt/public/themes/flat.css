@@ -125,6 +125,13 @@
   font-size: var(--font-size-small);
 }
 
+/* Keep Info... and Edit... buttons flat by targeting CheckButton components */
+/* Override 3D styling for CheckButton components */
+.entity-actions .check-button {
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+}
+
 /* Log Panel Components */
 .log-content {
   background-color: var(--flat-bg-primary);

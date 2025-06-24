@@ -40,7 +40,8 @@ function handleClick() {
 // Compute CSS classes based on state
 const buttonClasses = computed(() => {
   const stateClass = props.pressed ? 'btn-pressed' : ''
-  return [stateClass].filter(Boolean).join(' ')
+  const baseClass = 'check-button' // Add identifying class for styling
+  return [baseClass, stateClass].filter(Boolean).join(' ')
 })
 </script>
 
