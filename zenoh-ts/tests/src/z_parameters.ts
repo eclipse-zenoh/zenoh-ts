@@ -152,7 +152,7 @@ Deno.test("Parameters - Duplicates", () => {
 Deno.test("Parameters - Performance", { ignore: true }, () => {
   const numOperations = 10000;
   const params = Parameters.empty();
-
+  
   // Test insert performance
   const insertStart = performance.now();
   for (let i = 0; i < numOperations; i++) {
