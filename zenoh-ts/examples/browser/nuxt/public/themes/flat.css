@@ -1,0 +1,20 @@
+/* Flat theme - extends the boxed theme */
+@import url('./boxed.css');
+
+:root {
+  --theme-name: "Flat";
+}
+
+/* You can add your custom styles here that will extend the boxed theme */
+/* For example: */
+
+/*
+.entity-group {
+  border: 2px solid #007acc;
+  background-color: #f8f9fa;
+}
+
+.section-title {
+  color: #007acc;
+}
+*/

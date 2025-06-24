@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export type ThemeName = 'none' | 'boxed'
+export type ThemeName = 'none' | 'boxed' | 'flat'
 
 interface Theme {
   name: string
@@ -18,6 +18,11 @@ const themes: Record<ThemeName, Theme> = {
     name: 'boxed',
     displayName: 'Boxed',
     cssFile: '/themes/boxed.css'
+  },
+  flat: {
+    name: 'flat',
+    displayName: 'Flat',
+    cssFile: '/themes/flat.css'
   }
 }
 
