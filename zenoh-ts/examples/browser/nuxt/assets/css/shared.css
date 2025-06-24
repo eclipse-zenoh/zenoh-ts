@@ -3,18 +3,39 @@
 
 /* ===== BASE SIZING VARIABLES ===== */
 :root {
-  --compact-font-size: 14px;
-  --compact-label-font-size: 13px;
-  --compact-padding: 6px 10px;
-  --compact-padding-v: 6px;
-  --compact-padding-h: 10px;
-  --compact-margin: 4px;
-  --compact-gap: 8px;
-  --compact-border-radius: 4px;
-  --compact-input-height: 32px;
-  --compact-border-width: 1px;
-  --compact-border-width-thick: 2px;
+  /* Base font size - all other sizes derived from this */
+  --base-font-size: 14px;
   
+  /* Derived font sizes */
+  --font-size-small: calc(var(--base-font-size) * 0.8);     /* ~11px */
+  --font-size-smaller: calc(var(--base-font-size) * 0.7);   /* ~10px */
+  --font-size-normal: var(--base-font-size);                /* 14px */
+  --font-size-medium: calc(var(--base-font-size) * 1.1);    /* ~15px */
+  --font-size-large: calc(var(--base-font-size) * 1.2);     /* ~17px */
+  
+  /* Derived spacing/sizing based on font size */
+  --size-xs: calc(var(--base-font-size) * 0.15);    /* ~2px */
+  --size-sm: calc(var(--base-font-size) * 0.2);     /* ~3px */
+  --size-md: calc(var(--base-font-size) * 0.3);     /* ~4px */
+  --size-lg: calc(var(--base-font-size) * 0.4);     /* ~6px */
+  --size-xl: calc(var(--base-font-size) * 0.6);     /* ~8px */
+  
+  /* Border radius sizes */
+  --radius-xs: var(--size-xs);  /* 2px */
+  --radius-sm: var(--size-sm);  /* 3px */
+  --radius-md: var(--size-md);  /* 4px */
+  --radius-lg: var(--size-lg);  /* 6px */
+  --radius-round: 50%;
+  
+  /* Specific layout sizes */
+  --max-width-actions: calc(var(--base-font-size) * 14.3);  /* ~200px */
+  --min-width-option: calc(var(--base-font-size) * 12.9);   /* ~180px */
+  --max-width-option: calc(var(--base-font-size) * 20);     /* ~280px */
+  --min-width-option-sm: calc(var(--base-font-size) * 11.4); /* ~160px */
+  --max-width-option-sm: calc(var(--base-font-size) * 17.1); /* ~240px */
+  --min-height-control: calc(var(--base-font-size) * 1.4);   /* ~20px */
+  --spacing-content: calc(var(--base-font-size) * 1.4);      /* ~20px */
+ 
   /* JSON syntax highlighting - colorful for better readability */
   --json-key-color: #059669;
   --json-string-color: #dc2626;
@@ -22,6 +43,7 @@
   --json-boolean-color: #7c3aed;
   --json-null-color: #6b7280;
   --json-bracket-color: #374151;
+  --json-background: transparent;
   
   /* Log type colors - colorful for better distinction */
   --log-info-color: #2563eb;
@@ -30,9 +52,6 @@
   --log-data-color: #7c3aed;
   --log-warning-color: #ea580c;
   --log-neutral-color: #6b7280;
-  
-  /* Log background - styled background */
-  --log-background: #f8f9fa;
 }
 
 .btn-pressed {

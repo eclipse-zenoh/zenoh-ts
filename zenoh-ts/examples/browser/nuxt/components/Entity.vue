@@ -6,7 +6,7 @@
         {{ title }}
       </div>
       <div v-if=" descr" class="entity-descr">
-        - {{ descr }}
+        {{ descr }}
       </div>
 
       <!-- Entity actions - separate but sharing horizontal space -->

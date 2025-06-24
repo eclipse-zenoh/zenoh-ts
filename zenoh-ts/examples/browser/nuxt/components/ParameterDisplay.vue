@@ -109,7 +109,7 @@ function formatTitleElement(title: string, typeColor: string): string {
 function getJsonPreStyles(typeColor: string): string {
   return props.type === 'neutral' 
     ? '' // Neutral mode: no styling at all (no padding, no background, no borders)
-    : `background: var(--log-background, #f8f9fa); padding: var(--compact-gap); border-radius: var(--compact-border-radius); border-left: var(--compact-border-width-thick) solid ${typeColor}`; // Normal mode: full box styling
+    : `background: var(--json-background, transparent); padding: var(--compact-gap); border-radius: var(--compact-border-radius); border-left: var(--compact-border-width-thick) solid ${typeColor}`; // Normal mode: full box styling
 }
 
 /**
