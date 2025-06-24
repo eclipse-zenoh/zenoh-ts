@@ -1,6 +1,17 @@
 <template>
   <div class="option-group">
-    <label class="compact-label">{{ label }}:</label>
+    <label class="compact-label">
+      {{ label }}:
+      <label class="checkbox-label inline-checkbox">
+        <input 
+          type="checkbox" 
+          :checked="isEmpty" 
+          @change="handleEmptyToggle"
+          :disabled="disabled || false"
+        >
+        (empty)
+      </label>
+    </label>
     <div class="input-row">
       <input 
         type="number" 
@@ -11,15 +22,6 @@
         :disabled="disabled || isEmpty"
         class="compact-input"
       >
-      <label class="checkbox-label inline-checkbox">
-        <input 
-          type="checkbox" 
-          :checked="isEmpty" 
-          @change="handleEmptyToggle"
-          :disabled="disabled || false"
-        >
-        (empty)
-      </label>
     </div>
   </div>
 </template>

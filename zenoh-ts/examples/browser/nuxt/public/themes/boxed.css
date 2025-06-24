@@ -95,21 +95,24 @@
   margin: 2px 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   align-items: flex-start;
+  justify-content: flex-start;
 }
 
 /* Make individual option-group controls flexible for horizontal layout */
 .entity-edits .option-group:not(.option-group-full-width) {
   flex: 0 1 auto;
-  min-width: 150px;
-  max-width: 250px;
+  min-width: 180px;
+  max-width: 280px;
+  margin: 2px;
 }
 
 /* Ensure full-width controls take the entire row */
 .entity-edits .option-group.option-group-full-width {
   flex: 1 1 100%;
   width: 100%;
+  margin: 2px 0;
 }
 
 /* Also ensure other full-width classes work properly */
@@ -118,14 +121,7 @@
   width: 100%;
 }
 
-/* Adjust spacing for better horizontal layout */
-.entity-edits .option-group:not(.option-group-full-width) {
-  margin: 2px 0;
-}
-
-.entity-edits .option-group.option-group-full-width {
-  margin: 4px 0;
-}
+/* Remove the duplicate margin rules since they're handled above */
 
 /* Apply horizontal layout to other control elements in entity-edits */
 .entity-edits .theme-selector,
@@ -196,8 +192,100 @@
 .option-group {
   background-color: rgba(254, 240, 138, 0.6); /* Light yellow */
   border-radius: 3px;
-  padding: 4px 6px;
+  padding: 6px;
   margin: 2px 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Title row styling - contains label and optional checkbox */
+.option-group > label:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-weight: 500;
+  min-height: 20px;
+}
+
+/* Control container styling */
+.option-group .express-control,
+.option-group .encoding-control,
+.option-group .input-row,
+.option-group .fullwidth-input-row {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Make primary inputs/selects take full width */
+.option-group select,
+.option-group input[type="text"],
+.option-group input[type="number"],
+.option-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* Special handling for EncodingSelect with custom checkbox */
+.option-group .encoding-control {
+  position: relative;
+}
+
+/* Custom checkbox styling for EncodingSelect - now handled in title row */
+.option-group .custom-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* For controls that have checkboxes in the control area (like TriStateCheckbox) */
+.option-group .express-control {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.option-group .express-control .compact-input {
+  flex-shrink: 0;
+}
+
+.option-group .express-control .express-state-label {
+  flex-grow: 1;
+}
+
+/* Special handling for inline checkboxes in title (like TimeoutInput) */
+.option-group .checkbox-label.inline-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.9em;
+  margin: 0;
+  font-weight: normal;
+}
+
+/* Ensure input-row and fullwidth-input-row containers take full width */
+.option-group .input-row,
+.option-group .fullwidth-input-row {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.option-group .input-row input,
+.option-group .fullwidth-input-row input {
+  flex-grow: 1;
+  max-width: calc(100% - 20px); /* Account for gap and checkbox space */
+  box-sizing: border-box;
 }
 
 .theme-selector {
@@ -217,24 +305,32 @@
   background-color: rgba(254, 215, 170, 0.6); /* Light orange */
   border-radius: 3px;
   padding: 4px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .encoding-control {
   background-color: rgba(244, 164, 245, 0.6); /* Light pink */
   border-radius: 3px;
   padding: 4px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .fullwidth-input-row {
   background-color: rgba(153, 246, 228, 0.6); /* Light teal */
   border-radius: 3px;
   padding: 4px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .input-row {
   background-color: rgba(253, 186, 116, 0.6); /* Light peach */
   border-radius: 3px;
   padding: 3px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 /* Log Panel Components */
@@ -311,4 +407,25 @@
   text-align: center;
   font-style: italic;
   color: rgba(107, 114, 128, 0.8);
+}
+
+/* Responsive design for better mobile/small screen experience */
+@media (max-width: 768px) {
+  .entity-edits .option-group:not(.option-group-full-width) {
+    flex: 1 1 100%;
+    min-width: auto;
+    max-width: none;
+    margin: 2px 0;
+  }
+  
+  .entity-edits {
+    gap: 4px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .entity-edits .option-group:not(.option-group-full-width) {
+    min-width: 160px;
+    max-width: 240px;
+  }
 }

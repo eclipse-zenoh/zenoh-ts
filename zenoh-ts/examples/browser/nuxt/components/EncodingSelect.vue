@@ -1,6 +1,19 @@
 <template>
   <div class="option-group">
-    <label>Encoding:</label>
+    <label>
+      Encoding:
+      <!-- Custom Toggle Checkbox in title row -->
+      <label class="custom-checkbox-label">
+        <input 
+          type="checkbox" 
+          :checked="customEncoding" 
+          @change="handleCustomToggle"
+          :disabled="disabled || false"
+          class="custom-encoding-checkbox"
+        >
+        Custom
+      </label>
+    </label>
     <div class="encoding-control">
       <!-- Predefined Encoding Dropdown -->
       <select 
@@ -30,18 +43,6 @@
         placeholder="e.g., text/plain"
         class="encoding-text-input"
       >
-      
-      <!-- Custom Toggle Checkbox -->
-      <label class="custom-checkbox-label">
-        <input 
-          type="checkbox" 
-          :checked="customEncoding" 
-          @change="handleCustomToggle"
-          :disabled="disabled || false"
-          class="custom-encoding-checkbox"
-        >
-        Custom
-      </label>
     </div>
   </div>
 </template>

@@ -1,14 +1,7 @@
 <template>
   <div class="option-group option-group-full-width">
-    <label>{{ label }}:</label>
-    <div class="fullwidth-input-row">
-      <input 
-        type="text" 
-        :value="modelValue" 
-        @input="handleInput"
-        :placeholder="placeholder || ''"
-        :disabled="disabled || isEmpty"
-      >
+    <label>
+      {{ label }}:
       <label class="checkbox-label inline-checkbox">
         <input 
           type="checkbox" 
@@ -18,6 +11,15 @@
         >
         (empty)
       </label>
+    </label>
+    <div class="fullwidth-input-row">
+      <input 
+        type="text" 
+        :value="modelValue" 
+        @input="handleInput"
+        :placeholder="placeholder || ''"
+        :disabled="disabled || isEmpty"
+      >
     </div>
   </div>
 </template>
