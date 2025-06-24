@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
+    "clean": "rm -rf ./node_modules ./.nuxt ./.output ./dist",
     "type-check": "nuxt typecheck",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix"

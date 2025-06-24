@@ -73,6 +73,11 @@ build_examples_browser() {
     yarn install || exit 1
     yarn build || exit 1
     cd "$SCRIPTDIR/.."
+    
+    cd examples/browser/nuxt
+    yarn install || exit 1
+    yarn build || exit 1
+    cd "$SCRIPTDIR/.."
     echo "Browser examples build completed."
 }
 

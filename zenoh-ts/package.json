@@ -42,6 +42,7 @@
     "clean": "./scripts/clean.sh",
     "build": "./scripts/build.sh",
     "start": "./scripts/start.sh",
+    "start:nuxt": "./scripts/start.sh example browser nuxt",
     "release": "npx release-it",
     "lint": "npx eslint ."
   },
