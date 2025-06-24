@@ -37,6 +37,19 @@
   background-color: rgba(156, 163, 175, 0.4); /* Light gray for description */
 }
 
+.entity-session {
+  background-color: rgba(243, 244, 246, 0.8); /* Light gray for session */
+  color: rgba(107, 114, 128, 1); /* Gray text */
+  border-color: rgba(209, 213, 219, 1); /* Gray border */
+}
+
+.entity-session.selected {
+  background-color: rgba(219, 234, 254, 0.9); /* Light blue for selected session */
+  color: rgba(29, 78, 216, 1); /* Blue text */
+  border-color: rgba(59, 130, 246, 1); /* Blue border */
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
 .entity-actions {
   background-color: rgba(165, 180, 252, 0.5); /* Light indigo for actions */
 }

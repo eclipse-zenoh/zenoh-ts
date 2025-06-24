@@ -39,6 +39,15 @@
   font-style: italic;
 }
 
+.entity-session {
+  border-radius: var(--radius-xs);
+  padding: var(--size-xs) var(--size-sm);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
 .entity-actions {
   border-radius: var(--radius-sm);
   padding: var(--size-sm) var(--size-md);

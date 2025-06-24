@@ -5,10 +5,12 @@
       <div class="entity-title">
         {{ title }}
       </div>
+      <div v-if="session" class="entity-session" :class="{ 'selected': isSessionSelected }">
+        {{ session }}
+      </div>
       <div v-if=" descr" class="entity-descr">
         {{ descr }}
       </div>
-
       <!-- Entity actions - separate but sharing horizontal space -->
       <div class="entity-actions">
         <CheckButton
@@ -49,13 +51,19 @@
 interface Props {
   title: string;
   descr?: string;
+  session?: string;
+  selectedSession?: string | null;
 }
 
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const editsExpanded = defineModel<boolean>("editsExpanded", {
   default: false,
 });
 
 const infoExpanded = ref(false);
+
+const isSessionSelected = computed(() => {
+  return props.session && props.selectedSession === props.session;
+});
 </script>

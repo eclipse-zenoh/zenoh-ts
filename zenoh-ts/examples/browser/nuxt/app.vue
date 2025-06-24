@@ -36,11 +36,9 @@
                 <Entity
                   v-for="sessionState in activeSessions"
                   :key="sessionState.displayId"
-                  :title="`${sessionState.displayId}${
-                    selectedSessionId === sessionState.displayId
-                      ? ' (selected)'
-                      : ''
-                  }`"
+                  title="Session"
+                  :session="sessionState.displayId"
+                  :selected-session="selectedSessionId"
                   :descr="sessionState.serverUrl"
                 >
                   <template #actions>
@@ -133,7 +131,9 @@
                 <Entity
                   v-for="subscriberState in activeSubscribers"
                   :key="subscriberState.displayId"
-                  :title="`${subscriberState.sessionId} - ${subscriberState.displayId}`"
+                  :title="subscriberState.displayId"
+                  :session="subscriberState.sessionId"
+                  :selected-session="selectedSessionId"
                   :descr="subscriberState.keyExpr"
                 >
                   <template #actions>
@@ -287,7 +287,9 @@
                 <Entity
                   v-for="queryableState in activeQueryables"
                   :key="queryableState.displayId"
-                  :title="`${queryableState.sessionId} - ${queryableState.displayId}`"
+                  :title="queryableState.displayId"
+                  :session="queryableState.sessionId"
+                  :selected-session="selectedSessionId"
                   :descr="queryableState.keyExpr"
                 >
                   <template #actions>
