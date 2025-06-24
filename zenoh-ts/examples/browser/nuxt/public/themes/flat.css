@@ -81,7 +81,7 @@
 }
 
 .entity-session {
-  background-color: var(--flat-bg-tertiary);
+  background-color: var(--flat-bg-secondary);
   border-color: var(--flat-border-medium);
   color: var(--flat-text-secondary);
 }

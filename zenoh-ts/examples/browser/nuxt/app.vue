@@ -764,6 +764,7 @@ watch(
   display: flex;
   flex: 1;
   overflow: hidden;
+  gap: 0.5rem;
 }
 
 .entity-panel {
@@ -789,6 +790,7 @@ watch(
   flex: 1;
   overflow-y: auto;
   min-height: 0;
+  border: none;
 }
 
 /* Loading screen layout */
