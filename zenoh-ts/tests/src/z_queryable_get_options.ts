@@ -166,7 +166,7 @@ function verifyReceivedQuery(
   query: Query | undefined,
   description: string
 ): ExpectedQuery | undefined {
-  const allowedDestination = testCase.getOptions.allowedDestinaton;
+  const allowedDestination = testCase.getOptions.allowedDestination;
 
   let queryExpected = true;
 
@@ -351,7 +351,7 @@ class TestCase {
       target: this.getOptions.target,
       consolidation: this.getOptions.consolidation,
       timeout: this.getOptions.timeout,
-      allowedDestination: this.getOptions.allowedDestinaton,
+      allowedDestination: this.getOptions.allowedDestination,
       acceptReplies: this.getOptions.acceptReplies,
     };
   }
