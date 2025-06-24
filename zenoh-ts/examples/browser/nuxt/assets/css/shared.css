@@ -11,9 +11,6 @@
   --compact-margin: 4px;
   --compact-gap: 8px;
   --compact-border-radius: 4px;
-  --compact-button-padding: 6px 12px;
-  --compact-button-padding-v: 6px;
-  --compact-button-padding-h: 12px;
   --compact-input-height: 32px;
   --compact-border-width: 1px;
   --compact-border-width-thick: 2px;
@@ -33,4 +30,8 @@
   --log-data-color: inherit;
   --log-warning-color: inherit;
   --log-neutral-color: inherit;
+}
+
+.btn-pressed {
+  filter: brightness(0.9);
 }

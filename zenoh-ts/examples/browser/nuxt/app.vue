@@ -15,13 +15,12 @@
             <Entity
               title="Open"
               :descr="serverUrl"
-              v-model:edits-expanded="sessionOptionsExpanded"
+              v-model:editsExpanded="sessionOptionsCollapsed"
             >
               <template #actions>
                 <button
                   @click="connect"
                   :disabled="isConnecting"
-                  class="compact-button btn-success"
                 >
                   <span v-if="isConnecting">Connecting...</span>
                   <span v-else>Connect</span>
@@ -48,13 +47,11 @@
                     <button
                       @click="selectSession(sessionState.displayId)"
                       :disabled="selectedSessionId === sessionState.displayId"
-                      class="compact-button btn-info"
                     >
                       Select
                     </button>
                     <button
                       @click="disconnect(sessionState.displayId)"
-                      class="compact-button btn-danger"
                     >
                       Disconnect
                     </button>
@@ -85,7 +82,6 @@
                 <button
                   @click="getSessionInfo"
                   :disabled="!selectedSessionId"
-                  class="compact-button btn-primary"
                 >
                   Run
                 </button>
@@ -104,7 +100,7 @@
             <Entity
               title="Subscriber"
               :descr="subscriberParameters.key.value"
-              v-model:edits-expanded="subscriberOptionsExpanded"
+              v-model:editsExpanded="subscriberOptionsCollapsed"
             >
               <template #actions>
                 <button
@@ -112,7 +108,6 @@
                   :disabled="
                     !selectedSessionId || !subscriberParameters.key.value
                   "
-                  class="compact-button btn-primary"
                 >
                   Declare
                 </button>
@@ -144,7 +139,6 @@
                   <template #actions>
                     <button
                       @click="unsubscribe(subscriberState.displayId)"
-                      class="compact-button btn-danger"
                       :disabled="!selectedSessionId"
                     >
                       Undeclare
@@ -166,7 +160,7 @@
             <Entity
               title="Put"
               :descr="putParameters.key.value"
-              v-model:edits-expanded="putOptionsExpanded"
+              v-model:editsExpanded="putOptionsCollapsed"
             >
               <template #actions>
                 <button
@@ -176,7 +170,6 @@
                     !putParameters.key.value ||
                     putParameters.valueEmpty.value
                   "
-                  class="compact-button btn-primary"
                 >
                   Run
                 </button>
@@ -255,7 +248,7 @@
             <Entity
               title="Queryable"
               :descr="queryableParameters.key.value"
-              v-model:edits-expanded="queryableOptionsExpanded"
+              v-model:editsExpanded="queryableOptionsCollapsed"
             >
               <template #actions>
                 <button
@@ -263,7 +256,6 @@
                   :disabled="
                     !selectedSessionId || !queryableParameters.key.value
                   "
-                  class="compact-button btn-primary"
                 >
                   Declare
                 </button>
@@ -301,7 +293,6 @@
                   <template #actions>
                     <button
                       @click="undeclareQueryable(queryableState.displayId)"
-                      class="compact-button btn-danger"
                       :disabled="!selectedSessionId"
                     >
                       Undeclare
@@ -442,13 +433,12 @@
             <Entity
               title="Get"
               :descr="getParameters.key.value"
-              v-model:edits-expanded="getOptionsExpanded"
+              v-model:editsExpanded="getOptionsCollapsed"
             >
               <template #actions>
                 <button
                   @click="performGet"
                   :disabled="!selectedSessionId || !getParameters.key.value"
-                  class="compact-button btn-primary"
                 >
                   Run
                 </button>
@@ -545,7 +535,7 @@
             section-class="log-section"
           >
           <template #actions>
-            <button @click="clearLog" class="compact-button btn-warning">
+            <button @click="clearLog">
               Clear
             </button>
           </template>
@@ -695,11 +685,11 @@ if (import.meta.client) {
 const logContent = ref<HTMLElement>();
 
 // State to track expanded options panels for operations
-const sessionOptionsExpanded = ref(false);
-const subscriberOptionsExpanded = ref(false);
-const putOptionsExpanded = ref(false);
-const queryableOptionsExpanded = ref(false);
-const getOptionsExpanded = ref(false);
+const sessionOptionsCollapsed = ref(false);
+const subscriberOptionsCollapsed = ref(false);
+const putOptionsCollapsed = ref(false);
+const queryableOptionsCollapsed = ref(false);
+const getOptionsCollapsed = ref(false);
 
 // Auto-scroll to bottom when new log entries are added
 watch(

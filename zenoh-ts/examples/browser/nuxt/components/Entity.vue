@@ -5,23 +5,23 @@
       <div class="entity-title">
         {{ title }}
       </div>
-      <div v-if="!editsExpanded && descr" class="entity-descr">
+      <div v-if=" descr" class="entity-descr">
         - {{ descr }}
       </div>
 
       <!-- Entity actions - separate but sharing horizontal space -->
       <div class="entity-actions">
-        <slot name="actions" />
-        <CollapseButton
+        <CheckButton
           v-if="$slots['info']"
-          v-model:expanded="infoExpanded"
-          collapsed-text="Info..."
-          expanded-text="Close info"
+          v-model:pressed="infoExpanded"
+          label="Info..."
         />
-        <CollapseButton
+        <CheckButton
           v-if="$slots['edits']"
-          v-model:expanded="editsExpanded"
+          v-model:pressed="editsExpanded"
+          label="Edit..."
         />
+        <slot name="actions" />
       </div>
     </div>
 
