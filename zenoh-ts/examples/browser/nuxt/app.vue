@@ -32,7 +32,7 @@
               </template>
 
               <!-- Active Sessions as Sub-entities -->
-              <template #sub-entities>
+              <template v-if="activeSessions.length > 0" #sub-entities>
                 <Entity
                   v-for="sessionState in activeSessions"
                   :key="sessionState.displayId"
@@ -133,7 +133,7 @@
               </template>
 
               <!-- Active Subscribers as Sub-entities -->
-              <template #sub-entities>
+              <template v-if="activeSubscribers.length > 0" #sub-entities>
                 <Entity
                   v-for="subscriberState in activeSubscribers"
                   :key="subscriberState.displayId"
@@ -293,7 +293,7 @@
               </template>
 
               <!-- Active Queryables as Sub-entities -->
-              <template #sub-entities>
+              <template v-if="activeQueryables.length > 0" #sub-entities>
                 <Entity
                   v-for="queryableState in activeQueryables"
                   :key="queryableState.displayId"
