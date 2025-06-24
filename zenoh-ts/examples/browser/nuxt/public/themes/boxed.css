@@ -93,6 +93,47 @@
   padding: 6px;
   border-radius: 4px;
   margin: 2px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+/* Make individual option-group controls flexible for horizontal layout */
+.entity-edits .option-group:not(.option-group-full-width) {
+  flex: 0 1 auto;
+  min-width: 150px;
+  max-width: 250px;
+}
+
+/* Ensure full-width controls take the entire row */
+.entity-edits .option-group.option-group-full-width {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+/* Also ensure other full-width classes work properly */
+.entity-edits .fullwidth-input-row {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+/* Adjust spacing for better horizontal layout */
+.entity-edits .option-group:not(.option-group-full-width) {
+  margin: 2px 0;
+}
+
+.entity-edits .option-group.option-group-full-width {
+  margin: 4px 0;
+}
+
+/* Apply horizontal layout to other control elements in entity-edits */
+.entity-edits .theme-selector,
+.entity-edits .parameter-display {
+  flex: 0 1 auto;
+  min-width: 150px;
+  max-width: 250px;
+  margin: 2px 0;
 }
 
 /* Section Components */
