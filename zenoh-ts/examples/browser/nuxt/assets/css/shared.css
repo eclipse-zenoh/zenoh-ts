@@ -55,3 +55,7 @@
 .btn-pressed {
   filter: brightness(0.9);
 }
+
+.entity-session.selected {
+  font-weight: bold;
+}
