@@ -214,24 +214,30 @@
   padding: var(--size-md) var(--size-lg);
   margin: var(--size-xs) 0;
   border-left: var(--size-sm) solid transparent; /* Default border */
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-md);
 }
 
 .log-message {
   border-radius: var(--radius-xs);
-  padding: var(--size-xs) var(--size-md);
+  padding: 0 var(--size-md);
+  flex: 1;
 }
 
 .log-type {
   border-radius: var(--radius-xs);
-  padding: 1px var(--size-md);
+  padding: 0 var(--size-md);
   font-size: var(--font-size-small);
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .timestamp {
   border-radius: var(--radius-xs);
-  padding: 1px var(--size-sm);
+  padding: 0 var(--size-sm);
   font-size: var(--font-size-smaller);
+  white-space: nowrap;
 }
 
 .empty-log {

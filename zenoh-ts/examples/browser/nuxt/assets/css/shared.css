@@ -81,3 +81,9 @@
 .log-entry.warning .log-type {
   color: var(--log-warning-color);
 }
+
+/* ===== LOG PARAMETER DISPLAY SPACING ===== */
+/* Add top margin to parameter display in log messages */
+.log-message .parameter-display {
+  margin-top: var(--size-md);
+}
