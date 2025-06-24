@@ -15,4 +15,3 @@ zenoh-keyexpr-wasm/pkg/**
 **/node_modules
 **/dist
 **/coverage_profile
-**/benchmark_results
