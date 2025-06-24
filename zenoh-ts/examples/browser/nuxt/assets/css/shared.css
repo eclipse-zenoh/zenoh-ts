@@ -50,6 +50,20 @@
   --log-data-color: #7c3aed;
   --log-warning-color: #ea580c;
   --log-neutral-color: #6b7280;
+  
+  /* Section title background colors - subtle and distinct */
+  --section-session-bg: #bae6fd;         /* Brighter light blue for sessions */
+  --section-publisher-bg: #dcfce7;       /* Brighter light green for publishers */
+  --section-subscriber-bg: #fef08a;      /* Brighter light yellow for subscribers */
+  --section-queryable-bg: #f9a8d4;       /* Brighter light pink for queryables */
+  --section-query-bg: #ddd6fe;           /* Brighter light purple for queries */
+  --section-liveliness-bg: #fecaca;      /* Brighter light red for liveliness */
+  --section-logs-bg: #e2e8f0;            /* Brighter light gray for logs */
+  --section-default-bg: #cbd5e1;         /* Brighter default light gray */
+  
+  /* Session selection color - matches session section */
+  --session-selected-bg: var(--section-session-bg);
+  --session-selected-color: #0369a1;     /* Darker blue for text contrast */
 }
 
 .btn-pressed {
@@ -58,6 +72,32 @@
 
 .entity-session.selected {
   font-weight: bold;
+  background-color: var(--session-selected-bg);
+  color: var(--session-selected-color);
+}
+
+/* ===== SECTION HEADER BACKGROUND COLORS ===== */
+/* Background colors for different section headers */
+/* Default background first */
+.section-header {
+  background-color: var(--section-default-bg);
+}
+
+/* Specific section backgrounds - these override the default */
+.session-section .section-header {
+  background-color: var(--section-session-bg);
+}
+
+.pubsub-section .section-header {
+  background-color: var(--section-publisher-bg);
+}
+
+.query-section .section-header {
+  background-color: var(--section-query-bg);
+}
+
+.log-section .section-header {
+  background-color: var(--section-logs-bg);
 }
 
 /* ===== LOG TYPE COLOR STYLING ===== */
