@@ -7,11 +7,11 @@
   --base-font-size: 14px;
   
   /* Derived font sizes */
-  --font-size-small: calc(var(--base-font-size) * 0.8);     /* ~11px */
-  --font-size-smaller: calc(var(--base-font-size) * 0.7);   /* ~10px */
-  --font-size-normal: var(--base-font-size);                /* 14px */
-  --font-size-medium: calc(var(--base-font-size) * 1.1);    /* ~15px */
-  --font-size-large: calc(var(--base-font-size) * 1.2);     /* ~17px */
+  --font-size-small: calc(var(--base-font-size) * 0.8);
+  --font-size-smaller: calc(var(--base-font-size) * 0.7);
+  --font-size-normal: var(--base-font-size);
+  --font-size-medium: calc(var(--base-font-size) * 1.1);
+  --font-size-large: calc(var(--base-font-size) * 1.2);
   
   /* Derived spacing/sizing based on font size */
   --size-xs: calc(var(--base-font-size) * 0.15);    /* ~2px */
@@ -28,13 +28,11 @@
   --radius-round: 50%;
   
   /* Specific layout sizes */
-  --max-width-actions: calc(var(--base-font-size) * 14.3);  /* ~200px */
-  --min-width-option: calc(var(--base-font-size) * 12.9);   /* ~180px */
-  --max-width-option: calc(var(--base-font-size) * 20);     /* ~280px */
-  --min-width-option-sm: calc(var(--base-font-size) * 11.4); /* ~160px */
-  --max-width-option-sm: calc(var(--base-font-size) * 17.1); /* ~240px */
-  --min-height-control: calc(var(--base-font-size) * 1.4);   /* ~20px */
-  --spacing-content: calc(var(--base-font-size) * 1.4);      /* ~20px */
+  --max-width-actions: calc(var(--base-font-size) * 15);
+  --min-width-option: calc(var(--base-font-size) * 10);
+  --max-width-option: calc(var(--base-font-size) * 20);
+  --min-height-control: calc(var(--base-font-size) * 1.4);
+  --spacing-content: calc(var(--base-font-size) * 1.4);
  
   /* JSON syntax highlighting - colorful for better readability */
   --json-key-color: #059669;

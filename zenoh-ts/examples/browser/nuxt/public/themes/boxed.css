@@ -52,12 +52,9 @@
 }
 
 .entity-edits {
-  padding: var(--size-lg);
   border-radius: var(--radius-md);
-  margin: var(--size-xs) 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--size-lg);
   align-items: flex-start;
   justify-content: flex-start;
 }
@@ -65,16 +62,15 @@
 /* Make individual option-group controls flexible for horizontal layout */
 .entity-edits .option-group:not(.option-group-full-width) {
   flex: 0 1 auto;
+  width: max(33.33333%, var(--min-width-option));
   min-width: var(--min-width-option);
   max-width: var(--max-width-option);
-  margin: var(--size-xs);
 }
 
 /* Ensure full-width controls take the entire row */
 .entity-edits .option-group.option-group-full-width {
   flex: 1 1 100%;
   width: 100%;
-  margin: var(--size-xs) 0;
 }
 
 /* Also ensure other full-width classes work properly */
@@ -135,7 +131,6 @@
 .option-group {
   border-radius: var(--radius-sm);
   padding: var(--size-lg);
-  margin: var(--size-xs) 0;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -235,25 +230,4 @@
   padding: var(--spacing-content);
   text-align: center;
   font-style: italic;
-}
-
-/* Responsive design for better mobile/small screen experience */
-@media (max-width: 768px) {
-  .entity-edits .option-group:not(.option-group-full-width) {
-    flex: 1 1 100%;
-    min-width: auto;
-    max-width: none;
-    margin: var(--size-xs) 0;
-  }
-  
-  .entity-edits {
-    gap: var(--size-md);
-  }
-}
-
-@media (max-width: 1200px) {
-  .entity-edits .option-group:not(.option-group-full-width) {
-    min-width: var(--min-width-option-sm);
-    max-width: var(--max-width-option-sm);
-  }
 }
