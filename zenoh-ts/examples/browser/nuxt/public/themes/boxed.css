@@ -189,7 +189,6 @@
 
 /* Special handling for inline checkboxes in title */
 .option-group label input[type="checkbox"] {
-  display: flex;
   align-items: center;
   gap: 4px;
   font-size: 0.9em;
