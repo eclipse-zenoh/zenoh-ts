@@ -59,3 +59,25 @@
 .entity-session.selected {
   font-weight: bold;
 }
+
+/* ===== LOG TYPE COLOR STYLING ===== */
+/* Log type colors based on entry type */
+.log-entry.info .log-type {
+  color: var(--log-info-color);
+}
+
+.log-entry.success .log-type {
+  color: var(--log-success-color);
+}
+
+.log-entry.error .log-type {
+  color: var(--log-error-color);
+}
+
+.log-entry.data .log-type {
+  color: var(--log-data-color);
+}
+
+.log-entry.warning .log-type {
+  color: var(--log-warning-color);
+}

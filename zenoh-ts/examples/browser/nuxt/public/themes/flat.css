@@ -166,15 +166,6 @@
   border-left-color: var(--log-warning-color);
 }
 
-.log-message {
-  background-color: transparent;
-}
-
-.log-type {
-  background-color: var(--flat-bg-tertiary);
-  color: var(--flat-text-primary);
-}
-
 .timestamp {
   background-color: transparent;
   color: var(--flat-text-secondary);
