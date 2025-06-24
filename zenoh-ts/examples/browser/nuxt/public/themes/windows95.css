@@ -1,9 +1,0 @@
-/* Windows 95-style theme - derived from boxed theme */
-@import url('./boxed.css');
-
-:root {
-  --theme-name: "Windows 95";
-  
-  /* Inherits all JSON and log colors from boxed theme */
-  /* Inherits all component background styles from boxed theme */
-}

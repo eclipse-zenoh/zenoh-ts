@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 
-export type ThemeName = 'none' | 'boxed' | 'windows95'
+export type ThemeName = 'none' | 'boxed'
 
 interface Theme {
   name: string
@@ -18,15 +18,10 @@ const themes: Record<ThemeName, Theme> = {
     name: 'boxed',
     displayName: 'Boxed',
     cssFile: '/themes/boxed.css'
-  },
-  windows95: {
-    name: 'windows95',
-    displayName: 'Windows 95',
-    cssFile: '/themes/windows95.css'
   }
 }
 
-const currentTheme = ref<ThemeName>('windows95')
+const currentTheme = ref<ThemeName>('boxed')
 let currentThemeLink: HTMLLinkElement | null = null
 
 const loadTheme = async (themeName: ThemeName) => {
@@ -68,7 +63,7 @@ export const useTheme = () => {
     if (import.meta.client) {
       // Load theme from localStorage or default
       const savedTheme = localStorage.getItem('selectedTheme') as ThemeName
-      const themeToLoad = savedTheme && themes[savedTheme] ? savedTheme : 'windows95'
+      const themeToLoad = savedTheme && themes[savedTheme] ? savedTheme : 'boxed'
       await setTheme(themeToLoad)
     }
   }
