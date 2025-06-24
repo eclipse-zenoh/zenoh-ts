@@ -536,12 +536,14 @@
           </Section>
         </div>
 
-        <!-- Activity Log Section -->
-        <Section
-          title="Activity Log"
-          icon="📜"
-          section-class="log-section"
-        >
+        <!-- Activity Log Panel -->
+        <div class="log-panel">
+          <!-- Activity Log Section -->
+          <Section
+            title="Activity Log"
+            icon="📜"
+            section-class="log-section"
+          >
           <template #actions>
             <button @click="clearLog" class="compact-button btn-warning">
               Clear
@@ -574,6 +576,7 @@
             </div>
           </div>
         </Section>
+        </div>
       </div>
 
       <!-- Theme Selector at bottom -->
@@ -768,11 +771,20 @@ watch(
   width: 60%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.log-section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .log-content {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
 
 /* Loading screen layout */
@@ -782,4 +794,5 @@ watch(
   align-items: center;
   min-height: 100vh;
 }
+
 </style>

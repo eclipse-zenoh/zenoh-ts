@@ -17,6 +17,15 @@
   </div>
 </template>
 
+<style scoped>
+.section-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+</style>
+
 <script setup lang="ts">
 interface Props {
   title: string
