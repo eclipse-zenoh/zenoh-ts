@@ -49,157 +49,85 @@ function stringGen() {
  * Create test cases for each data type
  */
 function createTestCases(): TestCase<unknown>[] {
-    // Create typed arrays first
-    const uint8Array = new Uint8Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 256));
-    const uint16Array = new Uint16Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 65536));
-    const uint32Array = new Uint32Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 4294967296));
-    const bigUint64Array = new BigUint64Array(TEST_CONFIG.arraySize)
-        .fill(BigInt(Number.MAX_SAFE_INTEGER));
-    const int8Array = new Int8Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 256) - 128);
-    const int16Array = new Int16Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 65536) - 32768);
-    const int32Array = new Int32Array(TEST_CONFIG.arraySize)
-        .map(() => Math.floor(Math.random() * 4294967296) - 2147483648);
-    const bigInt64Array = new BigInt64Array(TEST_CONFIG.arraySize)
-        .fill(BigInt("-9223372036854775808"));
-    const float32Array = new Float32Array(TEST_CONFIG.arraySize)
-        .map(() => Math.random() * 1000);
-    const float64Array = new Float64Array(TEST_CONFIG.arraySize)
-        .map(() => Math.random() * 1000);
-
     return [
         {
             name: "uint8Array",
-            data: uint8Array,
+            data: new Uint8Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 256)),
             serialize: (v: Uint8Array) => zserialize(v, ZS.uint8array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint8array(), b) as Uint8Array,
         },
         {
-            name: "uint8[]",
-            data: Array.from(uint8Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "uint16Array",
-            data: uint16Array,
+            data: new Uint16Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 65536)),
             serialize: (v: Uint16Array) => zserialize(v, ZS.uint16array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint16array(), b) as Uint16Array,
         },
         {
-            name: "uint16[]",
-            data: Array.from(uint16Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "uint32Array",
-            data: uint32Array,
+            data: new Uint32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 4294967296)),
             serialize: (v: Uint32Array) => zserialize(v, ZS.uint32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.uint32array(), b) as Uint32Array,
         },
         {
-            name: "uint32[]",
-            data: Array.from(uint32Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "bigUint64Array",
-            data: bigUint64Array,
+            data: new BigUint64Array(TEST_CONFIG.arraySize)
+                .fill(BigInt(Number.MAX_SAFE_INTEGER)),
             serialize: (v: BigUint64Array) => zserialize(v, ZS.biguint64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.biguint64array(), b) as BigUint64Array,
         },
         {
-            name: "bigUint64[]",
-            data: Array.from(bigUint64Array),
-            serialize: (v: bigint[]) => zserialize(v, ZS.array(ZS.bigint())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.bigint()), b) as bigint[],
-        },
-        {
             name: "int8Array",
-            data: int8Array,
+            data: new Int8Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 256) - 128),
             serialize: (v: Int8Array) => zserialize(v, ZS.int8array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int8array(), b) as Int8Array,
         },
         {
-            name: "int8[]",
-            data: Array.from(int8Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "int16Array",
-            data: int16Array,
+            data: new Int16Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 65536) - 32768),
             serialize: (v: Int16Array) => zserialize(v, ZS.int16array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int16array(), b) as Int16Array,
         },
         {
-            name: "int16[]",
-            data: Array.from(int16Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "int32Array",
-            data: int32Array,
+            data: new Int32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.floor(Math.random() * 4294967296) - 2147483648),
             serialize: (v: Int32Array) => zserialize(v, ZS.int32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.int32array(), b) as Int32Array,
         },
         {
-            name: "int32[]",
-            data: Array.from(int32Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "bigInt64Array",
-            data: bigInt64Array,
+            data: new BigInt64Array(TEST_CONFIG.arraySize)
+                .fill(BigInt("-9223372036854775808")),
             serialize: (v: BigInt64Array) => zserialize(v, ZS.bigint64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.bigint64array(), b) as BigInt64Array,
         },
         {
-            name: "bigInt64[]",
-            data: Array.from(bigInt64Array),
-            serialize: (v: bigint[]) => zserialize(v, ZS.array(ZS.bigint())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.bigint()), b) as bigint[],
-        },
-        {
             name: "float32Array",
-            data: float32Array,
+            data: new Float32Array(TEST_CONFIG.arraySize)
+                .map(() => Math.random() * 1000),
             serialize: (v: Float32Array) => zserialize(v, ZS.float32array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.float32array(), b) as Float32Array,
         },
         {
-            name: "float32[]",
-            data: Array.from(float32Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
             name: "float64Array",
-            data: float64Array,
+            data: new Float64Array(TEST_CONFIG.arraySize)
+                .map(() => Math.random() * 1000),
             serialize: (v: Float64Array) => zserialize(v, ZS.float64array()),
             deserialize: (b: ZBytes) => zdeserialize(ZD.float64array(), b) as Float64Array,
         },
         {
-            name: "float64[]",
-            data: Array.from(float64Array),
-            serialize: (v: number[]) => zserialize(v, ZS.array(ZS.number())),
-            deserialize: (b: ZBytes) => zdeserialize(ZD.array(ZD.number()), b) as number[],
-        },
-        {
-            name: "string[]",
+            name: "strings",
             data: Array.from({ length: TEST_CONFIG.arraySize }, stringGen),
             serialize: (value: string[]) => zserialize(value, ZS.array(ZS.string())),
             deserialize: (bytes: ZBytes) => zdeserialize(ZD.array(ZD.string()), bytes) as string[],
         },
         {
-            name: "Map<number, number>",
+            name: "numberMap",
             data: new Map(
                 Array.from({ length: TEST_CONFIG.arraySize }, (_, i) => [i, i] as [number, number])
             ),
