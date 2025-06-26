@@ -1,0 +1,35 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "clean": "rm -rf ./node_modules ./.nuxt ./.output ./dist",
+    "type-check": "nuxt typecheck",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "dependencies": {
+    "@eclipse-zenoh/zenoh-ts": "file:../../..",
+    "nuxt": "^3.17.4",
+    "vite-plugin-top-level-await": "^1.5.0",
+    "vite-plugin-wasm": "^3.4.1",
+    "vue": "^3.5.16",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@nuxt/typescript-build": "^3.0.0",
+    "@nuxtjs/eslint-config-typescript": "^12.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.33.1",
+    "@typescript-eslint/parser": "^8.33.1",
+    "@vue/typescript-plugin": "^2.2.10",
+    "eslint": "^8.57.1",
+    "eslint-plugin-vue": "^10.2.0",
+    "typescript": "^5.0.0",
+    "vue-tsc": "^2.2.10"
+  }
+}

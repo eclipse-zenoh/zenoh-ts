@@ -134,15 +134,26 @@ The following examples are available:
 
     and many more
 
-- Chat in browser example:
+- Browser examples:
 
-  ```sh
-  yarn start DAEMON example browser
-  ```
+  - Chat application (simple, Webpack-based):
 
-  A browser window at [localhost:8080](http://127.0.0.1:8080/index.html) with
-  the chat interface should open. Open another window with the same address, press
-  the "Connect" buttons in both and see how they interact.
+    ```sh
+    yarn start DAEMON example browser chat
+    ```
+
+    A browser window at [localhost:8080](http://127.0.0.1:8080/index.html) with
+    the chat interface should open. Open another window with the same address, press
+    the "Connect" buttons in both and see how they interact.
+
+  - Nuxt.js application (Vue.js framework):
+
+    ```sh
+    yarn start DAEMON example browser nuxt
+    ```
+
+    Open browser at [localhost:3000](http://localhost:3000) to investigate Zenoh
+    functionality
 
 ### Generating Documentation
 

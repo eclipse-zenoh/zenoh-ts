@@ -1,0 +1,129 @@
+/* ===== SHARED CSS FOR ZENOH DEMO COMPONENTS ===== */
+/* This file contains only essential CSS variables - all styling removed */
+
+/* ===== BASE SIZING VARIABLES ===== */
+:root {
+  /* Base font size - all other sizes derived from this */
+  --base-font-size: 14px;
+  
+  /* Derived font sizes */
+  --font-size-small: calc(var(--base-font-size) * 0.9);
+  --font-size-smaller: calc(var(--base-font-size) * 0.7);
+  --font-size-normal: var(--base-font-size);
+  --font-size-medium: calc(var(--base-font-size) * 1.1);
+  --font-size-large: calc(var(--base-font-size) * 1.2);
+  
+  /* Derived spacing/sizing based on font size */
+  --size-xs: calc(var(--base-font-size) * 0.15);    /* ~2px */
+  --size-sm: calc(var(--base-font-size) * 0.2);     /* ~3px */
+  --size-md: calc(var(--base-font-size) * 0.3);     /* ~4px */
+  --size-lg: calc(var(--base-font-size) * 0.4);     /* ~6px */
+  --size-xl: calc(var(--base-font-size) * 0.6);     /* ~8px */
+  
+  /* Border radius sizes */
+  --radius-xs: var(--size-xs);  /* 2px */
+  --radius-sm: var(--size-sm);  /* 3px */
+  --radius-md: var(--size-md);  /* 4px */
+  --radius-lg: var(--size-lg);  /* 6px */
+  --radius-round: 50%;
+  
+  /* Specific layout sizes */
+  --max-width-actions: calc(var(--base-font-size) * 15);
+  --min-width-option: calc(var(--base-font-size) * 10);
+  --max-width-option: calc(var(--base-font-size) * 20);
+  --min-height-control: calc(var(--base-font-size) * 1.4);
+  --spacing-content: calc(var(--base-font-size) * 1.4);
+ 
+  /* JSON syntax highlighting - colorful for better readability */
+  --json-key-color: #059669;
+  --json-string-color: #dc2626;
+  --json-number-color: #2563eb;
+  --json-boolean-color: #7c3aed;
+  --json-null-color: #6b7280;
+  --json-bracket-color: #374151;
+  --json-background: transparent;
+  
+  /* Log type colors - colorful for better distinction */
+  --log-info-color: #2563eb;
+  --log-success-color: #16a34a;
+  --log-error-color: #dc2626;
+  --log-data-color: #7c3aed;
+  --log-warning-color: #ea580c;
+  --log-neutral-color: #6b7280;
+  
+  /* Section title background colors - subtle and distinct */
+  --section-session-bg: #bae6fd;         /* Brighter light blue for sessions */
+  --section-publisher-bg: #dcfce7;       /* Brighter light green for publishers */
+  --section-subscriber-bg: #fef08a;      /* Brighter light yellow for subscribers */
+  --section-queryable-bg: #f9a8d4;       /* Brighter light pink for queryables */
+  --section-query-bg: #ddd6fe;           /* Brighter light purple for queries */
+  --section-liveliness-bg: #fecaca;      /* Brighter light red for liveliness */
+  --section-logs-bg: #e2e8f0;            /* Brighter light gray for logs */
+  --section-default-bg: #cbd5e1;         /* Brighter default light gray */
+  
+  /* Session selection color - matches session section */
+  --session-selected-bg: var(--section-session-bg);
+  --session-selected-color: #0369a1;     /* Darker blue for text contrast */
+}
+
+.btn-pressed {
+  filter: brightness(0.9);
+}
+
+.entity-session.selected {
+  font-weight: bold;
+  background-color: var(--session-selected-bg);
+  color: var(--session-selected-color);
+}
+
+/* ===== SECTION HEADER BACKGROUND COLORS ===== */
+/* Background colors for different section headers */
+/* Default background first */
+.section-header {
+  background-color: var(--section-default-bg);
+}
+
+/* Specific section backgrounds - these override the default */
+.session-section .section-header {
+  background-color: var(--section-session-bg);
+}
+
+.pubsub-section .section-header {
+  background-color: var(--section-publisher-bg);
+}
+
+.query-section .section-header {
+  background-color: var(--section-query-bg);
+}
+
+.log-section .section-header {
+  background-color: var(--section-logs-bg);
+}
+
+/* ===== LOG TYPE COLOR STYLING ===== */
+/* Log type colors based on entry type */
+.log-entry.info .log-type {
+  color: var(--log-info-color);
+}
+
+.log-entry.success .log-type {
+  color: var(--log-success-color);
+}
+
+.log-entry.error .log-type {
+  color: var(--log-error-color);
+}
+
+.log-entry.data .log-type {
+  color: var(--log-data-color);
+}
+
+.log-entry.warning .log-type {
+  color: var(--log-warning-color);
+}
+
+/* ===== LOG PARAMETER DISPLAY SPACING ===== */
+/* Add top margin to parameter display in log messages */
+.log-message .parameter-display {
+  margin-top: var(--size-md);
+}

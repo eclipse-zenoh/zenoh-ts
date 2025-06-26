@@ -1,0 +1,248 @@
+/* Boxed theme - layout structure without colors */
+:root {
+  --theme-name: "Boxed";
+}
+
+/* ===== LAYOUT STRUCTURE STYLES ===== */
+
+/* Entity Components */
+.entity-group {
+  border-radius: var(--radius-lg);
+  padding: var(--size-xl);
+  margin: var(--size-md) 0;
+}
+
+.entity {
+  border-radius: var(--radius-md);
+  padding: var(--size-lg);
+  margin: var(--size-sm) 0;
+}
+.entity-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: var(--size-xl); /* Space between title, description and actions */
+}
+
+.entity-title {
+  border-radius: var(--radius-xs);
+  padding: var(--size-xs) var(--size-md);
+  font-weight: bold;
+  text-align: left;
+}
+
+.entity-descr {
+  border-radius: var(--radius-xs);
+  padding: 1px var(--size-sm);
+  font-size: var(--font-size-medium);
+  font-style: italic;
+}
+
+.entity-session {
+  border-radius: var(--radius-xs);
+  padding: var(--size-xs) var(--size-sm);
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  border: 1px solid;
+  transition: all 0.2s ease;
+}
+
+.entity-actions {
+  border-radius: var(--radius-sm);
+  padding: var(--size-sm) var(--size-md);
+  margin: var(--size-xs) 0;
+  display: flex;
+  flex-wrap: wrap; /* Allow actions to wrap to new line when needed */
+  gap: var(--size-md);
+  min-width: 0; /* Allow shrinking */
+  max-width: var(--max-width-actions); /* Force wrapping of buttons before header wraps */
+  margin-left: auto; /* Push actions to the right */
+}
+
+.entity-edits {
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+/* Make individual option-group controls flexible for horizontal layout */
+.entity-edits .option-group:not(.option-group-full-width) {
+  flex: 0 1 auto;
+  width: max(33.33333%, var(--min-width-option));
+  min-width: var(--min-width-option);
+  max-width: var(--max-width-option);
+}
+
+/* Ensure full-width controls take the entire row */
+.entity-edits .option-group.option-group-full-width {
+  flex: 1 1 100%;
+  width: 100%;
+}
+
+/* Also ensure other full-width classes work properly */
+/* Note: fullwidth-input-row wrapper was removed, controls are now direct children */
+
+/* Remove the duplicate margin rules since they're handled above */
+
+/* Apply horizontal layout to other control elements in entity-edits */
+
+/* Section Components */
+.section-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: var(--size-xl); /* Space between icon, title and actions */
+}
+
+.section-icon {
+  border-radius: var(--radius-round);
+  padding: var(--size-md);
+  font-size: var(--font-size-large);
+}
+
+.section-title {
+  border-radius: var(--radius-sm);
+  padding: var(--size-sm) var(--size-lg);
+  font-weight: bold;
+  font-size: var(--font-size-medium);
+  text-align: left;
+}
+
+.section-actions {
+  border-radius: var(--radius-sm);
+  padding: var(--size-sm) var(--size-md);
+  margin: var(--size-xs) 0;
+  display: flex;
+  flex-wrap: wrap; /* Allow actions to wrap to new line when needed */
+  gap: var(--size-md);
+  align-items: center;
+  min-width: 0; /* Allow shrinking */
+  max-width: var(--max-width-actions); /* Force wrapping of buttons before header wraps */
+  margin-left: auto; /* Push actions to the right */
+}
+
+.entity-info {
+  border-radius: var(--radius-md);
+  padding: var(--size-lg);
+  margin: var(--size-xs) 0;
+}
+
+.sub-entities {
+  padding: var(--size-md);
+  border-radius: var(--radius-sm);
+}
+
+/* Control Components */
+.option-group {
+  border-radius: var(--radius-sm);
+  padding: var(--size-lg);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Title row styling - contains label and optional checkbox */
+.option-group > label:first-child {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--size-md);
+  font-weight: 500;
+  min-height: var(--min-height-control);
+}
+
+/* Control container styling - using generic selectors */
+.option-group > div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--size-xl);
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Make primary inputs/selects take full width */
+.option-group select,
+.option-group input[type="text"],
+.option-group input[type="number"],
+.option-group textarea {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+/* For controls that have checkboxes in the control area */
+.option-group > div {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--size-xl);
+}
+
+.option-group > div > input[type="checkbox"] {
+  flex-shrink: 0;
+}
+
+.option-group > div > label {
+  flex-grow: 1;
+}
+
+/* Special handling for inline checkboxes in title */
+.option-group label input[type="checkbox"] {
+  align-items: center;
+  gap: var(--size-md);
+  font-size: var(--font-size-medium);
+  margin: 0;
+  font-weight: normal;
+}
+
+/* Ensure input containers that still exist work properly */
+
+/* Log Panel Components */
+.log-content {
+  border-radius: var(--radius-md);
+  padding: var(--size-lg);
+  overflow-y: auto;
+}
+
+.log-entry {
+  border-radius: var(--radius-sm);
+  padding: var(--size-md) var(--size-lg);
+  margin: var(--size-xs) 0;
+  border-left: var(--size-sm) solid transparent; /* Default border */
+  display: flex;
+  align-items: baseline;
+  gap: var(--size-md);
+}
+
+.log-message {
+  border-radius: var(--radius-xs);
+  padding: 0 var(--size-md);
+  flex: 1;
+}
+
+.log-type {
+  border-radius: var(--radius-xs);
+  padding: 0 var(--size-md);
+  font-size: var(--font-size-small);
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.timestamp {
+  border-radius: var(--radius-xs);
+  padding: 0 var(--size-sm);
+  font-size: var(--font-size-smaller);
+  white-space: nowrap;
+}
+
+.empty-log {
+  border-radius: var(--radius-md);
+  padding: var(--spacing-content);
+  text-align: center;
+  font-style: italic;
+}

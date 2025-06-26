@@ -1,0 +1,188 @@
+/* Flat theme - extends the boxed theme */
+@import url('./boxed.css');
+
+:root {
+  --theme-name: "Flat";
+  
+  /* Flat theme color palette */
+  --flat-bg-primary: #ffffff;
+  --flat-bg-secondary: #dddddd;
+  --flat-bg-tertiary: #bbbbbb;
+  --flat-border-light: #dee2e6;
+  --flat-border-medium: #adb5bd;
+  --flat-border-dark: #6c757d;
+  --flat-text-primary: #212529;
+  --flat-text-secondary: #6c757d;
+  --flat-accent: #0d6efd;
+  --flat-accent-light: #b6d7ff;
+  --flat-shadow: rgba(0, 0, 0, 0.1);
+}
+
+/* Apply sans-serif font to all elements in flat theme */
+* {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+}
+
+/* Section Components - Make sections look like separate blocks */
+.entity-group {
+  background-color: var(--flat-bg-primary);
+  border: 1px solid var(--flat-border-light);
+  box-shadow: 0 2px 4px var(--flat-shadow);
+  margin: var(--size-xl) 0;
+}
+
+.section-header {
+  background-color: var(--flat-bg-secondary);
+  border-bottom: 1px solid var(--flat-border-light);
+  margin: calc(-1 * var(--size-xl));
+  margin-bottom: var(--size-lg);
+  padding: var(--size-lg) var(--size-xl);
+}
+
+.section-icon {
+  background-color: transparent;
+  color: var(--flat-text-primary);
+}
+
+.section-title {
+  color: var(--flat-text-primary);
+}
+
+.section-actions {
+  background-color: transparent;
+}
+
+/* Entities inside sections - flat space without borders */
+.entity {
+  background-color: transparent;
+  border: none;
+  box-shadow: none;
+  margin: var(--size-sm) 0;
+  padding: var(--size-md) 0;
+  border-bottom: none;
+}
+
+.entity:last-child {
+  border-bottom: none;
+}
+
+.entity-header {
+  background-color: transparent;
+}
+
+.entity-title {
+  color: var(--flat-text-primary);
+  background-color: transparent;
+}
+
+.entity-descr {
+  color: var(--flat-text-secondary);
+  background-color: transparent;
+}
+
+.entity-session {
+  background-color: var(--flat-bg-secondary);
+  border-color: var(--flat-border-medium);
+  color: var(--flat-text-secondary);
+}
+
+.entity-session.selected {
+  background-color: var(--flat-accent-light);
+  border-color: var(--flat-accent);
+  color: var(--flat-text-primary);
+}
+
+.entity-actions {
+  background-color: transparent;
+}
+
+/* Edit and info boxes - bordered */
+.entity-edits {
+  background-color: var(--flat-bg-secondary);
+  border: 1px solid var(--flat-border-light);
+  margin: var(--size-lg) 0;
+  padding: var(--size-lg);
+}
+
+.entity-info {
+  background-color: var(--flat-bg-secondary);
+  border: 1px solid var(--flat-border-light);
+}
+
+.sub-entities {
+  background-color: transparent;
+  border: none;
+  border-left: var(--size-sm) solid var(--flat-border-medium);
+}
+
+/* Control Components */
+.option-group {
+  background-color: transparent;
+}
+
+.option-group > label:first-child {
+  color: var(--flat-text-primary);
+  font-size: var(--font-size-small);
+}
+
+/* Keep Info... and Edit... buttons flat by targeting CheckButton components */
+/* Override 3D styling for CheckButton components */
+.entity-actions .check-button {
+  border: none !important;
+  border-radius: var(--radius-md) !important;
+}
+
+/* Log Panel Components */
+.log-content {
+  background-color: var(--flat-bg-primary);
+  border: 1px solid var(--flat-border-light);
+}
+
+.log-entry {
+  border-bottom: 1px solid var(--flat-bg-tertiary);
+}
+
+.log-entry:last-child {
+  border-bottom: none;
+}
+
+.log-entry.info {
+  border-left-color: var(--log-info-color);
+}
+
+.log-entry.success {
+  border-left-color: var(--log-success-color);
+}
+
+.log-entry.error {
+  border-left-color: var(--log-error-color);
+}
+
+.log-entry.data {
+  border-left-color: var(--log-data-color);
+}
+
+.log-entry.warning {
+  border-left-color: var(--log-warning-color);
+}
+
+.log-type {
+  background-color: transparent;
+  color: var(--flat-text-primary);
+  font-weight: bold;
+}
+
+.log-message {
+  background-color: transparent;
+}
+
+.timestamp {
+  background-color: transparent;
+  color: var(--flat-text-secondary);
+}
+
+.empty-log {
+  background-color: var(--flat-bg-secondary);
+  color: var(--flat-text-secondary);
+  border: 1px solid var(--flat-border-light);
+}
