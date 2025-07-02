@@ -1,3 +1,4 @@
+/// <reference lib="deno.ns" />
 // Copyright (c) 2025 ZettaScale Technology
 //
 // This program and the accompanying materials are made available under the
