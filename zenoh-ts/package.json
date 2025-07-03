@@ -34,6 +34,7 @@
   "devDependencies": {
     "@types/node": "20.9.1",
     "@types/uuid": "^10.0.0",
+    "eslint-plugin-jsdoc": "^51.3.3",
     "typedoc": "^0.26.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.32.1"

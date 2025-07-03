@@ -1,4 +1,5 @@
 const tseslint = require('typescript-eslint');
+const jsdoc = require('eslint-plugin-jsdoc');
 
 module.exports = tseslint.config(
   {
@@ -36,6 +37,7 @@ module.exports = tseslint.config(
     },
     plugins: {
       '@typescript-eslint': tseslint.plugin,
+      jsdoc,
     },
     rules: {
       // Using a limited set of rules to avoid compatibility issues
@@ -116,7 +118,8 @@ module.exports = tseslint.config(
           'selector': 'enumMember',
           'format': ['PascalCase', 'UPPER_CASE']
         }
-      ]
+      ],
+      ...jsdoc.configs['flat/recommended-error'].rules
     }
   },
   // Config for examples, tests, and dist with no type checking
