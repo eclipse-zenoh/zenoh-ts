@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { Parameters } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
