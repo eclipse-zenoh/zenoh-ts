@@ -14,7 +14,7 @@
 {
   "compilerOptions": {
     "module": "esnext",
-    "target": "es2020",
+    "target": "esnext",
     "moduleResolution": "node",
     "strict": true,
     "noFallthroughCasesInSwitch": true,
@@ -35,7 +35,7 @@
     },
     "lib": [
       "DOM",
-      "ES2021"
+      "esnext"
     ],
     "declaration": true,
     "esModuleInterop": true,
