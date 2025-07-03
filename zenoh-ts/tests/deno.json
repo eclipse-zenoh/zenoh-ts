@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "lib": [
-      "esnext",
+      "es2022",
       "DOM",
       "DOM.Iterable",
       "deno.ns"
