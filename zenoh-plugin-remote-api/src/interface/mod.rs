@@ -84,7 +84,7 @@ impl Qos {
     ) -> Self {
         let p = priority as u8;
         let c = match congestion_control {
-            CongestionControl::Drop => 0u8,
+            CongestionControl::Drop | CongestionControl::BlockFirst => 0u8,
             CongestionControl::Block => 1u8,
         };
         let e = match express {
