@@ -56,7 +56,7 @@ if [[ "$bump_deps_pattern" != '' ]]; then
       toml_set_in_place Cargo.toml "workspace.dependencies.$dep.version" "$bump_deps_version"
     fi
 
-    if [[ -n $bump_deps_branch && dep != 'zenoh-plugin-remote-api']]; then
+    if [ -n "$bump_deps_branch" ] && [ "$dep" != 'zenoh-plugin-remote-api' ]; then
       toml_set_in_place Cargo.toml "workspace.dependencies.$dep.branch" "$bump_deps_branch"
     fi
   done
