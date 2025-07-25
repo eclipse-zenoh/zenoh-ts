@@ -35,15 +35,15 @@ serde = { version = "1.0.219", default-features = false, features = [
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", features = [
     "plugins",
-], version = "1.4.0" }
-zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
-zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.4.0" }
+], version = "1.5.0" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
+zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
+zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
+zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
+zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.5.0", version = "1.5.0" }
 zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.5.0" }
 
 uuid = { version = "1.17.0", default-features = false, features = [
