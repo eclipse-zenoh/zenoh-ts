@@ -1,6 +1,6 @@
 {
   "name": "@eclipse-zenoh/zenoh-ts",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "license": "(Apache-2.0 OR EPL-2.0)",
   "type": "module",
   "description": "Zenoh: The Zero Overhead Pub/Sub/Query Protocol",
