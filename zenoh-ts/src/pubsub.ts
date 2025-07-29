@@ -16,10 +16,11 @@ import { IntoZBytes, ZBytes } from "./z_bytes.js";
 import { Sample } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
-import { ChannelReceiver } from "./channels.js";
+import { ChannelReceiver, FifoChannel, intoCbDropReceiver } from "./channels.js";
 import { SessionInner } from "./session_inner.js";
 import { PublisherDelete, PublisherProperties, PublisherPut } from "./message.js";
 import { CongestionControl, Priority, Reliability } from "./enums.js";
+import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
 
 
 // ███████ ██    ██ ██████  ███████  ██████ ██████  ██ ██████  ███████ ██████
@@ -203,6 +204,39 @@ export class Publisher {
                 deleteOptions?.timestamp
             )
         )
+    }
+
+
+    /**
+     * Declares a new matching listener, notifying when publisher's `Matching Status` changes.
+     *
+     * @remarks
+     *  If a Matching listener is created with a callback, it cannot be simultaneously polled for new values.
+     * 
+     * @param {MatchingListenerOptions} matchingListenerOptions - optional additional parameters for matching listener.
+     * 
+     * @returns Matching listener
+     */
+    async matchingListener(
+        matchingListenerOptions?: MatchingListenerOptions
+    ): Promise<MatchingListener> {
+        const handler = matchingListenerOptions?.handler ?? new FifoChannel<MatchingStatus>(256);
+        let [callback, drop, receiver] = intoCbDropReceiver(handler);
+
+        const listenerId = await this.session.publisherDeclareMatchingListener(
+            this.publisherId,
+            { callback, drop }
+        );
+        return new MatchingListener(this.session, listenerId, receiver);
+    }
+
+    /**
+     * Gets publisher matching status - i.e. if there are any subscribers matching its key expression.
+     * 
+     * @returns Publisher matching status
+     */
+    async matchingStatus(): Promise<MatchingStatus> {
+        return await this.session.publisherGetMatchingStatus(this.publisherId);
     }
 
     /**

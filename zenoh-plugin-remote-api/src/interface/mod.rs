@@ -345,6 +345,44 @@ impl UndeclarePublisher {
     }
 }
 
+pub(crate) struct PublisherDeclareMatchingListener {
+    pub(crate) id: u32,
+    pub(crate) publisher_id: u32,
+}
+
+impl PublisherDeclareMatchingListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(PublisherDeclareMatchingListener {
+            id: deserializer.deserialize()?,
+            publisher_id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct UndeclareMatchingListener {
+    pub(crate) id: u32,
+}
+
+impl UndeclareMatchingListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(UndeclareMatchingListener {
+            id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct PublisherGetMatchingStatus {
+    pub(crate) publisher_id: u32,
+}
+
+impl PublisherGetMatchingStatus {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(PublisherGetMatchingStatus {
+            publisher_id: deserializer.deserialize()?,
+        })
+    }
+}
+
 pub(crate) struct DeclareSubscriber {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
@@ -432,6 +470,54 @@ impl UndeclareQuerier {
         Ok(UndeclareQuerier {
             id: deserializer.deserialize()?,
         })
+    }
+}
+
+pub(crate) struct QuerierDeclareMatchingListener {
+    pub(crate) id: u32,
+    pub(crate) querier_id: u32,
+}
+
+impl QuerierDeclareMatchingListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(QuerierDeclareMatchingListener {
+            id: deserializer.deserialize()?,
+            querier_id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct QuerierGetMatchingStatus {
+    pub(crate) querier_id: u32,
+}
+
+impl QuerierGetMatchingStatus {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(QuerierGetMatchingStatus {
+            querier_id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct MatchingStatus {
+    pub(crate) matching: bool,
+}
+
+impl MatchingStatus {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.matching);
+    }
+}
+
+pub(crate) struct MatchingStatusUpdate {
+    pub(crate) matching_listener_id: u32,
+    pub(crate) matching: bool,
+}
+
+impl MatchingStatusUpdate {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.matching_listener_id);
+        serializer.serialize(self.matching);
     }
 }
 
@@ -998,6 +1084,11 @@ remote_message! {
         ReplyErr,
         QueryResponseFinal,
         Ping,
+        PublisherDeclareMatchingListener,
+        UndeclareMatchingListener,
+        PublisherGetMatchingStatus,
+        QuerierDeclareMatchingListener,
+        QuerierGetMatchingStatus,
     },
     InRemoteMessageId
 }
@@ -1015,6 +1106,8 @@ remote_message! {
         Query,
         Reply,
         QueryResponseFinal,
+        MatchingStatus,
+        MatchingStatusUpdate,
     },
     OutRemoteMessageId
 }

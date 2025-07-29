@@ -12,7 +12,7 @@
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
 
-import { ReplyError, Config, Sample, Session, QueryTarget, Selector, ChannelReceiver, Reply, } from "@eclipse-zenoh/zenoh-ts";
+import { ReplyError, Config, Sample, Session, QueryTarget, Selector, ChannelReceiver, Reply, MatchingListener, MatchingStatus, } from "@eclipse-zenoh/zenoh-ts";
 import { Duration, Milliseconds } from 'typed-duration'
 import { BaseParseArgs } from "./parse_args.ts";
 
@@ -26,6 +26,19 @@ export async function main() {
     target: args.getQueryTarget(),
     timeout: args.getTimeout(),
   });
+
+  let matchingListener: MatchingListener | undefined = undefined;
+
+  if (args.addMatchingListener) {
+      const listenerCallback = function (status: MatchingStatus) {
+        if (status.matching()) {
+          console.warn("Querier has matching queryables.")
+        } else {
+          console.warn("Querier has NO MORE matching queryables")
+        }
+      };
+      matchingListener = await querier.matchingListener({handler: listenerCallback });
+  }
 
   for (let i = 0; i < 1000; i++) {
     await sleep(1000);
@@ -45,6 +58,8 @@ export async function main() {
     }
     console.warn("Get Finished");
   }
+
+  await matchingListener?.undeclare();
 }
 
 class ParseArgs extends BaseParseArgs {
@@ -52,6 +67,7 @@ class ParseArgs extends BaseParseArgs {
   public payload: string = "Querier Get from Zenoh-ts!";
   public target: string = "BEST_MATCHING";
   public timeout: number = 10000;
+  public addMatchingListener: boolean = false;
 
   constructor() {
     super();
@@ -63,7 +79,8 @@ class ParseArgs extends BaseParseArgs {
       selector: "Selector for the query",
       payload: "Payload for the query",
       target: "Target for the query",
-      timeout: "Timeout for the query in milliseconds"
+      timeout: "Timeout for the query in milliseconds",
+      addMatchingListener: "Add matching listener"
     };
   }
 
