@@ -15,13 +15,14 @@
 
 import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
 import { KeyExpr } from "./key_expr.js";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, OutMessageInterface, Ping, PublisherDelete, PublisherProperties, PublisherPut, Put, QuerierGet, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
 import { Query, Reply } from "./query.js";
 import { Closure } from "./closure.js";
 import { RemoteLink } from "./link.js";
 import { Sample } from "./sample.js";
 import { SessionInfo } from "./session.js";
 import { Timestamp } from "./timestamp.js";
+import { MatchingStatus } from "./matching.js";
 
 class IdSource {
     private static MAX: number = 1 << 31;
@@ -58,10 +59,12 @@ export class SessionInner {
     private querierIdCounter: IdSource = new IdSource();
     private livelinessTokenIdCounter: IdSource = new IdSource();
     private getIdCounter: IdSource = new IdSource();
+    private matchingListenerIdCounter: IdSource = new IdSource();
 
     private subscribers: Map<number, Closure<Sample>> = new Map<number, Closure<Sample>>();
     private queryables: Map<number, Closure<Query>> = new Map<number, Closure<Query>>();
     private gets: Map<number, Closure<Reply>> = new Map<number, Closure<Reply>>();
+    private matchingListeners: Map<number, Closure<MatchingStatus>> = new Map<number, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
     private readonly messageResponseTimeoutMs: number;
     
@@ -129,6 +132,16 @@ export class SessionInner {
                     } else {
                         this.gets.delete(q.queryId);
                         get.drop();
+                    }
+                    break;
+                }
+                case InRemoteMessageId.MatchingStatusUpdate: {
+                    const m = MatchingStatusUpdate.deserialize(deserializer);
+                    let matchingListener = this.matchingListeners.get(m.matchingListenerId);
+                    if (matchingListener == undefined) {
+                        console.warn(`Received matching status update for inexistant matching listener ${m.matchingListenerId}`) 
+                    } else {
+                        matchingListener.callback(new MatchingStatus(m.matching));
                     }
                     break;
                 }
@@ -413,6 +426,74 @@ export class SessionInner {
         await this.sendMessage(new QueryResponseFinal(queryId));
     }
 
+    async publisherDeclareMatchingListener(publisherId: number, closure: Closure<MatchingStatus>): Promise<number> {
+        let listenerId = this.matchingListenerIdCounter.get();
+        this.matchingListeners.set(listenerId, closure);
+        try {
+            await this.sendRequest(
+                new PublisherDeclareMatchingListener(listenerId, publisherId), 
+                InRemoteMessageId.ResponseOk, 
+                ResponseOk.deserialize
+            ) 
+        } catch (error) {
+            this.matchingListeners.delete(listenerId);
+            throw error;
+        }
+        return listenerId;
+    }
+
+    async undeclareMatchingListener(listenerId: number) {
+        const listener = this.matchingListeners.get(listenerId);
+        if (listener == undefined) {
+            new Error (`Unknown matching listener id: ${listenerId}`)
+        } else {
+            this.matchingListeners.delete(listenerId);
+            listener.drop();
+        }
+
+        await this.sendRequest(
+            new UndeclareMatchingListener(listenerId), 
+            InRemoteMessageId.ResponseOk, 
+            ResponseOk.deserialize
+        );
+    }
+
+    async publisherGetMatchingStatus(publisherId: number): Promise<MatchingStatus> {
+        return await this.sendRequest(
+            new PublisherGetMatchingStatus(publisherId), 
+            InRemoteMessageId.ResponseMatchingStatus, 
+            ResponseMatchingStatus.deserialize
+        ).then(
+            (value) => new MatchingStatus(value.matching)
+        );
+    }
+
+    async querierDeclareMatchingListener(querierId: number, closure: Closure<MatchingStatus>): Promise<number> {
+        let listenerId = this.matchingListenerIdCounter.get();
+        this.matchingListeners.set(listenerId, closure);
+        try {
+            await this.sendRequest(
+                new QuerierDeclareMatchingListener(listenerId, querierId), 
+                InRemoteMessageId.ResponseOk, 
+                ResponseOk.deserialize
+            ) 
+        } catch (error) {
+            this.matchingListeners.delete(listenerId);
+            throw error;
+        }
+        return listenerId;
+    }
+
+    async querierGetMatchingStatus(querierId: number): Promise<MatchingStatus> {
+        return await this.sendRequest(
+            new QuerierGetMatchingStatus(querierId), 
+            InRemoteMessageId.ResponseMatchingStatus, 
+            ResponseMatchingStatus.deserialize
+        ).then(
+            (value) => new MatchingStatus(value.matching)
+        );
+    }
+
     async close() {
         this.link.close();
         for (let s of this.subscribers) {
@@ -429,6 +510,12 @@ export class SessionInner {
             q[1].drop();
         }
         this.queryables.clear();
+
+        for (let l of this.matchingListeners) {
+            l[1].drop();
+        }
+        this.matchingListeners.clear();
+
         this.isClosed_ = true;
     }
 

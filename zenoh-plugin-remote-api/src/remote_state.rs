@@ -29,6 +29,7 @@ use lru::LruCache;
 use zenoh::{
     handlers::CallbackDrop,
     liveliness::LivelinessToken,
+    matching::MatchingListener,
     pubsub::{Publisher, Subscriber},
     query::{Querier, Query, Queryable, Reply, Selector},
     Session,
@@ -38,11 +39,13 @@ use zenoh_result::bail;
 use crate::{
     interface::{
         self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher,
-        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet, PingAck,
-        PublisherDelete, PublisherPut, Put, QuerierGet, QueryResponseFinal, ReplyDel, ReplyErr,
-        ReplyOk, ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
-        UndeclareLivelinessToken, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable,
-        UndeclareSubscriber,
+        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet,
+        MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete,
+        PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet,
+        QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk,
+        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
+        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
+        UndeclareQueryable, UndeclareSubscriber,
     },
     AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
 };
@@ -66,6 +69,7 @@ pub(crate) struct RemoteState {
     liveliness_tokens: HashMap<u32, LivelinessToken>,
     liveliness_subscribers: HashMap<u32, Subscriber<()>>,
     queriers: HashMap<u32, Querier<'static>>,
+    matching_listeners: HashMap<u32, MatchingListener<()>>,
 }
 
 impl RemoteState {
@@ -90,6 +94,7 @@ impl RemoteState {
             liveliness_tokens: HashMap::new(),
             liveliness_subscribers: HashMap::new(),
             queriers: HashMap::new(),
+            matching_listeners: HashMap::new(),
         }
     }
 
@@ -696,6 +701,107 @@ impl RemoteState {
         }
     }
 
+    async fn publisher_declare_matching_listener(
+        &mut self,
+        msg: PublisherDeclareMatchingListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        match self.publishers.get(&msg.publisher_id) {
+            Some(publisher) => {
+                if self.matching_listeners.contains_key(&msg.id) {
+                    bail!("Matching listener with id: '{}' already exists", msg.id);
+                }
+                let tx = self.tx.clone();
+                let ml = publisher
+                    .matching_listener()
+                    .callback(move |matching_status| {
+                        let msg = interface::MatchingStatusUpdate {
+                            matching_listener_id: msg.id,
+                            matching: matching_status.matching(),
+                        };
+                        let _ = tx.send((OutRemoteMessage::MatchingStatusUpdate(msg), None));
+                    })
+                    .await?;
+                self.matching_listeners.insert(msg.id, ml);
+            }
+            None => {
+                bail!("Publisher with id: '{}' does not exist", msg.publisher_id);
+            }
+        };
+        Ok(None)
+    }
+
+    async fn undeclare_matching_listener(
+        &mut self,
+        msg: UndeclareMatchingListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        match self.matching_listeners.remove(&msg.id) {
+            Some(ml) => {
+                ml.undeclare().await?;
+                Ok(None)
+            }
+            None => bail!("Matching listener with id: '{}' does not exist", msg.id),
+        }
+    }
+
+    async fn publisher_get_matching_status(
+        &mut self,
+        msg: PublisherGetMatchingStatus,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        match self.publishers.get(&msg.publisher_id) {
+            Some(p) => {
+                let status = p.matching_status().await?;
+                Ok(Some(OutRemoteMessage::MatchingStatus(MatchingStatus {
+                    matching: status.matching(),
+                })))
+            }
+            None => bail!("Publisher with id: '{}' does not exist", msg.publisher_id),
+        }
+    }
+
+    async fn querier_declare_matching_listener(
+        &mut self,
+        msg: QuerierDeclareMatchingListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        match self.queriers.get(&msg.querier_id) {
+            Some(querier) => {
+                if self.matching_listeners.contains_key(&msg.id) {
+                    bail!("Matching listener with id: '{}' already exists", msg.id);
+                }
+                let tx = self.tx.clone();
+                let ml = querier
+                    .matching_listener()
+                    .callback(move |matching_status| {
+                        let msg = interface::MatchingStatusUpdate {
+                            matching_listener_id: msg.id,
+                            matching: matching_status.matching(),
+                        };
+                        let _ = tx.send((OutRemoteMessage::MatchingStatusUpdate(msg), None));
+                    })
+                    .await?;
+                self.matching_listeners.insert(msg.id, ml);
+            }
+            None => {
+                bail!("Querier with id: '{}' does not exist", msg.querier_id);
+            }
+        };
+        Ok(None)
+    }
+
+    async fn querier_get_matching_status(
+        &mut self,
+        msg: QuerierGetMatchingStatus,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        match self.queriers.get(&msg.querier_id) {
+            Some(p) => {
+                let status = p.matching_status().await?;
+                Ok(Some(OutRemoteMessage::MatchingStatus(MatchingStatus {
+                    matching: status.matching(),
+                })))
+            }
+            None => bail!("Querier with id: '{}' does not exist", msg.querier_id),
+        }
+    }
+
     pub(crate) async fn handle_message(
         &mut self,
         msg: InRemoteMessage,
@@ -790,6 +896,28 @@ impl RemoteState {
             InRemoteMessage::Ping(_) => Ok(Some(OutRemoteMessage::PingAck(PingAck {
                 uuid: self.id.clone(),
             }))),
+            InRemoteMessage::PublisherDeclareMatchingListener(
+                publisher_declare_matching_listener,
+            ) => {
+                self.publisher_declare_matching_listener(publisher_declare_matching_listener)
+                    .await
+            }
+            InRemoteMessage::UndeclareMatchingListener(undeclare_matching_listener) => {
+                self.undeclare_matching_listener(undeclare_matching_listener)
+                    .await
+            }
+            InRemoteMessage::PublisherGetMatchingStatus(publisher_get_matching_status) => {
+                self.publisher_get_matching_status(publisher_get_matching_status)
+                    .await
+            }
+            InRemoteMessage::QuerierDeclareMatchingListener(querier_declare_matching_listener) => {
+                self.querier_declare_matching_listener(querier_declare_matching_listener)
+                    .await
+            }
+            InRemoteMessage::QuerierGetMatchingStatus(querier_get_matching_status) => {
+                self.querier_get_matching_status(querier_get_matching_status)
+                    .await
+            }
         }
     }
 }

@@ -18,6 +18,7 @@ import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./cha
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { SessionInner } from "./session_inner.js";
 import { CongestionControl, Priority, ReplyKeyExpr } from "./enums.js";
+import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
 
 /**
  * Options for a Querier Get operation 
@@ -119,5 +120,37 @@ export class Querier {
             { callback, drop }
         );
         return receiver;
+    }
+
+    /**
+     * Declares a new matching listener, notifying when querier's `Matching Status` changes.
+     *
+     * @remarks
+     *  If a Matching listener is created with a callback, it cannot be simultaneously polled for new values.
+     * 
+     * @param {MatchingListenerOptions} matchingListenerOptions - optional additional parameters for matching listener.
+     * 
+     * @returns Matching listener
+     */
+    async matchingListener(
+        matchingListenerOptions?: MatchingListenerOptions
+    ): Promise<MatchingListener> {
+        const handler = matchingListenerOptions?.handler ?? new FifoChannel<MatchingStatus>(256);
+        let [callback, drop, receiver] = intoCbDropReceiver(handler);
+
+        const listenerId = await this.session.querierDeclareMatchingListener(
+            this.querierId,
+            { callback, drop }
+        );
+        return new MatchingListener(this.session, listenerId, receiver);
+    }
+
+    /**
+     * Gets querier matching status - i.e. if there are any queryables matching its key expression and target.
+     * 
+     * @returns Querier matching status
+     */
+    async matchingStatus(): Promise<MatchingStatus> {
+        return await this.session.querierGetMatchingStatus(this.querierId);
     }
 }

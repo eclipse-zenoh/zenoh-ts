@@ -283,6 +283,11 @@ export enum OutRemoteMessageId {
     ReplyErr,
     QueryResponseFinal,
     Ping,
+    PublisherDeclareMatchingListener,
+    UndeclareMatchingListener,
+    PublisherGetMatchingStatus,
+    QuerierDeclareMatchingListener,
+    QuerierGetMatchingStatus,
 }
 
 export type PublisherProperties = {
@@ -710,6 +715,65 @@ export class Ping {
 }
 
 
+export class PublisherDeclareMatchingListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherDeclareMatchingListener;
+    public constructor(
+        public readonly id: number,
+        public readonly publisherId: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+        serializer.serializeNumberUint32(this.publisherId);
+    }
+}
+
+export class UndeclareMatchingListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareMatchingListener;
+    public constructor(
+        public readonly id: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+    }
+}
+
+export class PublisherGetMatchingStatus {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherGetMatchingStatus;
+    public constructor(
+        public readonly publisherId: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.publisherId);
+    }
+}
+
+export class QuerierDeclareMatchingListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierDeclareMatchingListener;
+    public constructor(
+        public readonly id: number,
+        public readonly querierId: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+        serializer.serializeNumberUint32(this.querierId);
+    }
+}
+
+export class QuerierGetMatchingStatus {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierGetMatchingStatus;
+    public constructor(
+        public readonly querierId: number,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.querierId);
+    }
+}
+
 export enum InRemoteMessageId {
     ResponsePing = 0,
     ResponseOk,
@@ -720,6 +784,8 @@ export enum InRemoteMessageId {
     InQuery,
     InReply,
     QueryResponseFinal,
+    ResponseMatchingStatus,
+    MatchingStatusUpdate,
 }
 
 export class ResponsePing {
@@ -831,6 +897,34 @@ export class InReply {
         let queryId = deserializer.deserializeNumberUint32();
         let reply = deserializeReply(deserializer);
         return new InReply(queryId, reply);
+    }
+}
+
+export class ResponseMatchingStatus {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseMatchingStatus;
+
+    public constructor(
+        public readonly matching: boolean,
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): ResponseMatchingStatus {
+        let matching = deserializer.deserializeBoolean();
+        return new ResponseMatchingStatus(matching);
+    }
+}
+
+export class MatchingStatusUpdate {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.MatchingStatusUpdate;
+
+    public constructor(
+        public readonly matchingListenerId: number,
+        public readonly matching: boolean,
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): MatchingStatusUpdate {
+        let matchingListenerId = deserializer.deserializeNumberUint32();
+        let matching = deserializer.deserializeBoolean();
+        return new MatchingStatusUpdate(matchingListenerId, matching);
     }
 }
 

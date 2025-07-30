@@ -15,6 +15,18 @@
 import { Priority } from "@eclipse-zenoh/zenoh-ts";
 import { parseArgs } from "@std/cli/parse-args";
 
+
+function camelCaseToKebabCase(s: string): string {
+  return s[0].toLowerCase() + s.slice(1, s.length).replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`);
+}
+
+function kebabCaseToCamelCase(s: string): string {
+  return s.replace(/(-[a-z])/ig, ($1) => {
+    return $1.toUpperCase()
+      .replace('-', '')
+  });
+}
+
 export abstract class BaseParseArgs {
   [key: string]: any;
 
@@ -29,41 +41,49 @@ export abstract class BaseParseArgs {
       if (!types[type]) {
         types[type] = [];
       }
-      types[type].push(key);
+      types[type].push(camelCaseToKebabCase(key));
     }
     return types;
   }
+
+  getHelp(types: Record<string, any>, positionalArgs: [string, string][]): string {
+    let s = "Usage: [OPTIONS]";
+    for (const p of positionalArgs) {
+      s += " <" + p[0] + ">";
+    }
+    if (positionalArgs.length != 0) {
+      s += "\nArguments:";
+      for (let i = 0; i < positionalArgs.length; i++) {
+        s += `\n<${positionalArgs[i][0]}> <${typeof this.positional[i]}>`;
+        s += `\n\t${positionalArgs[i][1]}`;
+      }
+    }
+
+    const namedHelp = this.getNamedArgsHelp();
+    s += "\nOptions:";
+    s += "\n--help\n\tPrint this help message";
+    for (const [arg, helpMessage] of Object.entries(namedHelp)) {
+        const kebabCaseArg = camelCaseToKebabCase(arg);
+        // find type of the argument
+        let type = Object.keys(types).find(key => types[key].includes(kebabCaseArg));
+        s += `\n--${kebabCaseArg} <${type}>`;
+        const defaultValue = this[arg];
+        if (defaultValue != undefined) {
+            s += `\n\t[default: ${defaultValue}]`;
+        }
+        s += `\n\t${helpMessage}`;
+    }
+    return s;
+  }
+  
 
   public parse() {
     const types = (this.constructor as typeof BaseParseArgs).fillTypesFromObject(this);
     const args = parseArgs(Deno.args, types);
     const positionalArgs = this.getPositionalArgsHelp();
+    const help = this.getHelp(types, positionalArgs);
     if (args.help) {
-        let s = "Usage: [OPTIONS]";
-        for (const p of positionalArgs) {
-          s += " <" + p[0] + ">";
-        }
-        if (positionalArgs.length != 0) {
-          console.log("Arguments:");
-          for (let i = 0; i < positionalArgs.length; i++) {
-            console.log(`<${positionalArgs[i][0]}> <${typeof this.positional[i]}>`);
-            console.log(`\t${positionalArgs[i][1]}`);
-          }
-        }
-
-        const namedHelp = this.getNamedArgsHelp();
-        console.log("Options:")
-        console.log("--help\n\tPrint this help message");
-        for (const [arg, helpMessage] of Object.entries(namedHelp)) {
-            // find type of the argument
-            let type = Object.keys(types).find(key => types[key].includes(arg));
-            console.log(`--${arg} <${type}>`);
-            const defaultValue = this[arg];
-            if (defaultValue) {
-                console.log(`\t[default: ${defaultValue}]`);
-            }
-            console.log(`\t${helpMessage}`);
-        }
+        console.log(help);
         Deno.exit(0);
     } else {
       if (positionalArgs.length != args._.length) {
@@ -81,7 +101,14 @@ export abstract class BaseParseArgs {
     }
     // assign all the properties of args to instance
     for (const [key, value] of Object.entries(args)) {
-      this[key] = value;
+      if (key == '_') continue;
+      const k = kebabCaseToCamelCase(key);
+      if (!(k in this)) {
+        console.error(`Unknown argument: ${key}`);
+        console.log(help);
+        Deno.exit(0);
+      }
+      this[kebabCaseToCamelCase(key)] = value;
     }
   }
 }

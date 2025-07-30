@@ -66,5 +66,10 @@ export {
   TryReceivedKind,
   ChannelState,
 } from "./channels.js";
+export {
+  MatchingListener,
+  MatchingListenerOptions,
+  MatchingStatus,
+} from "./matching.js";
 // Re-export duration external library
 export { Duration } from "typed-duration";
