@@ -259,9 +259,9 @@ class ZenohDemo extends ZenohDemoEmpty {
   }
 
   // Error logging method with JSON formatting for error details
-  override addErrorLogEntry(message: string, errorDetails?: any): void {
-    console.error(`[ERROR] ${message}`, errorDetails);
-    this.addLogEntry("error", message, errorDetails);
+  override addErrorLogEntry(message: string, data?: Record<string, any>): void {
+    console.error(`[ERROR] ${message}`, data);
+    this.addLogEntry("error", message, data);
   }
 
   override clearLog(): void {
@@ -366,7 +366,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `Failed to retrieve session information from ${sessionId}`,
-        error
+        { error }
       );
     }
   }
@@ -409,7 +409,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `Failed to connect to ${this.serverUrl.value}`,
-        error
+        { error }
       );
     } finally {
       this.isConnecting.value = false;
@@ -454,7 +454,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `Error during disconnect of session ${sessionId}`,
-        error
+        { error }
       );
     }
   }
@@ -486,7 +486,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `PUT failed for key "${this.putParameters.key.value}" on ${sessionId}`,
-        error
+        { error }
       );
     }
   }
@@ -535,7 +535,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             });
           }
         } catch (resultError) {
-          this.addErrorLogEntry("Error processing GET result", resultError);
+          this.addErrorLogEntry("Error processing GET result", { error: resultError });
         }
       }
       this.addLogEntry(
@@ -545,7 +545,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `GET failed for selector "${this.getParameters.key.value}" on ${sessionId}`,
-        error
+        { error }
       );
     }
   }
@@ -605,7 +605,7 @@ class ZenohDemo extends ZenohDemoEmpty {
           } catch (sampleError) {
             this.addErrorLogEntry(
               "Error processing subscription sample",
-              sampleError
+              { error: sampleError }
             );
           }
         }
@@ -616,13 +616,13 @@ class ZenohDemo extends ZenohDemoEmpty {
       } catch (subscriptionError) {
         this.addErrorLogEntry(
           `Subscription error for ${displayId}`,
-          subscriptionError
+          { error: subscriptionError }
         );
       }
     } catch (error) {
       this.addErrorLogEntry(
         `Subscribe failed for "${this.subscriberParameters.key.value}"`,
-        error
+        { error }
       );
     } finally {
       // Only remove subscriber if displayId was assigned (subscriber was successfully created)
@@ -641,7 +641,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       await subscriberState.subscriber.undeclare();
     } catch (error) {
-      this.addErrorLogEntry(`Undeclare failed for ${subscriberId}`, error);
+      this.addErrorLogEntry(`Undeclare failed for ${subscriberId}`, { error });
     }
   }
 
@@ -814,7 +814,7 @@ class ZenohDemo extends ZenohDemoEmpty {
             // Finalize the query to signal no more replies will be sent
             await query.finalize();
           } catch (queryError) {
-              this.addErrorLogEntry("Error handling query", queryError);
+              this.addErrorLogEntry("Error handling query", { error: queryError });
           }
         }
         this.addLogEntry(
@@ -824,13 +824,13 @@ class ZenohDemo extends ZenohDemoEmpty {
       } catch (queryableError) {
         this.addErrorLogEntry(
           `Queryable error for ${displayId}`,
-          queryableError
+          { error: queryableError }
         );
       }
     } catch (error) {
       this.addErrorLogEntry(
         `Declare queryable failed for "${this.queryableParameters.key.value}"`,
-        error
+        { error }
       );
     } finally {
       // Only remove queryable if displayId was assigned (queryable was successfully created)
@@ -853,7 +853,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `Undeclare queryable failed for ${queryableId}`,
-        error
+        { error }
       );
     }
   }
