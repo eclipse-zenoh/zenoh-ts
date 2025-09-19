@@ -53,7 +53,7 @@ use zenoh::{
     bytes::{Encoding, ZBytes},
     internal::{
         plugins::{RunningPluginTrait, ZenohPlugin},
-        runtime::Runtime,
+        runtime::DynamicRuntime,
     },
     key_expr::{
         format::{kedefine, keformat},
@@ -63,6 +63,7 @@ use zenoh::{
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};
 use zenoh_result::{bail, zerror, ZResult};
+use zenoh_util::ffi::JsonKeyValueMap;
 
 mod config;
 pub use config::Config;
@@ -147,7 +148,7 @@ pub struct RemoteApiPlugin;
 zenoh_plugin_trait::declare_plugin!(RemoteApiPlugin);
 impl ZenohPlugin for RemoteApiPlugin {}
 impl Plugin for RemoteApiPlugin {
-    type StartArgs = Runtime;
+    type StartArgs = DynamicRuntime;
     type Instance = zenoh::internal::plugins::RunningPlugin;
     const DEFAULT_NAME: &'static str = "remote_api";
     const PLUGIN_VERSION: &'static str = plugin_version!();
@@ -163,13 +164,12 @@ impl Plugin for RemoteApiPlugin {
         zenoh_util::try_init_log_from_env();
         tracing::info!("Starting {name}");
 
-        let runtime_conf = runtime.config().lock();
+        let plugin_conf = runtime
+            .get_config()
+            .get_plugin_config(name)
+            .map_err(|_| zerror!("Plugin `{}`: missing config", name))?;
 
-        let plugin_conf = runtime_conf
-            .plugin(name)
-            .ok_or_else(|| zerror!("Plugin `{}`: missing config", name))?;
-
-        let conf: Config = serde_json::from_value(plugin_conf.clone())
+        let conf: Config = serde_json::from_value(plugin_conf)
             .map_err(|e| zerror!("Plugin `{}` configuration error: {}", name, e))?;
 
         let wss_config: Option<(Vec<CertificateDer<'_>>, PrivateKeyDer<'_>)> =
@@ -189,19 +189,13 @@ impl Plugin for RemoteApiPlugin {
                 None => None,
             };
 
-        let weak_runtime = Runtime::downgrade(runtime);
-        if let Some(runtime) = weak_runtime.upgrade() {
-            spawn_runtime(run(runtime, conf, wss_config));
-
-            Ok(Box::new(RunningPlugin(RemoteAPIPlugin)))
-        } else {
-            bail!("Cannot Get Zenoh Instance of Runtime !")
-        }
+        spawn_runtime(run(runtime.clone(), conf, wss_config));
+        Ok(Box::new(RunningPlugin(RemoteAPIPlugin)))
     }
 }
 
 pub async fn run(
-    runtime: Runtime,
+    runtime: DynamicRuntime,
     config: Config,
     opt_certs: Option<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>)>,
 ) {
@@ -221,7 +215,7 @@ pub async fn run(
 struct RemoteAPIRuntime {
     config: Arc<Config>,
     wss_certs: Option<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>)>,
-    zenoh_runtime: Runtime,
+    zenoh_runtime: DynamicRuntime,
     state_map: StateMap,
 }
 
@@ -307,8 +301,12 @@ impl AdminSpaceClient {
     }
 }
 
-async fn run_admin_space_queryable(zenoh_runtime: Runtime, state_map: StateMap, config: Config) {
-    let session = match zenoh::session::init(zenoh_runtime.clone()).await {
+async fn run_admin_space_queryable(
+    zenoh_runtime: DynamicRuntime,
+    state_map: StateMap,
+    config: Config,
+) {
+    let session = match zenoh::session::init(zenoh_runtime).await {
         Ok(session) => session,
         Err(err) => {
             tracing::error!("Unable to get Zenoh session from Runtime {err}");
@@ -469,9 +467,9 @@ impl RunningPluginTrait for RunningPlugin {
     fn config_checker(
         &self,
         _path: &str,
-        _current: &serde_json::Map<String, serde_json::Value>,
-        _new: &serde_json::Map<String, serde_json::Value>,
-    ) -> ZResult<Option<serde_json::Map<String, serde_json::Value>>> {
+        _current: &JsonKeyValueMap,
+        _new: &JsonKeyValueMap,
+    ) -> ZResult<Option<JsonKeyValueMap>> {
         bail!("Runtime configuration change not supported");
     }
 }
@@ -488,7 +486,7 @@ impl Streamable for TlsStream<TcpStream> {}
 // Listen on the Zenoh Session
 async fn run_websocket_server(
     ws_port: &String,
-    zenoh_runtime: Runtime,
+    zenoh_runtime: DynamicRuntime,
     state_map: StateMap,
     opt_certs: Option<(Vec<CertificateDer<'static>>, PrivateKeyDer<'static>)>,
 ) {
