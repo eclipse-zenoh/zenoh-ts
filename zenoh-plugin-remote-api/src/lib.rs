@@ -63,6 +63,7 @@ use zenoh::{
 };
 use zenoh_plugin_trait::{plugin_long_version, plugin_version, Plugin, PluginControl};
 use zenoh_result::{bail, zerror, ZResult};
+use zenoh_util::ffi::JsonKeyValueMap;
 
 mod config;
 pub use config::Config;
@@ -463,7 +464,12 @@ struct RunningPlugin(RemoteAPIPlugin);
 impl PluginControl for RunningPlugin {}
 
 impl RunningPluginTrait for RunningPlugin {
-    fn config_checker(&self, _path: &str, _current: &str, _new: &str) -> ZResult<Option<String>> {
+    fn config_checker(
+        &self,
+        _path: &str,
+        _current: &JsonKeyValueMap,
+        _new: &JsonKeyValueMap,
+    ) -> ZResult<Option<JsonKeyValueMap>> {
         bail!("Runtime configuration change not supported");
     }
 }
