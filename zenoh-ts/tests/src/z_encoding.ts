@@ -23,6 +23,8 @@ Deno.test("Encoding - Basic", () => {
     assertEquals(Encoding.TEXT_PLAIN.withSchema("charset=utf-8").toString(), "text/plain;charset=utf-8");
     assertEquals(Encoding.fromString("text/plain;charset=utf-8").withSchema("charset=ascii").toString(), "text/plain;charset=ascii");
     assertEquals(Encoding.fromString("zenoh/bytes"), Encoding.ZENOH_BYTES);
+    assertEquals(Encoding.fromString("application/json-patch+json"), Encoding.APPLICATION_JSON_PATCH_JSON);
+    assertEquals(Encoding.APPLICATION_JSON_PATCH_JSON.toIdSchema(), [31, undefined]);
     assertEquals(Encoding.fromString("zenoh/bytes;foobar").toString(), "zenoh/bytes;foobar");
     assertEquals(Encoding.fromString("custom/encoding").toString(), "custom/encoding");
     assertEquals(Encoding.fromString("custom/encoding;foobar"), Encoding.fromString("custom/encoding").withSchema("foobar"));
