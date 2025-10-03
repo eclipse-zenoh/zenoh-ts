@@ -69,23 +69,38 @@ export enum EncodingPredefined {
     CUSTOM = 0xFFFF,
 }
 
-function createIdToEncodingMap(): Map<EncodingPredefined, string> {
+function getPredefinedEncodingString(e: EncodingPredefined): string {
+    switch (e) {
+        case EncodingPredefined.APPLICATION_OCTET_STREAM: return "application/octet-stream";
+        case EncodingPredefined.APPLICATION_PYTHON_SERIALIZED_OBJECT: return "application/python-serialized-object";
+        case EncodingPredefined.APPLICATION_JAVA_SERIALIZED_OBJECT: return "application/java-serialized-object";
+        case EncodingPredefined.APPLICATION_OPENMETRICS_TEXT: return "application/openmetrics-text";
+        case EncodingPredefined.APPLICATION_X_WWW_FORM_URLENCODED: return "application/x-www-form-urlencoded";
+        case EncodingPredefined.APPLICATION_COAP_PAYLOAD: return "application/coap-payload";
+        case EncodingPredefined.APPLICATION_JSON_PATCH_JSON: return "application/json-patch+json";
+        case EncodingPredefined.APPLICATION_JSON_SEQ: return "application/json-seq";
+        case EncodingPredefined.APPLICATION_SOAP_XML: return "application/soap+xml";
+        default: return (EncodingPredefined[e] as string).toLocaleLowerCase().replaceAll('_', '/');
+    }
+}
+
+function createIdToPredefinedEncodingMap(): Map<EncodingPredefined, string> {
     let out = new Map<EncodingPredefined, string>();
     for (let e in EncodingPredefined) {
         let n = Number(e);
         if (!isNaN(n) && n != EncodingPredefined.CUSTOM) {
-            out.set(n as EncodingPredefined, (EncodingPredefined[n] as string).toLocaleLowerCase().replaceAll('_', '/'));
+            out.set(n as EncodingPredefined, getPredefinedEncodingString(n));
         }
     }
     return out;
 }
 
-function createEncodingToIdMap(): Map<string, EncodingPredefined> {
+function createPredefinedEncodingToIdMap(): Map<string, EncodingPredefined> {
     let out = new Map<string, EncodingPredefined>();
     for (let e in EncodingPredefined) {
         let n = Number(e);
         if (!isNaN(n) && n != EncodingPredefined.CUSTOM) {
-            out.set((EncodingPredefined[n] as string).toLocaleLowerCase().replaceAll('_', '/'), n as EncodingPredefined);
+            out.set(getPredefinedEncodingString(n), n as EncodingPredefined);
         }
     }
     return out;
@@ -97,8 +112,8 @@ export type IntoEncoding = Encoding | String | string;
  * Zenoh Encoding Class
  */
 export class Encoding {
-    private static readonly ID_TO_ENCODING = createIdToEncodingMap();
-    private static readonly ENCODING_TO_ID = createEncodingToIdMap();
+    private static readonly ID_TO_ENCODING = createIdToPredefinedEncodingMap();
+    private static readonly ENCODING_TO_ID = createPredefinedEncodingToIdMap();
     private static readonly SEP = ";";
 
 
