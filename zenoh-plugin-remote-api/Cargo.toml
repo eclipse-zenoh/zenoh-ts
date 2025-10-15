@@ -14,7 +14,7 @@
 [package]
 rust-version = "1.75.0"
 name = "zenoh-plugin-remote-api"
-version = "1.5.1"
+version = "1.6.1"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = [
@@ -84,4 +84,4 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2024 ZettaScale Technology"
 section = "net"
 license-file = ["../zenoh-ts/LICENSE", "0"]
-depends = "zenohd (=1.5.1)"
+depends = "zenohd (=1.6.1)"
