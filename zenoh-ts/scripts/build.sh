@@ -35,7 +35,7 @@ build_library() {
     echo "Building library..."
     # build wasm module
     cd ../zenoh-keyexpr-wasm
-    cargo install wasm-pack || exit 1
+    cargo install wasm-pack --locked || exit 1
     wasm-pack build --target bundler --out-dir ../zenoh-ts/src/key_expr || exit 1
     cd "$SCRIPTDIR/.."
 
