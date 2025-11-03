@@ -90,7 +90,7 @@ jobs:
 
       - name: Install zenohd for testing
         run: |
-          cargo install cargo-run-bin
+          cargo install cargo-run-bin --locked
           cargo bin --install zenohd
 
       - name: Setup Node
