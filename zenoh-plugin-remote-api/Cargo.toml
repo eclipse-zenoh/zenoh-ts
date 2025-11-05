@@ -57,9 +57,8 @@ serde = { workspace = true, default-features = false, features = [
     "derive",
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = { workspace = true }
-zenoh = { workspace = true, features = ["plugins"] }
+zenoh = { workspace = true }
 zenoh-ext = { workspace = true }
-zenoh_backend_traits = { workspace = true }
 zenoh-plugin-trait = { workspace = true }
 zenoh-util = { workspace = true }
 zenoh-result = { workspace = true }

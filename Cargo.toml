@@ -36,10 +36,11 @@ serde = { version = "1.0.219", default-features = false, features = [
 serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
 zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
-    "plugins",
+    "internal",
+    "plugins", 
+    "unstable",
 ], version = "1.6.2" }
 zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh_backend_traits = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
