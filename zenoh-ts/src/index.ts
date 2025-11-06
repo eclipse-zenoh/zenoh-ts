@@ -71,5 +71,6 @@ export {
   MatchingListenerOptions,
   MatchingStatus,
 } from "./matching.js";
+export { CancellationToken } from "./cancellation_token.js"
 // Re-export duration external library
 export { Duration } from "typed-duration";

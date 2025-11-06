@@ -21,6 +21,7 @@ import { Duration, TimeDuration } from 'typed-duration'
 import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./channels.js";
 import { SessionInner } from "./session_inner.js";
 import { DEFAULT_QUERY_TIMEOUT_MS } from "./session.js";
+import { CancellationToken } from "./cancellation_token.js";
 
 /**
  * Options for a Liveliness Subscriber
@@ -36,10 +37,12 @@ interface LivelinessSubscriberOptions {
  * Options for a Liveliness Subscriber
  * @prop {TimeDuration=} timeout - This liveliness query timeout value
  * @prop {Handler<Sample>=} handler - Handler for this liveliness query
+ * @prop {CancellationToken=} cancellationToken - Token to interrupt the query. Warning: This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
  */
 interface LivelinessGetOptions {
     timeout?: TimeDuration,
     handler?: Handler<Reply>,
+    cancellationToken?: CancellationToken,
 }
 
 export class Liveliness {
@@ -85,13 +88,20 @@ export class Liveliness {
     async get(intoKeyExpr: IntoKeyExpr, livelinessGetOpts?: LivelinessGetOptions): Promise<ChannelReceiver<Reply> | undefined> {
         let handler = livelinessGetOpts?.handler ?? new FifoChannel<Reply>(256);
         let [callback, drop, receiver] = intoCbDropReceiver(handler);
-        await this.session.livelinessGet(
+        let cancellationToken = livelinessGetOpts?.cancellationToken;
+        if (cancellationToken?.isCancelled() ?? false) {
+            drop();
+            return receiver;
+        }
+        let getId = await this.session.livelinessGet(
             {
                 keyexpr: new KeyExpr(intoKeyExpr),
                 timeoutMs: livelinessGetOpts?.timeout ? Duration.milliseconds.from(livelinessGetOpts.timeout) : DEFAULT_QUERY_TIMEOUT_MS,
             },
             { callback, drop }
         );
+        cancellationToken?.addCancelAction(() => this.session.cancelQuery(getId));
+
         return receiver;
     }
 }
