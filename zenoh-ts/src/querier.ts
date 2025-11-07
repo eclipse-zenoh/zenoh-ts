@@ -19,6 +19,7 @@ import { Encoding, IntoEncoding } from "./encoding.js";
 import { SessionInner } from "./session_inner.js";
 import { CongestionControl, Priority, ReplyKeyExpr } from "./enums.js";
 import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
+import { CancellationToken } from "./cancellation_token.js";
 
 /**
  * Options for a Querier Get operation 
@@ -27,13 +28,15 @@ import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./mat
  * @prop {IntoZBytes=} payload - Payload associated with the query
  * @prop {IntoZBytes=} attachment - Additional Data sent with the query
  * @prop {Handler<Reply>=} handler - A reply handler
+ * @prop {CancellationToken=} cancellationToken - Token to interrupt the query. Warning: This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 */
 export interface QuerierGetOptions {
     parameters?: IntoParameters,
     encoding?: IntoEncoding,
     payload?: IntoZBytes,
     attachment?: IntoZBytes,
-    handler?: Handler<Reply>
+    handler?: Handler<Reply>,
+    cancellationToken?: CancellationToken,
 }
 
 /**
@@ -108,8 +111,12 @@ export class Querier {
 
         let handler = getOpts?.handler ?? new FifoChannel<Reply>(256);
         let [callback, drop, receiver] = intoCbDropReceiver(handler);
-
-        await this.session.querierGet(
+        let cancellationToken = getOpts?.cancellationToken;
+        if (cancellationToken?.isCancelled() ?? false) {
+            drop();
+            return receiver;
+        }
+        let getId = await this.session.querierGet(
             {
                 querierId: this.querierId,
                 parameters: getOpts?.parameters ? new Parameters(getOpts.parameters).toString() : "",
@@ -119,6 +126,7 @@ export class Querier {
             },
             { callback, drop }
         );
+        cancellationToken?.addCancelAction(() => this.session.cancelQuery(getId));
         return receiver;
     }
 

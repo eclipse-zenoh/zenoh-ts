@@ -34,6 +34,7 @@ import { Sample } from "./sample.js";
 import { SessionInner } from "./session_inner.js";
 import { Delete, Put, Qos, QuerierProperties, QuerySettings } from "./message.js";
 import { Querier } from "./querier.js";
+import { CancellationToken } from "./cancellation_token.js";
 
 export const DEFAULT_QUERY_TIMEOUT_MS = 10000;
 /**
@@ -93,6 +94,7 @@ export interface DeleteOptions {
  * @prop {QueryTarget=} target - Queryables this query should target
  * @prop {ReplyKeyExpr=} acceptReplies - Replies this query accepts
  * @prop {Handler<Reply>=} handler - A reply handler
+ * @prop {CancellationToken=} cancellationToken - Token to interrupt the query. Warning: This API has been marked as unstable: it works as advertised, but it may be changed in a future release.
 */
 export interface GetOptions {
     congestionControl?: CongestionControl,
@@ -106,6 +108,7 @@ export interface GetOptions {
     target?: QueryTarget,
     consolidation?: ConsolidationMode,
     acceptReplies?: ReplyKeyExpr,
+    cancellationToken?: CancellationToken,
     handler?: Handler<Reply>,
 }
 
@@ -309,7 +312,12 @@ export class Session {
         let handler = getOpts?.handler ?? new FifoChannel<Reply>(256);
         let [callback, drop, receiver] = intoCbDropReceiver(handler);
         let selector = Selector.from(intoSelector);
-        await this.inner.get(
+        let cancellationToken = getOpts?.cancellationToken;
+        if (cancellationToken?.isCancelled() ?? false) {
+            drop();
+            return receiver;
+        }
+        let getId = await this.inner.get(
             {
                 keyexpr: selector.keyExpr(),
                 parameters: selector.parameters().toString(),
@@ -332,6 +340,7 @@ export class Session {
             },
             { callback, drop }
         );
+        cancellationToken?.addCancelAction(() => this.inner.cancelQuery(getId));
 
         return receiver;
     }

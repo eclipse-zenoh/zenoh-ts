@@ -377,33 +377,36 @@ export class SessionInner {
         return await this.sendMessage(data);
     }
 
-    async get(data: GetProperties, closure: Closure<Reply>) {
+    async get(data: GetProperties, closure: Closure<Reply>): Promise<number> {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new Get(getId, data));
+            return getId;
         } catch (error) {
             this.gets.delete(getId);
             throw error;
         }
     }
 
-    async querierGet(data: QuerierGetProperties, closure: Closure<Reply>) {
+    async querierGet(data: QuerierGetProperties, closure: Closure<Reply>): Promise<number>  {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new QuerierGet(getId, data));
+            return getId;
         } catch (error) {
             this.gets.delete(getId);
             throw error;
         }
     }
 
-    async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>) {
+    async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>): Promise<number> {
         let getId = this.getIdCounter.get();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new LivelinessGet(getId, data));
+            return getId;
         } catch (error) {
             this.gets.delete(getId);
             throw error;
@@ -521,5 +524,13 @@ export class SessionInner {
 
     isClosed(): boolean {
         return this.isClosed_;
+    }
+
+    cancelQuery(queryId: number) {
+        let get = this.gets.get(queryId);
+        if (get != undefined) {
+            this.gets.delete(queryId);
+            get.drop()
+        }
     }
 }
