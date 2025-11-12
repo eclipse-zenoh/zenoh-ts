@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { Publisher, Subscriber, Config, Session, CancellationToken, ChannelState, Queryable, Querier, LivelinessToken, TryReceivedKind } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";

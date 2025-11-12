@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { Config, Session, Query, Reply, KeyExpr, Selector, ReplyError, Parameters, Sample, QueryTarget, Queryable, ChannelReceiver, Querier, ConsolidationMode } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
