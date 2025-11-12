@@ -23,6 +23,7 @@ import {
   Subscriber,
   PublisherOptions,
   PublisherPutOptions,
+  PublisherDeleteOptions,
   SubscriberOptions,
   Encoding,
   Priority,
@@ -30,6 +31,7 @@ import {
   ZBytes,
   Locality,
   Reliability,
+  SampleKind,
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { StableRandom } from "./commonTestUtils.ts";
@@ -132,59 +134,6 @@ const optionVariants = {
   expressValues: [undefined, false, true],
 };
 
-/**
- * Helper function to assert if a sample should be received based on locality settings
- * @param testCase The test case containing the locality settings
- * @param useSameSession Whether the publisher and subscriber are using the same session
- * @param sample The actual sample received (or undefined if no sample was received)
- * @param description Test description to include in error messages
- * @returns testCase.expectedSample() if the sample should be received, undefined otherwise
- */
-function verifyReceivedSample(
-  testCase: TestCase,
-  useSameSession: boolean,
-  sample: Sample | undefined,
-  description: string
-): Sample | undefined {
-  const allowedDestination = testCase.publisherOptions.allowedDestination;
-  const allowedOrigin = testCase.subscriberOptions.allowedOrigin;
-
-  let sampleExpected = true;
-
-  // If allowedDestination is REMOTE but we're using the same session, sample should NOT be received
-  if (allowedDestination === Locality.REMOTE && useSameSession) {
-    sampleExpected = false;
-  }
-
-  // If allowedDestination is SESSION_LOCAL but we're using different sessions, sample should NOT be received
-  if (allowedDestination === Locality.SESSION_LOCAL && !useSameSession) {
-    sampleExpected = false;
-  }
-
-  // If allowedOrigin is REMOTE but we're using the same session, sample should NOT be received
-  if (allowedOrigin === Locality.REMOTE && useSameSession) {
-    sampleExpected = false;
-  }
-
-  // If allowedOrigin is SESSION_LOCAL but we're using different sessions, sample should NOT be received
-  if (allowedOrigin === Locality.SESSION_LOCAL && !useSameSession) {
-    sampleExpected = false;
-  }
-
-  // Assert that the sample was received as expected
-  assertEquals(
-    sample !== undefined,
-    sampleExpected,
-    `Sample should ${
-      sampleExpected ? "be" : "NOT be"
-    } received for ${description} (publisher locality ${
-      allowedDestination ?? "is default"
-    }, subscriber locality ${allowedOrigin ?? "is default"})`
-  );
-
-  return sampleExpected ? testCase.expectedSample() : undefined;
-}
-
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -237,13 +186,14 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
 
 /**
  * Class representing a test case with all parameters that can be used in publish/subscribe operations.
- * This includes all parameters for PublisherOptions, PublisherPutOptions, and SubscriberOptions.
+ * This includes all parameters for PublisherOptions, PublisherPutOptions, PublisherDeleteOptions, and SubscriberOptions.
  */
 class TestCase {
   constructor(
     public keyexpr: IntoKeyExpr,
     public publisherOptions: PublisherOptions,
     public putOptions: PublisherPutOptions,
+    public deleteOptions: Record<string, unknown>,
     public payload: string | undefined,
     public subscriberOptions: SubscriberOptions
   ) {}
@@ -253,6 +203,8 @@ class TestCase {
       this.publisherOptions
     )}, putOptions=${JSON.stringify(
       this.putOptions
+    )}, deleteOptions=${JSON.stringify(
+      this.deleteOptions
     )}, payload=${this.payload}, subscriberOptions=${JSON.stringify(this.subscriberOptions)})`;
   }
 
@@ -303,6 +255,53 @@ class TestCase {
       effectivePayload,
       0, // SampleKind.PUT
       effectiveEncoding,
+      effectiveAttachment,
+      undefined, // Timestamp is not set in test responses
+      effectivePriority,
+      effectiveCongestionControl,
+      effectiveExpress
+    );
+
+    return sample;
+  }
+
+  /**
+   * Create expected Sample object for delete operation validation
+   * @returns Sample object with expected properties for DELETE kind
+   */
+  expectedDeleteSample(): Sample {
+    // Delete samples have no payload (empty ZBytes)
+    const effectivePayload = new ZBytes("");
+
+    // Determine the effective attachment from deleteOptions
+    const effectiveAttachment = this.deleteOptions.attachment
+      ? new ZBytes(this.deleteOptions.attachment as string | Uint8Array)
+      : undefined;
+
+    // Priority: use publisherOptions.priority or default to DATA
+    const effectivePriority =
+      this.publisherOptions.priority !== undefined
+        ? this.publisherOptions.priority
+        : Priority.DATA;
+
+    // CongestionControl: use publisherOptions.congestionControl or default to DROP
+    const effectiveCongestionControl =
+      this.publisherOptions.congestionControl !== undefined
+        ? this.publisherOptions.congestionControl
+        : CongestionControl.DROP;
+
+    // Express: use publisherOptions.express or default to false
+    const effectiveExpress =
+      this.publisherOptions.express !== undefined
+        ? this.publisherOptions.express
+        : false;
+
+    // Create a new Sample object with DELETE kind
+    const sample = new Sample(
+      new KeyExpr(this.keyexpr),
+      effectivePayload,
+      1, // SampleKind.DELETE
+      Encoding.default(), // Delete samples use default encoding
       effectiveAttachment,
       undefined, // Timestamp is not set in test responses
       effectivePriority,
@@ -430,6 +429,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -447,6 +447,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -462,6 +463,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -477,6 +479,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -494,6 +497,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -511,6 +515,7 @@ function generateTestCases(
         keyexpr,
         baseCase.publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         subscriberOptions
       )
@@ -528,6 +533,7 @@ function generateTestCases(
         keyexpr,
         publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -545,6 +551,7 @@ function generateTestCases(
         keyexpr,
         baseCase.publisherOptions,
         putOptions,
+        baseCase.deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -559,6 +566,7 @@ function generateTestCases(
         keyexpr,
         baseCase.publisherOptions,
         baseCase.putOptions,
+        baseCase.deleteOptions,
         payload,
         baseCase.subscriberOptions
       )
@@ -576,6 +584,25 @@ function generateTestCases(
         keyexpr,
         baseCase.publisherOptions,
         putOptions,
+        baseCase.deleteOptions,
+        baseCase.payload,
+        baseCase.subscriberOptions
+      )
+    );
+  }
+
+  // Generate test cases for delete attachment
+  for (const attachment of options.attachmentValues ?? []) {
+    const keyexpr = `zenoh/test/delete_attachment/${
+      attachment?.toString() ?? "undefined"
+    }`;
+    const deleteOptions = { ...baseCase.deleteOptions, attachment };
+    testCases.push(
+      new TestCase(
+        keyexpr,
+        baseCase.publisherOptions,
+        baseCase.putOptions,
+        deleteOptions,
         baseCase.payload,
         baseCase.subscriberOptions
       )
@@ -598,7 +625,7 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
     await sleep(100);
 
     // Generate test cases using the generateTestCases function
-    const baseTestCase = new TestCase("zenoh/test/base", {}, {}, "test-payload", {});
+    const baseTestCase = new TestCase("zenoh/test/base", {}, {}, {}, "test-payload", {});
 
     // Generate comprehensive test cases by cycling through all available option values
     const testCases: TestCase[] = generateTestCases(
@@ -621,7 +648,6 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
 
       let subscriber: Subscriber | undefined;
       let publisher: Publisher | undefined;
-      let sample: Sample | undefined;
       let samples: Sample[] = [];
 
       for (const operation of selectedOperations) {
@@ -635,7 +661,6 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
 
         subscriber = undefined;
         publisher = undefined;
-        sample = undefined;
         samples = [];
 
         // Choose session based on useSameSession flag
@@ -651,8 +676,7 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
             {
               ...testCase.subscriberOptions,
               handler: (s: Sample) => {
-                // Store the sample for validation
-                sample = s;
+                // Store the samples for validation
                 samples.push(s);
               },
             }
@@ -696,6 +720,12 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
               testCase.payload ?? "",
               testCase.putOptions
             );
+
+            // Wait for put sample to be processed
+            await sleep(100);
+
+            // Delete using publisher
+            await publisher.delete(testCase.deleteOptions);
           } else {
             // Put using session directly - combine publisher and put options
             await publisherSession!.put(
@@ -714,60 +744,106 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
                 allowedDestination: testCase.publisherOptions.allowedDestination,
               }
             );
+
+            // Wait for put sample to be processed
+            await sleep(100);
+
+            // Delete using session directly
+            await publisherSession!.delete(
+              testCase.keyexpr,
+              {
+                attachment: testCase.deleteOptions.attachment as string | Uint8Array | undefined,
+                congestionControl: testCase.publisherOptions.congestionControl,
+                priority: testCase.publisherOptions.priority,
+                express: testCase.publisherOptions.express,
+                allowedDestination: testCase.publisherOptions.allowedDestination,
+              }
+            );
           }
 
-          // Wait for sample to be processed
+          // Wait for delete sample to be processed
           await sleep(100);
 
-          // For channel operations, read from receiver first
+          // For channel operations, read from receiver first (read both PUT and DELETE samples)
           if (!operation.useCallback) {
             const receiver = subscriber!.receiver();
             if (receiver) {
-              // Try to read a sample with a timeout
+              // Try to read samples with a timeout (expect up to 2: PUT and DELETE)
               const readPromise = (async () => {
                 for await (const s of receiver) {
                   samples.push(s);
-                  sample = s;
-                  break; // Only expect one sample
+                  if (samples.length >= 2) break; // Expect PUT and DELETE samples
                 }
               })();
 
               // Wait for the read with a timeout
               await Promise.race([
                 readPromise,
-                sleep(200) // Additional wait time for channel reads
+                sleep(300) // Additional wait time for channel reads
               ]);
             }
           }
 
-          // Verify the sample was received correctly based on locality settings
-          const receivedSample = verifyReceivedSample(
-            testCase,
-            operation.useSameSession,
-            sample,
-            fullDescription
-          );
+          // Verify samples were received correctly based on locality settings
+          // We expect to receive both PUT and DELETE if locality allows
+          const sampleExpected = (() => {
+            const allowedDestination = testCase.publisherOptions.allowedDestination;
+            const allowedOrigin = testCase.subscriberOptions.allowedOrigin;
 
-          // Handle samples only if expected to be received
-          if (receivedSample) {
-            if (operation.useCallback) {
-              // For callback operations, sample is already stored
-              assertEquals(
-                samples.length,
-                1,
-                `Should receive exactly one sample for ${fullDescription}`
-              );
-            } else {
-              // For channel operations, sample was already read above
-              assertEquals(
-                samples.length,
-                1,
-                `Should receive exactly one sample for ${fullDescription}`
-              );
+            let expected = true;
+
+            // If allowedDestination is REMOTE but we're using the same session, sample should NOT be received
+            if (allowedDestination === Locality.REMOTE && operation.useSameSession) {
+              expected = false;
             }
 
-            // Verify Sample
-            compareSample(samples[0], receivedSample, fullDescription);
+            // If allowedDestination is SESSION_LOCAL but we're using different sessions, sample should NOT be received
+            if (allowedDestination === Locality.SESSION_LOCAL && !operation.useSameSession) {
+              expected = false;
+            }
+
+            // If allowedOrigin is REMOTE but we're using the same session, sample should NOT be received
+            if (allowedOrigin === Locality.REMOTE && operation.useSameSession) {
+              expected = false;
+            }
+
+            // If allowedOrigin is SESSION_LOCAL but we're using different sessions, sample should NOT be received
+            if (allowedOrigin === Locality.SESSION_LOCAL && !operation.useSameSession) {
+              expected = false;
+            }
+
+            return expected;
+          })();
+
+          // Handle samples only if expected to be received
+          if (sampleExpected) {
+            // Should receive exactly 2 samples: PUT and DELETE
+            assertEquals(
+              samples.length,
+              2,
+              `Should receive exactly 2 samples (PUT and DELETE) for ${fullDescription}, got ${samples.length}`
+            );
+
+            // Separate PUT and DELETE samples
+            const putSamples = samples.filter(s => s.kind() === 0); // SampleKind.PUT
+            const deleteSamples = samples.filter(s => s.kind() === 1); // SampleKind.DELETE
+
+            assertEquals(
+              putSamples.length,
+              1,
+              `Should receive exactly one PUT sample for ${fullDescription}`
+            );
+            assertEquals(
+              deleteSamples.length,
+              1,
+              `Should receive exactly one DELETE sample for ${fullDescription}`
+            );
+
+            // Verify PUT Sample
+            compareSample(putSamples[0], testCase.expectedSample(), fullDescription + " (PUT)");
+
+            // Verify DELETE Sample
+            compareSample(deleteSamples[0], testCase.expectedDeleteSample(), fullDescription + " (DELETE)");
           } else {
             // Sample was not expected due to locality restrictions - verify no sample was received
             assertEquals(
