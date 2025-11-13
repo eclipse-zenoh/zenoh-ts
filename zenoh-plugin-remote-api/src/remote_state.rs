@@ -43,9 +43,9 @@ use crate::{
         MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete,
         PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet,
         QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk,
-        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
-        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
-        UndeclareQueryable, UndeclareSubscriber,
+        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessToken,
+        UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable,
+        UndeclareSubscriber,
     },
     AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
 };
@@ -67,7 +67,6 @@ pub(crate) struct RemoteState {
     pending_queries: Arc<Mutex<LruCache<u32, Query>>>,
     query_counter: Arc<AtomicU32>,
     liveliness_tokens: HashMap<u32, LivelinessToken>,
-    liveliness_subscribers: HashMap<u32, Subscriber<()>>,
     queriers: HashMap<u32, Querier<'static>>,
     matching_listeners: HashMap<u32, MatchingListener<()>>,
 }
@@ -93,7 +92,6 @@ impl RemoteState {
             ))),
             query_counter: Arc::new(AtomicU32::new(0)),
             liveliness_tokens: HashMap::new(),
-            liveliness_subscribers: HashMap::new(),
             queriers: HashMap::new(),
             matching_listeners: HashMap::new(),
         }
@@ -136,17 +134,6 @@ impl RemoteState {
             }
         }
 
-        let mut liveliness_subscribers = HashMap::new();
-        std::mem::swap(
-            &mut liveliness_subscribers,
-            &mut self.liveliness_subscribers,
-        );
-        for (_, subscriber) in liveliness_subscribers {
-            if let Err(e) = subscriber.undeclare().await {
-                tracing::error!("{e}")
-            }
-        }
-
         if let Err(err) = self.session.close().await {
             tracing::error!("{err}")
         };
@@ -157,7 +144,11 @@ impl RemoteState {
         &mut self,
         declare_publisher: DeclarePublisher,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_publisher: id={}, keyexpr={}", declare_publisher.id, declare_publisher.keyexpr);
+        tracing::trace!(
+            "declare_publisher: id={}, keyexpr={}",
+            declare_publisher.id,
+            declare_publisher.keyexpr
+        );
         if self.publishers.contains_key(&declare_publisher.id) {
             bail!(
                 "Publisher with id: '{}' already exists",
@@ -179,7 +170,10 @@ impl RemoteState {
             .unwrap()
             .register_publisher(declare_publisher.id, publisher.key_expr().as_str());
         self.publishers.insert(declare_publisher.id, publisher);
-        tracing::trace!("declare_publisher: id={} completed successfully", declare_publisher.id);
+        tracing::trace!(
+            "declare_publisher: id={} completed successfully",
+            declare_publisher.id
+        );
         Ok(None)
     }
 
@@ -195,7 +189,10 @@ impl RemoteState {
                     .lock()
                     .unwrap()
                     .unregister_publisher(undeclare_publisher.id);
-                tracing::trace!("undeclare_publisher: id={} completed successfully", undeclare_publisher.id);
+                tracing::trace!(
+                    "undeclare_publisher: id={} completed successfully",
+                    undeclare_publisher.id
+                );
                 Ok(None)
             }
             None => bail!(
@@ -209,7 +206,11 @@ impl RemoteState {
         &mut self,
         declare_subscriber: DeclareSubscriber,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_subscriber: id={}, keyexpr={}", declare_subscriber.id, declare_subscriber.keyexpr);
+        tracing::trace!(
+            "declare_subscriber: id={}, keyexpr={}",
+            declare_subscriber.id,
+            declare_subscriber.keyexpr
+        );
         if self.subscribers.contains_key(&declare_subscriber.id) {
             bail!(
                 "Subscriber with id: '{}' already exists",
@@ -234,7 +235,10 @@ impl RemoteState {
             .unwrap()
             .register_subscriber(declare_subscriber.id, subscriber.key_expr().as_str());
         self.subscribers.insert(declare_subscriber.id, subscriber);
-        tracing::trace!("declare_subscriber: id={} completed successfully", declare_subscriber.id);
+        tracing::trace!(
+            "declare_subscriber: id={} completed successfully",
+            declare_subscriber.id
+        );
         Ok(None)
     }
 
@@ -250,7 +254,10 @@ impl RemoteState {
                     .lock()
                     .unwrap()
                     .unregister_subscriber(undeclare_subscriber.id);
-                tracing::trace!("undeclare_subscriber: id={} completed successfully", undeclare_subscriber.id);
+                tracing::trace!(
+                    "undeclare_subscriber: id={} completed successfully",
+                    undeclare_subscriber.id
+                );
                 Ok(None)
             }
             None => bail!(
@@ -264,7 +271,11 @@ impl RemoteState {
         &mut self,
         declare_queryable: DeclareQueryable,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_queryable: id={}, keyexpr={}", declare_queryable.id, declare_queryable.keyexpr);
+        tracing::trace!(
+            "declare_queryable: id={}, keyexpr={}",
+            declare_queryable.id,
+            declare_queryable.keyexpr
+        );
         if self.queryables.contains_key(&declare_queryable.id) {
             bail!(
                 "Queryable with id: '{}' already exists",
@@ -296,7 +307,10 @@ impl RemoteState {
             .unwrap()
             .register_queryable(declare_queryable.id, queryable.key_expr().as_str());
         self.queryables.insert(declare_queryable.id, queryable);
-        tracing::trace!("declare_queryable: id={} completed successfully", declare_queryable.id);
+        tracing::trace!(
+            "declare_queryable: id={} completed successfully",
+            declare_queryable.id
+        );
         Ok(None)
     }
 
@@ -312,7 +326,10 @@ impl RemoteState {
                     .lock()
                     .unwrap()
                     .unregister_queryable(undeclare_queryable.id);
-                tracing::trace!("undeclare_queryable: id={} completed successfully", undeclare_queryable.id);
+                tracing::trace!(
+                    "undeclare_queryable: id={} completed successfully",
+                    undeclare_queryable.id
+                );
                 Ok(None)
             }
             None => bail!(
@@ -326,7 +343,11 @@ impl RemoteState {
         &mut self,
         declare_querier: DeclareQuerier,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_querier: id={}, keyexpr={}", declare_querier.id, declare_querier.keyexpr);
+        tracing::trace!(
+            "declare_querier: id={}, keyexpr={}",
+            declare_querier.id,
+            declare_querier.keyexpr
+        );
         if self.queriers.contains_key(&declare_querier.id) {
             bail!("Querier with id: '{}' already exists", declare_querier.id);
         }
@@ -347,7 +368,10 @@ impl RemoteState {
             .unwrap()
             .register_querier(declare_querier.id, querier.key_expr().as_str());
         self.queriers.insert(declare_querier.id, querier);
-        tracing::trace!("declare_querier: id={} completed successfully", declare_querier.id);
+        tracing::trace!(
+            "declare_querier: id={} completed successfully",
+            declare_querier.id
+        );
         Ok(None)
     }
 
@@ -363,7 +387,10 @@ impl RemoteState {
                     .lock()
                     .unwrap()
                     .unregister_querier(undeclare_querier.id);
-                tracing::trace!("undeclare_querier: id={} completed successfully", undeclare_querier.id);
+                tracing::trace!(
+                    "undeclare_querier: id={} completed successfully",
+                    undeclare_querier.id
+                );
                 Ok(None)
             }
             None => bail!("Querier with id {} does not exist", undeclare_querier.id),
@@ -432,7 +459,10 @@ impl RemoteState {
                     pb = pb.encoding(encoding);
                 }
                 pb.await?;
-                tracing::trace!("publisher_put: publisher_id={} completed successfully", publisher_put.publisher_id);
+                tracing::trace!(
+                    "publisher_put: publisher_id={} completed successfully",
+                    publisher_put.publisher_id
+                );
                 Ok(())
             }
             None => {
@@ -448,14 +478,20 @@ impl RemoteState {
         &self,
         publisher_delete: PublisherDelete,
     ) -> Result<(), zenoh_result::Error> {
-        tracing::trace!("publisher_delete: publisher_id={}", publisher_delete.publisher_id);
+        tracing::trace!(
+            "publisher_delete: publisher_id={}",
+            publisher_delete.publisher_id
+        );
         match self.publishers.get(&publisher_delete.publisher_id) {
             Some(p) => {
                 p.delete()
                     .attachment(publisher_delete.attachment)
                     .timestamp(publisher_delete.timestamp)
                     .await?;
-                tracing::trace!("publisher_delete: publisher_id={} completed successfully", publisher_delete.publisher_id);
+                tracing::trace!(
+                    "publisher_delete: publisher_id={} completed successfully",
+                    publisher_delete.publisher_id
+                );
                 Ok(())
             }
             None => {
@@ -513,7 +549,11 @@ impl RemoteState {
     }
 
     async fn querier_get(&self, querier_get: QuerierGet) -> Result<(), zenoh_result::Error> {
-        tracing::trace!("querier_get: id={}, querier_id={}", querier_get.id, querier_get.querier_id);
+        tracing::trace!(
+            "querier_get: id={}, querier_id={}",
+            querier_get.id,
+            querier_get.querier_id
+        );
         match self.queriers.get(&querier_get.querier_id) {
             Some(querier) => {
                 let mut gb = querier.get();
@@ -539,7 +579,11 @@ impl RemoteState {
     }
 
     async fn reply_ok(&self, reply_ok: ReplyOk) -> Result<(), zenoh_result::Error> {
-        tracing::trace!("reply_ok: query_id={}, keyexpr={}", reply_ok.query_id, reply_ok.keyexpr);
+        tracing::trace!(
+            "reply_ok: query_id={}, keyexpr={}",
+            reply_ok.query_id,
+            reply_ok.keyexpr
+        );
         let q = self
             .pending_queries
             .lock()
@@ -557,7 +601,10 @@ impl RemoteState {
                     .express(reply_ok.qos.express())
                     .timestamp(reply_ok.timestamp)
                     .await?;
-                tracing::trace!("reply_ok: query_id={} completed successfully", reply_ok.query_id);
+                tracing::trace!(
+                    "reply_ok: query_id={} completed successfully",
+                    reply_ok.query_id
+                );
             }
             None => {
                 bail!("Query with id {} does not exist", reply_ok.query_id);
@@ -568,7 +615,11 @@ impl RemoteState {
     }
 
     async fn reply_del(&self, reply_del: ReplyDel) -> Result<(), zenoh_result::Error> {
-        tracing::trace!("reply_del: query_id={}, keyexpr={}", reply_del.query_id, reply_del.keyexpr);
+        tracing::trace!(
+            "reply_del: query_id={}, keyexpr={}",
+            reply_del.query_id,
+            reply_del.keyexpr
+        );
         let q = self
             .pending_queries
             .lock()
@@ -585,7 +636,10 @@ impl RemoteState {
                     .express(reply_del.qos.express())
                     .timestamp(reply_del.timestamp)
                     .await?;
-                tracing::trace!("reply_del: query_id={} completed successfully", reply_del.query_id);
+                tracing::trace!(
+                    "reply_del: query_id={} completed successfully",
+                    reply_del.query_id
+                );
             }
             None => {
                 bail!("Query with id {} does not exist", reply_del.query_id);
@@ -609,7 +663,10 @@ impl RemoteState {
                 q.reply_err(reply_err.payload)
                     .encoding(reply_err.encoding)
                     .await?;
-                tracing::trace!("reply_err: query_id={} completed successfully", reply_err.query_id);
+                tracing::trace!(
+                    "reply_err: query_id={} completed successfully",
+                    reply_err.query_id
+                );
             }
             None => {
                 bail!("Query with id {} does not exist", reply_err.query_id);
@@ -623,7 +680,11 @@ impl RemoteState {
         &mut self,
         declare_liveliness_token: DeclareLivelinessToken,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_liveliness_token: id={}, keyexpr={}", declare_liveliness_token.id, declare_liveliness_token.keyexpr);
+        tracing::trace!(
+            "declare_liveliness_token: id={}, keyexpr={}",
+            declare_liveliness_token.id,
+            declare_liveliness_token.keyexpr
+        );
         if self
             .liveliness_tokens
             .contains_key(&declare_liveliness_token.id)
@@ -640,7 +701,10 @@ impl RemoteState {
             .await?;
         self.liveliness_tokens
             .insert(declare_liveliness_token.id, token);
-        tracing::trace!("declare_liveliness_token: id={} completed successfully", declare_liveliness_token.id);
+        tracing::trace!(
+            "declare_liveliness_token: id={} completed successfully",
+            declare_liveliness_token.id
+        );
         Ok(None)
     }
 
@@ -648,14 +712,20 @@ impl RemoteState {
         &mut self,
         undeclare_liveliness_token: UndeclareLivelinessToken,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("undeclare_liveliness_token: id={}", undeclare_liveliness_token.id);
+        tracing::trace!(
+            "undeclare_liveliness_token: id={}",
+            undeclare_liveliness_token.id
+        );
         match self
             .liveliness_tokens
             .remove(&undeclare_liveliness_token.id)
         {
             Some(t) => {
                 t.undeclare().await?;
-                tracing::trace!("undeclare_liveliness_token: id={} completed successfully", undeclare_liveliness_token.id);
+                tracing::trace!(
+                    "undeclare_liveliness_token: id={} completed successfully",
+                    undeclare_liveliness_token.id
+                );
                 Ok(None)
             }
             None => bail!(
@@ -669,13 +739,17 @@ impl RemoteState {
         &mut self,
         declare_liveliness_subscriber: DeclareLivelinessSubscriber,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("declare_liveliness_subscriber: id={}, keyexpr={}", declare_liveliness_subscriber.id, declare_liveliness_subscriber.keyexpr);
+        tracing::trace!(
+            "declare_liveliness_subscriber: id={}, keyexpr={}",
+            declare_liveliness_subscriber.id,
+            declare_liveliness_subscriber.keyexpr
+        );
         if self
-            .liveliness_subscribers
+            .subscribers
             .contains_key(&declare_liveliness_subscriber.id)
         {
             bail!(
-                "Liveliness subscriber with id: '{}' already exists",
+                "Subscriber with id: '{}' already exists",
                 declare_liveliness_subscriber.id
             );
         }
@@ -693,45 +767,34 @@ impl RemoteState {
                 let _ = tx.send((OutRemoteMessage::Sample(msg), None));
             })
             .await?;
-        self.liveliness_subscribers
+        self.subscribers
             .insert(declare_liveliness_subscriber.id, subscriber);
-        tracing::trace!("declare_liveliness_subscriber: id={} completed successfully", declare_liveliness_subscriber.id);
+        tracing::trace!(
+            "declare_liveliness_subscriber: id={} completed successfully",
+            declare_liveliness_subscriber.id
+        );
         Ok(None)
-    }
-
-    async fn undeclare_liveliness_subscriber(
-        &mut self,
-        undeclare_liveliness_subscriber: UndeclareLivelinessSubscriber,
-    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("undeclare_liveliness_subscriber: id={}", undeclare_liveliness_subscriber.id);
-        match self
-            .liveliness_subscribers
-            .remove(&undeclare_liveliness_subscriber.id)
-        {
-            Some(t) => {
-                t.undeclare().await?;
-                tracing::trace!("undeclare_liveliness_subscriber: id={} completed successfully", undeclare_liveliness_subscriber.id);
-                Ok(None)
-            }
-            None => bail!(
-                "Liveliness subscriber with id {} does not exist",
-                undeclare_liveliness_subscriber.id
-            ),
-        }
     }
 
     async fn liveliness_get(
         &self,
         liveliness_get: LivelinessGet,
     ) -> Result<(), zenoh_result::Error> {
-        tracing::trace!("liveliness_get: id={}, keyexpr={}", liveliness_get.id, liveliness_get.keyexpr);
+        tracing::trace!(
+            "liveliness_get: id={}, keyexpr={}",
+            liveliness_get.id,
+            liveliness_get.keyexpr
+        );
         self.session
             .liveliness()
             .get(liveliness_get.keyexpr)
             .timeout(Duration::from_millis(liveliness_get.timeout_ms as u64))
             .with(self.create_get_callback(liveliness_get.id))
             .await?;
-        tracing::trace!("liveliness_get: id={} completed successfully", liveliness_get.id);
+        tracing::trace!(
+            "liveliness_get: id={} completed successfully",
+            liveliness_get.id
+        );
         Ok(())
     }
 
@@ -747,7 +810,10 @@ impl RemoteState {
             .pop(&response_final.query_id)
         {
             Some(_) => {
-                tracing::trace!("response_final: query_id={} completed successfully", response_final.query_id);
+                tracing::trace!(
+                    "response_final: query_id={} completed successfully",
+                    response_final.query_id
+                );
                 Ok(())
             }
             None => bail!("Query with id {} does not exist", response_final.query_id),
@@ -758,7 +824,11 @@ impl RemoteState {
         &mut self,
         msg: PublisherDeclareMatchingListener,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("publisher_declare_matching_listener: id={}, publisher_id={}", msg.id, msg.publisher_id);
+        tracing::trace!(
+            "publisher_declare_matching_listener: id={}, publisher_id={}",
+            msg.id,
+            msg.publisher_id
+        );
         match self.publishers.get(&msg.publisher_id) {
             Some(publisher) => {
                 if self.matching_listeners.contains_key(&msg.id) {
@@ -776,7 +846,10 @@ impl RemoteState {
                     })
                     .await?;
                 self.matching_listeners.insert(msg.id, ml);
-                tracing::trace!("publisher_declare_matching_listener: id={} completed successfully", msg.id);
+                tracing::trace!(
+                    "publisher_declare_matching_listener: id={} completed successfully",
+                    msg.id
+                );
             }
             None => {
                 bail!("Publisher with id: '{}' does not exist", msg.publisher_id);
@@ -793,7 +866,10 @@ impl RemoteState {
         match self.matching_listeners.remove(&msg.id) {
             Some(ml) => {
                 ml.undeclare().await?;
-                tracing::trace!("undeclare_matching_listener: id={} completed successfully", msg.id);
+                tracing::trace!(
+                    "undeclare_matching_listener: id={} completed successfully",
+                    msg.id
+                );
                 Ok(None)
             }
             None => bail!("Matching listener with id: '{}' does not exist", msg.id),
@@ -804,11 +880,17 @@ impl RemoteState {
         &mut self,
         msg: PublisherGetMatchingStatus,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("publisher_get_matching_status: publisher_id={}", msg.publisher_id);
+        tracing::trace!(
+            "publisher_get_matching_status: publisher_id={}",
+            msg.publisher_id
+        );
         match self.publishers.get(&msg.publisher_id) {
             Some(p) => {
                 let status = p.matching_status().await?;
-                tracing::trace!("publisher_get_matching_status: publisher_id={} completed successfully", msg.publisher_id);
+                tracing::trace!(
+                    "publisher_get_matching_status: publisher_id={} completed successfully",
+                    msg.publisher_id
+                );
                 Ok(Some(OutRemoteMessage::MatchingStatus(MatchingStatus {
                     matching: status.matching(),
                 })))
@@ -821,7 +903,11 @@ impl RemoteState {
         &mut self,
         msg: QuerierDeclareMatchingListener,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("querier_declare_matching_listener: id={}, querier_id={}", msg.id, msg.querier_id);
+        tracing::trace!(
+            "querier_declare_matching_listener: id={}, querier_id={}",
+            msg.id,
+            msg.querier_id
+        );
         match self.queriers.get(&msg.querier_id) {
             Some(querier) => {
                 if self.matching_listeners.contains_key(&msg.id) {
@@ -839,7 +925,10 @@ impl RemoteState {
                     })
                     .await?;
                 self.matching_listeners.insert(msg.id, ml);
-                tracing::trace!("querier_declare_matching_listener: id={} completed successfully", msg.id);
+                tracing::trace!(
+                    "querier_declare_matching_listener: id={} completed successfully",
+                    msg.id
+                );
             }
             None => {
                 bail!("Querier with id: '{}' does not exist", msg.querier_id);
@@ -856,7 +945,10 @@ impl RemoteState {
         match self.queriers.get(&msg.querier_id) {
             Some(p) => {
                 let status = p.matching_status().await?;
-                tracing::trace!("querier_get_matching_status: querier_id={} completed successfully", msg.querier_id);
+                tracing::trace!(
+                    "querier_get_matching_status: querier_id={} completed successfully",
+                    msg.querier_id
+                );
                 Ok(Some(OutRemoteMessage::MatchingStatus(MatchingStatus {
                     matching: status.matching(),
                 })))
@@ -952,10 +1044,6 @@ impl RemoteState {
             InRemoteMessage::QueryResponseFinal(response_final) => {
                 self.response_final(response_final)?;
                 Ok(None)
-            }
-            InRemoteMessage::UndeclareLivelinessSubscriber(undeclare_liveliness_subscriber) => {
-                self.undeclare_liveliness_subscriber(undeclare_liveliness_subscriber)
-                    .await
             }
             InRemoteMessage::Ping(_) => Ok(Some(OutRemoteMessage::PingAck(PingAck {
                 uuid: self.id.clone(),

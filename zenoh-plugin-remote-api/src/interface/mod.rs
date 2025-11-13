@@ -897,18 +897,6 @@ impl DeclareLivelinessSubscriber {
     }
 }
 
-pub(crate) struct UndeclareLivelinessSubscriber {
-    pub(crate) id: u32,
-}
-
-impl UndeclareLivelinessSubscriber {
-    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
-        Ok(UndeclareLivelinessSubscriber {
-            id: deserializer.deserialize()?,
-        })
-    }
-}
-
 pub(crate) struct LivelinessGet {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
@@ -1069,7 +1057,6 @@ remote_message! {
         DeclareLivelinessToken,
         UndeclareLivelinessToken,
         DeclareLivelinessSubscriber,
-        UndeclareLivelinessSubscriber,
         GetSessionInfo,
         GetTimestamp,
         Put,

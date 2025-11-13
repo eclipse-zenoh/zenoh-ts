@@ -269,7 +269,6 @@ export enum OutRemoteMessageId {
     DeclareLivelinessToken,
     UndeclareLivelinessToken,
     DeclareLivelinessSubscriber,
-    UndeclareLivelinessSubscriber,
     GetSessionInfo,
     GetTimestamp,
     Put,
@@ -458,17 +457,6 @@ export class DeclareLivelinessSubscriber {
         serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeBoolean(this.properties.history);
-    }
-}
-
-export class UndeclareLivelinessSubscriber {
-    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessSubscriber;
-    public constructor(
-        public readonly id: SubscriberId,
-    ) {}
-
-    public serializeWithZSerializer(serializer: ZBytesSerializer) {
-        serializer.serializeNumberUint32(this.id);
     }
 }
 

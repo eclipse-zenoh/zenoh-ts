@@ -15,7 +15,7 @@
 
 import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
 import { KeyExpr } from "./key_expr.js";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
 import { Query, Reply } from "./query.js";
 import { Closure } from "./closure.js";
 import { RemoteLink } from "./link.js";
@@ -341,21 +341,6 @@ export class SessionInner {
             throw error;
         }
         return subscriberId;
-    }
-
-    async undeclareLivelinessSubscriber(subscriberId: SubscriberId) {
-        const subscriber = this.subscribers.get(subscriberId);
-        if (subscriber == undefined) {
-            new Error (`Unknown subscriber id: ${subscriberId}`)
-        } else {
-            this.subscribers.delete(subscriberId);
-            subscriber.drop();
-        }
-        await this.sendRequest(
-            new UndeclareLivelinessSubscriber(subscriberId), 
-            InRemoteMessageId.ResponseOk, 
-            ResponseOk.deserialize
-        );
     }
 
     async getSessionInfo(): Promise<SessionInfo> {
