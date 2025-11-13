@@ -75,7 +75,9 @@ Deno.test("Liveliness - Token Get", async () => {
     }
   } finally {
     // Clean up all resources even if test fails
-    if (token) await token.undeclare().catch(() => {});
+    let token_undeclare_failed = false;
+    if (token) await token.undeclare().catch(() => {token_undeclare_failed = true;});
+    assert(token_undeclare_failed, "Repeated undeclare of token not failed as expected");
     if (session1) await session1.close();
     if (session2) await session2.close();
     await sleep(100);
@@ -150,7 +152,10 @@ Deno.test("Liveliness - Subscriber", async () => {
 
   } finally {
     // Ensure everything is cleaned up even if test fails
-    if (subscriber) await subscriber.undeclare().catch(() => {});
+    let subscriber_undeclare_failed = false;
+    if (subscriber) await subscriber.undeclare().catch(() => {subscriber_undeclare_failed = true;});
+    assert(subscriber_undeclare_failed, "Repeated undeclare of subscriber not failed as expected");
+    if (token2) await token2.undeclare().catch(() => {});
     if (token1) await token1.undeclare().catch(() => {});
     if (session1) await session1.close();
     if (session2) await session2.close();
