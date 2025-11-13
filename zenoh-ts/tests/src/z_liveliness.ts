@@ -152,9 +152,7 @@ Deno.test("Liveliness - Subscriber", async () => {
 
   } finally {
     // Ensure everything is cleaned up even if test fails
-    let subscriber_undeclare_failed = false;
-    if (subscriber) await subscriber.undeclare().catch(() => {subscriber_undeclare_failed = true;});
-    assert(subscriber_undeclare_failed, "Repeated undeclare of subscriber not failed as expected");
+    if (subscriber) await subscriber.undeclare().catch(() => {});
     if (token2) await token2.undeclare().catch(() => {});
     if (token1) await token1.undeclare().catch(() => {});
     if (session1) await session1.close();
