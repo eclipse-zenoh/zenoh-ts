@@ -19,7 +19,7 @@ import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./channels.js";
 import { CongestionControl, Locality, Priority, Reliability, ReplyKeyExpr } from "./enums.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, QueryableId, GetId } from "./session_inner.js";
 import { Qos, ReplyDel, ReplyErr, ReplyOk } from "./message.js";
 
 
@@ -50,7 +50,7 @@ export class Queryable {
      */
     constructor(
         private session: SessionInner,
-        private id: number,
+        private id: QueryableId,
         private keyExpr_: KeyExpr,
         private receiver_?: ChannelReceiver<Query>
     ) { }
@@ -132,7 +132,7 @@ export interface ReplyDelOptions {
 
 export class QueryInner {
     constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly keyexpr_: KeyExpr,
         public readonly parameters_: Parameters,
         public readonly payload_: ZBytes | undefined,

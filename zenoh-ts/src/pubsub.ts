@@ -17,7 +17,7 @@ import { Sample } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver, FifoChannel, intoCbDropReceiver } from "./channels.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, PublisherId, SubscriberId } from "./session_inner.js";
 import { PublisherDelete, PublisherProperties, PublisherPut } from "./message.js";
 import { CongestionControl, Priority, Reliability } from "./enums.js";
 import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
@@ -47,7 +47,7 @@ export class Subscriber {
      */
     constructor(
         private session: SessionInner,
-        private id: number,
+        private id: SubscriberId,
         private keyExpr_: KeyExpr,
         private receiver_?: ChannelReceiver<Sample>,
     ) { }
@@ -118,7 +118,7 @@ export class Publisher {
      */
     constructor(
         private session: SessionInner,
-        private publisherId: number,
+        private publisherId: PublisherId,
         private properties: PublisherProperties,
     ) { }
 
