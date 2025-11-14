@@ -21,37 +21,37 @@ function sleep(ms: number) {
 }
 
 Deno.test("Session Info - Comprehensive test", async () => {
-        const session = await open(new Config("ws/127.0.0.1:10000"));
-        await sleep(100);
+    const session = await open(new Config("ws/127.0.0.1:10000"));
+    await sleep(100);
 
-        assert(session !== undefined, "Session should be created");
-        assert(!session.isClosed(), "Session should not be closed");
+    assert(session !== undefined, "Session should be created");
+    assert(!session.isClosed(), "Session should not be closed");
 
-        const info: SessionInfo = await session.info();
-        const zid = info.zid();
-        const routers = info.routersZid();
-        const peers = info.peersZid();
+    const info: SessionInfo = await session.info();
+    const zid = info.zid();
+    const routers = info.routersZid();
+    const peers = info.peersZid();
 
-        assert(zid !== undefined, "ZID should be defined");
-        assert(Array.isArray(routers), "Routers should be an array");
-        assert(Array.isArray(peers), "Peers should be an array");
+    assert(zid !== undefined, "ZID should be defined");
+    assert(Array.isArray(routers), "Routers should be an array");
+    assert(Array.isArray(peers), "Peers should be an array");
 
-        // Multiple sessions share the same ZID
-        const session2 = await open(new Config("ws/127.0.0.1:10000"));
-        await sleep(100);
-        const info2: SessionInfo = await session2.info();
-        const zid2: ZenohId = info2.zid();
-        // Currently, when connecting to remote-api-plugin, all client sessions
-        // share the same ZID because they represent the same underlying Zenoh
-        // session on the server side. This behavior may change in the future
-        // if the remote-api-plugin is enhanced to provide unique session IDs
-        // for each client connection.
-        assertEquals(zid.toString(), zid2.toString(), 
-               "Sessions connected to the same remote-api-plugin should have the same ZID");
+    // Multiple sessions share the same ZID
+    const session2 = await open(new Config("ws/127.0.0.1:10000"));
+    await sleep(100);
+    const info2: SessionInfo = await session2.info();
+    const zid2: ZenohId = info2.zid();
+    // Currently, when connecting to remote-api-plugin, all client sessions
+    // share the same ZID because they represent the same underlying Zenoh
+    // session on the server side. This behavior may change in the future
+    // if the remote-api-plugin is enhanced to provide unique session IDs
+    // for each client connection.
+    assertEquals(zid.toString(), zid2.toString(), 
+            "Sessions connected to the same remote-api-plugin should have the same ZID");
 
-        session2.close();
-        session.close();
-        await sleep(100);
-        assert(session.isClosed(), "Session should be closed");
-        assert(session2.isClosed(), "Session2 should be closed");
+    session2.close();
+    session.close();
+    await sleep(100);
+    assert(session.isClosed(), "Session should be closed");
+    assert(session2.isClosed(), "Session2 should be closed");
 });
