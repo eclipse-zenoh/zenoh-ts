@@ -14,7 +14,7 @@
 /// <reference lib="deno.ns" />
 
 import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, NumberFormat, BigIntFormat, ZS, ZD } from "@eclipse-zenoh/zenoh-ts/ext";
-import { ZenohId } from "@eclipse-zenoh/zenoh-ts";
+import { ZenohId, ZBytes } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 class CustomStruct implements ZSerializeable, ZDeserializeable {
@@ -453,4 +453,26 @@ Deno.test("Serialization - ZenohId", () => {
     const serializedMax = zserialize(maxZenohId.toLeBytes());
     const deserializedMax = zdeserialize(ZD.uint8array(), serializedMax);
     assertEquals(deserializedMax, maxBytes, "ZenohId (max) serialization failed");
+});
+
+Deno.test("Serialization - ZBytes with Empty Payload", () => {
+    // Create an empty ZBytes instance using the empty() method from a dummy instance
+    const dummy = new ZBytes("");
+    const zbytes = dummy.empty();
+
+    // Verify initial state with isEmpty() and len()
+    assert(zbytes.isEmpty(), "ZBytes instance should be empty");
+    assertEquals(zbytes.len(), 0, "ZBytes instance should have length 0");
+
+    // Serialize the underlying buffer of the empty ZBytes
+    const serialized = zserialize(zbytes.toBytes());
+
+    // Deserialize back to a Uint8Array
+    const deserializedBytes = zdeserialize(ZD.uint8array(), serialized);
+
+    // Reconstruct ZBytes and verify
+    const reconstructedZBytes = new ZBytes(deserializedBytes);
+    assertEquals(reconstructedZBytes.toBytes(), zbytes.toBytes(), "ZBytes with empty payload round-trip serialization failed");
+    assert(reconstructedZBytes.isEmpty(), "Reconstructed ZBytes should be empty");
+    assertEquals(reconstructedZBytes.len(), 0, "Reconstructed ZBytes should have length 0");
 });
