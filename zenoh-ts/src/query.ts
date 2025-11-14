@@ -276,7 +276,7 @@ export class Query {
     }
 
     toString(): string {
-        return this.keyExpr.toString() + "?" + this.parameters.toString()
+        return this.selector().toString();
     }
 
     async [Symbol.asyncDispose]() {

@@ -13,7 +13,7 @@
 //
 /// <reference lib="deno.ns" />
 
-import { Parameters, Selector, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
+import { Parameters, Selector, KeyExpr, Session, Config, Query } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 Deno.test("Parameters - Basic", () => {
@@ -240,4 +240,42 @@ Deno.test("Selector - Complete", () => {
   assertEquals(complex.parameters().get("p2"), "x=y");
   assertEquals(complex.parameters().get("p3"), "");
   assert(complex.keyExpr() instanceof KeyExpr);
+});
+
+Deno.test("Query - toString", async () => {
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  
+  try {
+    const testCases = [
+      "test/query/path",
+      "test/query/path?p1=v1",
+      "test/query/path?p1=v1;p2=v2",
+      "test/query/path?p1=v1;p2=v2;p3=v3",
+      "test/query/path?param=value?with?question",
+    ];
+
+    let selectorStr = "";
+
+    const queryable = await session.declareQueryable("test/query/**", {
+      handler: (query: Query) => {
+        assertEquals(query.toString(), selectorStr, "Query toString should match selector string");
+        assertEquals(query.selector().toString(), selectorStr, "Query selector toString should match selector string");
+        query.finalize();
+      }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    for (const testCase of testCases) {
+      selectorStr = testCase;
+      await session.get(Selector.from(selectorStr), {
+        handler: (_reply) => {}
+      });
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    await queryable.undeclare();
+  } finally {
+    await session.close();
+  }
 });
