@@ -476,3 +476,80 @@ Deno.test("Serialization - ZBytes with Empty Payload", () => {
     assert(reconstructedZBytes.isEmpty(), "Reconstructed ZBytes should be empty");
     assertEquals(reconstructedZBytes.len(), 0, "Reconstructed ZBytes should have length 0");
 });
+
+Deno.test("Serialization - Large Data (ensureBuffer/resetBuffer)", () => {
+    // Test with array large enough to trigger ensureBuffer and resetBuffer
+    // Default buffer size is 256 bytes, so we need arrays that exceed this
+    
+    // Test large array of numbers (each Float64 is 8 bytes)
+    // Create array with 100 elements = 800 bytes + overhead > 256 bytes
+    const largeNumArray = Array.from({ length: 100 }, (_, i) => i * 1.5);
+    const largeNumBytes = zserialize(largeNumArray, ZS.array(ZS.number(NumberFormat.Float64)));
+    const largeNumResult = zdeserialize(ZD.array(ZD.number(NumberFormat.Float64)), largeNumBytes);
+    assertEquals(largeNumResult, largeNumArray, "large number array serialization failed");
+
+    // Test large string (each character is at least 1 byte)
+    // Create string with 500 characters > 256 bytes
+    const largeString = "a".repeat(500);
+    const largeStringBytes = zserialize(largeString);
+    const largeStringResult = zdeserialize(ZD.string(), largeStringBytes);
+    assertEquals(largeStringResult, largeString, "large string serialization failed");
+
+    // Test very large array of strings
+    // 100 strings of 20 chars each = 2000+ bytes
+    const largeStringArray = Array.from({ length: 100 }, (_, i) => `string_${i}_${"x".repeat(15)}`);
+    const largeStringArrayBytes = zserialize(largeStringArray, ZS.array(ZS.string()));
+    const largeStringArrayResult = zdeserialize(ZD.array(ZD.string()), largeStringArrayBytes);
+    assertEquals(largeStringArrayResult, largeStringArray, "large string array serialization failed");
+
+    // Test large Int32Array (4 bytes each)
+    // 200 elements = 800 bytes > 256 bytes
+    const largeInt32Array = new Int32Array(Array.from({ length: 200 }, (_, i) => i - 100));
+    const largeInt32Bytes = zserialize(largeInt32Array);
+    const largeInt32Result = zdeserialize(ZD.int32array(), largeInt32Bytes);
+    assertEquals(new Int32Array(largeInt32Result), largeInt32Array, "large Int32Array serialization failed");
+
+    // Test large nested array
+    // 50 subarrays with 10 elements each = 500 numbers = 4000+ bytes
+    const largeNestedArray = Array.from({ length: 50 }, (_, i) => 
+        Array.from({ length: 10 }, (_, j) => i * 10 + j)
+    );
+    const largeNestedBytes = zserialize(largeNestedArray, ZS.array(ZS.array(ZS.number())));
+    const largeNestedResult = zdeserialize(ZD.array(ZD.array(ZD.number())), largeNestedBytes);
+    assertEquals(largeNestedResult, largeNestedArray, "large nested array serialization failed");
+
+    // Test large map (to trigger multiple buffer operations)
+    // 150 entries with string keys and values
+    const largeMap = new Map<string, string>();
+    for (let i = 0; i < 150; i++) {
+        largeMap.set(`key_${i}`, `value_${i}_${"data".repeat(5)}`);
+    }
+    const largeMapBytes = zserialize(largeMap);
+    const largeMapResult = zdeserialize(ZD.map(ZD.string(), ZD.string()), largeMapBytes);
+    assertEquals(largeMapResult, largeMap, "large map serialization failed");
+
+    // Test large array of custom objects
+    const largeCustomArray = Array.from({ length: 50 }, (_, i) => 
+        new CustomStruct(
+            Array.from({ length: 10 }, (_, j) => (i * 10 + j) * 0.5),
+            i,
+            `custom_object_${i}_${"x".repeat(20)}`
+        )
+    );
+    const largeCustomBytes = zserialize(largeCustomArray);
+    const largeCustomResult = zdeserialize(ZD.array(ZD.object(CustomStruct)), largeCustomBytes) as CustomStruct[];
+    
+    assertEquals(largeCustomResult.length, largeCustomArray.length, "large custom array length mismatch");
+    for (let i = 0; i < largeCustomArray.length; i++) {
+        assertEquals(largeCustomResult[i].vd, largeCustomArray[i].vd, `large custom array [${i}].vd failed`);
+        assertEquals(largeCustomResult[i].i, largeCustomArray[i].i, `large custom array [${i}].i failed`);
+        assertEquals(largeCustomResult[i].s, largeCustomArray[i].s, `large custom array [${i}].s failed`);
+    }
+
+    // Test extremely large typed array to stress test buffer management
+    // 1000 Float64 values = 8000 bytes
+    const veryLargeFloat64Array = new Float64Array(Array.from({ length: 1000 }, (_, i) => i * Math.PI));
+    const veryLargeFloat64Bytes = zserialize(veryLargeFloat64Array);
+    const veryLargeFloat64Result = zdeserialize(ZD.float64array(), veryLargeFloat64Bytes);
+    assertEquals(new Float64Array(veryLargeFloat64Result), veryLargeFloat64Array, "very large Float64Array serialization failed");
+});
