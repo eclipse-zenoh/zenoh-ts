@@ -552,7 +552,7 @@ export class Selector {
     private keyExpr_: KeyExpr;
 
     // Optional : parameter field
-    private parameters_?: Parameters;
+    private parameters_: Parameters;
 
     /**
      * gets Key Expression part of Selector 
@@ -567,15 +567,11 @@ export class Selector {
      * @returns Parameters
      */
     parameters(): Parameters {
-        if (this.parameters_ == undefined) {
-            return new Parameters("");
-        } else {
-            return this.parameters_;
-        }
+        return this.parameters_;
     }
 
     toString(): string {
-        if (this.parameters_ != undefined && !this.parameters_.isEmpty()) {
+        if (!this.parameters_.isEmpty()) {
             return this.keyExpr_.toString() + "?" + this.parameters_.toString()
         } else {
             return this.keyExpr_.toString()
@@ -596,13 +592,13 @@ export class Selector {
         } else if (Array.isArray(selector)) {
             return new Selector(selector[0], selector[1]);
         } else {
-            let splitString = selector.split("?")
-            if (splitString.length == 1) {
+            let splitIndex = selector.indexOf("?")
+            if (splitIndex == -1) {
                 return new Selector(new KeyExpr(selector));
-            } else if (splitString.length == 2 && splitString[0] != undefined && splitString[1] != undefined) {
-                return new Selector(new KeyExpr(splitString[0]), new Parameters(splitString[1]));
             } else {
-                throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
+                let keyExpr = selector.substring(0, splitIndex);
+                let parameters = selector.substring(splitIndex + 1);
+                return new Selector(new KeyExpr(keyExpr), new Parameters(parameters));
             }
         }
     }

@@ -210,12 +210,29 @@ Deno.test("Selector - Complete", () => {
   assertEquals(sel.parameters().get("p1"), "v1");
   assert(!sel.parameters().isEmpty());
   assert(sel.parameters().containsKey("p1"));
-  assert(new Selector("demo/example").parameters().isEmpty());
+  
+  // Test parameters() returns new Parameters("") when undefined (line x15 coverage)
+  const selNoParams = new Selector("demo/example", undefined);
+  const params = selNoParams.parameters();
+  assert(params.isEmpty());
+  assertEquals(params.toString(), "");
+  
+  // Test parameters() returns this.parameters_
+  const selWithParams = new Selector("demo/example", "p1=v1");
+  const paramsWithValue = selWithParams.parameters();
+  assertEquals(paramsWithValue.get("p1"), "v1");
 
   // Test toString() with and without parameters
   assertEquals(new Selector("demo/test").toString(), "demo/test");
   assertEquals(new Selector("demo/example", "p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
   assertEquals(Selector.from("demo/example?p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
+
+  // Test from() with multiple ? - this is completely valid, only first ? is separator
+  const multiQuestion = Selector.from("demo/example?param1=v1?param2=v2");
+  assertEquals(multiQuestion.keyExpr().toString(), "demo/example");
+  assertEquals(multiQuestion.parameters().get("param1"), "v1?param2=v2");
+  assertEquals(multiQuestion.parameters().get("param2"), undefined);
+  assertEquals(multiQuestion.toString(), "demo/example?param1=v1?param2=v2");
 
   // Test complex parameters and keyExpr()
   const complex = new Selector("demo/example", "p1=v1|v2|v3;p2=x=y;p3");
