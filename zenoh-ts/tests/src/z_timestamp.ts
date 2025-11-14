@@ -35,6 +35,21 @@ Deno.test("Timestamp - Basic functionality", async () => {
         assert(typeof timestamp1.getMsSinceUnixEpoch() === "number", "Timestamp should return number for ms since epoch");
         assert(timestamp1.asDate() instanceof Date, "Timestamp should convert to Date");
 
+        // Get NTP64 timestamp
+        const ntp64 = timestamp1.getNtp64();
+
+        // Verify it's a BigInt
+        assert(typeof ntp64 === "bigint", "NTP64 timestamp should be a BigInt");
+
+        // Verify the value is reasonable. The Zenoh timestamp is expected to be in seconds since the Unix epoch.
+        const timestampSeconds = ntp64 >> 32n;
+        const currentUnixSeconds = BigInt(Math.floor(Date.now() / 1000));
+        
+        // The timestamp should be roughly the current unix time.
+        // Allow a few seconds of difference for execution delay and clock differences.
+        const difference = timestampSeconds - currentUnixSeconds;
+        assert(difference >= -5n && difference <= 5n, `Timestamp is off by ${difference} seconds`);
+
         // Wait for a small delay to ensure time difference
         await sleep(50);
 
@@ -199,3 +214,4 @@ Deno.test("Timestamp - ZenohId consistency", async () => {
         }
     }
 });
+
