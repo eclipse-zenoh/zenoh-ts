@@ -897,6 +897,22 @@ impl DeclareLivelinessSubscriber {
     }
 }
 
+// Obsolete type, kept for backward compatibility
+// There is no specific message to undeclare a liveliness subscriber anymore,
+// liveliness subscribers are undeclared as normal ones
+#[allow(dead_code)]
+pub(crate) struct UndeclareLivelinessSubscriber {
+    pub(crate) id: u32,
+}
+
+impl UndeclareLivelinessSubscriber {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(UndeclareLivelinessSubscriber {
+            id: deserializer.deserialize()?,
+        })
+    }
+}
+
 pub(crate) struct LivelinessGet {
     pub(crate) id: u32,
     pub(crate) keyexpr: OwnedKeyExpr,
@@ -943,6 +959,7 @@ macro_rules! remote_message_inner {
                 }
             }
         }
+        #[allow(dead_code)]
         $( #[$meta] )*
         $access enum $name {
             $($val($val),)*
@@ -1057,6 +1074,7 @@ remote_message! {
         DeclareLivelinessToken,
         UndeclareLivelinessToken,
         DeclareLivelinessSubscriber,
+        UndeclareLivelinessSubscriber,
         GetSessionInfo,
         GetTimestamp,
         Put,

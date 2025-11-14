@@ -1045,6 +1045,10 @@ impl RemoteState {
                 self.response_final(response_final)?;
                 Ok(None)
             }
+            InRemoteMessage::UndeclareLivelinessSubscriber(_) => {
+                // do nothing, as liveliness subscribers are stored in the same map as normal subscribers
+                Ok(None)
+            }
             InRemoteMessage::Ping(_) => Ok(Some(OutRemoteMessage::PingAck(PingAck {
                 uuid: self.id.clone(),
             }))),
