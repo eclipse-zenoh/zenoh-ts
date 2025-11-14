@@ -575,7 +575,7 @@ export class Selector {
     }
 
     toString(): string {
-        if (this.parameters_ != undefined) {
+        if (this.parameters_ != undefined && !this.parameters_.isEmpty()) {
             return this.keyExpr_.toString() + "?" + this.parameters_.toString()
         } else {
             return this.keyExpr_.toString()

@@ -13,7 +13,7 @@
 //
 /// <reference lib="deno.ns" />
 
-import { Parameters } from "@eclipse-zenoh/zenoh-ts";
+import { Parameters, Selector, KeyExpr } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 Deno.test("Parameters - Basic", () => {
@@ -193,4 +193,34 @@ Deno.test("Parameters - Performance", { ignore: true }, () => {
   }
 
   assert(params.isEmpty(), "Parameters should be empty after removing all entries");
+});
+
+Deno.test("Selector - Complete", () => {
+  // Test from() with different input types
+  const originalSelector = new Selector("demo/example", "p1=v1");
+  assertEquals(Selector.from(originalSelector), originalSelector);
+  assertEquals(Selector.from(new KeyExpr("demo/test")).toString(), "demo/test");
+  assertEquals(Selector.from([new KeyExpr("demo/example"), new Parameters("p1=v1;p2=v2")]).toString(), "demo/example?p1=v1;p2=v2");
+  assertEquals(Selector.from("demo/example?p1=v1;p2=v2").parameters().get("p1"), "v1");
+  assertEquals(Selector.from(new String("demo/example?p1=v1")).parameters().get("p1"), "v1");
+  assert(Selector.from("demo/example?").parameters().isEmpty());
+
+  // Test constructor and parameters retrieval
+  const sel = new Selector("demo/example", "p1=v1;p2=v2");
+  assertEquals(sel.parameters().get("p1"), "v1");
+  assert(!sel.parameters().isEmpty());
+  assert(sel.parameters().containsKey("p1"));
+  assert(new Selector("demo/example").parameters().isEmpty());
+
+  // Test toString() with and without parameters
+  assertEquals(new Selector("demo/test").toString(), "demo/test");
+  assertEquals(new Selector("demo/example", "p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
+  assertEquals(Selector.from("demo/example?p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
+
+  // Test complex parameters and keyExpr()
+  const complex = new Selector("demo/example", "p1=v1|v2|v3;p2=x=y;p3");
+  assertEquals(complex.parameters().get("p1"), "v1|v2|v3");
+  assertEquals(complex.parameters().get("p2"), "x=y");
+  assertEquals(complex.parameters().get("p3"), "");
+  assert(complex.keyExpr() instanceof KeyExpr);
 });
