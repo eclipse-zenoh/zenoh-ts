@@ -51,7 +51,8 @@ export {
   QuerierOptions,
   PublisherOptions,
   SessionInfo,
-  SubscriberOptions
+  SubscriberOptions,
+  open
 } from "./session.js";
 export { Config } from "./config.js";
 export { Encoding, IntoEncoding } from "./encoding.js";
