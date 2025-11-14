@@ -32,6 +32,7 @@ import {
   Locality,
   Reliability,
   SampleKind,
+  Timestamp,
 } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 import { StableRandom } from "./commonTestUtils.ts";
@@ -181,7 +182,11 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
     expected.attachment()?.toString() ?? undefined,
     `Sample attachment mismatch for ${description}`
   );
-  // Note: timestamp is not validated as it's typically undefined in test responses
+  assertEquals(
+    actual.timestamp(),
+    expected.timestamp(),
+    `Sample timestamp mismatch for ${description}`
+  );
 }
 
 /**
@@ -189,11 +194,13 @@ function compareSample(actual: Sample, expected: Sample, description: string) {
  * This includes all parameters for PublisherOptions, PublisherPutOptions, PublisherDeleteOptions, and SubscriberOptions.
  */
 class TestCase {
+  public timestamp: Timestamp | undefined = undefined; // Will be set during test execution
+
   constructor(
     public keyexpr: IntoKeyExpr,
     public publisherOptions: PublisherOptions,
     public putOptions: PublisherPutOptions,
-    public deleteOptions: Record<string, unknown>,
+    public deleteOptions: PublisherDeleteOptions,
     public payload: string | undefined,
     public subscriberOptions: SubscriberOptions
   ) {}
@@ -253,10 +260,10 @@ class TestCase {
     const sample = new Sample(
       new KeyExpr(this.keyexpr),
       effectivePayload,
-      0, // SampleKind.PUT
+      SampleKind.PUT,
       effectiveEncoding,
       effectiveAttachment,
-      undefined, // Timestamp is not set in test responses
+      this.timestamp, // Use the timestamp that was sent
       effectivePriority,
       effectiveCongestionControl,
       effectiveExpress
@@ -275,7 +282,7 @@ class TestCase {
 
     // Determine the effective attachment from deleteOptions
     const effectiveAttachment = this.deleteOptions.attachment
-      ? new ZBytes(this.deleteOptions.attachment as string | Uint8Array)
+      ? new ZBytes(this.deleteOptions.attachment)
       : undefined;
 
     // Priority: use publisherOptions.priority or default to DATA
@@ -300,10 +307,10 @@ class TestCase {
     const sample = new Sample(
       new KeyExpr(this.keyexpr),
       effectivePayload,
-      1, // SampleKind.DELETE
+      SampleKind.DELETE,
       Encoding.default(), // Delete samples use default encoding
       effectiveAttachment,
-      undefined, // Timestamp is not set in test responses
+      this.timestamp, // Use the timestamp that was sent
       effectivePriority,
       effectiveCongestionControl,
       effectiveExpress
@@ -715,18 +722,30 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
               fullDescription
             );
 
+            // Generate timestamp for this test case
+            testCase.timestamp = await publisherSession!.newTimestamp();
+
             // Put using publisher
             await publisher.put(
               testCase.payload ?? "",
-              testCase.putOptions
+              {
+                ...testCase.putOptions,
+                timestamp: testCase.timestamp,
+              }
             );
 
             // Wait for put sample to be processed
             await sleep(100);
 
             // Delete using publisher
-            await publisher.delete(testCase.deleteOptions);
+            await publisher.delete({
+              ...testCase.deleteOptions,
+              timestamp: testCase.timestamp,
+            });
           } else {
+            // Generate timestamp for this test case
+            testCase.timestamp = await publisherSession!.newTimestamp();
+
             // Put using session directly - combine publisher and put options
             await publisherSession!.put(
               testCase.keyexpr,
@@ -738,6 +757,7 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
                   testCase.putOptions.encoding ??
                   testCase.publisherOptions.encoding,
                 attachment: testCase.putOptions.attachment,
+                timestamp: testCase.timestamp,
                 congestionControl: testCase.publisherOptions.congestionControl,
                 priority: testCase.publisherOptions.priority,
                 express: testCase.publisherOptions.express,
@@ -752,7 +772,8 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
             await publisherSession!.delete(
               testCase.keyexpr,
               {
-                attachment: testCase.deleteOptions.attachment as string | Uint8Array | undefined,
+                attachment: testCase.deleteOptions.attachment,
+                timestamp: testCase.timestamp,
                 congestionControl: testCase.publisherOptions.congestionControl,
                 priority: testCase.publisherOptions.priority,
                 express: testCase.publisherOptions.express,
@@ -825,8 +846,8 @@ Deno.test("API - Comprehensive Publisher/Subscriber Operations with Options", as
             );
 
             // Separate PUT and DELETE samples
-            const putSamples = samples.filter(s => s.kind() === 0); // SampleKind.PUT
-            const deleteSamples = samples.filter(s => s.kind() === 1); // SampleKind.DELETE
+            const putSamples = samples.filter(s => s.kind() === SampleKind.PUT);
+            const deleteSamples = samples.filter(s => s.kind() === SampleKind.DELETE);
 
             assertEquals(
               putSamples.length,
