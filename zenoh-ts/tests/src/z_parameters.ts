@@ -21,9 +21,19 @@ Deno.test("Parameters - Basic", () => {
   const emptyParams = new Parameters("");
   assert(emptyParams.isEmpty(), "Empty string should create empty parameters");
 
+  // Test containsKey on empty parameters
+  assert(!emptyParams.containsKey("p1"), "Empty parameters should not contain any key");
+
   // Test single parameter with value
   const singleParam = new Parameters("p1=v1");
+  assert(!singleParam.isEmpty(), "Parameters with single parameter should not be empty");
   assertEquals(singleParam.get("p1"), "v1", "Single parameter with value not matched");
+  
+  // Test containsKey - key found
+  assert(singleParam.containsKey("p1"), "containsKey should return true for existing key");
+  
+  // Test containsKey - key not found
+  assert(!singleParam.containsKey("nonexistent"), "containsKey should return false for non-existing key");
 
   // Test multiple parameters with trailing semicolon
   const multiParamTrailing = new Parameters("p1=v1;p2=v2;");
