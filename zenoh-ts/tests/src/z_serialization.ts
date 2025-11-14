@@ -14,6 +14,7 @@
 /// <reference lib="deno.ns" />
 
 import { ZBytesSerializer, ZBytesDeserializer, ZSerializeable, ZDeserializeable, zserialize, zdeserialize, NumberFormat, BigIntFormat, ZS, ZD } from "@eclipse-zenoh/zenoh-ts/ext";
+import { ZenohId } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 class CustomStruct implements ZSerializeable, ZDeserializeable {
@@ -416,4 +417,40 @@ Deno.test("Serialization - Binary Format Equivalence", () => {
     const regularUint64Bytes = zserialize(regularUint64Array, ZS.array(ZS.number(NumberFormat.Uint64)));
     const typedUint64Bytes = zserialize(typedUint64Array);
     assertEquals(typedUint64Bytes, regularUint64Bytes, "Uint64Array and array<Uint64> should produce same binary format");
+});
+
+Deno.test("Serialization - ZenohId", () => {
+    // Create a ZenohId with known bytes (16 bytes)
+    const testBytes = new Uint8Array([
+        0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+        0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10
+    ]);
+    const zenohId = new ZenohId(testBytes);
+    
+    // Serialize the ZenohId bytes
+    const serialized = zserialize(zenohId.toLeBytes());
+    
+    // Deserialize back to Uint8Array
+    const deserialized = zdeserialize(ZD.uint8array(), serialized);
+    
+    // Verify the bytes match
+    assertEquals(deserialized, testBytes, "ZenohId serialization failed");
+    
+    // Verify we can create a ZenohId from deserialized bytes
+    const reconstructedZenohId = new ZenohId(deserialized);
+    assertEquals(reconstructedZenohId.toString(), zenohId.toString(), "ZenohId round-trip failed");
+    
+    // Test with a different ZenohId (all zeros)
+    const zeroBytes = new Uint8Array(16).fill(0);
+    const zeroZenohId = new ZenohId(zeroBytes);
+    const serializedZero = zserialize(zeroZenohId.toLeBytes());
+    const deserializedZero = zdeserialize(ZD.uint8array(), serializedZero);
+    assertEquals(deserializedZero, zeroBytes, "ZenohId (zeros) serialization failed");
+    
+    // Test with a different ZenohId (all 0xff)
+    const maxBytes = new Uint8Array(16).fill(0xff);
+    const maxZenohId = new ZenohId(maxBytes);
+    const serializedMax = zserialize(maxZenohId.toLeBytes());
+    const deserializedMax = zdeserialize(ZD.uint8array(), serializedMax);
+    assertEquals(deserializedMax, maxBytes, "ZenohId (max) serialization failed");
 });
