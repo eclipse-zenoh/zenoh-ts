@@ -269,6 +269,7 @@ export enum OutRemoteMessageId {
     DeclareLivelinessToken,
     UndeclareLivelinessToken,
     DeclareLivelinessSubscriber,
+    UndeclareLivelinessSubscriber, // obsolete, not used, kept for protocol compatibility
     GetSessionInfo,
     GetTimestamp,
     Put,
