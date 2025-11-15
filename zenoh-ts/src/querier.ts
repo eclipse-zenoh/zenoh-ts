@@ -16,7 +16,7 @@ import { KeyExpr } from "./key_expr.js";
 import { IntoParameters, Parameters, Reply } from "./query.js";
 import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./channels.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, QuerierId } from "./session_inner.js";
 import { CongestionControl, Priority, ReplyKeyExpr } from "./enums.js";
 import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
 import { CancellationToken } from "./cancellation_token.js";
@@ -56,7 +56,7 @@ export class Querier {
      */
     constructor(
         private session: SessionInner,
-        private querierId: number,
+        private querierId: QuerierId,
         private keyExpr_: KeyExpr,
         private congestionControl_: CongestionControl,
         private priority_: Priority,

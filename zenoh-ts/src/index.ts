@@ -28,7 +28,7 @@ export {
 export { Sample } from "./sample.js";
 export { Timestamp } from "./timestamp.js";
 export { ZenohId } from "./zid.js";
-export { Publisher, Subscriber } from "./pubsub.js";
+export { Publisher, Subscriber, PublisherPutOptions, PublisherDeleteOptions } from "./pubsub.js";
 export {
   IntoSelector,
   Parameters,
@@ -51,7 +51,8 @@ export {
   QuerierOptions,
   PublisherOptions,
   SessionInfo,
-  SubscriberOptions
+  SubscriberOptions,
+  open
 } from "./session.js";
 export { Config } from "./config.js";
 export { Encoding, IntoEncoding } from "./encoding.js";

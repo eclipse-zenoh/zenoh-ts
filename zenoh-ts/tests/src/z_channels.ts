@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { FifoChannel, ChannelSender, ChannelReceiver, TryReceivedKind, ChannelState } from "@eclipse-zenoh/zenoh-ts";
 import { RingChannel } from "@eclipse-zenoh/zenoh-ts";
