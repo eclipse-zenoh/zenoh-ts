@@ -266,35 +266,35 @@ impl AdminSpaceClient {
         }
     }
 
-    pub(crate) fn register_publisher(&mut self, id: interface::PublisherId, key_expr: &str) {
+    pub(crate) fn register_publisher(&mut self, id: PublisherId, key_expr: &str) {
         self.publishers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_subscriber(&mut self, id: interface::SubscriberId, key_expr: &str) {
+    pub(crate) fn register_subscriber(&mut self, id: SubscriberId, key_expr: &str) {
         self.subscribers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_queryable(&mut self, id: interface::QueryableId, key_expr: &str) {
+    pub(crate) fn register_queryable(&mut self, id: QueryableId, key_expr: &str) {
         self.queryables.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_querier(&mut self, id: interface::QuerierId, key_expr: &str) {
+    pub(crate) fn register_querier(&mut self, id: QuerierId, key_expr: &str) {
         self.queriers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn unregister_publisher(&mut self, id: interface::PublisherId) {
+    pub(crate) fn unregister_publisher(&mut self, id: PublisherId) {
         self.publishers.remove(&id);
     }
 
-    pub(crate) fn unregister_subscriber(&mut self, id: interface::SubscriberId) {
+    pub(crate) fn unregister_subscriber(&mut self, id: SubscriberId) {
         self.subscribers.remove(&id);
     }
 
-    pub(crate) fn unregister_queryable(&mut self, id: interface::QueryableId) {
+    pub(crate) fn unregister_queryable(&mut self, id: QueryableId) {
         self.queryables.remove(&id);
     }
 
-    pub(crate) fn unregister_querier(&mut self, id: interface::QuerierId) {
+    pub(crate) fn unregister_querier(&mut self, id: QuerierId) {
         self.queriers.remove(&id);
     }
 
