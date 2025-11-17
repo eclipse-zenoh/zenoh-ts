@@ -48,20 +48,16 @@ export enum SubscriberKind {
     LivelinessSubscriber,
 }
 
-class IdSource<T extends number> {
+class IdSource {
     private static MAX: number = 1 << 31;
-    private current: number;
+    private static current: number = 0;
 
-    constructor() {
-        this.current = 0;
-    }
-
-    get(): T {
-        const ret = this.current;
-        if (this.current == IdSource.MAX) {
-            this.current = 0;
+    static get<T extends number>(): T {
+        const ret = IdSource.current;
+        if (IdSource.current == IdSource.MAX) {
+            IdSource.current = 0;
         } else {
-            this.current++;
+            IdSource.current++;
         }
         return ret as T;
     }
@@ -75,16 +71,6 @@ export class SessionInner {
 
     private link: RemoteLink;
     private id: string = "";
-
-    private messageIdCounter: IdSource<number> = new IdSource<number>();
-    private publisherIdCounter: IdSource<PublisherId> = new IdSource<PublisherId>();
-    private subscriberIdCounter: IdSource<SubscriberId> = new IdSource<SubscriberId>();
-    private queryableIdCounter: IdSource<QueryableId> = new IdSource<QueryableId>();
-    private querierIdCounter: IdSource<QuerierId> = new IdSource<QuerierId>();
-    private livelinessTokenIdCounter: IdSource<LivelinessTokenId> = new IdSource<LivelinessTokenId>();
-    private livelinessSubscriberIdCounter: IdSource<LivelinessSubscriberId> = new IdSource<LivelinessSubscriberId>();
-    private getIdCounter: IdSource<GetId> = new IdSource<GetId>();
-    private matchingListenerIdCounter: IdSource<MatchingListenerId> = new IdSource<MatchingListenerId>();
 
     private subscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
@@ -184,7 +170,7 @@ export class SessionInner {
 
     private async sendRequest<T>(msg: OutMessageInterface, expectedResponseId: InRemoteMessageId, deserialize: (deserializer: ZBytesDeserializer) => T): Promise<T> {
         let serializer = new ZBytesSerializer();
-        const msgId = this.messageIdCounter.get();
+        const msgId = IdSource.get<number>();
         serializeHeader([msg.outMessageId, msgId], serializer);
 
         msg.serializeWithZSerializer(serializer);
@@ -225,7 +211,7 @@ export class SessionInner {
     }
 
     async declarePublisher(info: PublisherProperties): Promise<PublisherId> {
-        let publisherId = this.publisherIdCounter.get();
+        let publisherId = IdSource.get<PublisherId>();
         await this.sendRequest(
             new DeclarePublisher(publisherId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -243,7 +229,7 @@ export class SessionInner {
     }
 
     async declareSubscriber(info: SubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
-        let subscriberId = this.subscriberIdCounter.get();
+        let subscriberId = IdSource.get<SubscriberId>();
         this.subscribers.set(subscriberId, closure);
         try {
             await this.sendRequest(
@@ -274,7 +260,7 @@ export class SessionInner {
     }
 
     async declareQueryable(info: QueryableProperties, closure: Closure<Query>): Promise<QueryableId> {
-        let queryableId = this.queryableIdCounter.get();
+        let queryableId = IdSource.get<QueryableId>();
         await this.sendRequest(
             new DeclareQueryable(queryableId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -300,7 +286,7 @@ export class SessionInner {
     }
 
     async declareQuerier(info: QuerierProperties): Promise<QuerierId> {
-        let querierId = this.querierIdCounter.get();
+        let querierId = IdSource.get<QuerierId>();
         await this.sendRequest(
             new DeclareQuerier(querierId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -318,7 +304,7 @@ export class SessionInner {
     }
 
     async declareLivelinessToken(keyexpr: KeyExpr): Promise<LivelinessTokenId> {
-        let tokenId = this.livelinessTokenIdCounter.get();
+        let tokenId = IdSource.get<LivelinessTokenId>();
         await this.sendRequest(
             new DeclareLivelinessToken(tokenId, keyexpr), 
             InRemoteMessageId.ResponseOk, 
@@ -336,7 +322,7 @@ export class SessionInner {
     }
 
     async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<LivelinessSubscriberId> {
-        let livelinessSubscriberId = this.livelinessSubscriberIdCounter.get();
+        let livelinessSubscriberId = IdSource.get<LivelinessSubscriberId>();
         this.livelinessSubscribers.set(livelinessSubscriberId, closure);
         try {
             await this.sendRequest(
@@ -403,7 +389,7 @@ export class SessionInner {
     }
 
     async get(data: GetProperties, closure: Closure<Reply>): Promise<GetId> {
-        let getId = this.getIdCounter.get();
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new Get(getId, data));
@@ -415,7 +401,7 @@ export class SessionInner {
     }
 
     async querierGet(data: QuerierGetProperties, closure: Closure<Reply>): Promise<GetId>  {
-        let getId = this.getIdCounter.get();
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new QuerierGet(getId, data));
@@ -427,7 +413,7 @@ export class SessionInner {
     }
 
     async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>): Promise<GetId> {
-        let getId = this.getIdCounter.get();
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new LivelinessGet(getId, data));
@@ -455,7 +441,7 @@ export class SessionInner {
     }
 
     async publisherDeclareMatchingListener(publisherId: PublisherId, closure: Closure<MatchingStatus>): Promise<MatchingListenerId> {
-        let listenerId = this.matchingListenerIdCounter.get();
+        let listenerId = IdSource.get<MatchingListenerId>();
         this.matchingListeners.set(listenerId, closure);
         try {
             await this.sendRequest(
@@ -497,7 +483,7 @@ export class SessionInner {
     }
 
     async querierDeclareMatchingListener(querierId: QuerierId, closure: Closure<MatchingStatus>): Promise<MatchingListenerId> {
-        let listenerId = this.matchingListenerIdCounter.get();
+        let listenerId = IdSource.get<MatchingListenerId>();
         this.matchingListeners.set(listenerId, closure);
         try {
             await this.sendRequest(
