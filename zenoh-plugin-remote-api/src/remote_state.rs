@@ -222,13 +222,13 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "declare_subscriber: id={}, keyexpr={}",
-            declare_subscriber.id.0,
+            declare_subscriber.id,
             declare_subscriber.keyexpr
         );
         if self.subscribers.contains_key(&declare_subscriber.id) {
             bail!(
                 "Subscriber with id: '{}' already exists",
-                declare_subscriber.id.0
+                declare_subscriber.id
             );
         }
         let tx = self.tx.clone();
@@ -251,7 +251,7 @@ impl RemoteState {
         self.subscribers.insert(declare_subscriber.id, subscriber);
         tracing::trace!(
             "declare_subscriber: id={} completed successfully",
-            declare_subscriber.id.0
+            declare_subscriber.id
         );
         Ok(None)
     }
@@ -260,7 +260,7 @@ impl RemoteState {
         &mut self,
         undeclare_subscriber: UndeclareSubscriber,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("undeclare_subscriber: id={}", undeclare_subscriber.id.0);
+        tracing::trace!("undeclare_subscriber: id={}", undeclare_subscriber.id);
         match self.subscribers.remove(&undeclare_subscriber.id) {
             Some(s) => {
                 s.undeclare().await?;
@@ -270,13 +270,13 @@ impl RemoteState {
                     .unregister_subscriber(undeclare_subscriber.id);
                 tracing::trace!(
                     "undeclare_subscriber: id={} completed successfully",
-                    undeclare_subscriber.id.0
+                    undeclare_subscriber.id
                 );
                 Ok(None)
             }
             None => bail!(
                 "Subscriber with id {} does not exist",
-                undeclare_subscriber.id.0
+                undeclare_subscriber.id
             ),
         }
     }
@@ -756,7 +756,7 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "declare_liveliness_subscriber: id={}, keyexpr={}",
-            declare_liveliness_subscriber.id.0,
+            declare_liveliness_subscriber.id,
             declare_liveliness_subscriber.keyexpr
         );
         if self
@@ -765,7 +765,7 @@ impl RemoteState {
         {
             bail!(
                 "Liveliness subscriber with id: '{}' already exists",
-                declare_liveliness_subscriber.id.0
+                declare_liveliness_subscriber.id
             );
         }
         let tx = self.tx.clone();
@@ -786,7 +786,7 @@ impl RemoteState {
             .insert(declare_liveliness_subscriber.id, subscriber);
         tracing::trace!(
             "declare_liveliness_subscriber: id={} completed successfully",
-            declare_liveliness_subscriber.id.0
+            declare_liveliness_subscriber.id
         );
         Ok(None)
     }
@@ -797,7 +797,7 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "undeclare_liveliness_subscriber: id={}",
-            undeclare_liveliness_subscriber.id.0
+            undeclare_liveliness_subscriber.id
         );
         match self
             .liveliness_subscribers
@@ -807,13 +807,13 @@ impl RemoteState {
                 t.undeclare().await?;
                 tracing::trace!(
                     "undeclare_liveliness_subscriber: id={} completed successfully",
-                    undeclare_liveliness_subscriber.id.0
+                    undeclare_liveliness_subscriber.id
                 );
                 Ok(None)
             }
             None => bail!(
                 "Liveliness subscriber with id {} does not exist",
-                undeclare_liveliness_subscriber.id.0
+                undeclare_liveliness_subscriber.id
             ),
         }
     }
