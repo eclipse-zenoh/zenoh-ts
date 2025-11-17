@@ -506,7 +506,7 @@ export class SessionInner {
     }
 
     async close() {
-        this.link.close();
+        await this.link.close();
         for (let s of this.subscribers) {
             s[1].drop();
         }

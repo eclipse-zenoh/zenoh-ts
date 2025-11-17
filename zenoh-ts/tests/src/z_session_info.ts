@@ -46,11 +46,11 @@ Deno.test("Session Info - Comprehensive test", async () => {
     // session on the server side. This behavior may change in the future
     // if the remote-api-plugin is enhanced to provide unique session IDs
     // for each client connection.
-    assertEquals(zid.toString(), zid2.toString(), 
+    assertEquals(zid.toString(), zid2.toString(),
             "Sessions connected to the same remote-api-plugin should have the same ZID");
 
-    session2.close();
-    session.close();
+    await session2.close();
+    await session.close();
     await sleep(100);
     assert(session.isClosed(), "Session should be closed");
     assert(session2.isClosed(), "Session2 should be closed");
