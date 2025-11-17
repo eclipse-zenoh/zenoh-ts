@@ -28,22 +28,40 @@ use zenoh_result::bail;
 
 pub(crate) type SequenceId = u32;
 
-/// Typed identifier for regular subscribers
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct SubscriberId(pub(crate) u32);
+/// Macro to define typed identifiers with automatic Serialize/Deserialize
+macro_rules! define_typed_id {
+    ($name:ident) => {
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        pub(crate) struct $name(pub(crate) u32);
 
-impl Serialize for SubscriberId {
-    fn serialize(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.0);
-    }
+        impl Serialize for $name {
+            fn serialize(&self, serializer: &mut ZSerializer) {
+                serializer.serialize(self.0);
+            }
+        }
+
+        impl Deserialize for $name {
+            fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
+                Ok($name(deserializer.deserialize()?))
+            }
+        }
+
+        impl std::fmt::Display for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                write!(f, "{}", self.0)
+            }
+        }
+    };
 }
 
-impl Deserialize for SubscriberId {
-    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
-        Ok(SubscriberId(deserializer.deserialize()?))
-    }
-}
-
+// Define all typed identifiers
+define_typed_id!(SubscriberId);
+define_typed_id!(PublisherId);
+define_typed_id!(QueryableId);
+define_typed_id!(QueryId);
+define_typed_id!(LivelinessTokenId);
+define_typed_id!(QuerierId);
+define_typed_id!(MatchingListenerId);
 
 pub(crate) fn serialize_option<T: Sized + Serialize>(serializer: &mut ZSerializer, o: &Option<T>) {
     match o {
@@ -333,7 +351,7 @@ impl PingAck {
 }
 
 pub(crate) struct DeclarePublisher {
-    pub(crate) id: u32,
+    pub(crate) id: PublisherId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) encoding: Encoding,
     pub(crate) qos: Qos,
@@ -351,7 +369,7 @@ impl DeclarePublisher {
 }
 
 pub(crate) struct UndeclarePublisher {
-    pub(crate) id: u32,
+    pub(crate) id: PublisherId,
 }
 
 impl UndeclarePublisher {
@@ -363,8 +381,8 @@ impl UndeclarePublisher {
 }
 
 pub(crate) struct PublisherDeclareMatchingListener {
-    pub(crate) id: u32,
-    pub(crate) publisher_id: u32,
+    pub(crate) id: MatchingListenerId,
+    pub(crate) publisher_id: PublisherId,
 }
 
 impl PublisherDeclareMatchingListener {
@@ -377,7 +395,7 @@ impl PublisherDeclareMatchingListener {
 }
 
 pub(crate) struct UndeclareMatchingListener {
-    pub(crate) id: u32,
+    pub(crate) id: MatchingListenerId,
 }
 
 impl UndeclareMatchingListener {
@@ -389,7 +407,7 @@ impl UndeclareMatchingListener {
 }
 
 pub(crate) struct PublisherGetMatchingStatus {
-    pub(crate) publisher_id: u32,
+    pub(crate) publisher_id: PublisherId,
 }
 
 impl PublisherGetMatchingStatus {
@@ -429,7 +447,7 @@ impl UndeclareSubscriber {
 }
 
 pub(crate) struct DeclareQueryable {
-    pub(crate) id: u32,
+    pub(crate) id: QueryableId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) complete: bool,
     pub(crate) allowed_origin: Locality,
@@ -447,7 +465,7 @@ impl DeclareQueryable {
 }
 
 pub(crate) struct UndeclareQueryable {
-    pub(crate) id: u32,
+    pub(crate) id: QueryableId,
 }
 
 impl UndeclareQueryable {
@@ -459,7 +477,7 @@ impl UndeclareQueryable {
 }
 
 pub(crate) struct DeclareQuerier {
-    pub(crate) id: u32,
+    pub(crate) id: QuerierId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) qos: Qos,
     pub(crate) query_settings: QuerySettings,
@@ -479,7 +497,7 @@ impl DeclareQuerier {
 }
 
 pub(crate) struct UndeclareQuerier {
-    pub(crate) id: u32,
+    pub(crate) id: QuerierId,
 }
 
 impl UndeclareQuerier {
@@ -491,8 +509,8 @@ impl UndeclareQuerier {
 }
 
 pub(crate) struct QuerierDeclareMatchingListener {
-    pub(crate) id: u32,
-    pub(crate) querier_id: u32,
+    pub(crate) id: MatchingListenerId,
+    pub(crate) querier_id: QuerierId,
 }
 
 impl QuerierDeclareMatchingListener {
@@ -505,7 +523,7 @@ impl QuerierDeclareMatchingListener {
 }
 
 pub(crate) struct QuerierGetMatchingStatus {
-    pub(crate) querier_id: u32,
+    pub(crate) querier_id: QuerierId,
 }
 
 impl QuerierGetMatchingStatus {
@@ -527,7 +545,7 @@ impl MatchingStatus {
 }
 
 pub(crate) struct MatchingStatusUpdate {
-    pub(crate) matching_listener_id: u32,
+    pub(crate) matching_listener_id: MatchingListenerId,
     pub(crate) matching: bool,
 }
 
@@ -623,7 +641,7 @@ impl Delete {
 }
 
 pub(crate) struct PublisherPut {
-    pub(crate) publisher_id: u32,
+    pub(crate) publisher_id: PublisherId,
     pub(crate) payload: Vec<u8>,
     pub(crate) encoding: Option<Encoding>,
     pub(crate) attachment: Option<Vec<u8>>,
@@ -643,7 +661,7 @@ impl PublisherPut {
 }
 
 pub(crate) struct PublisherDelete {
-    pub(crate) publisher_id: u32,
+    pub(crate) publisher_id: PublisherId,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
 }
@@ -659,7 +677,7 @@ impl PublisherDelete {
 }
 
 pub(crate) struct Get {
-    pub(crate) id: u32,
+    pub(crate) id: QueryId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) parameters: String,
     pub(crate) payload: Option<Vec<u8>>,
@@ -687,8 +705,8 @@ impl Get {
 }
 
 pub(crate) struct QuerierGet {
-    pub(crate) id: u32,
-    pub(crate) querier_id: u32,
+    pub(crate) id: QueryId,
+    pub(crate) querier_id: QuerierId,
     pub(crate) parameters: String,
     pub(crate) payload: Option<Vec<u8>>,
     pub(crate) encoding: Option<Encoding>,
@@ -739,8 +757,8 @@ impl Sample {
 }
 
 pub(crate) struct Query {
-    pub(crate) queryable_id: u32,
-    pub(crate) query_id: u32,
+    pub(crate) queryable_id: QueryableId,
+    pub(crate) query_id: QueryId,
     pub(crate) query: zenoh::query::Query,
 }
 
@@ -766,7 +784,7 @@ impl Query {
 }
 
 pub(crate) struct Reply {
-    pub(crate) query_id: u32,
+    pub(crate) query_id: QueryId,
     pub(crate) reply: zenoh::query::Reply,
 }
 
@@ -792,7 +810,7 @@ impl Reply {
 }
 
 pub(crate) struct ReplyOk {
-    pub(crate) query_id: u32,
+    pub(crate) query_id: QueryId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) payload: Vec<u8>,
     pub(crate) encoding: Encoding,
@@ -816,7 +834,7 @@ impl ReplyOk {
 }
 
 pub(crate) struct ReplyDel {
-    pub(crate) query_id: u32,
+    pub(crate) query_id: QueryId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) attachment: Option<Vec<u8>>,
     pub(crate) timestamp: Option<Timestamp>,
@@ -836,7 +854,7 @@ impl ReplyDel {
 }
 
 pub(crate) struct ReplyErr {
-    pub(crate) query_id: u32,
+    pub(crate) query_id: QueryId,
     pub(crate) payload: Vec<u8>,
     pub(crate) encoding: Encoding,
 }
@@ -852,7 +870,7 @@ impl ReplyErr {
 }
 
 pub(crate) struct QueryResponseFinal {
-    pub(crate) query_id: u32,
+    pub(crate) query_id: QueryId,
 }
 
 impl QueryResponseFinal {
@@ -870,7 +888,7 @@ impl QueryResponseFinal {
 }
 
 pub(crate) struct DeclareLivelinessToken {
-    pub(crate) id: u32,
+    pub(crate) id: LivelinessTokenId,
     pub(crate) keyexpr: OwnedKeyExpr,
 }
 
@@ -886,7 +904,7 @@ impl DeclareLivelinessToken {
 }
 
 pub(crate) struct UndeclareLivelinessToken {
-    pub(crate) id: u32,
+    pub(crate) id: LivelinessTokenId,
 }
 
 impl UndeclareLivelinessToken {
@@ -928,7 +946,7 @@ impl UndeclareLivelinessSubscriber {
 }
 
 pub(crate) struct LivelinessGet {
-    pub(crate) id: u32,
+    pub(crate) id: QueryId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) timeout_ms: u32,
 }

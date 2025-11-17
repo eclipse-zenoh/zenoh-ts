@@ -37,9 +37,18 @@ use zenoh::{
 use zenoh_result::bail;
 
 use crate::{
-    AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId, interface::{
-        self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet, MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseSessionInfo, ResponseTimestamp, SubscriberId, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber
-    }
+    interface::{
+        self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher,
+        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet,
+        LivelinessTokenId, MatchingListenerId, MatchingStatus, PingAck,
+        PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherId,
+        PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus,
+        QuerierId, QueryId, QueryResponseFinal, QueryableId, ReplyDel, ReplyErr, ReplyOk,
+        ResponseSessionInfo, ResponseTimestamp, SubscriberId, UndeclareLivelinessSubscriber,
+        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
+        UndeclareQueryable, UndeclareSubscriber,
+    },
+    AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
 };
 
 // Since we do not have api to get query timeout
@@ -54,14 +63,14 @@ pub(crate) struct RemoteState {
     admin_client: Arc<Mutex<AdminSpaceClient>>,
     session: Session,
     subscribers: HashMap<SubscriberId, Subscriber<()>>,
-    publishers: HashMap<u32, Publisher<'static>>,
-    queryables: HashMap<u32, Queryable<()>>,
-    pending_queries: Arc<Mutex<LruCache<u32, Query>>>,
+    publishers: HashMap<PublisherId, Publisher<'static>>,
+    queryables: HashMap<QueryableId, Queryable<()>>,
+    pending_queries: Arc<Mutex<LruCache<QueryId, Query>>>,
     query_counter: Arc<AtomicU32>,
-    liveliness_tokens: HashMap<u32, LivelinessToken>,
+    liveliness_tokens: HashMap<LivelinessTokenId, LivelinessToken>,
     liveliness_subscribers: HashMap<SubscriberId, Subscriber<()>>,
-    queriers: HashMap<u32, Querier<'static>>,
-    matching_listeners: HashMap<u32, MatchingListener<()>>,
+    queriers: HashMap<QuerierId, Querier<'static>>,
+    matching_listeners: HashMap<MatchingListenerId, MatchingListener<()>>,
 }
 
 impl RemoteState {
@@ -173,7 +182,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_publisher(declare_publisher.id, publisher.key_expr().as_str());
+            .register_publisher(declare_publisher.id.0, publisher.key_expr().as_str());
         self.publishers.insert(declare_publisher.id, publisher);
         tracing::trace!(
             "declare_publisher: id={} completed successfully",
@@ -193,7 +202,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_publisher(undeclare_publisher.id);
+                    .unregister_publisher(undeclare_publisher.id.0);
                 tracing::trace!(
                     "undeclare_publisher: id={} completed successfully",
                     undeclare_publisher.id
@@ -297,7 +306,8 @@ impl RemoteState {
             .complete(declare_queryable.complete)
             .allowed_origin(declare_queryable.allowed_origin)
             .callback(move |q| {
-                let query_id = query_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let query_id =
+                    QueryId(query_counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
                 let msg = interface::Query {
                     queryable_id: declare_queryable.id,
                     query_id,
@@ -310,7 +320,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_queryable(declare_queryable.id, queryable.key_expr().as_str());
+            .register_queryable(declare_queryable.id.0, queryable.key_expr().as_str());
         self.queryables.insert(declare_queryable.id, queryable);
         tracing::trace!(
             "declare_queryable: id={} completed successfully",
@@ -330,7 +340,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_queryable(undeclare_queryable.id);
+                    .unregister_queryable(undeclare_queryable.id.0);
                 tracing::trace!(
                     "undeclare_queryable: id={} completed successfully",
                     undeclare_queryable.id
@@ -371,7 +381,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_querier(declare_querier.id, querier.key_expr().as_str());
+            .register_querier(declare_querier.id.0, querier.key_expr().as_str());
         self.queriers.insert(declare_querier.id, querier);
         tracing::trace!(
             "declare_querier: id={} completed successfully",
@@ -391,7 +401,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_querier(undeclare_querier.id);
+                    .unregister_querier(undeclare_querier.id.0);
                 tracing::trace!(
                     "undeclare_querier: id={} completed successfully",
                     undeclare_querier.id
@@ -507,7 +517,7 @@ impl RemoteState {
             }
         }
     }
-    fn create_get_callback(&self, query_id: u32) -> CallbackDrop<impl Fn(Reply), impl FnMut()> {
+    fn create_get_callback(&self, query_id: QueryId) -> CallbackDrop<impl Fn(Reply), impl FnMut()> {
         let tx1 = self.tx.clone();
         let tx2 = self.tx.clone();
         CallbackDrop {
