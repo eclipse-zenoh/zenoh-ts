@@ -744,7 +744,6 @@ fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample
     serializer.serialize(qos);
 }
 
-
 pub(crate) struct Sample {
     pub(crate) subscriber_id: SubscriberId,
     pub(crate) sample: zenoh::sample::Sample,
