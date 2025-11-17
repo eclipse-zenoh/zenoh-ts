@@ -897,7 +897,6 @@ impl DeclareLivelinessSubscriber {
     }
 }
 
-#[allow(dead_code)]
 pub(crate) struct UndeclareLivelinessSubscriber {
     pub(crate) id: u32,
 }
