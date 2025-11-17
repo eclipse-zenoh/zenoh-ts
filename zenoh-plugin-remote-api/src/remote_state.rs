@@ -37,17 +37,9 @@ use zenoh::{
 use zenoh_result::bail;
 
 use crate::{
-    interface::{
-        self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher,
-        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet,
-        MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete,
-        PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet,
-        QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk,
-        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
-        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
-        UndeclareQueryable, UndeclareSubscriber,
-    },
-    AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
+    AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId, interface::{
+        self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet, MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseSessionInfo, ResponseTimestamp, SubscriberId, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber
+    }
 };
 
 // Since we do not have api to get query timeout
@@ -61,13 +53,13 @@ pub(crate) struct RemoteState {
     tx: Sender<(OutRemoteMessage, Option<SequenceId>)>,
     admin_client: Arc<Mutex<AdminSpaceClient>>,
     session: Session,
-    subscribers: HashMap<u32, Subscriber<()>>,
+    subscribers: HashMap<SubscriberId, Subscriber<()>>,
     publishers: HashMap<u32, Publisher<'static>>,
     queryables: HashMap<u32, Queryable<()>>,
     pending_queries: Arc<Mutex<LruCache<u32, Query>>>,
     query_counter: Arc<AtomicU32>,
     liveliness_tokens: HashMap<u32, LivelinessToken>,
-    liveliness_subscribers: HashMap<u32, Subscriber<()>>,
+    liveliness_subscribers: HashMap<interface::LivelinessSubscriberId, Subscriber<()>>,
     queriers: HashMap<u32, Querier<'static>>,
     matching_listeners: HashMap<u32, MatchingListener<()>>,
 }
@@ -221,13 +213,13 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "declare_subscriber: id={}, keyexpr={}",
-            declare_subscriber.id,
+            declare_subscriber.id.0,
             declare_subscriber.keyexpr
         );
         if self.subscribers.contains_key(&declare_subscriber.id) {
             bail!(
                 "Subscriber with id: '{}' already exists",
-                declare_subscriber.id
+                declare_subscriber.id.0
             );
         }
         let tx = self.tx.clone();
@@ -246,11 +238,11 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_subscriber(declare_subscriber.id, subscriber.key_expr().as_str());
+            .register_subscriber(declare_subscriber.id.0, subscriber.key_expr().as_str());
         self.subscribers.insert(declare_subscriber.id, subscriber);
         tracing::trace!(
             "declare_subscriber: id={} completed successfully",
-            declare_subscriber.id
+            declare_subscriber.id.0
         );
         Ok(None)
     }
@@ -259,23 +251,23 @@ impl RemoteState {
         &mut self,
         undeclare_subscriber: UndeclareSubscriber,
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
-        tracing::trace!("undeclare_subscriber: id={}", undeclare_subscriber.id);
+        tracing::trace!("undeclare_subscriber: id={}", undeclare_subscriber.id.0);
         match self.subscribers.remove(&undeclare_subscriber.id) {
             Some(s) => {
                 s.undeclare().await?;
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_subscriber(undeclare_subscriber.id);
+                    .unregister_subscriber(undeclare_subscriber.id.0);
                 tracing::trace!(
                     "undeclare_subscriber: id={} completed successfully",
-                    undeclare_subscriber.id
+                    undeclare_subscriber.id.0
                 );
                 Ok(None)
             }
             None => bail!(
                 "Subscriber with id {} does not exist",
-                undeclare_subscriber.id
+                undeclare_subscriber.id.0
             ),
         }
     }
@@ -754,16 +746,16 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "declare_liveliness_subscriber: id={}, keyexpr={}",
-            declare_liveliness_subscriber.id,
+            declare_liveliness_subscriber.id.0,
             declare_liveliness_subscriber.keyexpr
         );
         if self
-            .subscribers
+            .liveliness_subscribers
             .contains_key(&declare_liveliness_subscriber.id)
         {
             bail!(
-                "Subscriber with id: '{}' already exists",
-                declare_liveliness_subscriber.id
+                "Liveliness subscriber with id: '{}' already exists",
+                declare_liveliness_subscriber.id.0
             );
         }
         let tx = self.tx.clone();
@@ -780,11 +772,11 @@ impl RemoteState {
                 let _ = tx.send((OutRemoteMessage::Sample(msg), None));
             })
             .await?;
-        self.subscribers
+        self.liveliness_subscribers
             .insert(declare_liveliness_subscriber.id, subscriber);
         tracing::trace!(
             "declare_liveliness_subscriber: id={} completed successfully",
-            declare_liveliness_subscriber.id
+            declare_liveliness_subscriber.id.0
         );
         Ok(None)
     }
@@ -795,7 +787,7 @@ impl RemoteState {
     ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
         tracing::trace!(
             "undeclare_liveliness_subscriber: id={}",
-            undeclare_liveliness_subscriber.id
+            undeclare_liveliness_subscriber.id.0
         );
         match self
             .liveliness_subscribers
@@ -805,13 +797,13 @@ impl RemoteState {
                 t.undeclare().await?;
                 tracing::trace!(
                     "undeclare_liveliness_subscriber: id={} completed successfully",
-                    undeclare_liveliness_subscriber.id
+                    undeclare_liveliness_subscriber.id.0
                 );
                 Ok(None)
             }
             None => bail!(
                 "Liveliness subscriber with id {} does not exist",
-                undeclare_liveliness_subscriber.id
+                undeclare_liveliness_subscriber.id.0
             ),
         }
     }

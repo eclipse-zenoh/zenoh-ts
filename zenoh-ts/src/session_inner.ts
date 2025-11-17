@@ -529,6 +529,11 @@ export class SessionInner {
         }
         this.subscribers.clear();
 
+        for (let l of this.livelinessSubscribers) {
+            l[1].drop();
+        }
+        this.livelinessSubscribers.clear();
+
         for (let g of this.gets) {
             g[1].drop();
         }

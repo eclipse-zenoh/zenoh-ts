@@ -28,6 +28,38 @@ use zenoh_result::bail;
 
 pub(crate) type SequenceId = u32;
 
+/// Typed identifier for regular subscribers
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct SubscriberId(pub(crate) u32);
+
+impl Serialize for SubscriberId {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.0);
+    }
+}
+
+impl Deserialize for SubscriberId {
+    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
+        Ok(SubscriberId(deserializer.deserialize()?))
+    }
+}
+
+/// Typed identifier for liveliness subscribers
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub(crate) struct LivelinessSubscriberId(pub(crate) u32);
+
+impl Serialize for LivelinessSubscriberId {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.0);
+    }
+}
+
+impl Deserialize for LivelinessSubscriberId {
+    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
+        Ok(LivelinessSubscriberId(deserializer.deserialize()?))
+    }
+}
+
 pub(crate) fn serialize_option<T: Sized + Serialize>(serializer: &mut ZSerializer, o: &Option<T>) {
     match o {
         Some(v) => {
@@ -384,7 +416,7 @@ impl PublisherGetMatchingStatus {
 }
 
 pub(crate) struct DeclareSubscriber {
-    pub(crate) id: u32,
+    pub(crate) id: SubscriberId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) allowed_origin: Locality,
 }
@@ -400,7 +432,7 @@ impl DeclareSubscriber {
 }
 
 pub(crate) struct UndeclareSubscriber {
-    pub(crate) id: u32,
+    pub(crate) id: SubscriberId,
 }
 
 impl UndeclareSubscriber {
@@ -708,8 +740,28 @@ fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample
     serializer.serialize(qos);
 }
 
+pub(crate) enum SubscriberIdWithKind {
+    Subscriber(SubscriberId),
+    LivelinessSubscriber(LivelinessSubscriberId),
+}
+
+impl Serialize for SubscriberIdWithKind {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        match self {
+            SubscriberIdWithKind::Subscriber(id) => {
+                serializer.serialize(0u8);
+                serializer.serialize(*id);
+            }
+            SubscriberIdWithKind::LivelinessSubscriber(id) => {
+                serializer.serialize(1u8);
+                serializer.serialize(*id);
+            }
+        }
+    }
+}
+
 pub(crate) struct Sample {
-    pub(crate) subscriber_id: u32,
+    pub(crate) subscriber_id_with_kind: SubscriberIdWithKind,
     pub(crate) sample: zenoh::sample::Sample,
 }
 
@@ -880,7 +932,7 @@ impl UndeclareLivelinessToken {
 }
 
 pub(crate) struct DeclareLivelinessSubscriber {
-    pub(crate) id: u32,
+    pub(crate) id: LivelinessSubscriberId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) history: bool,
 }
@@ -898,7 +950,7 @@ impl DeclareLivelinessSubscriber {
 }
 
 pub(crate) struct UndeclareLivelinessSubscriber {
-    pub(crate) id: u32,
+    pub(crate) id: LivelinessSubscriberId,
 }
 
 impl UndeclareLivelinessSubscriber {
