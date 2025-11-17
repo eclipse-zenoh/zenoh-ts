@@ -22,7 +22,7 @@ import { Sample } from "./sample.js";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
 import { SessionInfo } from "./session.js";
-import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId } from "./session_inner.js";
+import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, LivelinessSubscriberId, GetId, MatchingListenerId } from "./session_inner.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
@@ -269,7 +269,7 @@ export enum OutRemoteMessageId {
     DeclareLivelinessToken,
     UndeclareLivelinessToken,
     DeclareLivelinessSubscriber,
-    UndeclareLivelinessSubscriber, // obsolete, not used, kept for protocol compatibility
+    UndeclareLivelinessSubscriber,
     GetSessionInfo,
     GetTimestamp,
     Put,
@@ -450,7 +450,7 @@ export type LivelinessSubscriberProperties = {
 export class DeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessSubscriber;
     public constructor(
-        public readonly id: SubscriberId,
+        public readonly id: LivelinessSubscriberId,
         public readonly properties: LivelinessSubscriberProperties,
     ) {}
 
@@ -458,6 +458,17 @@ export class DeclareLivelinessSubscriber {
         serializer.serializeNumberUint32(this.id);
         serializer.serializeString(this.properties.keyexpr.toString());
         serializer.serializeBoolean(this.properties.history);
+    }
+}
+
+export class UndeclareLivelinessSubscriber {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessSubscriber;
+    public constructor(
+        public readonly id: LivelinessSubscriberId,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
     }
 }
 

@@ -15,7 +15,7 @@
 
 import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
 import { KeyExpr } from "./key_expr.js";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
 import { Query, Reply } from "./query.js";
 import { Closure } from "./closure.js";
 import { RemoteLink } from "./link.js";
@@ -30,6 +30,7 @@ declare const subscriberIdBrand: unique symbol;
 declare const queryableIdBrand: unique symbol;
 declare const querierIdBrand: unique symbol;
 declare const livelinessTokenIdBrand: unique symbol;
+declare const livelinessSubscriberIdBrand: unique symbol;
 declare const getIdBrand: unique symbol;
 declare const matchingListenerIdBrand: unique symbol;
 
@@ -38,8 +39,14 @@ export type SubscriberId = number & { readonly [subscriberIdBrand]: typeof subsc
 export type QueryableId = number & { readonly [queryableIdBrand]: typeof queryableIdBrand };
 export type QuerierId = number & { readonly [querierIdBrand]: typeof querierIdBrand };
 export type LivelinessTokenId = number & { readonly [livelinessTokenIdBrand]: typeof livelinessTokenIdBrand };
+export type LivelinessSubscriberId = number & { readonly [livelinessSubscriberIdBrand]: typeof livelinessSubscriberIdBrand };
 export type GetId = number & { readonly [getIdBrand]: typeof getIdBrand };
 export type MatchingListenerId = number & { readonly [matchingListenerIdBrand]: typeof matchingListenerIdBrand };
+
+export enum SubscriberKind {
+    Subscriber,
+    LivelinessSubscriber,
+}
 
 class IdSource<T extends number> {
     private static MAX: number = 1 << 31;
@@ -75,16 +82,17 @@ export class SessionInner {
     private queryableIdCounter: IdSource<QueryableId> = new IdSource<QueryableId>();
     private querierIdCounter: IdSource<QuerierId> = new IdSource<QuerierId>();
     private livelinessTokenIdCounter: IdSource<LivelinessTokenId> = new IdSource<LivelinessTokenId>();
+    private livelinessSubscriberIdCounter: IdSource<LivelinessSubscriberId> = new IdSource<LivelinessSubscriberId>();
     private getIdCounter: IdSource<GetId> = new IdSource<GetId>();
     private matchingListenerIdCounter: IdSource<MatchingListenerId> = new IdSource<MatchingListenerId>();
 
     private subscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
+    private livelinessSubscribers: Map<LivelinessSubscriberId, Closure<Sample>> = new Map<LivelinessSubscriberId, Closure<Sample>>();
     private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
     private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
     private readonly messageResponseTimeoutMs: number;
-    
 
     private constructor(link: RemoteLink, messageResponseTimeoutMs: number) {
         this.link = link;
@@ -327,20 +335,35 @@ export class SessionInner {
         );
     }
 
-    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
-        let subscriberId = this.subscriberIdCounter.get();
-        this.subscribers.set(subscriberId, closure);
+    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<LivelinessSubscriberId> {
+        let livelinessSubscriberId = this.livelinessSubscriberIdCounter.get();
+        this.livelinessSubscribers.set(livelinessSubscriberId, closure);
         try {
             await this.sendRequest(
-                new DeclareLivelinessSubscriber(subscriberId, info), 
+                new DeclareLivelinessSubscriber(livelinessSubscriberId, info), 
                 InRemoteMessageId.ResponseOk, 
                 ResponseOk.deserialize
             );
         } catch (error) {
-            this.subscribers.delete(subscriberId);
+            this.livelinessSubscribers.delete(livelinessSubscriberId);
             throw error;
         }
-        return subscriberId;
+        return livelinessSubscriberId;
+    }
+
+    async undeclareLivelinessSubscriber(livelinessSubscriberId: LivelinessSubscriberId) {
+        const livelinessSubscriber = this.livelinessSubscribers.get(livelinessSubscriberId);
+        if (livelinessSubscriber == undefined) {
+            new Error (`Unknown liveliness subscriber id: ${livelinessSubscriberId}`)
+        } else {
+            this.livelinessSubscribers.delete(livelinessSubscriberId);
+            livelinessSubscriber.drop();
+        }
+        await this.sendRequest(
+            new UndeclareLivelinessSubscriber(livelinessSubscriberId), 
+            InRemoteMessageId.ResponseOk, 
+            ResponseOk.deserialize
+        );
     }
 
     async getSessionInfo(): Promise<SessionInfo> {

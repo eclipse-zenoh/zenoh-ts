@@ -43,9 +43,9 @@ use crate::{
         MatchingStatus, PingAck, PublisherDeclareMatchingListener, PublisherDelete,
         PublisherGetMatchingStatus, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet,
         QuerierGetMatchingStatus, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk,
-        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessToken,
-        UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable,
-        UndeclareSubscriber,
+        ResponseSessionInfo, ResponseTimestamp, UndeclareLivelinessSubscriber,
+        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
+        UndeclareQueryable, UndeclareSubscriber,
     },
     AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
 };
@@ -67,6 +67,7 @@ pub(crate) struct RemoteState {
     pending_queries: Arc<Mutex<LruCache<u32, Query>>>,
     query_counter: Arc<AtomicU32>,
     liveliness_tokens: HashMap<u32, LivelinessToken>,
+    liveliness_subscribers: HashMap<u32, Subscriber<()>>,
     queriers: HashMap<u32, Querier<'static>>,
     matching_listeners: HashMap<u32, MatchingListener<()>>,
 }
@@ -92,6 +93,7 @@ impl RemoteState {
             ))),
             query_counter: Arc::new(AtomicU32::new(0)),
             liveliness_tokens: HashMap::new(),
+            liveliness_subscribers: HashMap::new(),
             queriers: HashMap::new(),
             matching_listeners: HashMap::new(),
         }
@@ -130,6 +132,17 @@ impl RemoteState {
         std::mem::swap(&mut liveliness_tokens, &mut self.liveliness_tokens);
         for (_, token) in liveliness_tokens {
             if let Err(e) = token.undeclare().await {
+                tracing::error!("{e}")
+            }
+        }
+
+        let mut liveliness_subscribers = HashMap::new();
+        std::mem::swap(
+            &mut liveliness_subscribers,
+            &mut self.liveliness_subscribers,
+        );
+        for (_, subscriber) in liveliness_subscribers {
+            if let Err(e) = subscriber.undeclare().await {
                 tracing::error!("{e}")
             }
         }
@@ -776,6 +789,33 @@ impl RemoteState {
         Ok(None)
     }
 
+    async fn undeclare_liveliness_subscriber(
+        &mut self,
+        undeclare_liveliness_subscriber: UndeclareLivelinessSubscriber,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        tracing::trace!(
+            "undeclare_liveliness_subscriber: id={}",
+            undeclare_liveliness_subscriber.id
+        );
+        match self
+            .liveliness_subscribers
+            .remove(&undeclare_liveliness_subscriber.id)
+        {
+            Some(t) => {
+                t.undeclare().await?;
+                tracing::trace!(
+                    "undeclare_liveliness_subscriber: id={} completed successfully",
+                    undeclare_liveliness_subscriber.id
+                );
+                Ok(None)
+            }
+            None => bail!(
+                "Liveliness subscriber with id {} does not exist",
+                undeclare_liveliness_subscriber.id
+            ),
+        }
+    }
+
     async fn liveliness_get(
         &self,
         liveliness_get: LivelinessGet,
@@ -1045,9 +1085,9 @@ impl RemoteState {
                 self.response_final(response_final)?;
                 Ok(None)
             }
-            InRemoteMessage::UndeclareLivelinessSubscriber(_) => {
-                // do nothing, as liveliness subscribers are stored in the same map as normal subscribers
-                Ok(None)
+            InRemoteMessage::UndeclareLivelinessSubscriber(undeclare_liveliness_subscriber) => {
+                self.undeclare_liveliness_subscriber(undeclare_liveliness_subscriber)
+                    .await
             }
             InRemoteMessage::Ping(_) => Ok(Some(OutRemoteMessage::PingAck(PingAck {
                 uuid: self.id.clone(),

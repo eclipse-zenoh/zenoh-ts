@@ -897,9 +897,6 @@ impl DeclareLivelinessSubscriber {
     }
 }
 
-// Obsolete type, kept for backward compatibility
-// There is no specific message to undeclare a liveliness subscriber anymore,
-// liveliness subscribers are undeclared as normal ones
 #[allow(dead_code)]
 pub(crate) struct UndeclareLivelinessSubscriber {
     pub(crate) id: u32,
@@ -959,7 +956,6 @@ macro_rules! remote_message_inner {
                 }
             }
         }
-        #[allow(dead_code)]
         $( #[$meta] )*
         $access enum $name {
             $($val($val),)*
