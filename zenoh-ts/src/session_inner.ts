@@ -72,7 +72,6 @@ export class SessionInner {
 
     private subscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
-    private livelinessSubscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
     private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
@@ -321,31 +320,31 @@ export class SessionInner {
 
     async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
         let livelinessSubscriberId = IdSource.get<SubscriberId>();
-        this.livelinessSubscribers.set(livelinessSubscriberId, closure);
+        this.subscribers.set(livelinessSubscriberId, closure);
         try {
             await this.sendRequest(
-                new DeclareLivelinessSubscriber(livelinessSubscriberId, info), 
-                InRemoteMessageId.ResponseOk, 
+                new DeclareLivelinessSubscriber(livelinessSubscriberId, info),
+                InRemoteMessageId.ResponseOk,
                 ResponseOk.deserialize
             );
         } catch (error) {
-            this.livelinessSubscribers.delete(livelinessSubscriberId);
+            this.subscribers.delete(livelinessSubscriberId);
             throw error;
         }
         return livelinessSubscriberId;
     }
 
     async undeclareLivelinessSubscriber(livelinessSubscriberId: SubscriberId) {
-        const livelinessSubscriber = this.livelinessSubscribers.get(livelinessSubscriberId);
+        const livelinessSubscriber = this.subscribers.get(livelinessSubscriberId);
         if (livelinessSubscriber == undefined) {
             new Error (`Unknown liveliness subscriber id: ${livelinessSubscriberId}`)
         } else {
-            this.livelinessSubscribers.delete(livelinessSubscriberId);
+            this.subscribers.delete(livelinessSubscriberId);
             livelinessSubscriber.drop();
         }
         await this.sendRequest(
-            new UndeclareLivelinessSubscriber(livelinessSubscriberId), 
-            InRemoteMessageId.ResponseOk, 
+            new UndeclareLivelinessSubscriber(livelinessSubscriberId),
+            InRemoteMessageId.ResponseOk,
             ResponseOk.deserialize
         );
     }
@@ -512,11 +511,6 @@ export class SessionInner {
             s[1].drop();
         }
         this.subscribers.clear();
-
-        for (let l of this.livelinessSubscribers) {
-            l[1].drop();
-        }
-        this.livelinessSubscribers.clear();
 
         for (let g of this.gets) {
             g[1].drop();
