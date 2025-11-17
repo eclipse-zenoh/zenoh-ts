@@ -59,7 +59,7 @@ pub(crate) struct RemoteState {
     pending_queries: Arc<Mutex<LruCache<u32, Query>>>,
     query_counter: Arc<AtomicU32>,
     liveliness_tokens: HashMap<u32, LivelinessToken>,
-    liveliness_subscribers: HashMap<interface::LivelinessSubscriberId, Subscriber<()>>,
+    liveliness_subscribers: HashMap<SubscriberId, Subscriber<()>>,
     queriers: HashMap<u32, Querier<'static>>,
     matching_listeners: HashMap<u32, MatchingListener<()>>,
 }

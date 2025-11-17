@@ -44,21 +44,6 @@ impl Deserialize for SubscriberId {
     }
 }
 
-/// Typed identifier for liveliness subscribers
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct LivelinessSubscriberId(pub(crate) u32);
-
-impl Serialize for LivelinessSubscriberId {
-    fn serialize(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.0);
-    }
-}
-
-impl Deserialize for LivelinessSubscriberId {
-    fn deserialize(deserializer: &mut ZDeserializer) -> Result<Self, ZDeserializeError> {
-        Ok(LivelinessSubscriberId(deserializer.deserialize()?))
-    }
-}
 
 pub(crate) fn serialize_option<T: Sized + Serialize>(serializer: &mut ZSerializer, o: &Option<T>) {
     match o {
@@ -740,28 +725,9 @@ fn serialize_sample(serializer: &mut ZSerializer, sample: &zenoh::sample::Sample
     serializer.serialize(qos);
 }
 
-pub(crate) enum SubscriberIdWithKind {
-    Subscriber(SubscriberId),
-    LivelinessSubscriber(LivelinessSubscriberId),
-}
-
-impl Serialize for SubscriberIdWithKind {
-    fn serialize(&self, serializer: &mut ZSerializer) {
-        match self {
-            SubscriberIdWithKind::Subscriber(id) => {
-                serializer.serialize(0u8);
-                serializer.serialize(*id);
-            }
-            SubscriberIdWithKind::LivelinessSubscriber(id) => {
-                serializer.serialize(1u8);
-                serializer.serialize(*id);
-            }
-        }
-    }
-}
 
 pub(crate) struct Sample {
-    pub(crate) subscriber_id_with_kind: SubscriberIdWithKind,
+    pub(crate) subscriber_id: SubscriberId,
     pub(crate) sample: zenoh::sample::Sample,
 }
 
@@ -932,7 +898,7 @@ impl UndeclareLivelinessToken {
 }
 
 pub(crate) struct DeclareLivelinessSubscriber {
-    pub(crate) id: LivelinessSubscriberId,
+    pub(crate) id: SubscriberId,
     pub(crate) keyexpr: OwnedKeyExpr,
     pub(crate) history: bool,
 }
@@ -950,7 +916,7 @@ impl DeclareLivelinessSubscriber {
 }
 
 pub(crate) struct UndeclareLivelinessSubscriber {
-    pub(crate) id: LivelinessSubscriberId,
+    pub(crate) id: SubscriberId,
 }
 
 impl UndeclareLivelinessSubscriber {
