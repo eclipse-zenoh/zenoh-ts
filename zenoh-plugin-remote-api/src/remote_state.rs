@@ -182,7 +182,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_publisher(declare_publisher.id.0, publisher.key_expr().as_str());
+            .register_publisher(declare_publisher.id, publisher.key_expr().as_str());
         self.publishers.insert(declare_publisher.id, publisher);
         tracing::trace!(
             "declare_publisher: id={} completed successfully",
@@ -202,7 +202,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_publisher(undeclare_publisher.id.0);
+                    .unregister_publisher(undeclare_publisher.id);
                 tracing::trace!(
                     "undeclare_publisher: id={} completed successfully",
                     undeclare_publisher.id
@@ -247,7 +247,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_subscriber(declare_subscriber.id.0, subscriber.key_expr().as_str());
+            .register_subscriber(declare_subscriber.id, subscriber.key_expr().as_str());
         self.subscribers.insert(declare_subscriber.id, subscriber);
         tracing::trace!(
             "declare_subscriber: id={} completed successfully",
@@ -267,7 +267,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_subscriber(undeclare_subscriber.id.0);
+                    .unregister_subscriber(undeclare_subscriber.id);
                 tracing::trace!(
                     "undeclare_subscriber: id={} completed successfully",
                     undeclare_subscriber.id.0
@@ -320,7 +320,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_queryable(declare_queryable.id.0, queryable.key_expr().as_str());
+            .register_queryable(declare_queryable.id, queryable.key_expr().as_str());
         self.queryables.insert(declare_queryable.id, queryable);
         tracing::trace!(
             "declare_queryable: id={} completed successfully",
@@ -340,7 +340,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_queryable(undeclare_queryable.id.0);
+                    .unregister_queryable(undeclare_queryable.id);
                 tracing::trace!(
                     "undeclare_queryable: id={} completed successfully",
                     undeclare_queryable.id
@@ -381,7 +381,7 @@ impl RemoteState {
         self.admin_client
             .lock()
             .unwrap()
-            .register_querier(declare_querier.id.0, querier.key_expr().as_str());
+            .register_querier(declare_querier.id, querier.key_expr().as_str());
         self.queriers.insert(declare_querier.id, querier);
         tracing::trace!(
             "declare_querier: id={} completed successfully",
@@ -401,7 +401,7 @@ impl RemoteState {
                 self.admin_client
                     .lock()
                     .unwrap()
-                    .unregister_querier(undeclare_querier.id.0);
+                    .unregister_querier(undeclare_querier.id);
                 tracing::trace!(
                     "undeclare_querier: id={} completed successfully",
                     undeclare_querier.id

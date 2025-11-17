@@ -31,7 +31,8 @@ pub(crate) type SequenceId = u32;
 /// Macro to define typed identifiers with automatic Serialize/Deserialize
 macro_rules! define_typed_id {
     ($name:ident) => {
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, serde::Serialize)]
+        #[serde(transparent)]
         pub(crate) struct $name(pub(crate) u32);
 
         impl Serialize for $name {
