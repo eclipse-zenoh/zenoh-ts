@@ -22,7 +22,7 @@ import { Sample } from "./sample.js";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
 import { SessionInfo } from "./session.js";
-import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, LivelinessSubscriberId, GetId, MatchingListenerId } from "./session_inner.js";
+import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId } from "./session_inner.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
@@ -450,7 +450,7 @@ export type LivelinessSubscriberProperties = {
 export class DeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessSubscriber;
     public constructor(
-        public readonly id: LivelinessSubscriberId,
+        public readonly id: SubscriberId,
         public readonly properties: LivelinessSubscriberProperties,
     ) {}
 
@@ -464,7 +464,7 @@ export class DeclareLivelinessSubscriber {
 export class UndeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessSubscriber;
     public constructor(
-        public readonly id: LivelinessSubscriberId,
+        public readonly id: SubscriberId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {

@@ -17,7 +17,7 @@ import { Sample } from "./sample.js";
 import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver, FifoChannel, intoCbDropReceiver } from "./channels.js";
-import { SessionInner, PublisherId, SubscriberId, LivelinessSubscriberId, SubscriberKind } from "./session_inner.js";
+import { SessionInner, PublisherId, SubscriberId, SubscriberKind } from "./session_inner.js";
 import { PublisherDelete, PublisherProperties, PublisherPut } from "./message.js";
 import { CongestionControl, Priority, Reliability } from "./enums.js";
 import { MatchingListener, MatchingListenerOptions, MatchingStatus } from "./matching.js";
@@ -48,7 +48,7 @@ export class Subscriber {
     constructor(
         private session: SessionInner,
         private kind: SubscriberKind,
-        private id: SubscriberId | LivelinessSubscriberId,
+        private id: SubscriberId,
         private keyExpr_: KeyExpr,
         private receiver_?: ChannelReceiver<Sample>,
     ) { }
@@ -75,9 +75,9 @@ export class Subscriber {
      */
     async undeclare() {
         if (this.kind === SubscriberKind.Subscriber) {
-            await this.session.undeclareSubscriber(this.id as SubscriberId);
+            await this.session.undeclareSubscriber(this.id);
         } else {
-            await this.session.undeclareLivelinessSubscriber(this.id as LivelinessSubscriberId);
+            await this.session.undeclareLivelinessSubscriber(this.id);
         }
     }
 }

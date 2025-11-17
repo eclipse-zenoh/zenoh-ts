@@ -30,7 +30,6 @@ declare const subscriberIdBrand: unique symbol;
 declare const queryableIdBrand: unique symbol;
 declare const querierIdBrand: unique symbol;
 declare const livelinessTokenIdBrand: unique symbol;
-declare const livelinessSubscriberIdBrand: unique symbol;
 declare const getIdBrand: unique symbol;
 declare const matchingListenerIdBrand: unique symbol;
 
@@ -39,7 +38,6 @@ export type SubscriberId = number & { readonly [subscriberIdBrand]: typeof subsc
 export type QueryableId = number & { readonly [queryableIdBrand]: typeof queryableIdBrand };
 export type QuerierId = number & { readonly [querierIdBrand]: typeof querierIdBrand };
 export type LivelinessTokenId = number & { readonly [livelinessTokenIdBrand]: typeof livelinessTokenIdBrand };
-export type LivelinessSubscriberId = number & { readonly [livelinessSubscriberIdBrand]: typeof livelinessSubscriberIdBrand };
 export type GetId = number & { readonly [getIdBrand]: typeof getIdBrand };
 export type MatchingListenerId = number & { readonly [matchingListenerIdBrand]: typeof matchingListenerIdBrand };
 
@@ -74,7 +72,7 @@ export class SessionInner {
 
     private subscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
-    private livelinessSubscribers: Map<LivelinessSubscriberId, Closure<Sample>> = new Map<LivelinessSubscriberId, Closure<Sample>>();
+    private livelinessSubscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
     private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
     private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
@@ -321,8 +319,8 @@ export class SessionInner {
         );
     }
 
-    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<LivelinessSubscriberId> {
-        let livelinessSubscriberId = IdSource.get<LivelinessSubscriberId>();
+    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
+        let livelinessSubscriberId = IdSource.get<SubscriberId>();
         this.livelinessSubscribers.set(livelinessSubscriberId, closure);
         try {
             await this.sendRequest(
@@ -337,7 +335,7 @@ export class SessionInner {
         return livelinessSubscriberId;
     }
 
-    async undeclareLivelinessSubscriber(livelinessSubscriberId: LivelinessSubscriberId) {
+    async undeclareLivelinessSubscriber(livelinessSubscriberId: SubscriberId) {
         const livelinessSubscriber = this.livelinessSubscribers.get(livelinessSubscriberId);
         if (livelinessSubscriber == undefined) {
             new Error (`Unknown liveliness subscriber id: ${livelinessSubscriberId}`)
