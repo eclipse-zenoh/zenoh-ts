@@ -19,6 +19,7 @@ use zenoh::{
     internal::{plugins::PluginsManager, runtime::RuntimeBuilder},
     session::ZenohId,
 };
+use zenoh_config::PermissionsConf;
 use zenoh_plugin_remote_api::RemoteApiPlugin;
 use zenoh_plugin_trait::Plugin;
 
@@ -74,6 +75,22 @@ struct Args {
     /// Path to the TLS private key file for secure WebSocket connections.
     #[arg(long, value_name = "PATH")]
     key: Option<String>,
+
+    /// Allows arbitrary configuration changes as column-separated KEY:VALUE pairs,
+    /// where the empty key is used to represent the entire configuration:
+    ///   - KEY must be a valid config path, or empty string if the whole configuration is defined.
+    ///   - VALUE must be a valid JSON5 string that can be deserialized to the expected type for the KEY field.
+    ///
+    /// Examples:
+    /// - `--cfg='startup/subscribe:["demo/**"]'`
+    /// - `--cfg='plugins/storage_manager/storages/demo:{key_expr:"demo/example/**",volume:"memory"}'`
+    /// - `--cfg=':{metadata:{name:"My App"},adminspace:{enabled:true,permissions:{read:true,write:true}}'`
+    #[arg(long)]
+    cfg: Vec<String>,
+
+    /// Configure the read and/or write permissions on the admin space. Default is read only.
+    #[arg(long, value_name = "[r|w|rw|none]")]
+    adminspace_permissions: Option<String>,
 }
 
 #[derive(clap::ValueEnum, Clone, Debug)]
@@ -106,11 +123,23 @@ impl std::str::FromStr for SessionMode {
 fn parse_args() -> Config {
     let args = Args::parse();
 
-    // load config file at first
-    let mut config = match &args.config {
-        Some(conf_file) => Config::from_file(conf_file).unwrap(),
-        None => Config::default(),
+    // Check for inline config first (--cfg with empty key)
+    let mut inline_config = None;
+    for json in &args.cfg {
+        if let Some(("", cfg)) = json.split_once(':') {
+            inline_config = Some(cfg);
+        }
+    }
+
+    // Load config: inline config takes precedence over config file
+    let mut config = if let Some(cfg) = inline_config {
+        Config::from_json5(cfg).expect("Invalid Zenoh config")
+    } else if let Some(conf_file) = &args.config {
+        Config::from_file(conf_file).unwrap()
+    } else {
+        Config::default()
     };
+
     // if "remote_api" plugin conf is not present, add it (empty to use default config)
     if config.plugin("remote_api").is_none() {
         config.insert_json5("plugins/remote_api", "{}").unwrap();
@@ -152,6 +181,43 @@ fn parse_args() -> Config {
     // Enable loading plugins
     config.plugins_loading.set_enabled(true).unwrap();
 
+    // Apply adminspace permissions if specified
+    if let Some(adminspace_permissions) = &args.adminspace_permissions {
+        match adminspace_permissions.as_str() {
+            "r" => config
+                .adminspace
+                .set_permissions(PermissionsConf {
+                    read: true,
+                    write: false,
+                })
+                .unwrap(),
+            "w" => config
+                .adminspace
+                .set_permissions(PermissionsConf {
+                    read: false,
+                    write: true,
+                })
+                .unwrap(),
+            "rw" => config
+                .adminspace
+                .set_permissions(PermissionsConf {
+                    read: true,
+                    write: true,
+                })
+                .unwrap(),
+            "none" => config
+                .adminspace
+                .set_permissions(PermissionsConf {
+                    read: false,
+                    write: false,
+                })
+                .unwrap(),
+            s => panic!(
+                r#"Invalid option: --adminspace-permissions={s} - Accepted values: "r", "w", "rw" or "none""#
+            ),
+        };
+    }
+
     // apply Remote API related arguments over config
     if let Some(ws_port) = &args.ws_port {
         config
@@ -175,6 +241,26 @@ fn parse_args() -> Config {
                     &format!(r#""{key_path}""#),
                 )
                 .unwrap();
+        }
+    }
+
+    // Process --cfg parameters (except the inline config which was already processed)
+    for json in &args.cfg {
+        if let Some((key, value)) = json.split_once(':') {
+            if !key.is_empty() {
+                match json5::Deserializer::from_str(value) {
+                    Ok(mut deserializer) => {
+                        if let Err(e) =
+                            config.insert(key.strip_prefix('/').unwrap_or(key), &mut deserializer)
+                        {
+                            tracing::warn!("Couldn't perform configuration {}: {}", json, e);
+                        }
+                    }
+                    Err(e) => tracing::warn!("Couldn't perform configuration {}: {}", json, e),
+                }
+            }
+        } else {
+            panic!("--cfg accepts KEY:VALUE pairs. {json} is not a valid KEY:VALUE pair.")
         }
     }
 
