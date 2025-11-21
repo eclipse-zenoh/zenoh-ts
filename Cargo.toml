@@ -3,7 +3,7 @@ members = ["zenoh-plugin-remote-api", "zenoh-bridge-remote-api", "zenoh-keyexpr-
 resolver = "1"
 
 [workspace.package]
-version = "1.6.2"
+version = "1.6.2-22-g4acb8f6"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = ["Charles Schleich <charles.schleich@zettascale.tech>"]
@@ -45,7 +45,7 @@ zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branc
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.6.2" }
+zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.6.2-22-g4acb8f6" }
 
 uuid = { version = "1.17.0", default-features = false, features = [
     "v4",
@@ -60,7 +60,7 @@ branch = "main"
 git = "https://github.com/eclipse-zenoh/zenoh.git"
 
 [workspace.metadata.bin]
-zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
+zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2-22-g4acb8f6" }
 
 [profile.release.package.zenoh-keyexpr-wasm]
 # Tell `rustc` to optimize for small code size for wasm project
