@@ -68,6 +68,8 @@ use zenoh_util::ffi::JsonKeyValueMap;
 mod config;
 pub use config::Config;
 
+use crate::interface::{LivelinessTokenId, PublisherId, QuerierId, QueryableId, SubscriberId};
+
 mod interface;
 
 mod remote_state;
@@ -244,11 +246,11 @@ impl RemoteAPIRuntime {
 pub(crate) struct AdminSpaceClient {
     uuid: String,
     remote_address: SocketAddr,
-    publishers: HashMap<u32, String>,
-    subscribers: HashMap<u32, String>,
-    queryables: HashMap<u32, String>,
-    queriers: HashMap<u32, String>,
-    liveliness_tokens: HashMap<u32, String>,
+    publishers: HashMap<PublisherId, String>,
+    subscribers: HashMap<SubscriberId, String>,
+    queryables: HashMap<QueryableId, String>,
+    queriers: HashMap<QuerierId, String>,
+    liveliness_tokens: HashMap<LivelinessTokenId, String>,
 }
 
 impl AdminSpaceClient {
@@ -264,35 +266,35 @@ impl AdminSpaceClient {
         }
     }
 
-    pub(crate) fn register_publisher(&mut self, id: u32, key_expr: &str) {
+    pub(crate) fn register_publisher(&mut self, id: PublisherId, key_expr: &str) {
         self.publishers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_subscriber(&mut self, id: u32, key_expr: &str) {
+    pub(crate) fn register_subscriber(&mut self, id: SubscriberId, key_expr: &str) {
         self.subscribers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_queryable(&mut self, id: u32, key_expr: &str) {
+    pub(crate) fn register_queryable(&mut self, id: QueryableId, key_expr: &str) {
         self.queryables.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn register_querier(&mut self, id: u32, key_expr: &str) {
+    pub(crate) fn register_querier(&mut self, id: QuerierId, key_expr: &str) {
         self.queriers.insert(id, key_expr.to_string());
     }
 
-    pub(crate) fn unregister_publisher(&mut self, id: u32) {
+    pub(crate) fn unregister_publisher(&mut self, id: PublisherId) {
         self.publishers.remove(&id);
     }
 
-    pub(crate) fn unregister_subscriber(&mut self, id: u32) {
+    pub(crate) fn unregister_subscriber(&mut self, id: SubscriberId) {
         self.subscribers.remove(&id);
     }
 
-    pub(crate) fn unregister_queryable(&mut self, id: u32) {
+    pub(crate) fn unregister_queryable(&mut self, id: QueryableId) {
         self.queryables.remove(&id);
     }
 
-    pub(crate) fn unregister_querier(&mut self, id: u32) {
+    pub(crate) fn unregister_querier(&mut self, id: QuerierId) {
         self.queriers.remove(&id);
     }
 

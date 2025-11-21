@@ -24,27 +24,44 @@ import { SessionInfo } from "./session.js";
 import { Timestamp } from "./timestamp.js";
 import { MatchingStatus } from "./matching.js";
 
+// Private branded types for IDs
+declare const publisherIdBrand: unique symbol;
+declare const subscriberIdBrand: unique symbol;
+declare const queryableIdBrand: unique symbol;
+declare const querierIdBrand: unique symbol;
+declare const livelinessTokenIdBrand: unique symbol;
+declare const getIdBrand: unique symbol;
+declare const matchingListenerIdBrand: unique symbol;
+
+export type PublisherId = number & { readonly [publisherIdBrand]: typeof publisherIdBrand };
+export type SubscriberId = number & { readonly [subscriberIdBrand]: typeof subscriberIdBrand };
+export type QueryableId = number & { readonly [queryableIdBrand]: typeof queryableIdBrand };
+export type QuerierId = number & { readonly [querierIdBrand]: typeof querierIdBrand };
+export type LivelinessTokenId = number & { readonly [livelinessTokenIdBrand]: typeof livelinessTokenIdBrand };
+export type GetId = number & { readonly [getIdBrand]: typeof getIdBrand };
+export type MatchingListenerId = number & { readonly [matchingListenerIdBrand]: typeof matchingListenerIdBrand };
+
+export enum SubscriberKind {
+    Subscriber,
+    LivelinessSubscriber,
+}
+
 class IdSource {
     private static MAX: number = 1 << 31;
-    private current: number;
+    private static current: number = 0;
 
-    constructor() {
-        this.current = 0;
-    }
-
-    get(): number {
-        const ret = this.current;
-        if (this.current == IdSource.MAX) {
-            this.current = 0;
+    static get<T extends number>(): T {
+        const ret = IdSource.current;
+        if (IdSource.current == IdSource.MAX) {
+            IdSource.current = 0;
         } else {
-            this.current++;
+            IdSource.current++;
         }
-        return ret;
+        return ret as T;
     }
 }
 
 type OnResponseReceivedCallback = (msg: [InRemoteMessageId, ZBytesDeserializer]) => void;
-
 
 export class SessionInner {
     private isClosed_: boolean = false;
@@ -52,22 +69,13 @@ export class SessionInner {
     private link: RemoteLink;
     private id: string = "";
 
-    private messageIdCounter: IdSource = new IdSource();
-    private publisherIdCounter: IdSource = new IdSource();
-    private subscriberIdCounter: IdSource = new IdSource();
-    private queryableIdCounter: IdSource = new IdSource();
-    private querierIdCounter: IdSource = new IdSource();
-    private livelinessTokenIdCounter: IdSource = new IdSource();
-    private getIdCounter: IdSource = new IdSource();
-    private matchingListenerIdCounter: IdSource = new IdSource();
-
-    private subscribers: Map<number, Closure<Sample>> = new Map<number, Closure<Sample>>();
-    private queryables: Map<number, Closure<Query>> = new Map<number, Closure<Query>>();
-    private gets: Map<number, Closure<Reply>> = new Map<number, Closure<Reply>>();
-    private matchingListeners: Map<number, Closure<MatchingStatus>> = new Map<number, Closure<MatchingStatus>>();
+    private subscribers: Map<SubscriberId, Closure<Sample>> = new Map<SubscriberId, Closure<Sample>>();
+    private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
+    private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
+    private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
+    private nextMessageId: number = 0;
     private readonly messageResponseTimeoutMs: number;
-    
 
     private constructor(link: RemoteLink, messageResponseTimeoutMs: number) {
         this.link = link;
@@ -159,7 +167,8 @@ export class SessionInner {
 
     private async sendRequest<T>(msg: OutMessageInterface, expectedResponseId: InRemoteMessageId, deserialize: (deserializer: ZBytesDeserializer) => T): Promise<T> {
         let serializer = new ZBytesSerializer();
-        const msgId = this.messageIdCounter.get();
+        const msgId = this.nextMessageId;
+        this.nextMessageId = (this.nextMessageId + 1) % (1 << 31);
         serializeHeader([msg.outMessageId, msgId], serializer);
 
         msg.serializeWithZSerializer(serializer);
@@ -199,8 +208,8 @@ export class SessionInner {
         return session;
     }
 
-    async declarePublisher(info: PublisherProperties): Promise<number> {
-        let publisherId = this.publisherIdCounter.get();
+    async declarePublisher(info: PublisherProperties): Promise<PublisherId> {
+        let publisherId = IdSource.get<PublisherId>();
         await this.sendRequest(
             new DeclarePublisher(publisherId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -209,7 +218,7 @@ export class SessionInner {
         return publisherId;
     }
 
-    async undeclarePublisher(publisherId: number) {
+    async undeclarePublisher(publisherId: PublisherId) {
         await this.sendRequest(
             new UndeclarePublisher(publisherId), 
             InRemoteMessageId.ResponseOk, 
@@ -217,8 +226,8 @@ export class SessionInner {
         );
     }
 
-    async declareSubscriber(info: SubscriberProperties, closure: Closure<Sample>): Promise<number> {
-        let subscriberId = this.subscriberIdCounter.get();
+    async declareSubscriber(info: SubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
+        let subscriberId = IdSource.get<SubscriberId>();
         this.subscribers.set(subscriberId, closure);
         try {
             await this.sendRequest(
@@ -233,7 +242,7 @@ export class SessionInner {
         return subscriberId;
     }
 
-    async undeclareSubscriber(subscriberId: number) {
+    async undeclareSubscriber(subscriberId: SubscriberId) {
         const subscriber = this.subscribers.get(subscriberId);
         if (subscriber == undefined) {
             new Error (`Unknown subscriber id: ${subscriberId}`)
@@ -248,8 +257,8 @@ export class SessionInner {
         );
     }
 
-    async declareQueryable(info: QueryableProperties, closure: Closure<Query>): Promise<number> {
-        let queryableId = this.queryableIdCounter.get();
+    async declareQueryable(info: QueryableProperties, closure: Closure<Query>): Promise<QueryableId> {
+        let queryableId = IdSource.get<QueryableId>();
         await this.sendRequest(
             new DeclareQueryable(queryableId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -259,7 +268,7 @@ export class SessionInner {
         return queryableId;
     }
 
-    async undeclareQueryable(queryableId: number) {
+    async undeclareQueryable(queryableId: QueryableId) {
         const queryable = this.queryables.get(queryableId);
         if (queryable == undefined) {
             new Error (`Unknown queryable id: ${queryableId}`)
@@ -274,8 +283,8 @@ export class SessionInner {
         );
     }
 
-    async declareQuerier(info: QuerierProperties): Promise<number> {
-        let querierId = this.querierIdCounter.get();
+    async declareQuerier(info: QuerierProperties): Promise<QuerierId> {
+        let querierId = IdSource.get<QuerierId>();
         await this.sendRequest(
             new DeclareQuerier(querierId, info), 
             InRemoteMessageId.ResponseOk, 
@@ -284,7 +293,7 @@ export class SessionInner {
         return querierId;
     }
 
-    async undeclareQuerier(querierId: number) {
+    async undeclareQuerier(querierId: QuerierId) {
         await this.sendRequest(
             new UndeclareQuerier(querierId), 
             InRemoteMessageId.ResponseOk, 
@@ -292,8 +301,8 @@ export class SessionInner {
         );
     }
 
-    async declareLivelinessToken(keyexpr: KeyExpr): Promise<number> {
-        let tokenId = this.livelinessTokenIdCounter.get();
+    async declareLivelinessToken(keyexpr: KeyExpr): Promise<LivelinessTokenId> {
+        let tokenId = IdSource.get<LivelinessTokenId>();
         await this.sendRequest(
             new DeclareLivelinessToken(tokenId, keyexpr), 
             InRemoteMessageId.ResponseOk, 
@@ -302,7 +311,7 @@ export class SessionInner {
         return tokenId;
     }
 
-    async undeclareLivelinessToken(tokenId: number) {
+    async undeclareLivelinessToken(tokenId: LivelinessTokenId) {
         await this.sendRequest(
             new UndeclareLivelinessToken(tokenId), 
             InRemoteMessageId.ResponseOk, 
@@ -310,33 +319,33 @@ export class SessionInner {
         );
     }
 
-    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<number> {
-        let subscriberId = this.subscriberIdCounter.get();
-        this.subscribers.set(subscriberId, closure);
+    async declareLivelinessSubscriber(info: LivelinessSubscriberProperties, closure: Closure<Sample>): Promise<SubscriberId> {
+        let livelinessSubscriberId = IdSource.get<SubscriberId>();
+        this.subscribers.set(livelinessSubscriberId, closure);
         try {
             await this.sendRequest(
-                new DeclareLivelinessSubscriber(subscriberId, info), 
-                InRemoteMessageId.ResponseOk, 
+                new DeclareLivelinessSubscriber(livelinessSubscriberId, info),
+                InRemoteMessageId.ResponseOk,
                 ResponseOk.deserialize
             );
         } catch (error) {
-            this.subscribers.delete(subscriberId);
+            this.subscribers.delete(livelinessSubscriberId);
             throw error;
         }
-        return subscriberId;
+        return livelinessSubscriberId;
     }
 
-    async undeclareLivelinessSubscriber(subscriberId: number) {
-        const subscriber = this.subscribers.get(subscriberId);
-        if (subscriber == undefined) {
-            new Error (`Unknown subscriber id: ${subscriberId}`)
+    async undeclareLivelinessSubscriber(livelinessSubscriberId: SubscriberId) {
+        const livelinessSubscriber = this.subscribers.get(livelinessSubscriberId);
+        if (livelinessSubscriber == undefined) {
+            new Error (`Unknown liveliness subscriber id: ${livelinessSubscriberId}`)
         } else {
-            this.subscribers.delete(subscriberId);
-            subscriber.drop();
+            this.subscribers.delete(livelinessSubscriberId);
+            livelinessSubscriber.drop();
         }
         await this.sendRequest(
-            new UndeclareLivelinessSubscriber(subscriberId), 
-            InRemoteMessageId.ResponseOk, 
+            new UndeclareLivelinessSubscriber(livelinessSubscriberId),
+            InRemoteMessageId.ResponseOk,
             ResponseOk.deserialize
         );
     }
@@ -377,8 +386,8 @@ export class SessionInner {
         return await this.sendMessage(data);
     }
 
-    async get(data: GetProperties, closure: Closure<Reply>): Promise<number> {
-        let getId = this.getIdCounter.get();
+    async get(data: GetProperties, closure: Closure<Reply>): Promise<GetId> {
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new Get(getId, data));
@@ -389,8 +398,8 @@ export class SessionInner {
         }
     }
 
-    async querierGet(data: QuerierGetProperties, closure: Closure<Reply>): Promise<number>  {
-        let getId = this.getIdCounter.get();
+    async querierGet(data: QuerierGetProperties, closure: Closure<Reply>): Promise<GetId>  {
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new QuerierGet(getId, data));
@@ -401,8 +410,8 @@ export class SessionInner {
         }
     }
 
-    async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>): Promise<number> {
-        let getId = this.getIdCounter.get();
+    async livelinessGet(data: LivelinessGetProperties, closure: Closure<Reply>): Promise<GetId> {
+        let getId = IdSource.get<GetId>();
         this.gets.set(getId, closure);
         try {
             await this.sendMessage(new LivelinessGet(getId, data));
@@ -425,12 +434,12 @@ export class SessionInner {
         await this.sendMessage(data);
     }
 
-    async sendResponseFinal(queryId: number) {
+    async sendResponseFinal(queryId: GetId) {
         await this.sendMessage(new QueryResponseFinal(queryId));
     }
 
-    async publisherDeclareMatchingListener(publisherId: number, closure: Closure<MatchingStatus>): Promise<number> {
-        let listenerId = this.matchingListenerIdCounter.get();
+    async publisherDeclareMatchingListener(publisherId: PublisherId, closure: Closure<MatchingStatus>): Promise<MatchingListenerId> {
+        let listenerId = IdSource.get<MatchingListenerId>();
         this.matchingListeners.set(listenerId, closure);
         try {
             await this.sendRequest(
@@ -445,7 +454,7 @@ export class SessionInner {
         return listenerId;
     }
 
-    async undeclareMatchingListener(listenerId: number) {
+    async undeclareMatchingListener(listenerId: MatchingListenerId) {
         const listener = this.matchingListeners.get(listenerId);
         if (listener == undefined) {
             new Error (`Unknown matching listener id: ${listenerId}`)
@@ -461,7 +470,7 @@ export class SessionInner {
         );
     }
 
-    async publisherGetMatchingStatus(publisherId: number): Promise<MatchingStatus> {
+    async publisherGetMatchingStatus(publisherId: PublisherId): Promise<MatchingStatus> {
         return await this.sendRequest(
             new PublisherGetMatchingStatus(publisherId), 
             InRemoteMessageId.ResponseMatchingStatus, 
@@ -471,8 +480,8 @@ export class SessionInner {
         );
     }
 
-    async querierDeclareMatchingListener(querierId: number, closure: Closure<MatchingStatus>): Promise<number> {
-        let listenerId = this.matchingListenerIdCounter.get();
+    async querierDeclareMatchingListener(querierId: QuerierId, closure: Closure<MatchingStatus>): Promise<MatchingListenerId> {
+        let listenerId = IdSource.get<MatchingListenerId>();
         this.matchingListeners.set(listenerId, closure);
         try {
             await this.sendRequest(
@@ -487,7 +496,7 @@ export class SessionInner {
         return listenerId;
     }
 
-    async querierGetMatchingStatus(querierId: number): Promise<MatchingStatus> {
+    async querierGetMatchingStatus(querierId: QuerierId): Promise<MatchingStatus> {
         return await this.sendRequest(
             new QuerierGetMatchingStatus(querierId), 
             InRemoteMessageId.ResponseMatchingStatus, 
@@ -498,7 +507,7 @@ export class SessionInner {
     }
 
     async close() {
-        this.link.close();
+        await this.link.close();
         for (let s of this.subscribers) {
             s[1].drop();
         }
@@ -526,7 +535,7 @@ export class SessionInner {
         return this.isClosed_;
     }
 
-    cancelQuery(queryId: number) {
+    cancelQuery(queryId: GetId) {
         let get = this.gets.get(queryId);
         if (get != undefined) {
             this.gets.delete(queryId);

@@ -22,6 +22,7 @@ import { Sample } from "./sample.js";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
 import { SessionInfo } from "./session.js";
+import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId } from "./session_inner.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
@@ -245,7 +246,7 @@ function deserializeReply(deserializer: ZBytesDeserializer): Reply {
 }
 
 function deserializeQueryInner(deserializer: ZBytesDeserializer): QueryInner {
-    let queryId = deserializer.deserializeNumberUint32();
+    let queryId = deserializer.deserializeNumberUint32() as GetId;
     let keyexpr = new KeyExpr(deserializer.deserializeString());
     let params = new Parameters(deserializer.deserializeString());
     let payload = deserializeOptZBytes(deserializer);
@@ -299,7 +300,7 @@ export type PublisherProperties = {
 export class DeclarePublisher {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclarePublisher;
     public constructor(
-        public readonly id: number,
+        public readonly id: PublisherId,
         public readonly properties: PublisherProperties,
     ) {}
 
@@ -314,7 +315,7 @@ export class DeclarePublisher {
 export class UndeclarePublisher {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclarePublisher;
     public constructor(
-        public readonly id: number,
+        public readonly id: PublisherId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -330,7 +331,7 @@ export type SubscriberProperties = {
 export class DeclareSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareSubscriber;
     public constructor(
-        public readonly id: number,
+        public readonly id: SubscriberId,
         public readonly properties: SubscriberProperties
     ) {}
 
@@ -344,7 +345,7 @@ export class DeclareSubscriber {
 export class UndeclareSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareSubscriber;
     public constructor(
-        public readonly id: number,
+        public readonly id: SubscriberId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -360,7 +361,7 @@ export type QueryableProperties = {
 export class DeclareQueryable {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareQueryable;
     public constructor(
-        public readonly id: number,
+        public readonly id: QueryableId,
         public readonly properties: QueryableProperties,
     ) {}
 
@@ -375,7 +376,7 @@ export class DeclareQueryable {
 export class UndeclareQueryable {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareQueryable;
     public constructor(
-        public readonly id: number,
+        public readonly id: QueryableId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -393,7 +394,7 @@ export type QuerierProperties = {
 export class DeclareQuerier {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareQuerier;
     public constructor(
-        public readonly id: number,
+        public readonly id: QuerierId,
         public readonly properties: QuerierProperties,
     ) {}
 
@@ -409,7 +410,7 @@ export class DeclareQuerier {
 export class UndeclareQuerier {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareQuerier;
     public constructor(
-        public readonly id: number,
+        public readonly id: QuerierId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -420,7 +421,7 @@ export class UndeclareQuerier {
 export class DeclareLivelinessToken {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessToken;
     public constructor(
-        public readonly id: number,
+        public readonly id: LivelinessTokenId,
         public readonly keyexpr: KeyExpr,
     ) {}
 
@@ -433,7 +434,7 @@ export class DeclareLivelinessToken {
 export class UndeclareLivelinessToken {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessToken;
     public constructor(
-        public readonly id: number,
+        public readonly id: LivelinessTokenId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -449,7 +450,7 @@ export type LivelinessSubscriberProperties = {
 export class DeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLivelinessSubscriber;
     public constructor(
-        public readonly id: number,
+        public readonly id: SubscriberId,
         public readonly properties: LivelinessSubscriberProperties,
     ) {}
 
@@ -463,7 +464,7 @@ export class DeclareLivelinessSubscriber {
 export class UndeclareLivelinessSubscriber {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLivelinessSubscriber;
     public constructor(
-        public readonly id: number,
+        public readonly id: SubscriberId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -526,7 +527,7 @@ export class Delete {
 export class PublisherPut {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherPut;
     public constructor(
-        public readonly publisherId: number,
+        public readonly publisherId: PublisherId,
         public readonly payload: ZBytes,
         public readonly encoding: Encoding | undefined,
         public readonly attachment: ZBytes | undefined,
@@ -545,7 +546,7 @@ export class PublisherPut {
 export class PublisherDelete {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherDelete;
     public constructor(
-        public readonly publisherId: number,
+        public readonly publisherId: PublisherId,
         public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
     ) {}
@@ -570,7 +571,7 @@ export type GetProperties = {
 export class Get {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.Get;
     public constructor(
-        public readonly id: number,
+        public readonly id: GetId,
         public readonly properties: GetProperties
     ) {}
 
@@ -588,7 +589,7 @@ export class Get {
 }
 
 export type QuerierGetProperties = {
-    querierId: number,
+    querierId: QuerierId,
     parameters: string,
     payload: ZBytes | undefined,
     encoding: Encoding | undefined,
@@ -598,7 +599,7 @@ export type QuerierGetProperties = {
 export class QuerierGet {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierGet;
     public constructor(
-        public readonly id: number,
+        public readonly id: GetId,
         public readonly properties: QuerierGetProperties
     ) {}
 
@@ -620,7 +621,7 @@ export type LivelinessGetProperties = {
 export class LivelinessGet {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.LivelinessGet;
     public constructor(
-        public readonly id: number,
+        public readonly id: GetId,
         public readonly properties: LivelinessGetProperties,
     ) {}
 
@@ -634,7 +635,7 @@ export class LivelinessGet {
 export class ReplyOk {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyOk;
     public constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly keyexpr: KeyExpr,
         public readonly payload: ZBytes,
         public readonly encoding: Encoding,
@@ -657,7 +658,7 @@ export class ReplyOk {
 export class ReplyDel {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyDel;
     public constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly keyexpr: KeyExpr,
         public readonly attachment: ZBytes | undefined,
         public readonly timestamp: Timestamp | undefined,
@@ -676,7 +677,7 @@ export class ReplyDel {
 export class ReplyErr {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.ReplyErr;
     public constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly payload: ZBytes,
         public readonly encoding: Encoding,
     ) {}
@@ -693,7 +694,7 @@ export class QueryResponseFinal {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.QueryResponseFinal;
 
     public constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -701,7 +702,7 @@ export class QueryResponseFinal {
     }
 
     public static deserialize(deserializer: ZBytesDeserializer): QueryResponseFinal {
-        let queryId = deserializer.deserializeNumberUint32();
+        let queryId = deserializer.deserializeNumberUint32() as GetId;
         return new QueryResponseFinal(queryId);
     }
 }
@@ -718,8 +719,8 @@ export class Ping {
 export class PublisherDeclareMatchingListener {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherDeclareMatchingListener;
     public constructor(
-        public readonly id: number,
-        public readonly publisherId: number,
+        public readonly id: MatchingListenerId,
+        public readonly publisherId: PublisherId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -731,7 +732,7 @@ export class PublisherDeclareMatchingListener {
 export class UndeclareMatchingListener {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareMatchingListener;
     public constructor(
-        public readonly id: number,
+        public readonly id: MatchingListenerId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -742,7 +743,7 @@ export class UndeclareMatchingListener {
 export class PublisherGetMatchingStatus {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.PublisherGetMatchingStatus;
     public constructor(
-        public readonly publisherId: number,
+        public readonly publisherId: PublisherId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -753,8 +754,8 @@ export class PublisherGetMatchingStatus {
 export class QuerierDeclareMatchingListener {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierDeclareMatchingListener;
     public constructor(
-        public readonly id: number,
-        public readonly querierId: number,
+        public readonly id: MatchingListenerId,
+        public readonly querierId: QuerierId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -766,7 +767,7 @@ export class QuerierDeclareMatchingListener {
 export class QuerierGetMatchingStatus {
     public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.QuerierGetMatchingStatus;
     public constructor(
-        public readonly querierId: number,
+        public readonly querierId: QuerierId,
     ) {}
 
     public serializeWithZSerializer(serializer: ZBytesSerializer) {
@@ -859,12 +860,12 @@ export class InSample {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InSample;
 
     public constructor(
-        public readonly subscriberId: number,
+        public readonly subscriberId: SubscriberId,
         public readonly sample: Sample,
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): InSample {
-        let subscriberId = deserializer.deserializeNumberUint32();
+        let subscriberId = deserializer.deserializeNumberUint32() as SubscriberId;
         let sample = deserializeSample(deserializer);
         return new InSample(subscriberId, sample);
     }
@@ -874,12 +875,12 @@ export class InQuery {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InQuery;
 
     public constructor(
-        public readonly queryableId: number,
+        public readonly queryableId: QueryableId,
         public readonly query: QueryInner,
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): InQuery {
-        let queryableId = deserializer.deserializeNumberUint32();
+        let queryableId = deserializer.deserializeNumberUint32() as QueryableId;
         let query = deserializeQueryInner(deserializer);
         return new InQuery(queryableId, query);
     }
@@ -889,12 +890,12 @@ export class InReply {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InReply;
 
     public constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly reply: Reply,
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): InReply {
-        let queryId = deserializer.deserializeNumberUint32();
+        let queryId = deserializer.deserializeNumberUint32() as GetId;
         let reply = deserializeReply(deserializer);
         return new InReply(queryId, reply);
     }
@@ -917,12 +918,12 @@ export class MatchingStatusUpdate {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.MatchingStatusUpdate;
 
     public constructor(
-        public readonly matchingListenerId: number,
+        public readonly matchingListenerId: MatchingListenerId,
         public readonly matching: boolean,
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): MatchingStatusUpdate {
-        let matchingListenerId = deserializer.deserializeNumberUint32();
+        let matchingListenerId = deserializer.deserializeNumberUint32() as MatchingListenerId;
         let matching = deserializer.deserializeBoolean();
         return new MatchingStatusUpdate(matchingListenerId, matching);
     }

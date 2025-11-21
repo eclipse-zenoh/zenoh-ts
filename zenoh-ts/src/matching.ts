@@ -13,7 +13,7 @@
 //
 
 import { ChannelReceiver, Handler } from "./channels";
-import { SessionInner } from "./session_inner";
+import { SessionInner, MatchingListenerId } from "./session_inner";
 
 /**
  * A class that indicates if there exist Subscribers matching the Publisher's key expression or Queryables matching Querier's key expression and target.
@@ -59,7 +59,7 @@ export class MatchingListener {
      */
     constructor(
         private session: SessionInner,
-        private id: number,
+        private id: MatchingListenerId,
         private receiver_?: ChannelReceiver<MatchingStatus>,
     ) { }
 

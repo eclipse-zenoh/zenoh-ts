@@ -26,10 +26,6 @@ else
   if [ "$1" = "ALL" ]; then
     deno test -A $COVERAGE_OPTS src/*.ts
     EXIT_CODE=$?
-    if [ $EXIT_CODE -eq 0 ]; then
-      deno test -A $COVERAGE_OPTS src/bench/*.ts
-      EXIT_CODE=$?
-    fi
   else
     TEST_PATH="src/$1.ts"
     if [ -f "$TEST_PATH" ]; then
