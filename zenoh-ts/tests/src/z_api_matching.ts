@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { Config, Session, Subscriber, MatchingListener, Publisher, Querier, Queryable, TryReceivedKind } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals } from "https://deno.land/std@0.192.0/testing/asserts.ts";

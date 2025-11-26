@@ -13,7 +13,7 @@
 //
 /// <reference lib="deno.ns" />
 
-import { Parameters } from "@eclipse-zenoh/zenoh-ts";
+import { Parameters, Selector, KeyExpr, Session, Config, Query } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 Deno.test("Parameters - Basic", () => {
@@ -21,9 +21,19 @@ Deno.test("Parameters - Basic", () => {
   const emptyParams = new Parameters("");
   assert(emptyParams.isEmpty(), "Empty string should create empty parameters");
 
+  // Test containsKey on empty parameters
+  assert(!emptyParams.containsKey("p1"), "Empty parameters should not contain any key");
+
   // Test single parameter with value
   const singleParam = new Parameters("p1=v1");
+  assert(!singleParam.isEmpty(), "Parameters with single parameter should not be empty");
   assertEquals(singleParam.get("p1"), "v1", "Single parameter with value not matched");
+  
+  // Test containsKey - key found
+  assert(singleParam.containsKey("p1"), "containsKey should return true for existing key");
+  
+  // Test containsKey - key not found
+  assert(!singleParam.containsKey("nonexistent"), "containsKey should return false for non-existing key");
 
   // Test multiple parameters with trailing semicolon
   const multiParamTrailing = new Parameters("p1=v1;p2=v2;");
@@ -183,4 +193,89 @@ Deno.test("Parameters - Performance", { ignore: true }, () => {
   }
 
   assert(params.isEmpty(), "Parameters should be empty after removing all entries");
+});
+
+Deno.test("Selector - Complete", () => {
+  // Test from() with different input types
+  const originalSelector = new Selector("demo/example", "p1=v1");
+  assertEquals(Selector.from(originalSelector), originalSelector);
+  assertEquals(Selector.from(new KeyExpr("demo/test")).toString(), "demo/test");
+  assertEquals(Selector.from([new KeyExpr("demo/example"), new Parameters("p1=v1;p2=v2")]).toString(), "demo/example?p1=v1;p2=v2");
+  assertEquals(Selector.from("demo/example?p1=v1;p2=v2").parameters().get("p1"), "v1");
+  assertEquals(Selector.from(new String("demo/example?p1=v1")).parameters().get("p1"), "v1");
+  assert(Selector.from("demo/example?").parameters().isEmpty());
+
+  // Test constructor and parameters retrieval
+  const sel = new Selector("demo/example", "p1=v1;p2=v2");
+  assertEquals(sel.parameters().get("p1"), "v1");
+  assert(!sel.parameters().isEmpty());
+  assert(sel.parameters().containsKey("p1"));
+  
+  // Test parameters() returns new Parameters("") when undefined (line x15 coverage)
+  const selNoParams = new Selector("demo/example", undefined);
+  const params = selNoParams.parameters();
+  assert(params.isEmpty());
+  assertEquals(params.toString(), "");
+  
+  // Test parameters() returns this.parameters_
+  const selWithParams = new Selector("demo/example", "p1=v1");
+  const paramsWithValue = selWithParams.parameters();
+  assertEquals(paramsWithValue.get("p1"), "v1");
+
+  // Test toString() with and without parameters
+  assertEquals(new Selector("demo/test").toString(), "demo/test");
+  assertEquals(new Selector("demo/example", "p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
+  assertEquals(Selector.from("demo/example?p1=v1;p2=v2").toString(), "demo/example?p1=v1;p2=v2");
+
+  // Test from() with multiple ? - this is completely valid, only first ? is separator
+  const multiQuestion = Selector.from("demo/example?param1=v1?param2=v2");
+  assertEquals(multiQuestion.keyExpr().toString(), "demo/example");
+  assertEquals(multiQuestion.parameters().get("param1"), "v1?param2=v2");
+  assertEquals(multiQuestion.parameters().get("param2"), undefined);
+  assertEquals(multiQuestion.toString(), "demo/example?param1=v1?param2=v2");
+
+  // Test complex parameters and keyExpr()
+  const complex = new Selector("demo/example", "p1=v1|v2|v3;p2=x=y;p3");
+  assertEquals(complex.parameters().get("p1"), "v1|v2|v3");
+  assertEquals(complex.parameters().get("p2"), "x=y");
+  assertEquals(complex.parameters().get("p3"), "");
+  assert(complex.keyExpr() instanceof KeyExpr);
+});
+
+Deno.test("Query - toString", async () => {
+  const session = await Session.open(new Config("ws/127.0.0.1:10000"));
+  
+  try {
+    const testCases = [
+      "test/query/path",
+      "test/query/path?p1=v1",
+      "test/query/path?p1=v1;p2=v2",
+      "test/query/path?p1=v1;p2=v2;p3=v3",
+      "test/query/path?param=value?with?question",
+    ];
+
+    let selectorStr = "";
+
+    const queryable = await session.declareQueryable("test/query/**", {
+      handler: (query: Query) => {
+        assertEquals(query.toString(), selectorStr, "Query toString should match selector string");
+        assertEquals(query.selector().toString(), selectorStr, "Query selector toString should match selector string");
+        query.finalize();
+      }
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    for (const testCase of testCases) {
+      selectorStr = testCase;
+      await session.get(Selector.from(selectorStr), {
+        handler: (_reply) => {}
+      });
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+
+    await queryable.undeclare();
+  } finally {
+    await session.close();
+  }
 });

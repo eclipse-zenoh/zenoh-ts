@@ -11,6 +11,7 @@
 // Contributors:
 //   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 //
+/// <reference lib="deno.ns" />
 
 import { Config, Session, Sample, KeyExpr, SampleKind } from "@eclipse-zenoh/zenoh-ts";
 import { assertEquals, assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
@@ -74,7 +75,9 @@ Deno.test("Liveliness - Token Get", async () => {
     }
   } finally {
     // Clean up all resources even if test fails
-    if (token) await token.undeclare().catch(() => {});
+    let token_undeclare_failed = false;
+    if (token) await token.undeclare().catch(() => {token_undeclare_failed = true;});
+    assert(token_undeclare_failed, "Repeated undeclare of token not failed as expected");
     if (session1) await session1.close();
     if (session2) await session2.close();
     await sleep(100);
@@ -150,9 +153,69 @@ Deno.test("Liveliness - Subscriber", async () => {
   } finally {
     // Ensure everything is cleaned up even if test fails
     if (subscriber) await subscriber.undeclare().catch(() => {});
+    if (token2) await token2.undeclare().catch(() => {});
     if (token1) await token1.undeclare().catch(() => {});
     if (session1) await session1.close();
     if (session2) await session2.close();
+    await sleep(100);
+  }
+});
+
+Deno.test("Liveliness - check that session is auto-undeclared", async () => {
+  let token: Token | undefined;
+  let session1: Session | undefined;
+  
+  try {
+    // Open a monitoring session that will stay alive
+    session1 = await Session.open(new Config("ws/127.0.0.1:10000"));
+    await sleep(1000);
+
+    const ke = new KeyExpr("zenoh/liveliness/test/*");
+    const tokenKe = new KeyExpr("zenoh/liveliness/test/dispose");
+
+    const putTokens: Set<string> = new Set();
+    const deleteTokens: Set<string> = new Set();
+
+    // Declare a subscriber on session1 to monitor token lifecycle
+    const subscriber = await session1.liveliness().declareSubscriber(ke, {
+      handler: (sample: Sample) => {
+        if (sample.kind() === SampleKind.PUT) {
+          putTokens.add(sample.keyexpr().toString());
+        } else if (sample.kind() === SampleKind.DELETE) {
+          deleteTokens.add(sample.keyexpr().toString());
+        }
+      },
+      history: true
+    });
+
+    await sleep(1000);
+
+    // Use await using to automatically dispose session2
+    {
+      await using session2 = await Session.open(new Config("ws/127.0.0.1:10000"));
+      await sleep(1000);
+      
+      // Declare token on session2 - declare it outside the dispose scope
+      token = await session2.liveliness().declareToken(tokenKe);
+      await sleep(1000);
+
+      assertEquals(putTokens.size, 1, "Expected 1 PUT token");
+      assert(putTokens.has("zenoh/liveliness/test/dispose"), "Expected token in PUT set");
+      
+      // session2 will be automatically closed via Symbol.asyncDispose when block ends
+    }
+    
+    // After the block, session2 should be disposed and token should be auto-undeclared
+    await sleep(1000);
+
+    assertEquals(deleteTokens.size, 1, "Expected 1 DELETE token after session dispose");
+    assert(deleteTokens.has("zenoh/liveliness/test/dispose"), "Expected token in DELETE set after session dispose");
+
+    await subscriber.undeclare();
+  } finally {
+    // Clean up - token.undeclare() should fail since session is already closed
+    if (token) await token.undeclare().catch(() => {});
+    if (session1) await session1.close();
     await sleep(100);
   }
 });

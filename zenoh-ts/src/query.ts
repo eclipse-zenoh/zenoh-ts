@@ -19,7 +19,7 @@ import { Encoding, IntoEncoding } from "./encoding.js";
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver } from "./channels.js";
 import { CongestionControl, Locality, Priority, Reliability, ReplyKeyExpr } from "./enums.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, QueryableId, GetId } from "./session_inner.js";
 import { Qos, ReplyDel, ReplyErr, ReplyOk } from "./message.js";
 
 
@@ -50,7 +50,7 @@ export class Queryable {
      */
     constructor(
         private session: SessionInner,
-        private id: number,
+        private id: QueryableId,
         private keyExpr_: KeyExpr,
         private receiver_?: ChannelReceiver<Query>
     ) { }
@@ -132,7 +132,7 @@ export interface ReplyDelOptions {
 
 export class QueryInner {
     constructor(
-        public readonly queryId: number,
+        public readonly queryId: GetId,
         public readonly keyexpr_: KeyExpr,
         public readonly parameters_: Parameters,
         public readonly payload_: ZBytes | undefined,
@@ -276,7 +276,7 @@ export class Query {
     }
 
     toString(): string {
-        return this.keyExpr.toString() + "?" + this.parameters.toString()
+        return this.selector().toString();
     }
 
     async [Symbol.asyncDispose]() {
@@ -552,7 +552,7 @@ export class Selector {
     private keyExpr_: KeyExpr;
 
     // Optional : parameter field
-    private parameters_?: Parameters;
+    private parameters_: Parameters;
 
     /**
      * gets Key Expression part of Selector 
@@ -567,15 +567,11 @@ export class Selector {
      * @returns Parameters
      */
     parameters(): Parameters {
-        if (this.parameters_ == undefined) {
-            return new Parameters("");
-        } else {
-            return this.parameters_;
-        }
+        return this.parameters_;
     }
 
     toString(): string {
-        if (this.parameters_ != undefined) {
+        if (!this.parameters_.isEmpty()) {
             return this.keyExpr_.toString() + "?" + this.parameters_.toString()
         } else {
             return this.keyExpr_.toString()
@@ -596,13 +592,13 @@ export class Selector {
         } else if (Array.isArray(selector)) {
             return new Selector(selector[0], selector[1]);
         } else {
-            let splitString = selector.split("?")
-            if (splitString.length == 1) {
+            let splitIndex = selector.indexOf("?")
+            if (splitIndex == -1) {
                 return new Selector(new KeyExpr(selector));
-            } else if (splitString.length == 2 && splitString[0] != undefined && splitString[1] != undefined) {
-                return new Selector(new KeyExpr(splitString[0]), new Parameters(splitString[1]));
             } else {
-                throw "Error: Invalid Selector, expected format <KeyExpr>?<Parameters>";
+                let keyExpr = selector.substring(0, splitIndex);
+                let parameters = selector.substring(splitIndex + 1);
+                return new Selector(new KeyExpr(keyExpr), new Parameters(parameters));
             }
         }
     }

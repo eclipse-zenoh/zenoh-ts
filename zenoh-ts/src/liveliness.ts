@@ -19,7 +19,7 @@ import { Reply } from "./query.js";
 import { Subscriber } from "./pubsub.js";
 import { Duration, TimeDuration } from 'typed-duration'
 import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./channels.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, LivelinessTokenId, SubscriberKind } from "./session_inner.js";
 import { DEFAULT_QUERY_TIMEOUT_MS } from "./session.js";
 import { CancellationToken } from "./cancellation_token.js";
 
@@ -76,7 +76,7 @@ export class Liveliness {
             { callback, drop }
         );
 
-        return new Subscriber(this.session, subscriberId, keyexpr, receiver);
+        return new Subscriber(this.session, SubscriberKind.LivelinessSubscriber, subscriberId, keyexpr, receiver);
     }
 
     /**
@@ -116,7 +116,7 @@ export class Liveliness {
  * that monitors it.
  */
 export class LivelinessToken {
-    constructor(private session: SessionInner, private id: number) { }
+    constructor(private session: SessionInner, private id: LivelinessTokenId) { }
 
     async undeclare() {
         await this.session.undeclareLivelinessToken(this.id);

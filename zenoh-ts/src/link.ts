@@ -87,9 +87,28 @@ export class RemoteLink {
     return this.ws.readyState == WebSocket.OPEN;
   }
 
-  close() {
+  async close() {
     this.ws.onmessage = null;
-    this.ws.close();
+
+    // If already closed or closing, just return
+    if (this.ws.readyState === WebSocket.CLOSED || this.ws.readyState === WebSocket.CLOSING) {
+      return;
+    }
+
+    // Wait for the WebSocket to fully close
+    await new Promise<void>((resolve, reject) => {
+      this.ws.onclose = () => {
+        this.ws.onclose = null;
+        this.ws.onerror = null;
+        resolve();
+      };
+      this.ws.onerror = () => {
+        this.ws.onclose = null;
+        this.ws.onerror = null;
+        reject(new Error('WebSocket error during close'));
+      };
+      this.ws.close();
+    });
   }
 
 

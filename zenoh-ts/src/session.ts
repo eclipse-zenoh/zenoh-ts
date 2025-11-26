@@ -31,7 +31,7 @@ import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./cha
 import { ZenohId } from "./zid.js";
 import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr } from "./enums.js";
 import { Sample } from "./sample.js";
-import { SessionInner } from "./session_inner.js";
+import { SessionInner, SubscriberKind } from "./session_inner.js";
 import { Delete, Put, Qos, QuerierProperties, QuerySettings } from "./message.js";
 import { Querier } from "./querier.js";
 import { CancellationToken } from "./cancellation_token.js";
@@ -371,7 +371,7 @@ export class Session {
             },
             { callback, drop }
         );
-        return new Subscriber(this.inner, subscriberId, keyexpr, receiver);
+        return new Subscriber(this.inner, SubscriberKind.Subscriber, subscriberId, keyexpr, receiver);
     }
 
     /**
