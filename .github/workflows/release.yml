@@ -176,7 +176,7 @@ jobs:
       #   is and thus point to the main branch of eclipse-zenoh/zenoh.
       # - In live-run mode, we assume that eclipse-zenoh/zenoh is already
       #   published as this workflow can't be responsible for publishing it
-      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && 'zenoh.*' || '' }}
+      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && '^zenoh-plugin-remote-api$' || '' }}
       unpublished-deps-repos: ${{ !(inputs.live-run || false) && 'eclipse-zenoh/zenoh' || '' }}
     secrets: inherit
 
