@@ -41,6 +41,16 @@ export interface SubscriberState {
   options: SubscriberOptionsJSON
 }
 
+// Publisher state interface
+export interface PublisherState {
+  displayId: string; // Display ID like "pub0", "pub1", etc.
+  sessionId: string; // Session ID that this publisher belongs to
+  keyExpr: string;
+  publisher: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define PublisherOptionsJSON when implementing
+}
+
 // Reply parameters state - for successful replies
 export interface ReplyParametersState {
   keyExpr: string;
@@ -113,6 +123,12 @@ export interface SubscriberParametersState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
+// Publisher parameters state - includes all publisher-related data
+export interface PublisherParametersState {
+  key: Ref<string>;
+  // TODO: Add more publisher options when implementing functionality
+}
+
 // Queryable parameters state - includes all queryable-related data (declaration only)
 export interface QueryableParametersState {
   key: Ref<string>;
@@ -146,12 +162,14 @@ export interface ZenohDemoState {
   isConnecting: Ref<boolean>;
   putParameters: PutParametersState;
   subscriberParameters: SubscriberParametersState;
+  publisherParameters: PublisherParametersState;
   queryableParameters: QueryableParametersState;
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
   activeSessions: Ref<SessionState[]>;
   selectedSessionId: Ref<string | null>; // Track which session is currently selected
   activeSubscribers: Ref<SubscriberState[]>;
+  activePublishers: Ref<PublisherState[]>;
   activeQueryables: Ref<QueryableState[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
@@ -169,6 +187,8 @@ export interface ZenohDemoState {
   getSessionInfo: () => Promise<void>;
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
+  declarePublisher: () => Promise<void>;
+  undeclarePublisher: (publisherId: string) => Promise<void>;
   declareQueryable: () => Promise<void>;
   undeclareQueryable: (queryableId: string) => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
@@ -234,6 +254,9 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     key: ref("demo/example/**"),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
+  publisherParameters = {
+    key: ref("demo/example/publisher"),
+  };
   queryableParameters = {
     key: ref("demo/example/queryable"),
     complete: ref(undefined as boolean | undefined),
@@ -261,6 +284,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   activeSessions = ref<SessionState[]>([]);
   selectedSessionId = ref<string | null>(null);
   activeSubscribers = ref<SubscriberState[]>([]);
+  activePublishers = ref<PublisherState[]>([]);
   activeQueryables = ref<QueryableState[]>([]) as any;
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
@@ -277,6 +301,8 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async performGet() {}
   async subscribe() {}
   async unsubscribe(_: string) {}
+  async declarePublisher() {}
+  async undeclarePublisher(_: string) {}
   async declareQueryable() {}
   async undeclareQueryable(_: string) {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}

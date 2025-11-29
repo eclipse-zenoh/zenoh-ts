@@ -162,6 +162,64 @@
               </template>
             </Entity>
 
+            <!-- Declare Publisher Operation -->
+            <Entity
+              title="Publisher"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+              :descr="publisherParameters.key.value"
+              v-model:editsExpanded="publisherOptionsCollapsed"
+            >
+              <template #actions>
+                <button
+                  @click="declarePublisher"
+                  :disabled="
+                    !selectedSessionId || !publisherParameters.key.value
+                  "
+                >
+                  Declare
+                </button>
+              </template>
+
+              <template #edits>
+                <KeyExprInput
+                  v-model="publisherParameters.key.value"
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/publisher)"
+                  :disabled="!selectedSessionId"
+                />
+              </template>
+
+              <!-- Active Publishers as Sub-entities -->
+              <template v-if="activePublishers.length > 0" #sub-entities>
+                <Entity
+                  v-for="publisherState in activePublishers"
+                  :key="publisherState.displayId"
+                  :title="publisherState.displayId"
+                  :session="publisherState.sessionId"
+                  :selected-session="selectedSessionId"
+                  :descr="publisherState.keyExpr"
+                >
+                  <template #actions>
+                    <button
+                      @click="undeclarePublisher(publisherState.displayId)"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
+                  </template>
+
+                  <!-- Info as reactive slot -->
+                  <template #info>
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{ 'PublisherOptions': publisherState.options }"
+                    />
+                  </template>
+                </Entity>
+              </template>
+            </Entity>
+
             <!-- Put Operation -->
             <Entity
               title="Put"
@@ -631,8 +689,10 @@ const {
   putParameters,
   logEntries,
   activeSubscribers,
+  activePublishers,
   activeQueryables,
   subscriberParameters,
+  publisherParameters,
   queryableParameters,
   getParameters,
 
@@ -655,6 +715,8 @@ const {
   performGet,
   subscribe,
   unsubscribe,
+  declarePublisher,
+  undeclarePublisher,
   declareQueryable,
   undeclareQueryable,
 
@@ -701,6 +763,7 @@ const logContent = ref<HTMLElement>();
 // State to track expanded options panels for operations
 const sessionOptionsCollapsed = ref(false);
 const subscriberOptionsCollapsed = ref(false);
+const publisherOptionsCollapsed = ref(false);
 const putOptionsCollapsed = ref(false);
 const queryableOptionsCollapsed = ref(false);
 const getOptionsCollapsed = ref(false);
