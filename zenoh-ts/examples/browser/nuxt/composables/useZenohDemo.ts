@@ -41,6 +41,21 @@ export interface SubscriberState {
   options: SubscriberOptionsJSON
 }
 
+// Publisher put parameters state - for each publisher instance
+export interface PublisherPutParametersState {
+  payload: string;
+  payloadEmpty: boolean;
+  encoding: string;
+  customEncoding: boolean;
+  priority: Priority | undefined;
+  congestionControl: CongestionControl | undefined;
+  express: boolean | undefined;
+  attachment: string;
+  attachmentEmpty: boolean;
+  putOptionsJSON: any; // TODO: Define PutOptionsJSON type
+  updatePutOptionsJSON: () => void;
+}
+
 // Publisher state interface
 export interface PublisherState {
   displayId: string; // Display ID like "pub0", "pub1", etc.
@@ -49,6 +64,7 @@ export interface PublisherState {
   publisher: any; // Use any type to avoid strict type checking issues
   createdAt: Date;
   options: any; // TODO: Define PublisherOptionsJSON when implementing
+  putParameters: PublisherPutParametersState; // Per-publisher configuration
 }
 
 // Reply parameters state - for successful replies
@@ -189,6 +205,7 @@ export interface ZenohDemoState {
   unsubscribe: (subscriberId: string) => Promise<void>;
   declarePublisher: () => Promise<void>;
   undeclarePublisher: (publisherId: string) => Promise<void>;
+  publishData: (publisherId: string) => Promise<void>;
   declareQueryable: () => Promise<void>;
   undeclareQueryable: (queryableId: string) => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
@@ -229,6 +246,23 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
     // Reply sub-states
     reply,
     replyErr,
+  };
+}
+
+// Helper function to create default publisher put parameters
+export function createDefaultPublisherPutParameters(): PublisherPutParametersState {
+  return {
+    payload: "",
+    payloadEmpty: true,
+    encoding: "",
+    customEncoding: false,
+    priority: undefined as Priority | undefined,
+    congestionControl: undefined as CongestionControl | undefined,
+    express: undefined as boolean | undefined,
+    attachment: "",
+    attachmentEmpty: true,
+    putOptionsJSON: {},
+    updatePutOptionsJSON: () => {}
   };
 }
 
@@ -303,6 +337,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async unsubscribe(_: string) {}
   async declarePublisher() {}
   async undeclarePublisher(_: string) {}
+  async publishData(_: string) {}
   async declareQueryable() {}
   async undeclareQueryable(_: string) {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}

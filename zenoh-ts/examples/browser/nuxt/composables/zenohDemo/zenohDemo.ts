@@ -5,6 +5,8 @@ import {
   type LogEntry,
   type SessionState,
   type SubscriberState,
+  type PublisherState,
+  type PublisherPutParametersState,
   type QueryableState,
   type PutParametersState,
   type SubscriberParametersState,
@@ -13,6 +15,7 @@ import {
   type ReplyErrParametersState,
   type GetParametersState,
   createDefaultResponseParameters,
+  createDefaultPublisherPutParameters,
 } from "../useZenohDemo";
 import {
   Config,
@@ -195,6 +198,7 @@ function getParametersStateToGetOptions(
 class ZenohDemo extends ZenohDemoEmpty {
   private sessionIdCounter = 0;
   private subscriberIdCounter = 0;
+  private publisherIdCounter = 0;
   private queryableIdCounter = 0;
 
   constructor() {
@@ -293,6 +297,22 @@ class ZenohDemo extends ZenohDemoEmpty {
           sessionId: firstSession.displayId,
         };
       }
+    }
+    return undefined;
+  }
+
+  // Method to get a specific session by ID
+  private getSessionById(
+    sessionId: string
+  ): { session: Session; sessionId: string } | undefined {
+    const foundSession = this.activeSessions.value.find(
+      (session) => session.displayId === sessionId
+    );
+    if (foundSession) {
+      return {
+        session: foundSession.session,
+        sessionId: foundSession.displayId,
+      };
     }
     return undefined;
   }
@@ -642,6 +662,197 @@ class ZenohDemo extends ZenohDemoEmpty {
       await subscriberState.subscriber.undeclare();
     } catch (error) {
       this.addErrorLogEntry(`Undeclare failed for ${subscriberId}`, { error });
+    }
+  }
+
+  // Helper method to convert publisher put parameters to PutOptions
+  private async publisherPutParametersStateToPutOptions(
+    putParams: PublisherPutParametersState
+  ): Promise<PutOptions> {
+    const options: PutOptions = {};
+
+    // Encoding
+    if (putParams.encoding) {
+      options.encoding = Encoding.fromString(putParams.encoding);
+    }
+
+    // Priority
+    if (putParams.priority !== undefined) {
+      options.priority = putParams.priority;
+    }
+
+    // Congestion Control
+    if (putParams.congestionControl !== undefined) {
+      options.congestionControl = putParams.congestionControl;
+    }
+
+    // Express
+    if (putParams.express !== undefined) {
+      options.express = putParams.express;
+    }
+
+    // Attachment
+    if (!putParams.attachmentEmpty && putParams.attachment) {
+      options.attachment = new ZBytes(putParams.attachment);
+    }
+
+    return options;
+  }
+
+  // Helper method to convert publisher put parameters to JSON for logging
+  private publisherPutParametersStateToPutOptionsJSON(
+    putParams: PublisherPutParametersState
+  ): any {
+    const json: any = {};
+
+    if (putParams.encoding) {
+      json.encoding = putParams.encoding;
+    }
+    if (putParams.priority !== undefined) {
+      json.priority = putParams.priority;
+    }
+    if (putParams.congestionControl !== undefined) {
+      json.congestionControl = putParams.congestionControl;
+    }
+    if (putParams.express !== undefined) {
+      json.express = putParams.express;
+    }
+    if (!putParams.attachmentEmpty && putParams.attachment) {
+      json.attachment = putParams.attachment;
+    }
+
+    return json;
+  }
+
+  override async declarePublisher(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.publisherParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.publisherParameters.key.value);
+
+      // TODO: Implement publisherParametersStateToPublisherOptions when options are defined
+      const publisherOptions = {}; // Empty for now
+
+      const publisher = await currentSession.declarePublisher(
+        keyExpr,
+        publisherOptions
+      );
+
+      displayId = `pub${this.publisherIdCounter++}`;
+      const createdAt = new Date();
+
+      // CREATE INDIVIDUAL PUT PARAMETERS FOR THIS PUBLISHER
+      const putParameters = createDefaultPublisherPutParameters();
+
+      // Set up sync method
+      putParameters.updatePutOptionsJSON = () => {
+        putParameters.putOptionsJSON = this.publisherPutParametersStateToPutOptionsJSON(putParameters);
+      };
+
+      // Initialize with default payload
+      const createdAtStr = createdAt.toISOString().slice(11, 19);
+      putParameters.payload = `Hello from publisher ${displayId} on session ${sessionId} created at ${createdAtStr}`;
+      putParameters.payloadEmpty = false;
+
+      const publisherState: PublisherState = {
+        displayId,
+        keyExpr: this.publisherParameters.key.value,
+        publisher,
+        createdAt,
+        options: {}, // TODO: publisherOptionsToJSON when available
+        putParameters: putParameters, // EACH PUBLISHER HAS ITS OWN
+        sessionId,
+      };
+
+      this.activePublishers.value.push(publisherState);
+
+      this.addLogEntry("success", `Publisher ${displayId} declared`, {
+        keyexpr: publisherState.keyExpr,
+        PublisherOptions: publisherState.options,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare publisher${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclarePublisher(publisherId: string): Promise<void> {
+    const index = this.activePublishers.value.findIndex(
+      (pub: PublisherState) => pub.displayId === publisherId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found`);
+      return;
+    }
+
+    const publisherState = this.activePublishers.value[index];
+    if (!publisherState) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found in array`);
+      return;
+    }
+
+    try {
+      await publisherState.publisher.undeclare();
+      this.activePublishers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Publisher ${publisherId} undeclared`, {
+        keyexpr: publisherState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare publisher ${publisherId}`,
+        { error }
+      );
+    }
+  }
+
+  override async publishData(publisherId: string): Promise<void> {
+    const publisherState = this.activePublishers.value.find(
+      (pub: PublisherState) => pub.displayId === publisherId
+    );
+
+    if (!publisherState) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found`);
+      return;
+    }
+
+    const sessionWithId = this.getSessionById(publisherState.sessionId);
+    if (!sessionWithId) {
+      this.addErrorLogEntry(`Session ${publisherState.sessionId} not found for publisher ${publisherId}`);
+      return;
+    }
+
+    try {
+      const putParams = publisherState.putParameters;
+      const payload = putParams.payloadEmpty ? "" : putParams.payload;
+
+      // Build put options from publisher's stored parameters
+      const options = await this.publisherPutParametersStateToPutOptions(
+        putParams
+      );
+
+      await publisherState.publisher.put(payload, options);
+
+      this.addLogEntry("success", `Published data on ${publisherId}`, {
+        keyexpr: publisherState.keyExpr,
+        payload,
+        PutOptions: putOptionsToJSON(options),
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to publish on ${publisherId}`,
+        { error }
+      );
     }
   }
 

@@ -202,6 +202,12 @@
                 >
                   <template #actions>
                     <button
+                      @click="publishData(publisherState.displayId)"
+                      :disabled="!selectedSessionId || publisherState.putParameters.payloadEmpty"
+                    >
+                      Publish
+                    </button>
+                    <button
                       @click="undeclarePublisher(publisherState.displayId)"
                       :disabled="!selectedSessionId"
                     >
@@ -214,6 +220,60 @@
                     <ParameterDisplay
                       type="neutral"
                       :data="{ 'PublisherOptions': publisherState.options }"
+                    />
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{
+                        'Put Config': {
+                          'Payload': publisherState.putParameters.payload,
+                          'Encoding': publisherState.putParameters.encoding || 'default',
+                          'Priority': publisherState.putParameters.priority || 'default',
+                          'Put Options': publisherState.putParameters.putOptionsJSON
+                        }
+                      }"
+                    />
+                  </template>
+
+                  <!-- Edit Put Parameters Section -->
+                  <template #edits>
+                    <PayloadInput
+                      v-model="publisherState.putParameters.payload"
+                      v-model:is-empty="publisherState.putParameters.payloadEmpty"
+                      label="Payload"
+                      placeholder="Data to publish"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <EncodingSelect
+                      v-model="publisherState.putParameters.encoding"
+                      v-model:custom-encoding="publisherState.putParameters.customEncoding"
+                      :encoding-options="encodingOptions"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <PrioritySelect
+                      v-model="publisherState.putParameters.priority"
+                      :disabled="!selectedSessionId"
+                      :options="priorityOptions"
+                    />
+
+                    <CongestionControlSelect
+                      v-model="publisherState.putParameters.congestionControl"
+                      :disabled="!selectedSessionId"
+                      :options="congestionControlOptions"
+                    />
+
+                    <ExpressSelect
+                      v-model="publisherState.putParameters.express"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <PayloadInput
+                      v-model="publisherState.putParameters.attachment"
+                      v-model:is-empty="publisherState.putParameters.attachmentEmpty"
+                      label="Attachment"
+                      placeholder="Optional attachment data"
+                      :disabled="!selectedSessionId"
                     />
                   </template>
                 </Entity>
@@ -717,6 +777,7 @@ const {
   unsubscribe,
   declarePublisher,
   undeclarePublisher,
+  publishData,
   declareQueryable,
   undeclareQueryable,
 
@@ -806,6 +867,25 @@ watch(
         () => {
           // Update replyErrOptionsJSON
           queryable.responseParameters.replyErr.updateReplyErrOptionsJSON();
+        },
+        { deep: true, immediate: true }
+      );
+    });
+  },
+  { deep: true, immediate: true }
+);
+
+// Watchers to update putOptionsJSON when publisher put parameters change
+watch(
+  activePublishers,
+  (publishers) => {
+    publishers.forEach((publisher) => {
+      watch(
+        () => ({
+          putParams: publisher.putParameters,
+        }),
+        () => {
+          publisher.putParameters.updatePutOptionsJSON();
         },
         { deep: true, immediate: true }
       );
