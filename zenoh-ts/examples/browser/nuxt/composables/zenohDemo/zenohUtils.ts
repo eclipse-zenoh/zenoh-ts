@@ -75,6 +75,16 @@ export interface SubscriberOptionsJSON {
   allowedOrigin: string | undefined;
 }
 
+// Interface for the publisher options JSON representation
+export interface PublisherOptionsJSON {
+  encoding: string | undefined;
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  reliability: string | undefined;
+  allowedDestination: string | undefined;
+}
+
 // Interface for the queryable options JSON representation
 export interface QueryableOptionsJSON {
   complete: string | undefined;
@@ -248,6 +258,29 @@ export function subscriberOptionsToJSON(
 ): SubscriberOptionsJSON {
   const result: SubscriberOptionsJSON = {
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts PublisherOptions object to a structured JSON object for logging
+ * @param options The PublisherOptions object to convert
+ * @returns A structured object containing all publisher options as strings
+ */
+export function publisherOptionsToJSON(
+  options: PutOptions
+): PublisherOptionsJSON {
+  const result: PublisherOptionsJSON = {
+    encoding: options.encoding?.toString(),
+    priority: labelOrUndefined(Priority, options.priority),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    reliability: labelOrUndefined(Reliability, options.reliability),
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
   };
   return cleanUndefineds(result);
 }

@@ -142,7 +142,13 @@ export interface SubscriberParametersState {
 // Publisher parameters state - includes all publisher-related data
 export interface PublisherParametersState {
   key: Ref<string>;
-  // TODO: Add more publisher options when implementing functionality
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  priority: Ref<Priority | undefined>;
+  express: Ref<boolean | undefined>;
+  reliability: Ref<Reliability | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
 }
 
 // Queryable parameters state - includes all queryable-related data (declaration only)
@@ -290,6 +296,13 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   publisherParameters = {
     key: ref("demo/example/publisher"),
+    encoding: ref(""),
+    customEncoding: ref(false),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    priority: ref(undefined as Priority | undefined),
+    express: ref(undefined as boolean | undefined),
+    reliability: ref(undefined as Reliability | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
   };
   queryableParameters = {
     key: ref("demo/example/queryable"),

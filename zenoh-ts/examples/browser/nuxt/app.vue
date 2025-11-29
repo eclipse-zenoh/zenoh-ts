@@ -188,6 +188,42 @@
                   placeholder="Key expression (e.g., demo/example/publisher)"
                   :disabled="!selectedSessionId"
                 />
+
+                <EncodingSelect
+                  v-model="publisherParameters.encoding.value"
+                  v-model:custom-encoding="publisherParameters.customEncoding.value"
+                  :encoding-options="encodingOptions"
+                  :disabled="!selectedSessionId"
+                />
+
+                <PrioritySelect
+                  v-model="publisherParameters.priority.value"
+                  :disabled="!selectedSessionId"
+                  :options="priorityOptions"
+                />
+
+                <CongestionControlSelect
+                  v-model="publisherParameters.congestionControl.value"
+                  :disabled="!selectedSessionId"
+                  :options="congestionControlOptions"
+                />
+
+                <ExpressSelect
+                  v-model="publisherParameters.express.value"
+                  :disabled="!selectedSessionId"
+                />
+
+                <ReliabilitySelect
+                  v-model="publisherParameters.reliability.value"
+                  :disabled="!selectedSessionId"
+                  :options="reliabilityOptions"
+                />
+
+                <AllowedDestinationSelect
+                  v-model="publisherParameters.allowedDestination.value"
+                  :disabled="!selectedSessionId"
+                  :options="localityOptions"
+                />
               </template>
 
               <!-- Active Publishers as Sub-entities -->
@@ -205,7 +241,7 @@
                       @click="publishData(publisherState.displayId)"
                       :disabled="!selectedSessionId || publisherState.putParameters.payloadEmpty"
                     >
-                      Publish
+                      Put
                     </button>
                     <button
                       @click="undeclarePublisher(publisherState.displayId)"

@@ -7,6 +7,7 @@ import {
   type SubscriberState,
   type PublisherState,
   type PublisherPutParametersState,
+  type PublisherParametersState,
   type QueryableState,
   type PutParametersState,
   type SubscriberParametersState,
@@ -53,6 +54,7 @@ import {
   queryToJSON,
   putOptionsToJSON,
   subscriberOptionsToJSON,
+  publisherOptionsToJSON,
   queryableOptionsToJSON,
   getOptionsToJSON,
   replyOptionsToJSON,
@@ -97,6 +99,31 @@ function subscriberParametersStateToSubscriberOptions(
   let opts: SubscriberOptions = {};
   if (options.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = options.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function publisherParametersStateToPublisherOptions(
+  parameters: PublisherParametersState
+): PutOptions {
+  let opts: PutOptions = {};
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
+  }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.reliability.value !== undefined) {
+    opts.reliability = parameters.reliability.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
   }
   return opts;
 }
@@ -737,8 +764,9 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       const keyExpr = new KeyExpr(this.publisherParameters.key.value);
 
-      // TODO: Implement publisherParametersStateToPublisherOptions when options are defined
-      const publisherOptions = {}; // Empty for now
+      const publisherOptions = publisherParametersStateToPublisherOptions(
+        this.publisherParameters
+      );
 
       const publisher = await currentSession.declarePublisher(
         keyExpr,
@@ -766,7 +794,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         keyExpr: this.publisherParameters.key.value,
         publisher,
         createdAt,
-        options: {}, // TODO: publisherOptionsToJSON when available
+        options: publisherOptionsToJSON(publisherOptions),
         putParameters: putParameters, // EACH PUBLISHER HAS ITS OWN
         sessionId,
       };
