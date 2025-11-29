@@ -10,6 +10,7 @@
             title="Session"
             icon="🔗"
             section-class="session-section"
+            v-model:collapsed="sessionSectionCollapsed"
           >
             <!-- Open Operation -->
             <Entity
@@ -97,6 +98,7 @@
             icon="📡"
             section-class="pubsub-section"
             :disabled="!selectedSessionId"
+            v-model:collapsed="pubsubSectionCollapsed"
           >
             <!-- Declare Subscriber Operation -->
             <Entity
@@ -405,6 +407,7 @@
             icon="🔍"
             section-class="query-section"
             :disabled="!selectedSessionId"
+            v-model:collapsed="querySectionCollapsed"
           >
             <!-- Declare Queryable Operation -->
             <Entity
@@ -890,7 +893,13 @@
           </Section>
 
           <!-- Liveliness Section -->
-          <Section title="Liveliness" icon="🩺" section-class="liveliness-section"            :disabled="!selectedSessionId">
+          <Section
+            title="Liveliness"
+            icon="🩺"
+            section-class="liveliness-section"
+            :disabled="!selectedSessionId"
+            v-model:collapsed="livelinessSectionCollapsed"
+          >
             <!-- Liveliness Token -->
             <Entity
               title="Token"
@@ -1063,6 +1072,7 @@
             title="Activity Log"
             icon="📜"
             section-class="log-section"
+            v-model:collapsed="logSectionCollapsed"
           >
           <template #actions>
             <button @click="clearLog">
@@ -1245,6 +1255,13 @@ const livelinessTokenOptionsCollapsed = ref(false);
 const livelinessSubscriberOptionsCollapsed = ref(false);
 const livelinessGetOptionsCollapsed = ref(false);
 const getOptionsCollapsed = ref(false);
+
+// State to track collapsed state for sections
+const sessionSectionCollapsed = ref(false);
+const pubsubSectionCollapsed = ref(false);
+const querySectionCollapsed = ref(false);
+const livelinessSectionCollapsed = ref(false);
+const logSectionCollapsed = ref(false);
 
 // Auto-scroll to bottom when new log entries are added
 watch(
