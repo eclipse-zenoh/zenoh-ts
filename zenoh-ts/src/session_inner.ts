@@ -63,7 +63,6 @@ class IdSource {
 
 type OnResponseReceivedCallback = (msg: [InRemoteMessageId, ZBytesDeserializer]) => void;
 
-
 export class SessionInner {
     private isClosed_: boolean = false;
 
@@ -75,6 +74,7 @@ export class SessionInner {
     private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
     private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
+    private nextMessageId: number = 0;
     private readonly messageResponseTimeoutMs: number;
 
     private constructor(link: RemoteLink, messageResponseTimeoutMs: number) {
@@ -167,7 +167,8 @@ export class SessionInner {
 
     private async sendRequest<T>(msg: OutMessageInterface, expectedResponseId: InRemoteMessageId, deserialize: (deserializer: ZBytesDeserializer) => T): Promise<T> {
         let serializer = new ZBytesSerializer();
-        const msgId = IdSource.get<number>();
+        const msgId = this.nextMessageId;
+        this.nextMessageId = (this.nextMessageId + 1) % (1 << 31);
         serializeHeader([msg.outMessageId, msgId], serializer);
 
         msg.serializeWithZSerializer(serializer);

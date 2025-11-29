@@ -132,6 +132,7 @@ jobs:
       branch: ${{ needs.tag.outputs.branch }}
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.(dylib|so)$
+        ^zenoh-bridge-remote-api$
         ^zenoh_plugin_remote_api(2)?\.dll$
     secrets: inherit
 
@@ -175,7 +176,7 @@ jobs:
       #   is and thus point to the main branch of eclipse-zenoh/zenoh.
       # - In live-run mode, we assume that eclipse-zenoh/zenoh is already
       #   published as this workflow can't be responsible for publishing it
-      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && 'zenoh.*' || '' }}
+      unpublished-deps-patterns: ${{ !(inputs.live-run || false) && '^zenoh-plugin-remote-api$' || '' }}
       unpublished-deps-repos: ${{ !(inputs.live-run || false) && 'eclipse-zenoh/zenoh' || '' }}
     secrets: inherit
 
@@ -204,6 +205,7 @@ jobs:
       branch: ${{ needs.tag.outputs.branch }}
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.dylib$
+        ^zenoh-bridge-remote-api$
       formulae: |
         zenoh-plugin-remote-api
     secrets: inherit
@@ -220,6 +222,7 @@ jobs:
       branch: ${{ needs.tag.outputs.branch }}
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.(dylib|so)$
+        ^zenoh-bridge-remote-api$
         ^zenoh_plugin_remote_api(2)?\.dll$
       name: zenoh-plugin-remote-api
     secrets: inherit
@@ -236,5 +239,6 @@ jobs:
       branch: ${{ needs.tag.outputs.branch }}
       artifact-patterns: |
         ^libzenoh_plugin_remote_api(2)?\.(dylib|so)$
+        ^zenoh-bridge-remote-api$
         ^zenoh_plugin_remote_api(2)?\.dll$
     secrets: inherit
