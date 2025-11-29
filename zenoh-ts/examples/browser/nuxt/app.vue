@@ -890,7 +890,7 @@
           </Section>
 
           <!-- Liveliness Section -->
-          <Section title="Liveliness" icon="🩺">
+          <Section title="Liveliness" icon="🩺" section-class="liveliness-section"            :disabled="!selectedSessionId">
             <!-- Liveliness Token -->
             <Entity
               title="Token"
