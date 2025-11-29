@@ -447,7 +447,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   };
   livelinessSubscriberParameters = {
     key: ref("demo/example/**"),
-    history: ref(false),
+    history: ref(undefined as boolean | undefined),
   };
   livelinessGetParameters = {
     key: ref("demo/example/**"),

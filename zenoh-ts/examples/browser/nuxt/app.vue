@@ -890,7 +890,7 @@
           </Section>
 
           <!-- Liveliness Section -->
-          <Section title="Liveliness" icon="💓">
+          <Section title="Liveliness" icon="🩺">
             <!-- Liveliness Token -->
             <Entity
               title="Token"
@@ -981,11 +981,10 @@
                   :disabled="!selectedSessionId"
                 />
 
-                <CheckBox
+                <TriStateCheckbox
                   v-model="livelinessSubscriberParameters.history.value"
                   label="History"
                   :disabled="!selectedSessionId"
-                  :three-state="false"
                 />
               </template>
 
