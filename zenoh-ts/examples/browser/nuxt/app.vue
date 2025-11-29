@@ -1258,10 +1258,10 @@ const getOptionsCollapsed = ref(false);
 
 // State to track collapsed state for sections
 const sessionSectionCollapsed = ref(false);
-const pubsubSectionCollapsed = ref(false);
-const querySectionCollapsed = ref(false);
-const livelinessSectionCollapsed = ref(false);
-const logSectionCollapsed = ref(false);
+const pubsubSectionCollapsed = ref(true);
+const querySectionCollapsed = ref(true);
+const livelinessSectionCollapsed = ref(true);
+const logSectionCollapsed = ref(true);
 
 // Auto-scroll to bottom when new log entries are added
 watch(
