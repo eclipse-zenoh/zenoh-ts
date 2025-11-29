@@ -1419,7 +1419,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       });
 
       // Update default key for next token
-      this.livelinessTokenParameters.key.value = `demo/example/${sessionId}/token${this.livelinessTokenIdCounter}`;
+      this.livelinessTokenParameters.key.value = `demo/example/token${this.livelinessTokenIdCounter}`;
     } catch (error) {
       this.addErrorLogEntry(
         `Failed to declare liveliness token${displayId ? ` ${displayId}` : ""}`,

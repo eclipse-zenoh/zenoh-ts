@@ -914,7 +914,7 @@
                 <KeyExprInput
                   v-model="livelinessTokenParameters.key.value"
                   label="Key Expression"
-                  placeholder="Key expression (e.g., demo/example/ses0/token0)"
+                  placeholder="Key expression (e.g., demo/example/token0)"
                   :disabled="!selectedSessionId"
                 />
               </template>

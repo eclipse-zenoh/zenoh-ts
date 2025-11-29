@@ -443,7 +443,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
   };
   livelinessTokenParameters = {
-    key: ref("demo/example/ses0/token0"), // Will be updated dynamically
+    key: ref("demo/example/token0"),
   };
   livelinessSubscriberParameters = {
     key: ref("demo/example/**"),
