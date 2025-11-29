@@ -98,6 +98,11 @@ export interface QuerierOptionsJSON {
   acceptReplies: string | undefined;
 }
 
+// Interface for the liveliness subscriber options JSON representation
+export interface LivelinessSubscriberOptionsJSON {
+  history: string | undefined;
+}
+
 // Interface for the queryable options JSON representation
 export interface QueryableOptionsJSON {
   complete: string | undefined;
@@ -337,6 +342,20 @@ export function queryableOptionsToJSON(
   const result: QueryableOptionsJSON = {
     complete: options.complete?.toString(),
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts LivelinessSubscriberOptions object to a structured JSON object for logging
+ * @param history The history flag
+ * @returns A structured object containing all liveliness subscriber options as strings
+ */
+export function livelinessSubscriberOptionsToJSON(
+  history: boolean
+): LivelinessSubscriberOptionsJSON {
+  const result: LivelinessSubscriberOptionsJSON = {
+    history: history.toString(),
   };
   return cleanUndefineds(result);
 }

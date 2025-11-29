@@ -77,7 +77,7 @@ export interface ReplyParametersState {
   priority: Priority | undefined;
   congestionControl: CongestionControl | undefined;
   express: boolean | undefined;
-  useTimestamp: boolean; // Whether to automatically get timestamp from session
+  useTimestamp: boolean | undefined; // Whether to automatically get timestamp from session
   attachment: string;
   attachmentEmpty: boolean;
   replyOptionsJSON: ReplyOptionsJSON;
@@ -204,6 +204,43 @@ export interface QuerierParametersState {
   acceptReplies: Ref<ReplyKeyExpr | undefined>;
 }
 
+// Liveliness token state interface
+export interface LivelinessTokenState {
+  displayId: string; // Display ID like "lt0", "lt1", etc.
+  sessionId: string; // Session ID that this token belongs to
+  keyExpr: string;
+  token: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+}
+
+// Liveliness token parameters state - includes token declaration data
+export interface LivelinessTokenParametersState {
+  key: Ref<string>;
+}
+
+// Liveliness subscriber state interface
+export interface LivelinessSubscriberState {
+  displayId: string; // Display ID like "ls0", "ls1", etc.
+  sessionId: string; // Session ID that this subscriber belongs to
+  keyExpr: string;
+  subscriber: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define LivelinessSubscriberOptionsJSON
+}
+
+// Liveliness subscriber parameters state - includes subscriber declaration data
+export interface LivelinessSubscriberParametersState {
+  key: Ref<string>;
+  history: Ref<boolean | undefined>;
+}
+
+// Liveliness get parameters state - includes all liveliness get-related data
+export interface LivelinessGetParametersState {
+  key: Ref<string>;
+  timeout: Ref<number | undefined>;
+  timeoutEmpty: Ref<boolean>;
+}
+
 // Get parameters state - includes all get-related data
 export interface GetParametersState {
   key: Ref<string>;
@@ -233,6 +270,9 @@ export interface ZenohDemoState {
   publisherParameters: PublisherParametersState;
   queryableParameters: QueryableParametersState;
   querierParameters: QuerierParametersState;
+  livelinessTokenParameters: LivelinessTokenParametersState;
+  livelinessSubscriberParameters: LivelinessSubscriberParametersState;
+  livelinessGetParameters: LivelinessGetParametersState;
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
   activeSessions: Ref<SessionState[]>;
@@ -241,6 +281,8 @@ export interface ZenohDemoState {
   activePublishers: Ref<PublisherState[]>;
   activeQueryables: Ref<QueryableState[]>;
   activeQueriers: Ref<QuerierState[]>;
+  activeLivelinessTokens: Ref<LivelinessTokenState[]>;
+  activeLivelinessSubscribers: Ref<LivelinessSubscriberState[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
@@ -265,6 +307,11 @@ export interface ZenohDemoState {
   declareQuerier: () => Promise<void>;
   undeclareQuerier: (querierId: string) => Promise<void>;
   performQuerierGet: (querierId: string) => Promise<void>;
+  declareLivelinessToken: () => Promise<void>;
+  undeclareLivelinessToken: (tokenId: string) => Promise<void>;
+  declareLivelinessSubscriber: () => Promise<void>;
+  undeclareLivelinessSubscriber: (subscriberId: string) => Promise<void>;
+  performLivelinessGet: () => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
   addErrorLogEntry: (message: string, error?: any) => void;
   clearLog: () => void;
@@ -395,6 +442,18 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     timeoutEmpty: ref(true),
     acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
   };
+  livelinessTokenParameters = {
+    key: ref("demo/example/ses0/token0"), // Will be updated dynamically
+  };
+  livelinessSubscriberParameters = {
+    key: ref("demo/example/**"),
+    history: ref(false),
+  };
+  livelinessGetParameters = {
+    key: ref("demo/example/**"),
+    timeout: ref(undefined as number | undefined),
+    timeoutEmpty: ref(true),
+  };
   getParameters = {
     key: ref("demo/example/*"),
     congestionControl: ref(undefined as CongestionControl | undefined),
@@ -420,6 +479,8 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   activePublishers = ref<PublisherState[]>([]);
   activeQueryables = ref<QueryableState[]>([]) as any;
   activeQueriers = ref<QuerierState[]>([]);
+  activeLivelinessTokens = ref<LivelinessTokenState[]>([]);
+  activeLivelinessSubscribers = ref<LivelinessSubscriberState[]>([]);
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
@@ -443,6 +504,11 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async declareQuerier() {}
   async undeclareQuerier(_: string) {}
   async performQuerierGet(_: string) {}
+  async declareLivelinessToken() {}
+  async undeclareLivelinessToken(_: string) {}
+  async declareLivelinessSubscriber() {}
+  async undeclareLivelinessSubscriber(_: string) {}
+  async performLivelinessGet() {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}

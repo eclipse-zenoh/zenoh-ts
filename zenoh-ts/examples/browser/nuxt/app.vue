@@ -888,6 +888,173 @@
               </template>
             </Entity>
           </Section>
+
+          <!-- Liveliness Section -->
+          <Section title="Liveliness" icon="💓">
+            <!-- Liveliness Token -->
+            <Entity
+              title="Token"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+              :descr="livelinessTokenParameters.key.value"
+              v-model:editsExpanded="livelinessTokenOptionsCollapsed"
+            >
+              <template #actions>
+                <button
+                  @click="declareLivelinessToken"
+                  :disabled="
+                    !selectedSessionId || !livelinessTokenParameters.key.value
+                  "
+                >
+                  Declare
+                </button>
+              </template>
+
+              <template #edits>
+                <KeyExprInput
+                  v-model="livelinessTokenParameters.key.value"
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/ses0/token0)"
+                  :disabled="!selectedSessionId"
+                />
+              </template>
+
+              <!-- Active Tokens as Sub-entities -->
+              <template v-if="activeLivelinessTokens.length > 0" #sub-entities>
+                <Entity
+                  v-for="tokenState in activeLivelinessTokens"
+                  :key="tokenState.displayId"
+                  :title="tokenState.displayId"
+                  :session="tokenState.sessionId"
+                  :selected-session="selectedSessionId"
+                  :descr="tokenState.keyExpr"
+                >
+                  <template #actions>
+                    <button
+                      @click="undeclareLivelinessToken(tokenState.displayId)"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
+                  </template>
+
+                  <!-- Info section -->
+                  <template #info>
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{
+                        'Token Info': {
+                          'Key Expression': tokenState.keyExpr,
+                          'Created At': tokenState.createdAt.toISOString()
+                        }
+                      }"
+                    />
+                  </template>
+                </Entity>
+              </template>
+            </Entity>
+
+            <!-- Liveliness Subscriber -->
+            <Entity
+              title="Subscriber"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+              :descr="livelinessSubscriberParameters.key.value"
+              v-model:editsExpanded="livelinessSubscriberOptionsCollapsed"
+            >
+              <template #actions>
+                <button
+                  @click="declareLivelinessSubscriber"
+                  :disabled="
+                    !selectedSessionId || !livelinessSubscriberParameters.key.value
+                  "
+                >
+                  Declare
+                </button>
+              </template>
+
+              <template #edits>
+                <KeyExprInput
+                  v-model="livelinessSubscriberParameters.key.value"
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/**)"
+                  :disabled="!selectedSessionId"
+                />
+
+                <CheckBox
+                  v-model="livelinessSubscriberParameters.history.value"
+                  label="History"
+                  :disabled="!selectedSessionId"
+                  :three-state="false"
+                />
+              </template>
+
+              <!-- Active Liveliness Subscribers as Sub-entities -->
+              <template v-if="activeLivelinessSubscribers.length > 0" #sub-entities>
+                <Entity
+                  v-for="subscriberState in activeLivelinessSubscribers"
+                  :key="subscriberState.displayId"
+                  :title="subscriberState.displayId"
+                  :session="subscriberState.sessionId"
+                  :selected-session="selectedSessionId"
+                  :descr="subscriberState.keyExpr"
+                >
+                  <template #actions>
+                    <button
+                      @click="undeclareLivelinessSubscriber(subscriberState.displayId)"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
+                  </template>
+
+                  <!-- Info section -->
+                  <template #info>
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{
+                        'LivelinessSubscriberOptions': subscriberState.options
+                      }"
+                    />
+                  </template>
+                </Entity>
+              </template>
+            </Entity>
+
+            <!-- Liveliness Get Operation -->
+            <Entity
+              title="Get"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+              :descr="livelinessGetParameters.key.value"
+              v-model:editsExpanded="livelinessGetOptionsCollapsed"
+            >
+              <template #actions>
+                <button
+                  @click="performLivelinessGet"
+                  :disabled="!selectedSessionId || !livelinessGetParameters.key.value"
+                >
+                  Run
+                </button>
+              </template>
+
+              <template #edits>
+                <KeyExprInput
+                  v-model="livelinessGetParameters.key.value"
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/**)"
+                  :disabled="!selectedSessionId"
+                />
+
+                <TimeoutInput
+                  v-model="livelinessGetParameters.timeout.value"
+                  v-model:is-empty="livelinessGetParameters.timeoutEmpty.value"
+                  placeholder="Timeout (ms)"
+                  :disabled="!selectedSessionId"
+                />
+              </template>
+            </Entity>
+          </Section>
         </div>
 
         <!-- Activity Log Panel -->
@@ -984,10 +1151,15 @@ const {
   activePublishers,
   activeQueryables,
   activeQueriers,
+  activeLivelinessTokens,
+  activeLivelinessSubscribers,
   subscriberParameters,
   publisherParameters,
   queryableParameters,
   querierParameters,
+  livelinessTokenParameters,
+  livelinessSubscriberParameters,
+  livelinessGetParameters,
   getParameters,
 
   // Option arrays (now part of the state)
@@ -1017,6 +1189,11 @@ const {
   declareQuerier,
   undeclareQuerier,
   performQuerierGet,
+  declareLivelinessToken,
+  undeclareLivelinessToken,
+  declareLivelinessSubscriber,
+  undeclareLivelinessSubscriber,
+  performLivelinessGet,
 
   // App operations
   clearLog,
@@ -1065,6 +1242,9 @@ const publisherOptionsCollapsed = ref(false);
 const putOptionsCollapsed = ref(false);
 const queryableOptionsCollapsed = ref(false);
 const querierOptionsCollapsed = ref(false);
+const livelinessTokenOptionsCollapsed = ref(false);
+const livelinessSubscriberOptionsCollapsed = ref(false);
+const livelinessGetOptionsCollapsed = ref(false);
 const getOptionsCollapsed = ref(false);
 
 // Auto-scroll to bottom when new log entries are added

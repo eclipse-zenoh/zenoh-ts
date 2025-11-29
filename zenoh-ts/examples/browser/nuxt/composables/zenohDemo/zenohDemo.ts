@@ -12,6 +12,8 @@ import {
   type QuerierState,
   type QuerierGetParametersState,
   type QuerierParametersState,
+  type LivelinessTokenState,
+  type LivelinessSubscriberState,
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
@@ -62,6 +64,7 @@ import {
   publisherOptionsToJSON,
   querierOptionsToJSON,
   queryableOptionsToJSON,
+  livelinessSubscriberOptionsToJSON,
   getOptionsToJSON,
   replyOptionsToJSON,
   replyErrorToJSON,
@@ -308,6 +311,8 @@ class ZenohDemo extends ZenohDemoEmpty {
   private publisherIdCounter = 0;
   private queryableIdCounter = 0;
   private querierIdCounter = 0;
+  private livelinessTokenIdCounter = 0;
+  private livelinessSubscriberIdCounter = 0;
 
   constructor() {
     super();
@@ -1378,6 +1383,234 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Failed to perform get on ${querierId}`,
         { error }
       );
+    }
+  }
+
+  override async declareLivelinessToken(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessTokenParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.livelinessTokenParameters.key.value);
+
+      const token = await currentSession.liveliness().declareToken(keyExpr);
+
+      displayId = `lt${this.livelinessTokenIdCounter++}`;
+      const createdAt = new Date();
+
+      const tokenState: LivelinessTokenState = {
+        displayId,
+        keyExpr: this.livelinessTokenParameters.key.value,
+        token,
+        createdAt,
+        sessionId,
+      };
+
+      this.activeLivelinessTokens.value.push(tokenState);
+
+      this.addLogEntry("success", `Liveliness token ${displayId} declared`, {
+        keyexpr: this.livelinessTokenParameters.key.value,
+      });
+
+      // Update default key for next token
+      this.livelinessTokenParameters.key.value = `demo/example/${sessionId}/token${this.livelinessTokenIdCounter}`;
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare liveliness token${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareLivelinessToken(tokenId: string): Promise<void> {
+    const index = this.activeLivelinessTokens.value.findIndex(
+      (tk: LivelinessTokenState) => tk.displayId === tokenId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Liveliness token ${tokenId} not found`);
+      return;
+    }
+
+    const tokenState = this.activeLivelinessTokens.value[index];
+    if (!tokenState) {
+      this.addErrorLogEntry(`Liveliness token ${tokenId} not found in array`);
+      return;
+    }
+
+    try {
+      await tokenState.token.undeclare();
+      this.activeLivelinessTokens.value.splice(index, 1);
+
+      this.addLogEntry("success", `Liveliness token ${tokenId} undeclared`, {
+        keyexpr: tokenState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare liveliness token ${tokenId}`,
+        { error }
+      );
+    }
+  }
+
+  override async declareLivelinessSubscriber(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessSubscriberParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.livelinessSubscriberParameters.key.value);
+      const history = this.livelinessSubscriberParameters.history.value ?? false;
+
+      const subscriber = await currentSession.liveliness().declareSubscriber(
+        keyExpr,
+        { history }
+      );
+
+      displayId = `ls${this.livelinessSubscriberIdCounter++}`;
+      const createdAt = new Date();
+
+      const subscriberState: LivelinessSubscriberState = {
+        displayId,
+        keyExpr: this.livelinessSubscriberParameters.key.value,
+        subscriber,
+        createdAt,
+        options: livelinessSubscriberOptionsToJSON(history),
+        sessionId,
+      };
+
+      this.activeLivelinessSubscribers.value.push(subscriberState);
+
+      // Set up receiver to process samples
+      const receiver = subscriber.receiver();
+      (async () => {
+        try {
+          for await (const sample of receiver as ChannelReceiver<Sample>) {
+            this.addLogEntry("data", `Liveliness sample on ${displayId}`, {
+              Sample: sampleToJSON(sample),
+            });
+          }
+        } catch (error) {
+          this.addErrorLogEntry(
+            `Error in liveliness subscriber ${displayId} receiver`,
+            { error }
+          );
+        }
+      })();
+
+      this.addLogEntry("success", `Liveliness subscriber ${displayId} declared`, {
+        keyexpr: this.livelinessSubscriberParameters.key.value,
+        LivelinessSubscriberOptions: livelinessSubscriberOptionsToJSON(history),
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare liveliness subscriber${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareLivelinessSubscriber(subscriberId: string): Promise<void> {
+    const index = this.activeLivelinessSubscribers.value.findIndex(
+      (sub: LivelinessSubscriberState) => sub.displayId === subscriberId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Liveliness subscriber ${subscriberId} not found`);
+      return;
+    }
+
+    const subscriberState = this.activeLivelinessSubscribers.value[index];
+    if (!subscriberState) {
+      this.addErrorLogEntry(`Liveliness subscriber ${subscriberId} not found in array`);
+      return;
+    }
+
+    try {
+      await subscriberState.subscriber.undeclare();
+      this.activeLivelinessSubscribers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Liveliness subscriber ${subscriberId} undeclared`, {
+        keyexpr: subscriberState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare liveliness subscriber ${subscriberId}`,
+        { error }
+      );
+    }
+  }
+
+  override async performLivelinessGet(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessGetParameters.key.value) return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
+
+    try {
+      const selector = this.livelinessGetParameters.key.value;
+
+      // Build get options
+      const getOptions: any = {};
+      if (
+        !this.livelinessGetParameters.timeoutEmpty.value &&
+        this.livelinessGetParameters.timeout.value !== undefined
+      ) {
+        getOptions.timeout = Duration.milliseconds.of(this.livelinessGetParameters.timeout.value);
+      }
+
+      this.addLogEntry("info", `Starting liveliness GET on ${sessionId}`, {
+        selector: selector,
+        timeout_ms: this.livelinessGetParameters.timeout.value,
+      });
+
+      const receiver = await currentSession.liveliness().get(selector, getOptions);
+      if (!receiver) {
+        this.addErrorLogEntry("Liveliness GET failed: No receiver returned");
+        return;
+      }
+
+      let resultCount = 0;
+
+      for await (const reply of receiver as ChannelReceiver<Reply>) {
+        try {
+          const result = reply.result();
+          // Check if it's a successful sample or an error
+          if (result instanceof Sample) {
+            // It's a Sample - use JSON formatting for enhanced display
+            const sample = result as Sample;
+            this.addLogEntry("data", "Liveliness GET result", {
+              Sample: sampleToJSON(sample),
+            });
+            resultCount++;
+          } else {
+            // It's a ReplyError - log with error formatting
+            const replyError = result as ReplyError;
+            this.addLogEntry("data", `Liveliness GET query error for ${selector}`, {
+              ReplyError: replyErrorToJSON(replyError),
+            });
+          }
+        } catch (resultError) {
+          this.addErrorLogEntry("Error processing liveliness GET result", { error: resultError });
+        }
+      }
+      this.addLogEntry(
+        "success",
+        `Liveliness GET query completed on ${sessionId} for ${selector}. Found ${resultCount} results.`
+      );
+    } catch (error) {
+      this.addErrorLogEntry("Liveliness GET query failed", { error });
     }
   }
 }
