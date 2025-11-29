@@ -9,6 +9,7 @@ import {
   type PutOptions,
   type SubscriberOptions,
   type QueryableOptions,
+  type QuerierOptions,
   type GetOptions,
   type ReplyErrOptions,
   type ReplyOptions,
@@ -83,6 +84,18 @@ export interface PublisherOptionsJSON {
   express: string | undefined;
   reliability: string | undefined;
   allowedDestination: string | undefined;
+}
+
+// Interface for the querier options JSON representation
+export interface QuerierOptionsJSON {
+  congestionControl: string | undefined;
+  priority: string | undefined;
+  express: string | undefined;
+  allowedDestination: string | undefined;
+  consolidation: string | undefined;
+  target: string | undefined;
+  timeout_ms: number | undefined;
+  acceptReplies: string | undefined;
 }
 
 // Interface for the queryable options JSON representation
@@ -281,6 +294,34 @@ export function publisherOptionsToJSON(
       options.express !== undefined ? options.express.toString() : undefined,
     reliability: labelOrUndefined(Reliability, options.reliability),
     allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts QuerierOptions object to a structured JSON object for logging
+ * @param options The QuerierOptions object to convert
+ * @returns A structured object containing all querier options as strings
+ */
+export function querierOptionsToJSON(
+  options: QuerierOptions
+): QuerierOptionsJSON {
+  const result: QuerierOptionsJSON = {
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    priority: labelOrUndefined(Priority, options.priority),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    consolidation: labelOrUndefined(ConsolidationMode, options.consolidation),
+    target: labelOrUndefined(QueryTarget, options.target),
+    timeout_ms:
+      options.timeout !== undefined
+        ? milliseconds.from(options.timeout)
+        : undefined,
+    acceptReplies: labelOrUndefined(ReplyKeyExpr, options.acceptReplies),
   };
   return cleanUndefineds(result);
 }

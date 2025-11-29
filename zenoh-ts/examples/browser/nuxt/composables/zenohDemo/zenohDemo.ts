@@ -9,6 +9,9 @@ import {
   type PublisherPutParametersState,
   type PublisherParametersState,
   type QueryableState,
+  type QuerierState,
+  type QuerierGetParametersState,
+  type QuerierParametersState,
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
@@ -17,6 +20,7 @@ import {
   type GetParametersState,
   createDefaultResponseParameters,
   createDefaultPublisherPutParameters,
+  createDefaultQuerierGetParameters,
 } from "../useZenohDemo";
 import {
   Config,
@@ -42,6 +46,7 @@ import type {
   PutOptions,
   SubscriberOptions,
   QueryableOptions,
+  QuerierOptions,
   GetOptions,
   ChannelReceiver,
 } from "@eclipse-zenoh/zenoh-ts";
@@ -55,6 +60,7 @@ import {
   putOptionsToJSON,
   subscriberOptionsToJSON,
   publisherOptionsToJSON,
+  querierOptionsToJSON,
   queryableOptionsToJSON,
   getOptionsToJSON,
   replyOptionsToJSON,
@@ -137,6 +143,80 @@ function queryableParametersStateToQueryableOptions(
   }
   if (parameters.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = parameters.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function querierParametersStateToQuerierOptions(
+  parameters: QuerierParametersState
+): QuerierOptions {
+  let opts: QuerierOptions = {};
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
+  }
+  if (parameters.consolidation.value !== undefined) {
+    opts.consolidation = parameters.consolidation.value;
+  }
+  if (parameters.target.value !== undefined) {
+    opts.target = parameters.target.value;
+  }
+  if (
+    !parameters.timeoutEmpty.value &&
+    parameters.timeout.value !== undefined
+  ) {
+    opts.timeout = Duration.milliseconds.of(parameters.timeout.value);
+  }
+  if (parameters.acceptReplies.value !== undefined) {
+    opts.acceptReplies = parameters.acceptReplies.value;
+  }
+  return opts;
+}
+
+function querierGetParametersStateToGetOptions(
+  parameters: QuerierGetParametersState
+): GetOptions {
+  let opts: GetOptions = {};
+  if (parameters.congestionControl !== undefined) {
+    opts.congestionControl = parameters.congestionControl;
+  }
+  if (parameters.priority !== undefined) {
+    opts.priority = parameters.priority;
+  }
+  if (parameters.express !== undefined) {
+    opts.express = parameters.express;
+  }
+  if (parameters.allowedDestination !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination;
+  }
+  if (parameters.encoding) {
+    opts.encoding = Encoding.fromString(parameters.encoding);
+  }
+  if (!parameters.payloadEmpty) {
+    opts.payload = new ZBytes(parameters.payload);
+  }
+  if (!parameters.attachmentEmpty) {
+    opts.attachment = new ZBytes(parameters.attachment);
+  }
+  if (!parameters.timeoutEmpty && parameters.timeout !== undefined) {
+    opts.timeout = Duration.milliseconds.of(parameters.timeout);
+  }
+  if (parameters.target !== undefined) {
+    opts.target = parameters.target;
+  }
+  if (parameters.consolidation !== undefined) {
+    opts.consolidation = parameters.consolidation;
+  }
+  if (parameters.acceptReplies !== undefined) {
+    opts.acceptReplies = parameters.acceptReplies;
   }
   return opts;
 }
@@ -227,6 +307,7 @@ class ZenohDemo extends ZenohDemoEmpty {
   private subscriberIdCounter = 0;
   private publisherIdCounter = 0;
   private queryableIdCounter = 0;
+  private querierIdCounter = 0;
 
   constructor() {
     super();
@@ -751,6 +832,48 @@ class ZenohDemo extends ZenohDemoEmpty {
     return json;
   }
 
+  private querierGetParametersStateToGetOptionsJSON(
+    getParams: QuerierGetParametersState
+  ): any {
+    const json: any = {};
+
+    if (getParams.encoding) {
+      json.encoding = getParams.encoding;
+    }
+    if (getParams.priority !== undefined) {
+      json.priority = getParams.priority;
+    }
+    if (getParams.congestionControl !== undefined) {
+      json.congestionControl = getParams.congestionControl;
+    }
+    if (getParams.express !== undefined) {
+      json.express = getParams.express;
+    }
+    if (getParams.allowedDestination !== undefined) {
+      json.allowedDestination = getParams.allowedDestination;
+    }
+    if (getParams.consolidation !== undefined) {
+      json.consolidation = getParams.consolidation;
+    }
+    if (getParams.target !== undefined) {
+      json.target = getParams.target;
+    }
+    if (!getParams.timeoutEmpty && getParams.timeout !== undefined) {
+      json.timeout_ms = getParams.timeout;
+    }
+    if (getParams.acceptReplies !== undefined) {
+      json.acceptReplies = getParams.acceptReplies;
+    }
+    if (!getParams.payloadEmpty && getParams.payload) {
+      json.payload = getParams.payload;
+    }
+    if (!getParams.attachmentEmpty && getParams.attachment) {
+      json.attachment = getParams.attachment;
+    }
+
+    return json;
+  }
+
   override async declarePublisher(): Promise<void> {
     const sessionWithId = this.getCurrentSessionWithId();
     if (!sessionWithId || !this.publisherParameters.key.value) {
@@ -1092,6 +1215,167 @@ class ZenohDemo extends ZenohDemoEmpty {
     } catch (error) {
       this.addErrorLogEntry(
         `Undeclare queryable failed for ${queryableId}`,
+        { error }
+      );
+    }
+  }
+
+  override async declareQuerier(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.querierParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.querierParameters.key.value);
+
+      const querierOptions = querierParametersStateToQuerierOptions(
+        this.querierParameters
+      );
+
+      const querier = await currentSession.declareQuerier(
+        keyExpr,
+        querierOptions
+      );
+
+      displayId = `qr${this.querierIdCounter++}`;
+      const createdAt = new Date();
+
+      // CREATE INDIVIDUAL GET PARAMETERS FOR THIS QUERIER
+      const getParameters = createDefaultQuerierGetParameters();
+
+      // Set up sync method
+      getParameters.updateGetOptionsJSON = () => {
+        getParameters.getOptionsJSON = this.querierGetParametersStateToGetOptionsJSON(getParameters);
+      };
+
+      // Initialize with default payload (empty)
+      getParameters.payloadEmpty = true;
+
+      const querierState: QuerierState = {
+        displayId,
+        keyExpr: this.querierParameters.key.value,
+        querier,
+        createdAt,
+        options: querierOptionsToJSON(querierOptions),
+        getParameters: getParameters, // EACH QUERIER HAS ITS OWN
+        sessionId,
+      };
+
+      this.activeQueriers.value.push(querierState);
+
+      this.addLogEntry("success", `Querier ${displayId} declared`, {
+        keyexpr: this.querierParameters.key.value,
+        QuerierOptions: querierOptionsToJSON(querierOptions),
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare querier${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareQuerier(querierId: string): Promise<void> {
+    const index = this.activeQueriers.value.findIndex(
+      (qr: QuerierState) => qr.displayId === querierId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Querier ${querierId} not found`);
+      return;
+    }
+
+    const querierState = this.activeQueriers.value[index];
+    if (!querierState) {
+      this.addErrorLogEntry(`Querier ${querierId} not found in array`);
+      return;
+    }
+
+    try {
+      await querierState.querier.undeclare();
+      this.activeQueriers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Querier ${querierId} undeclared`, {
+        keyexpr: querierState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare querier ${querierId}`,
+        { error }
+      );
+    }
+  }
+
+  override async performQuerierGet(querierId: string): Promise<void> {
+    const querierState = this.activeQueriers.value.find(
+      (qr: QuerierState) => qr.displayId === querierId
+    );
+
+    if (!querierState) {
+      this.addErrorLogEntry(`Querier ${querierId} not found`);
+      return;
+    }
+
+    const sessionWithId = this.getSessionById(querierState.sessionId);
+    if (!sessionWithId) {
+      this.addErrorLogEntry(`Session ${querierState.sessionId} not found for querier ${querierId}`);
+      return;
+    }
+
+    try {
+      const getParams = querierState.getParameters;
+
+      // Build get options from querier's stored parameters
+      const options = querierGetParametersStateToGetOptions(getParams);
+
+      this.addLogEntry("info", `Performing get on ${querierId}`, {
+        keyexpr: querierState.keyExpr,
+        GetOptions: getOptionsToJSON(options),
+      });
+
+      const receiver = await querierState.querier.get(options);
+      if (!receiver) {
+        this.addErrorLogEntry("GET failed: No receiver returned");
+        return;
+      }
+
+      // Process replies
+      let resultCount = 0;
+
+      for await (const reply of receiver as ChannelReceiver<Reply>) {
+        try {
+          const result = reply.result();
+          // Check if it's a successful sample or an error
+          if (result instanceof Sample) {
+            // It's a Sample - use JSON formatting for enhanced display
+            const sample = result as Sample;
+            this.addLogEntry("data", `Reply ${resultCount + 1} from ${querierId}`, {
+              Sample: sampleToJSON(sample),
+            });
+            resultCount++;
+          } else {
+            // It's a ReplyError - log with error formatting
+            const replyError = result as ReplyError;
+            this.addLogEntry("data", `Error reply from ${querierId}`, {
+              ReplyError: replyErrorToJSON(replyError),
+            });
+          }
+        } catch (resultError) {
+          this.addErrorLogEntry("Error processing GET result", { error: resultError });
+        }
+      }
+
+      this.addLogEntry("success", `Get completed on ${querierId}: ${resultCount} replies received`, {
+        keyexpr: querierState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to perform get on ${querierId}`,
         { error }
       );
     }

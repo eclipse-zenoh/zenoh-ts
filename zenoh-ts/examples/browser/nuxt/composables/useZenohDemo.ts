@@ -151,11 +151,57 @@ export interface PublisherParametersState {
   allowedDestination: Ref<Locality | undefined>;
 }
 
+// Querier get parameters state - for each querier instance
+export interface QuerierGetParametersState {
+  congestionControl: CongestionControl | undefined;
+  priority: Priority | undefined;
+  express: boolean | undefined;
+  allowedDestination: Locality | undefined;
+  encoding: string;
+  customEncoding: boolean;
+  payload: string;
+  payloadEmpty: boolean;
+  attachment: string;
+  attachmentEmpty: boolean;
+  timeout: number | undefined;
+  timeoutEmpty: boolean;
+  target: QueryTarget | undefined;
+  consolidation: ConsolidationMode | undefined;
+  acceptReplies: ReplyKeyExpr | undefined;
+  getOptionsJSON: any; // TODO: Define GetOptionsJSON type
+  updateGetOptionsJSON: () => void;
+}
+
+// Querier state interface
+export interface QuerierState {
+  displayId: string; // Display ID like "qr0", "qr1", etc.
+  sessionId: string; // Session ID that this querier belongs to
+  keyExpr: string;
+  querier: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define QuerierOptionsJSON when implementing
+  getParameters: QuerierGetParametersState; // Per-querier configuration
+}
+
 // Queryable parameters state - includes all queryable-related data (declaration only)
 export interface QueryableParametersState {
   key: Ref<string>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
+}
+
+// Querier parameters state - includes all querier-related data
+export interface QuerierParametersState {
+  key: Ref<string>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  priority: Ref<Priority | undefined>;
+  express: Ref<boolean | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
+  consolidation: Ref<ConsolidationMode | undefined>;
+  target: Ref<QueryTarget | undefined>;
+  timeout: Ref<number | undefined>;
+  timeoutEmpty: Ref<boolean>;
+  acceptReplies: Ref<ReplyKeyExpr | undefined>;
 }
 
 // Get parameters state - includes all get-related data
@@ -186,6 +232,7 @@ export interface ZenohDemoState {
   subscriberParameters: SubscriberParametersState;
   publisherParameters: PublisherParametersState;
   queryableParameters: QueryableParametersState;
+  querierParameters: QuerierParametersState;
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
   activeSessions: Ref<SessionState[]>;
@@ -193,6 +240,7 @@ export interface ZenohDemoState {
   activeSubscribers: Ref<SubscriberState[]>;
   activePublishers: Ref<PublisherState[]>;
   activeQueryables: Ref<QueryableState[]>;
+  activeQueriers: Ref<QuerierState[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
@@ -214,6 +262,9 @@ export interface ZenohDemoState {
   publishData: (publisherId: string) => Promise<void>;
   declareQueryable: () => Promise<void>;
   undeclareQueryable: (queryableId: string) => Promise<void>;
+  declareQuerier: () => Promise<void>;
+  undeclareQuerier: (querierId: string) => Promise<void>;
+  performQuerierGet: (querierId: string) => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
   addErrorLogEntry: (message: string, error?: any) => void;
   clearLog: () => void;
@@ -272,6 +323,29 @@ export function createDefaultPublisherPutParameters(): PublisherPutParametersSta
   };
 }
 
+// Helper function to create default querier get parameters
+export function createDefaultQuerierGetParameters(): QuerierGetParametersState {
+  return {
+    congestionControl: undefined as CongestionControl | undefined,
+    priority: undefined as Priority | undefined,
+    express: undefined as boolean | undefined,
+    allowedDestination: undefined as Locality | undefined,
+    encoding: "",
+    customEncoding: false,
+    payload: "",
+    payloadEmpty: true,
+    attachment: "",
+    attachmentEmpty: true,
+    timeout: undefined as number | undefined,
+    timeoutEmpty: true,
+    target: undefined as QueryTarget | undefined,
+    consolidation: undefined as ConsolidationMode | undefined,
+    acceptReplies: undefined as ReplyKeyExpr | undefined,
+    getOptionsJSON: {},
+    updateGetOptionsJSON: () => {}
+  };
+}
+
 export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   // state fields only; operations are bound in the super constructor
   serverUrl = ref("ws://localhost:10000");
@@ -309,6 +383,18 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
+  querierParameters = {
+    key: ref("demo/example/*"),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    priority: ref(undefined as Priority | undefined),
+    express: ref(undefined as boolean | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
+    consolidation: ref(undefined as ConsolidationMode | undefined),
+    target: ref(undefined as QueryTarget | undefined),
+    timeout: ref(undefined as number | undefined),
+    timeoutEmpty: ref(true),
+    acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
+  };
   getParameters = {
     key: ref("demo/example/*"),
     congestionControl: ref(undefined as CongestionControl | undefined),
@@ -333,6 +419,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   activeSubscribers = ref<SubscriberState[]>([]);
   activePublishers = ref<PublisherState[]>([]);
   activeQueryables = ref<QueryableState[]>([]) as any;
+  activeQueriers = ref<QuerierState[]>([]);
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
@@ -353,6 +440,9 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async publishData(_: string) {}
   async declareQueryable() {}
   async undeclareQueryable(_: string) {}
+  async declareQuerier() {}
+  async undeclareQuerier(_: string) {}
+  async performQuerierGet(_: string) {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}

@@ -595,6 +595,202 @@
               </template>
             </Entity>
 
+            <!-- Declare Querier Operation -->
+            <Entity
+              title="Querier"
+              :session="selectedSessionId"
+              :selected-session="selectedSessionId"
+              :descr="querierParameters.key.value"
+              v-model:editsExpanded="querierOptionsCollapsed"
+            >
+              <template #actions>
+                <button
+                  @click="declareQuerier"
+                  :disabled="
+                    !selectedSessionId || !querierParameters.key.value
+                  "
+                >
+                  Declare
+                </button>
+              </template>
+
+              <template #edits>
+                <KeyExprInput
+                  v-model="querierParameters.key.value"
+                  label="Key Expression"
+                  placeholder="Key expression (e.g., demo/example/*)"
+                  :disabled="!selectedSessionId"
+                />
+
+                <PrioritySelect
+                  v-model="querierParameters.priority.value"
+                  :disabled="!selectedSessionId"
+                  :options="priorityOptions"
+                />
+
+                <CongestionControlSelect
+                  v-model="querierParameters.congestionControl.value"
+                  :disabled="!selectedSessionId"
+                  :options="congestionControlOptions"
+                />
+
+                <ExpressSelect
+                  v-model="querierParameters.express.value"
+                  :disabled="!selectedSessionId"
+                />
+
+                <AllowedDestinationSelect
+                  v-model="querierParameters.allowedDestination.value"
+                  :disabled="!selectedSessionId"
+                  :options="localityOptions"
+                />
+
+                <TargetSelect
+                  v-model="querierParameters.target.value"
+                  :disabled="!selectedSessionId"
+                  :options="targetOptions"
+                />
+
+                <ConsolidationSelect
+                  v-model="querierParameters.consolidation.value"
+                  :disabled="!selectedSessionId"
+                  :options="consolidationOptions"
+                />
+
+                <TimeoutInput
+                  v-model="querierParameters.timeout.value"
+                  v-model:is-empty="querierParameters.timeoutEmpty.value"
+                  placeholder="Timeout (ms)"
+                  :disabled="!selectedSessionId"
+                />
+
+                <AcceptRepliesSelect
+                  v-model="querierParameters.acceptReplies.value"
+                  :disabled="!selectedSessionId"
+                  :options="acceptRepliesOptions"
+                />
+              </template>
+
+              <!-- Active Queriers as Sub-entities -->
+              <template v-if="activeQueriers.length > 0" #sub-entities>
+                <Entity
+                  v-for="querierState in activeQueriers"
+                  :key="querierState.displayId"
+                  :title="querierState.displayId"
+                  :session="querierState.sessionId"
+                  :selected-session="selectedSessionId"
+                  :descr="querierState.keyExpr"
+                >
+                  <template #actions>
+                    <button
+                      @click="performQuerierGet(querierState.displayId)"
+                      :disabled="!selectedSessionId"
+                    >
+                      Get
+                    </button>
+                    <button
+                      @click="undeclareQuerier(querierState.displayId)"
+                      :disabled="!selectedSessionId"
+                    >
+                      Undeclare
+                    </button>
+                  </template>
+
+                  <!-- Info as reactive slot -->
+                  <template #info>
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{ 'QuerierOptions': querierState.options }"
+                    />
+                    <ParameterDisplay
+                      type="neutral"
+                      :data="{
+                        'Get Config': {
+                          'Encoding': querierState.getParameters.encoding || 'default',
+                          'Priority': querierState.getParameters.priority || 'default',
+                          'Get Options': querierState.getParameters.getOptionsJSON
+                        }
+                      }"
+                    />
+                  </template>
+
+                  <!-- Edit Get Parameters Section -->
+                  <template #edits>
+                    <EncodingSelect
+                      v-model="querierState.getParameters.encoding"
+                      v-model:custom-encoding="querierState.getParameters.customEncoding"
+                      :encoding-options="encodingOptions"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <PrioritySelect
+                      v-model="querierState.getParameters.priority"
+                      :disabled="!selectedSessionId"
+                      :options="priorityOptions"
+                    />
+
+                    <CongestionControlSelect
+                      v-model="querierState.getParameters.congestionControl"
+                      :disabled="!selectedSessionId"
+                      :options="congestionControlOptions"
+                    />
+
+                    <ExpressSelect
+                      v-model="querierState.getParameters.express"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <AllowedDestinationSelect
+                      v-model="querierState.getParameters.allowedDestination"
+                      :disabled="!selectedSessionId"
+                      :options="localityOptions"
+                    />
+
+                    <TargetSelect
+                      v-model="querierState.getParameters.target"
+                      :disabled="!selectedSessionId"
+                      :options="targetOptions"
+                    />
+
+                    <ConsolidationSelect
+                      v-model="querierState.getParameters.consolidation"
+                      :disabled="!selectedSessionId"
+                      :options="consolidationOptions"
+                    />
+
+                    <TimeoutInput
+                      v-model="querierState.getParameters.timeout"
+                      v-model:is-empty="querierState.getParameters.timeoutEmpty"
+                      placeholder="Timeout (ms)"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <AcceptRepliesSelect
+                      v-model="querierState.getParameters.acceptReplies"
+                      :disabled="!selectedSessionId"
+                      :options="acceptRepliesOptions"
+                    />
+
+                    <PayloadInput
+                      v-model="querierState.getParameters.payload"
+                      v-model:is-empty="querierState.getParameters.payloadEmpty"
+                      label="Payload"
+                      placeholder="Optional query payload"
+                      :disabled="!selectedSessionId"
+                    />
+
+                    <PayloadInput
+                      v-model="querierState.getParameters.attachment"
+                      v-model:is-empty="querierState.getParameters.attachmentEmpty"
+                      label="Attachment"
+                      placeholder="Optional attachment data"
+                      :disabled="!selectedSessionId"
+                    />
+                  </template>
+                </Entity>
+              </template>
+            </Entity>
+
             <!-- Get Operation -->
             <Entity
               title="Get"
@@ -787,9 +983,11 @@ const {
   activeSubscribers,
   activePublishers,
   activeQueryables,
+  activeQueriers,
   subscriberParameters,
   publisherParameters,
   queryableParameters,
+  querierParameters,
   getParameters,
 
   // Option arrays (now part of the state)
@@ -816,6 +1014,9 @@ const {
   publishData,
   declareQueryable,
   undeclareQueryable,
+  declareQuerier,
+  undeclareQuerier,
+  performQuerierGet,
 
   // App operations
   clearLog,
@@ -863,6 +1064,7 @@ const subscriberOptionsCollapsed = ref(false);
 const publisherOptionsCollapsed = ref(false);
 const putOptionsCollapsed = ref(false);
 const queryableOptionsCollapsed = ref(false);
+const querierOptionsCollapsed = ref(false);
 const getOptionsCollapsed = ref(false);
 
 // Auto-scroll to bottom when new log entries are added
@@ -922,6 +1124,25 @@ watch(
         }),
         () => {
           publisher.putParameters.updatePutOptionsJSON();
+        },
+        { deep: true, immediate: true }
+      );
+    });
+  },
+  { deep: true, immediate: true }
+);
+
+// Watchers to update getOptionsJSON when querier get parameters change
+watch(
+  activeQueriers,
+  (queriers) => {
+    queriers.forEach((querier) => {
+      watch(
+        () => ({
+          getParams: querier.getParameters,
+        }),
+        () => {
+          querier.getParameters.updateGetOptionsJSON();
         },
         { deep: true, immediate: true }
       );
