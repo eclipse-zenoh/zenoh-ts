@@ -6,18 +6,18 @@
       <div class="section-title">{{ title }}</div>
 
       <!-- Section actions - separate but sharing horizontal space -->
-      <div class="section-actions">
+      <div v-if="$slots['actions'] || props.collapsible" class="section-actions">
         <slot name="actions" />
         <!-- Fold/Unfold button (always present if foldable) -->
         <CheckButton
-          v-if="collapsed !== undefined"
-          :pressed="collapsed"
+          v-if="props.collapsible"
+          :pressed="props.collapsed ?? false"
           @update:pressed="emit('update:collapsed', $event)"
         />
       </div>
     </div>
 
-    <div v-if="!collapsed" class="section-content">
+    <div v-if="!props.collapsed" class="section-content">
       <slot />
     </div>
   </div>
@@ -41,11 +41,13 @@ interface Props {
   sectionClass?: string
   disabled?: boolean
   collapsed?: boolean
+  collapsible?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   sectionClass: '',
-  disabled: false
+  disabled: false,
+  collapsible: false
 })
 
 const emit = defineEmits<{

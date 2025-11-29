@@ -10,6 +10,7 @@
             title="Session"
             icon="🔗"
             section-class="session-section"
+            collapsible
             v-model:collapsed="sessionSectionCollapsed"
           >
             <!-- Open Operation -->
@@ -98,6 +99,7 @@
             icon="📡"
             section-class="pubsub-section"
             :disabled="!selectedSessionId"
+            collapsible
             v-model:collapsed="pubsubSectionCollapsed"
           >
             <!-- Declare Subscriber Operation -->
@@ -407,6 +409,7 @@
             icon="🔍"
             section-class="query-section"
             :disabled="!selectedSessionId"
+            collapsible
             v-model:collapsed="querySectionCollapsed"
           >
             <!-- Declare Queryable Operation -->
@@ -898,6 +901,7 @@
             icon="🩺"
             section-class="liveliness-section"
             :disabled="!selectedSessionId"
+            collapsible
             v-model:collapsed="livelinessSectionCollapsed"
           >
             <!-- Liveliness Token -->
@@ -1072,7 +1076,6 @@
             title="Activity Log"
             icon="📜"
             section-class="log-section"
-            v-model:collapsed="logSectionCollapsed"
           >
           <template #actions>
             <button @click="clearLog">
@@ -1261,7 +1264,6 @@ const sessionSectionCollapsed = ref(false);
 const pubsubSectionCollapsed = ref(true);
 const querySectionCollapsed = ref(true);
 const livelinessSectionCollapsed = ref(true);
-const logSectionCollapsed = ref(true);
 
 // Auto-scroll to bottom when new log entries are added
 watch(
