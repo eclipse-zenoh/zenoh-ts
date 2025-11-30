@@ -838,8 +838,8 @@ class ZenohDemo extends ZenohDemoEmpty {
       options.encoding = Encoding.fromString(putParams.encoding);
     }
 
-    // Attachment
-    if (!putParams.attachmentEmpty && putParams.attachment) {
+    // Attachment - send if checkbox is unchecked (even if empty string)
+    if (!putParams.attachmentEmpty) {
       options.attachment = new ZBytes(putParams.attachment);
     }
 
