@@ -315,7 +315,7 @@
                   :disabled="
                     !selectedSessionId ||
                     !putParameters.key.value ||
-                    (putParameters.publicationKind.value === 0 && putParameters.valueEmpty.value)
+                    (putParameters.publicationKind.value === SampleKind.PUT && putParameters.valueEmpty.value)
                   "
                 >
                   Run
@@ -336,9 +336,8 @@
                   :disabled="!selectedSessionId"
                 />
 
-                <!-- SampleKind.PUT = 0 -->
                 <PayloadInput
-                  v-if="putParameters.publicationKind.value === 0"
+                  v-if="putParameters.publicationKind.value === SampleKind.PUT"
                   v-model="putParameters.value.value"
                   v-model:is-empty="putParameters.valueEmpty.value"
                   label="Payload"
@@ -347,7 +346,7 @@
                 />
 
                 <EncodingSelect
-                  v-if="putParameters.publicationKind.value === 0"
+                  v-if="putParameters.publicationKind.value === SampleKind.PUT"
                   v-model="putParameters.encoding.value"
                   v-model:custom-encoding="putParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
@@ -1176,6 +1175,9 @@ const {
   targetOptions,
   consolidationOptions,
   acceptRepliesOptions,
+
+  // Enum values
+  SampleKind,
 
   // Operations
   connect,

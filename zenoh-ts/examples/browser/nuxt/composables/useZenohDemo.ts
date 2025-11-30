@@ -294,6 +294,7 @@ export interface ZenohDemoState {
   targetOptions: OptionItem[];
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
+  SampleKind: { PUT: number; DELETE: number };
   connect: () => Promise<void>;
   disconnect: (sessionId: string) => Promise<void>;
   selectSession: (sessionId: string) => void;
@@ -491,6 +492,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   localityOptions: OptionItem[] = [];
   sampleKindOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
+  SampleKind = { PUT: 0, DELETE: 1 };
   targetOptions: OptionItem[] = [];
   consolidationOptions: OptionItem[] = [];
   acceptRepliesOptions: OptionItem[] = [];

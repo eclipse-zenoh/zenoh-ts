@@ -363,6 +363,9 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     this.sampleKindOptions = createOptionsFromEnum(SampleKind, []);
 
+    // Expose SampleKind enum values as a plain object for use in Vue templates
+    this.SampleKind = { PUT: SampleKind.PUT, DELETE: SampleKind.DELETE };
+
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
     this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, [
