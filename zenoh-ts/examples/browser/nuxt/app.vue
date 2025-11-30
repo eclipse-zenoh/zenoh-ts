@@ -318,7 +318,7 @@
                     (putParameters.publicationKind.value === SampleKind.PUT && putParameters.valueEmpty.value)
                   "
                 >
-                  Run
+                  {{ putParameters.publicationKind.value === SampleKind.PUT ? 'Put' : 'Delete' }}
                 </button>
               </template>
 
