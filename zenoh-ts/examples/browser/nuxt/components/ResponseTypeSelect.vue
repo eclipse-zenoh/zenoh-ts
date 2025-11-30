@@ -3,33 +3,33 @@
     <label>{{ props.label }}:</label>
     <div class="radio-group">
       <label class="radio-option">
-        <input 
-          type="radio" 
+        <input
+          type="radio"
           :name="props.name"
-          value="reply" 
-          :checked="props.modelValue === 'reply'"
+          value="Sample"
+          :checked="props.modelValue === 'Sample'"
           @change="updateValue"
           :disabled="props.disabled"
         >
-        <span>Reply</span>
+        <span>Sample</span>
       </label>
       <label class="radio-option">
-        <input 
-          type="radio" 
+        <input
+          type="radio"
           :name="props.name"
-          value="replyErr" 
-          :checked="props.modelValue === 'replyErr'"
+          value="Error"
+          :checked="props.modelValue === 'Error'"
           @change="updateValue"
           :disabled="props.disabled"
         >
         <span>Error</span>
       </label>
       <label class="radio-option">
-        <input 
-          type="radio" 
+        <input
+          type="radio"
           :name="props.name"
-          value="ignore" 
-          :checked="props.modelValue === 'ignore'"
+          value="Ignore"
+          :checked="props.modelValue === 'Ignore'"
           @change="updateValue"
           :disabled="props.disabled"
         >
@@ -41,14 +41,14 @@
 
 <script setup lang="ts">
 interface Props {
-  modelValue: 'reply' | 'replyErr' | 'ignore'
+  modelValue: 'Sample' | 'Error' | 'Ignore'
   disabled?: boolean
   label?: string
   name: string
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: 'reply' | 'replyErr' | 'ignore'): void
+  (e: 'update:modelValue', value: 'Sample' | 'Error' | 'Ignore'): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -59,6 +59,6 @@ const emit = defineEmits<Emits>()
 
 function updateValue(event: Event) {
   const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value as 'reply' | 'replyErr' | 'ignore')
+  emit('update:modelValue', target.value as 'Sample' | 'Error' | 'Ignore')
 }
 </script>

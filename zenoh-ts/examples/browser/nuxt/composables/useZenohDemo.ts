@@ -71,6 +71,7 @@ export interface PublisherState {
 
 // Reply parameters state - for successful replies
 export interface ReplyParametersState {
+  publicationKind: SampleKind;
   keyExpr: string;
   payload: string;
   payloadEmpty: boolean;
@@ -99,7 +100,7 @@ export interface ReplyErrParametersState {
 // Individual queryable response parameters state
 export interface QueryableResponseParametersState {
   // Reply configuration
-  replyType: "reply" | "replyErr" | "ignore";
+  replyType: "Sample" | "Error" | "Ignore";
   
   // Reply sub-states
   reply: ReplyParametersState;
@@ -325,6 +326,7 @@ export interface ZenohDemoState {
 // Helper function to create default response parameters for a new queryable
 export function createDefaultResponseParameters(): QueryableResponseParametersState {
   const reply: ReplyParametersState = {
+    publicationKind: 0 as SampleKind, // SampleKind.PUT = 0
     keyExpr: "",
     payload: "",
     payloadEmpty: true,
@@ -351,7 +353,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 
   return {
     // Reply configuration
-    replyType: "reply" as "reply" | "replyErr" | "ignore",
+    replyType: "Sample" as "Sample" | "Error" | "Ignore",
     // Reply sub-states
     reply,
     replyErr,

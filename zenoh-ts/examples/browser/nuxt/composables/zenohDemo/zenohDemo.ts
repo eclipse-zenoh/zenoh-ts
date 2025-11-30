@@ -285,6 +285,29 @@ async function replyParametersStateToReplyOptions(
   return opts;
 }
 
+async function replyParametersStateToReplyDelOptions(
+  parameters: ReplyParametersState,
+  session?: Session
+) {
+  let opts: import("@eclipse-zenoh/zenoh-ts").ReplyDelOptions = {};
+  if (parameters.priority !== undefined) {
+    opts.priority = parameters.priority;
+  }
+  if (parameters.congestionControl !== undefined) {
+    opts.congestionControl = parameters.congestionControl;
+  }
+  if (parameters.express !== undefined) {
+    opts.express = parameters.express;
+  }
+  if (parameters.useTimestamp && session) {
+    opts.timestamp = await session.newTimestamp();
+  }
+  if (!parameters.attachmentEmpty) {
+    opts.attachment = new ZBytes(parameters.attachment);
+  }
+  return opts;
+}
+
 function replyErrParametersStateToReplyErrOptions(
   parameters: ReplyErrParametersState
 ) {
@@ -1147,7 +1170,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         for await (const query of receiver as ChannelReceiver<Query>) {
           try {
             // Handle reply based on configured reply type
-            if (responseParameters.replyType === "reply") {
+            if (responseParameters.replyType === "Sample") {
               // Get reply parameters
               const replyParams = responseParameters.reply;
 
@@ -1203,8 +1226,29 @@ class ZenohDemo extends ZenohDemoEmpty {
                 logData
               );
 
-              await query.reply(replyKeyExpr, replyPayload, replyOptions);
-            } else if (responseParameters.replyType === "replyErr") {
+              // Check publication kind to decide between reply() and replyDel()
+              if (replyParams.publicationKind === SampleKind.PUT) {
+                await query.reply(replyKeyExpr, replyPayload, replyOptions);
+              } else {
+                // DELETE - use replyDel
+                const replyDelOptions = await replyParametersStateToReplyDelOptions(
+                  replyParams,
+                  currentSession
+                );
+
+                this.addLogEntry(
+                  "data",
+                  `Queryable ${displayId} replying DELETE to query:`,
+                  {
+                    Query: queryToJSON(query),
+                    "reply keyexpr": replyKeyExpr.toString(),
+                    ReplyDelOptions: replyDelOptions,
+                  }
+                );
+
+                await query.replyDel(replyKeyExpr, replyDelOptions);
+              }
+            } else if (responseParameters.replyType === "Error") {
               // Handle error reply
               const replyErrParams = responseParameters.replyErr;
 
@@ -1228,7 +1272,7 @@ class ZenohDemo extends ZenohDemoEmpty {
                 }
               );
               await query.replyErr(errorPayload, replyErrOptions);
-            } else if (responseParameters.replyType === "ignore") {
+            } else if (responseParameters.replyType === "Ignore") {
               // Handle ignore case - just log that the query is being ignored
               this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
                 Query: queryToJSON(query),
