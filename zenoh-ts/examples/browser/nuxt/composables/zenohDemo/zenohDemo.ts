@@ -23,6 +23,7 @@ import {
   createDefaultResponseParameters,
   createDefaultPublisherPutParameters,
   createDefaultQuerierGetParameters,
+  ResponseType,
 } from "../useZenohDemo";
 import {
   Config,
@@ -391,6 +392,11 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     // Expose SampleKind enum values as a plain object for use in Vue templates
     this.SampleKind = { PUT: SampleKind.PUT, DELETE: SampleKind.DELETE };
+
+    this.responseTypeOptions = createOptionsFromEnum(ResponseType, []);
+
+    // Expose ResponseType enum values as a plain object for use in Vue templates
+    this.ResponseType = { Sample: ResponseType.Sample, Error: ResponseType.Error, Ignore: ResponseType.Ignore };
 
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
@@ -1171,7 +1177,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         for await (const query of receiver as ChannelReceiver<Query>) {
           try {
             // Handle reply based on configured reply type
-            if (responseParameters.replyType === "Sample") {
+            if (responseParameters.replyType === ResponseType.Sample) {
               // Get reply parameters
               const replyParams = responseParameters.reply;
 
@@ -1249,7 +1255,7 @@ class ZenohDemo extends ZenohDemoEmpty {
 
                 await query.replyDel(replyKeyExpr, replyDelOptions);
               }
-            } else if (responseParameters.replyType === "Error") {
+            } else if (responseParameters.replyType === ResponseType.Error) {
               // Handle error reply
               const replyErrParams = responseParameters.replyErr;
 
@@ -1273,7 +1279,7 @@ class ZenohDemo extends ZenohDemoEmpty {
                 }
               );
               await query.replyErr(errorPayload, replyErrOptions);
-            } else if (responseParameters.replyType === "Ignore") {
+            } else if (responseParameters.replyType === ResponseType.Ignore) {
               // Handle ignore case - just log that the query is being ignored
               this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
                 Query: queryToJSON(query),

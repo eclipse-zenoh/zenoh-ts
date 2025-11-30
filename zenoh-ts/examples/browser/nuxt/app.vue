@@ -481,14 +481,14 @@
                       :data="{ 
                         'Reply Config': {
                           'Reply Type': queryableState.responseParameters.replyType,
-                          ...(queryableState.responseParameters.replyType === 'Sample' ? {
+                          ...(queryableState.responseParameters.replyType === ResponseType.Sample ? {
                             'Reply Key': queryableState.responseParameters.reply.keyExpr,
                             'Reply Options': queryableState.responseParameters.reply.replyOptionsJSON
                           } : {}),
-                          ...(queryableState.responseParameters.replyType === 'Error' ? {
+                          ...(queryableState.responseParameters.replyType === ResponseType.Error ? {
                             'Error Options': queryableState.responseParameters.replyErr.replyErrOptionsJSON
                           } : {}),
-                          ...(queryableState.responseParameters.replyType === 'Ignore' ? {
+                          ...(queryableState.responseParameters.replyType === ResponseType.Ignore ? {
                             'Behavior': 'Queries received but no reply sent (only query.finalize() called)'
                           } : {})
                         }
@@ -501,13 +501,13 @@
                     <!-- Response Type Selection -->
                     <ResponseTypeSelect
                       v-model="queryableState.responseParameters.replyType"
-                      :name="`response-type-${queryableState.displayId}`"
+                      :options="responseTypeOptions"
                       :disabled="!selectedSessionId"
                     />
 
                     <!-- Reply Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === 'Sample'"
+                      v-if="queryableState.responseParameters.replyType === ResponseType.Sample"
                     >
                       <PublicationKindSelect
                         v-model="queryableState.responseParameters.reply.publicationKind"
@@ -574,7 +574,7 @@
 
                     <!-- ReplyErr Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === 'Error'"
+                      v-if="queryableState.responseParameters.replyType === ResponseType.Error"
                     >
                       <PayloadInput
                         v-model="queryableState.responseParameters.replyErr.payload"
@@ -594,7 +594,7 @@
 
                     <!-- Ignore Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === 'Ignore'"
+                      v-if="queryableState.responseParameters.replyType === ResponseType.Ignore"
                     >
                       <div class="ignore-info">
                         <p class="ignore-description">
@@ -1184,6 +1184,7 @@ const {
 
   // Option arrays (now part of the state)
   sampleKindOptions,
+  responseTypeOptions,
   priorityOptions,
   congestionControlOptions,
   reliabilityOptions,
@@ -1195,6 +1196,7 @@ const {
 
   // Enum values
   SampleKind,
+  ResponseType,
 
   // Operations
   connect,

@@ -15,6 +15,15 @@ import type {
 } from "@eclipse-zenoh/zenoh-ts";
 import type { QueryableOptionsJSON, ReplyErrOptionsJSON, ReplyOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
 
+// Response type enum for queryable replies
+export const ResponseType = {
+  Sample: 0,
+  Error: 1,
+  Ignore: 2,
+} as const;
+
+export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+
 // Log entry interface
 export interface LogEntry {
   timestamp: Date;
@@ -100,7 +109,7 @@ export interface ReplyErrParametersState {
 // Individual queryable response parameters state
 export interface QueryableResponseParametersState {
   // Reply configuration
-  replyType: "Sample" | "Error" | "Ignore";
+  replyType: ResponseType;
   
   // Reply sub-states
   reply: ReplyParametersState;
@@ -292,11 +301,13 @@ export interface ZenohDemoState {
   reliabilityOptions: OptionItem[];
   localityOptions: OptionItem[];
   sampleKindOptions: OptionItem[];
+  responseTypeOptions: OptionItem[];
   encodingOptions: OptionItem[];
   targetOptions: OptionItem[];
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
   SampleKind: { PUT: number; DELETE: number };
+  ResponseType: { Sample: number; Error: number; Ignore: number };
   connect: () => Promise<void>;
   disconnect: (sessionId: string) => Promise<void>;
   selectSession: (sessionId: string) => void;
@@ -353,7 +364,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 
   return {
     // Reply configuration
-    replyType: "Sample" as "Sample" | "Error" | "Ignore",
+    replyType: ResponseType.Sample,
     // Reply sub-states
     reply,
     replyErr,
@@ -495,8 +506,10 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   reliabilityOptions: OptionItem[] = [];
   localityOptions: OptionItem[] = [];
   sampleKindOptions: OptionItem[] = [];
+  responseTypeOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
   SampleKind = { PUT: 0, DELETE: 1 };
+  ResponseType = { Sample: 0, Error: 1, Ignore: 2 };
   targetOptions: OptionItem[] = [];
   consolidationOptions: OptionItem[] = [];
   acceptRepliesOptions: OptionItem[] = [];

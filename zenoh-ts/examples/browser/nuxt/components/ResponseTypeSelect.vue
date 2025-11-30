@@ -1,64 +1,32 @@
 <template>
-  <div class="option-group option-group-full-width radio-option-group">
-    <label>{{ props.label }}:</label>
-    <div class="radio-group">
-      <label class="radio-option">
-        <input
-          type="radio"
-          :name="props.name"
-          value="Sample"
-          :checked="props.modelValue === 'Sample'"
-          @change="updateValue"
-          :disabled="props.disabled"
-        >
-        <span>Sample</span>
-      </label>
-      <label class="radio-option">
-        <input
-          type="radio"
-          :name="props.name"
-          value="Error"
-          :checked="props.modelValue === 'Error'"
-          @change="updateValue"
-          :disabled="props.disabled"
-        >
-        <span>Error</span>
-      </label>
-      <label class="radio-option">
-        <input
-          type="radio"
-          :name="props.name"
-          value="Ignore"
-          :checked="props.modelValue === 'Ignore'"
-          @change="updateValue"
-          :disabled="props.disabled"
-        >
-        <span>Ignore</span>
-      </label>
-    </div>
-  </div>
+  <NumberOptionSelectRequired
+    :model-value="modelValue"
+    :disabled="disabled ?? false"
+    :options="options"
+    label="Response Type"
+    @update:model-value="handleUpdate"
+  />
 </template>
 
 <script setup lang="ts">
+import type { ResponseType } from '../composables/useZenohDemo'
+import type { OptionItem } from '../composables/zenohDemo/safeUtils'
+import NumberOptionSelectRequired from './NumberOptionSelectRequired.vue'
+
 interface Props {
-  modelValue: 'Sample' | 'Error' | 'Ignore'
+  modelValue: ResponseType
   disabled?: boolean
-  label?: string
-  name: string
+  options: OptionItem[]
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: 'Sample' | 'Error' | 'Ignore'): void
+  (e: 'update:modelValue', value: ResponseType): void
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  disabled: false,
-  label: 'Response Type'
-})
+defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-function updateValue(event: Event) {
-  const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value as 'Sample' | 'Error' | 'Ignore')
+function handleUpdate(value: number) {
+  emit('update:modelValue', value as ResponseType)
 }
 </script>
