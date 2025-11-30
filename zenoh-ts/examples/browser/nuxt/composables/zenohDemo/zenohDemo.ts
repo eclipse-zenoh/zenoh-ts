@@ -50,6 +50,7 @@ import type {
   DeleteOptions,
   PublisherOptions,
   PublisherPutOptions,
+  PublisherDeleteOptions,
   SubscriberOptions,
   QueryableOptions,
   QuerierOptions,
@@ -66,6 +67,7 @@ import {
   putOptionsToJSON,
   deleteOptionsToJSON,
   publisherPutOptionsToJSON,
+  publisherDeleteOptionsToJSON,
   subscriberOptionsToJSON,
   publisherOptionsToJSON,
   querierOptionsToJSON,
@@ -844,6 +846,20 @@ class ZenohDemo extends ZenohDemoEmpty {
     return options;
   }
 
+  // Helper method to convert publisher put parameters to PublisherDeleteOptions
+  private async publisherPutParametersStateToDeleteOptions(
+    putParams: PublisherPutParametersState
+  ): Promise<PublisherDeleteOptions> {
+    const options: PublisherDeleteOptions = {};
+
+    // Attachment - send if checkbox is unchecked (even if empty string)
+    if (!putParams.attachmentEmpty) {
+      options.attachment = new ZBytes(putParams.attachment);
+    }
+
+    return options;
+  }
+
   // Helper method to convert publisher put parameters to JSON for logging
   private publisherPutParametersStateToPutOptionsJSON(
     putParams: PublisherPutParametersState
@@ -1033,10 +1049,15 @@ class ZenohDemo extends ZenohDemoEmpty {
         });
       } else {
         // DELETE operation
-        await publisherState.publisher.delete();
+        const deleteOptions = await this.publisherPutParametersStateToDeleteOptions(
+          putParams
+        );
+
+        await publisherState.publisher.delete(deleteOptions);
 
         this.addLogEntry("success", `Published DELETE on ${publisherId}`, {
           keyexpr: publisherState.keyExpr,
+          PublisherDeleteOptions: publisherDeleteOptionsToJSON(deleteOptions),
         });
       }
     } catch (error) {

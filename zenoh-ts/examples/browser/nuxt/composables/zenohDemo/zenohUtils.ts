@@ -9,6 +9,7 @@ import {
   type PutOptions,
   type DeleteOptions,
   type PublisherPutOptions,
+  type PublisherDeleteOptions,
   type SubscriberOptions,
   type QueryableOptions,
   type QuerierOptions,
@@ -352,6 +353,25 @@ export function publisherPutOptionsToJSON(
 ): PublisherPutOptionsJSON {
   const result: PublisherPutOptionsJSON = {
     encoding: options.encoding?.toString(),
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+// Interface for the publisher delete options JSON representation
+export interface PublisherDeleteOptionsJSON {
+  attachment: string | undefined;
+}
+
+/**
+ * Converts PublisherDeleteOptions object to a structured JSON object for logging
+ * @param options The PublisherDeleteOptions object to convert
+ * @returns A structured object containing all publisher delete options as strings
+ */
+export function publisherDeleteOptionsToJSON(
+  options: PublisherDeleteOptions
+): PublisherDeleteOptionsJSON {
+  const result: PublisherDeleteOptionsJSON = {
     attachment: options.attachment?.toString(),
   };
   return cleanUndefineds(result);
