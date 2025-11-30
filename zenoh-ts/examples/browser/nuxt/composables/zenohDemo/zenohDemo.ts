@@ -46,6 +46,8 @@ import {
 import { Duration } from "typed-duration";
 import type {
   PutOptions,
+  PublisherOptions,
+  PublisherPutOptions,
   SubscriberOptions,
   QueryableOptions,
   QuerierOptions,
@@ -60,6 +62,7 @@ import {
   sampleToJSON,
   queryToJSON,
   putOptionsToJSON,
+  publisherPutOptionsToJSON,
   subscriberOptionsToJSON,
   publisherOptionsToJSON,
   querierOptionsToJSON,
@@ -114,8 +117,8 @@ function subscriberParametersStateToSubscriberOptions(
 
 function publisherParametersStateToPublisherOptions(
   parameters: PublisherParametersState
-): PutOptions {
-  let opts: PutOptions = {};
+): PublisherOptions {
+  let opts: PublisherOptions = {};
   if (parameters.encoding.value) {
     opts.encoding = Encoding.fromString(parameters.encoding.value);
   }
@@ -778,30 +781,15 @@ class ZenohDemo extends ZenohDemoEmpty {
     }
   }
 
-  // Helper method to convert publisher put parameters to PutOptions
+  // Helper method to convert publisher put parameters to PublisherPutOptions
   private async publisherPutParametersStateToPutOptions(
     putParams: PublisherPutParametersState
-  ): Promise<PutOptions> {
-    const options: PutOptions = {};
+  ): Promise<PublisherPutOptions> {
+    const options: PublisherPutOptions = {};
 
     // Encoding
     if (putParams.encoding) {
       options.encoding = Encoding.fromString(putParams.encoding);
-    }
-
-    // Priority
-    if (putParams.priority !== undefined) {
-      options.priority = putParams.priority;
-    }
-
-    // Congestion Control
-    if (putParams.congestionControl !== undefined) {
-      options.congestionControl = putParams.congestionControl;
-    }
-
-    // Express
-    if (putParams.express !== undefined) {
-      options.express = putParams.express;
     }
 
     // Attachment
@@ -820,15 +808,6 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     if (putParams.encoding) {
       json.encoding = putParams.encoding;
-    }
-    if (putParams.priority !== undefined) {
-      json.priority = putParams.priority;
-    }
-    if (putParams.congestionControl !== undefined) {
-      json.congestionControl = putParams.congestionControl;
-    }
-    if (putParams.express !== undefined) {
-      json.express = putParams.express;
     }
     if (!putParams.attachmentEmpty && putParams.attachment) {
       json.attachment = putParams.attachment;
@@ -1002,7 +981,7 @@ class ZenohDemo extends ZenohDemoEmpty {
       this.addLogEntry("success", `Published data on ${publisherId}`, {
         keyexpr: publisherState.keyExpr,
         payload,
-        PutOptions: putOptionsToJSON(options),
+        PublisherPutOptions: publisherPutOptionsToJSON(options),
       });
     } catch (error) {
       this.addErrorLogEntry(

@@ -7,6 +7,7 @@ import {
   Locality,
   Query,
   type PutOptions,
+  type PublisherPutOptions,
   type SubscriberOptions,
   type QueryableOptions,
   type QuerierOptions,
@@ -84,6 +85,12 @@ export interface PublisherOptionsJSON {
   express: string | undefined;
   reliability: string | undefined;
   allowedDestination: string | undefined;
+}
+
+// Interface for the publisher put options JSON representation
+export interface PublisherPutOptionsJSON {
+  encoding: string | undefined;
+  attachment: string | undefined;
 }
 
 // Interface for the querier options JSON representation
@@ -299,6 +306,21 @@ export function publisherOptionsToJSON(
       options.express !== undefined ? options.express.toString() : undefined,
     reliability: labelOrUndefined(Reliability, options.reliability),
     allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts PublisherPutOptions object to a structured JSON object for logging
+ * @param options The PublisherPutOptions object to convert
+ * @returns A structured object containing all publisher put options as strings
+ */
+export function publisherPutOptionsToJSON(
+  options: PublisherPutOptions
+): PublisherPutOptionsJSON {
+  const result: PublisherPutOptionsJSON = {
+    encoding: options.encoding?.toString(),
+    attachment: options.attachment?.toString(),
   };
   return cleanUndefineds(result);
 }

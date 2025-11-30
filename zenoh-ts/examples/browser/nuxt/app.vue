@@ -266,8 +266,6 @@
                       :data="{
                         'Put Config': {
                           'Payload': publisherState.putParameters.payload,
-                          'Encoding': publisherState.putParameters.encoding || 'default',
-                          'Priority': publisherState.putParameters.priority || 'default',
                           'Put Options': publisherState.putParameters.putOptionsJSON
                         }
                       }"
@@ -288,23 +286,6 @@
                       v-model="publisherState.putParameters.encoding"
                       v-model:custom-encoding="publisherState.putParameters.customEncoding"
                       :encoding-options="encodingOptions"
-                      :disabled="!selectedSessionId"
-                    />
-
-                    <PrioritySelect
-                      v-model="publisherState.putParameters.priority"
-                      :disabled="!selectedSessionId"
-                      :options="priorityOptions"
-                    />
-
-                    <CongestionControlSelect
-                      v-model="publisherState.putParameters.congestionControl"
-                      :disabled="!selectedSessionId"
-                      :options="congestionControlOptions"
-                    />
-
-                    <ExpressSelect
-                      v-model="publisherState.putParameters.express"
                       :disabled="!selectedSessionId"
                     />
 
