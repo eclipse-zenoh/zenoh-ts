@@ -1013,23 +1013,36 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     try {
       const putParams = publisherState.putParameters;
-      const payload = putParams.payloadEmpty ? "" : putParams.payload;
+      const publicationKind = putParams.publicationKind;
 
-      // Build put options from publisher's stored parameters
-      const options = await this.publisherPutParametersStateToPutOptions(
-        putParams
-      );
+      if (publicationKind === SampleKind.PUT) {
+        // PUT operation
+        const payload = putParams.payloadEmpty ? "" : putParams.payload;
 
-      await publisherState.publisher.put(payload, options);
+        // Build put options from publisher's stored parameters
+        const options = await this.publisherPutParametersStateToPutOptions(
+          putParams
+        );
 
-      this.addLogEntry("success", `Published data on ${publisherId}`, {
-        keyexpr: publisherState.keyExpr,
-        payload,
-        PublisherPutOptions: publisherPutOptionsToJSON(options),
-      });
+        await publisherState.publisher.put(payload, options);
+
+        this.addLogEntry("success", `Published data on ${publisherId}`, {
+          keyexpr: publisherState.keyExpr,
+          payload,
+          PublisherPutOptions: publisherPutOptionsToJSON(options),
+        });
+      } else {
+        // DELETE operation
+        await publisherState.publisher.delete();
+
+        this.addLogEntry("success", `Published DELETE on ${publisherId}`, {
+          keyexpr: publisherState.keyExpr,
+        });
+      }
     } catch (error) {
+      const operationName = publisherState.putParameters.publicationKind === SampleKind.PUT ? "PUT" : "DELETE";
       this.addErrorLogEntry(
-        `Failed to publish on ${publisherId}`,
+        `Failed to publish ${operationName} on ${publisherId}`,
         { error }
       );
     }

@@ -243,9 +243,10 @@
                   <template #actions>
                     <button
                       @click="publishData(publisherState.displayId)"
-                      :disabled="!selectedSessionId || publisherState.putParameters.payloadEmpty"
+                      :disabled="!selectedSessionId ||
+                        (publisherState.putParameters.publicationKind === SampleKind.PUT && publisherState.putParameters.payloadEmpty)"
                     >
-                      Put
+                      {{ publisherState.putParameters.publicationKind === SampleKind.PUT ? 'Put' : 'Delete' }}
                     </button>
                     <button
                       @click="undeclarePublisher(publisherState.displayId)"
@@ -274,7 +275,14 @@
 
                   <!-- Edit Put Parameters Section -->
                   <template #edits>
+                    <PublicationKindSelect
+                      v-model="publisherState.putParameters.publicationKind"
+                      :options="sampleKindOptions"
+                      :disabled="!selectedSessionId"
+                    />
+
                     <PayloadInput
+                      v-if="publisherState.putParameters.publicationKind === SampleKind.PUT"
                       v-model="publisherState.putParameters.payload"
                       v-model:is-empty="publisherState.putParameters.payloadEmpty"
                       label="Payload"
@@ -283,6 +291,7 @@
                     />
 
                     <EncodingSelect
+                      v-if="publisherState.putParameters.publicationKind === SampleKind.PUT"
                       v-model="publisherState.putParameters.encoding"
                       v-model:custom-encoding="publisherState.putParameters.customEncoding"
                       :encoding-options="encodingOptions"

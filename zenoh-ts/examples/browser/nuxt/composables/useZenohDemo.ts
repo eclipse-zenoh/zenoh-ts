@@ -44,6 +44,7 @@ export interface SubscriberState {
 
 // Publisher put parameters state - for each publisher instance
 export interface PublisherPutParametersState {
+  publicationKind: SampleKind;
   payload: string;
   payloadEmpty: boolean;
   encoding: string;
@@ -360,6 +361,7 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 // Helper function to create default publisher put parameters
 export function createDefaultPublisherPutParameters(): PublisherPutParametersState {
   return {
+    publicationKind: 0 as SampleKind, // SampleKind.PUT = 0
     payload: "",
     payloadEmpty: true,
     encoding: "",
