@@ -481,6 +481,39 @@ export function replyOptionsToJSON(options: ReplyOptions): ReplyOptionsJSON {
   return cleanUndefineds(result);
 }
 
+// Interface for the reply delete options JSON representation
+export interface ReplyDelOptionsJSON {
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  timestamp: any | undefined;
+  attachment: string | undefined;
+}
+
+/**
+ * Converts ReplyDelOptions object to a structured JSON object for logging
+ * @param options The ReplyDelOptions object to convert
+ * @returns A structured object containing all reply delete options as strings
+ */
+export function replyDelOptionsToJSON(
+  options: import("@eclipse-zenoh/zenoh-ts").ReplyDelOptions
+): ReplyDelOptionsJSON {
+  const result: ReplyDelOptionsJSON = {
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    priority: labelOrUndefined(Priority, options.priority),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    timestamp: options.timestamp
+      ? timestampToJSON(options.timestamp)
+      : undefined,
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
 export function replyErrOptionsToJSON(
   options: ReplyErrOptions
 ): ReplyErrOptionsJSON {

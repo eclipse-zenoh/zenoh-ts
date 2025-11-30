@@ -75,6 +75,7 @@ import {
   livelinessSubscriberOptionsToJSON,
   getOptionsToJSON,
   replyOptionsToJSON,
+  replyDelOptionsToJSON,
   replyErrorToJSON,
   sessionInfoToJSON,
   replyParametersStateToReplyOptionsJSON,
@@ -1242,7 +1243,7 @@ class ZenohDemo extends ZenohDemoEmpty {
                   {
                     Query: queryToJSON(query),
                     "reply keyexpr": replyKeyExpr.toString(),
-                    ReplyDelOptions: replyDelOptions,
+                    ReplyDelOptions: replyDelOptionsToJSON(replyDelOptions),
                   }
                 );
 
