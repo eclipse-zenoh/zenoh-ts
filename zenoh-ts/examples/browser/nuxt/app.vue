@@ -1136,6 +1136,7 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onUnmounted } from "vue";
+import { ResponseType } from "./composables/useZenohDemo";
 
 // Import components
 import ResponseTypeSelect from "./components/ResponseTypeSelect.vue";
@@ -1196,7 +1197,6 @@ const {
 
   // Enum values
   SampleKind,
-  ResponseType,
 
   // Operations
   connect,

@@ -395,9 +395,6 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     this.responseTypeOptions = createOptionsFromEnum(ResponseType, []);
 
-    // Expose ResponseType enum values as a plain object for use in Vue templates
-    this.ResponseType = { Sample: ResponseType.Sample, Error: ResponseType.Error, Ignore: ResponseType.Ignore };
-
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
     this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, [

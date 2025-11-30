@@ -305,7 +305,6 @@ export interface ZenohDemoState {
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
   SampleKind: { PUT: number; DELETE: number };
-  ResponseType: { Sample: number; Error: number; Ignore: number };
   connect: () => Promise<void>;
   disconnect: (sessionId: string) => Promise<void>;
   selectSession: (sessionId: string) => void;
@@ -507,7 +506,6 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   responseTypeOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
   SampleKind = { PUT: 0, DELETE: 1 };
-  ResponseType = { Sample: 0, Error: 1, Ignore: 2 };
   targetOptions: OptionItem[] = [];
   consolidationOptions: OptionItem[] = [];
   acceptRepliesOptions: OptionItem[] = [];
