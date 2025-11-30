@@ -16,13 +16,11 @@ import type {
 import type { QueryableOptionsJSON, ReplyErrOptionsJSON, ReplyOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
 
 // Response type enum for queryable replies
-export const ResponseType = {
-  Sample: 0,
-  Error: 1,
-  Ignore: 2,
-} as const;
-
-export type ResponseType = typeof ResponseType[keyof typeof ResponseType];
+export enum ResponseType {
+  Sample = 0,
+  Error = 1,
+  Ignore = 2,
+}
 
 // Log entry interface
 export interface LogEntry {
