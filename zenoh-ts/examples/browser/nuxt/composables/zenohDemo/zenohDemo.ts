@@ -46,6 +46,7 @@ import {
 import { Duration } from "typed-duration";
 import type {
   PutOptions,
+  DeleteOptions,
   PublisherOptions,
   PublisherPutOptions,
   SubscriberOptions,
@@ -62,6 +63,7 @@ import {
   sampleToJSON,
   queryToJSON,
   putOptionsToJSON,
+  deleteOptionsToJSON,
   publisherPutOptionsToJSON,
   subscriberOptionsToJSON,
   publisherOptionsToJSON,
@@ -84,6 +86,31 @@ function putParametersStateToPutOptions(
   if (parameters.encoding.value) {
     opts.encoding = Encoding.fromString(parameters.encoding.value);
   }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.reliability.value !== undefined) {
+    opts.reliability = parameters.reliability.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
+  }
+  if (!parameters.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(parameters.attachment.value);
+  }
+  return opts;
+}
+
+function putParametersStateToDeleteOptions(
+  parameters: PutParametersState
+): DeleteOptions {
+  let opts: DeleteOptions = {};
   if (parameters.priority.value !== undefined) {
     opts.priority = parameters.priority.value;
   }
@@ -597,31 +624,41 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async performPut(): Promise<void> {
     const sessionWithId = this.getCurrentSessionWithId();
-    if (
-      !sessionWithId ||
-      !this.putParameters.key.value ||
-      this.putParameters.valueEmpty.value
-    )
+    if (!sessionWithId || !this.putParameters.key.value)
       return;
 
     const { session: currentSession, sessionId } = sessionWithId;
+    const publicationKind = this.putParameters.publicationKind.value;
 
     try {
       const keyExpr = new KeyExpr(this.putParameters.key.value);
-      const bytes = new ZBytes(this.putParameters.value.value);
 
-      // Build put options
-      const options = putParametersStateToPutOptions(this.putParameters);
-      await currentSession.put(keyExpr, bytes, options);
+      if (publicationKind === 'put') {
+        // PUT operation
+        if (this.putParameters.valueEmpty.value) return;
 
-      this.addLogEntry("success", `PUT successful on ${sessionId}`, {
-        keyexpr: keyExpr.toString(),
-        payload: bytes.toString(),
-        PutOptions: putOptionsToJSON(options),
-      });
+        const bytes = new ZBytes(this.putParameters.value.value);
+        const options = putParametersStateToPutOptions(this.putParameters);
+        await currentSession.put(keyExpr, bytes, options);
+
+        this.addLogEntry("success", `PUT successful on ${sessionId}`, {
+          keyexpr: keyExpr.toString(),
+          payload: bytes.toString(),
+          PutOptions: putOptionsToJSON(options),
+        });
+      } else {
+        // DELETE operation
+        const options = putParametersStateToDeleteOptions(this.putParameters);
+        await currentSession.delete(keyExpr, options);
+
+        this.addLogEntry("success", `DELETE successful on ${sessionId}`, {
+          keyexpr: keyExpr.toString(),
+          DeleteOptions: deleteOptionsToJSON(options),
+        });
+      }
     } catch (error) {
       this.addErrorLogEntry(
-        `PUT failed for key "${this.putParameters.key.value}" on ${sessionId}`,
+        `${publicationKind.toUpperCase()} failed for key "${this.putParameters.key.value}" on ${sessionId}`,
         { error }
       );
     }

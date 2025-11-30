@@ -119,6 +119,7 @@ export interface QueryableState {
 
 // Put parameters state - includes all put-related data
 export interface PutParametersState {
+  publicationKind: Ref<'put' | 'delete'>;
   key: Ref<string>;
   value: Ref<string>;
   valueEmpty: Ref<boolean>;
@@ -398,6 +399,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   serverUrl = ref("ws://localhost:10000");
   isConnecting = ref(false);
   putParameters = {
+    publicationKind: ref('put' as 'put' | 'delete'),
     key: ref("demo/example/test"),
     value: ref("Hello Zenoh!"),
     valueEmpty: ref(false),

@@ -301,9 +301,9 @@
               </template>
             </Entity>
 
-            <!-- Put Operation -->
+            <!-- Put/Delete Operation -->
             <Entity
-              title="Put"
+              title="Put/Delete"
               :session="selectedSessionId"
               :selected-session="selectedSessionId"
               :descr="putParameters.key.value"
@@ -315,7 +315,7 @@
                   :disabled="
                     !selectedSessionId ||
                     !putParameters.key.value ||
-                    putParameters.valueEmpty.value
+                    (putParameters.publicationKind.value === 'put' && putParameters.valueEmpty.value)
                   "
                 >
                   Run
@@ -323,13 +323,21 @@
               </template>
 
               <template #edits>
+                <PublicationKindSelect
+                  v-model="putParameters.publicationKind.value"
+                  name="publication-kind"
+                  :disabled="!selectedSessionId"
+                />
+
                 <KeyExprInput
                   v-model="putParameters.key.value"
                   label="Key Expression"
                   placeholder="Key expression (e.g., demo/example/test)"
                   :disabled="!selectedSessionId"
                 />
+
                 <PayloadInput
+                  v-if="putParameters.publicationKind.value === 'put'"
                   v-model="putParameters.value.value"
                   v-model:is-empty="putParameters.valueEmpty.value"
                   label="Payload"
@@ -338,6 +346,7 @@
                 />
 
                 <EncodingSelect
+                  v-if="putParameters.publicationKind.value === 'put'"
                   v-model="putParameters.encoding.value"
                   v-model:custom-encoding="putParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
@@ -1113,6 +1122,7 @@ import { onBeforeUnmount, onUnmounted } from "vue";
 
 // Import components
 import ResponseTypeSelect from "./components/ResponseTypeSelect.vue";
+import PublicationKindSelect from "./components/PublicationKindSelect.vue";
 import ServerInput from "./components/ServerInput.vue";
 import TimeoutInput from "./components/TimeoutInput.vue";
 import TargetSelect from "./components/TargetSelect.vue";

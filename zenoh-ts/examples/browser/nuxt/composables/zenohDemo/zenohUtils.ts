@@ -7,6 +7,7 @@ import {
   Locality,
   Query,
   type PutOptions,
+  type DeleteOptions,
   type PublisherPutOptions,
   type SubscriberOptions,
   type QueryableOptions,
@@ -64,6 +65,16 @@ export interface ReplyErrorJSON {
 // Interface for the put options JSON representation
 export interface PutOptionsJSON {
   encoding: string | undefined;
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  reliability: string | undefined;
+  allowedDestination: string | undefined;
+  attachment: string | undefined;
+}
+
+// Interface for the delete options JSON representation
+export interface DeleteOptionsJSON {
   priority: string | undefined;
   congestionControl: string | undefined;
   express: string | undefined;
@@ -259,6 +270,27 @@ export function queryToJSON(query: Query): QueryJSON {
 export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
   const result: PutOptionsJSON = {
     encoding: options.encoding?.toString(),
+    priority: labelOrUndefined(Priority, options.priority),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    reliability: labelOrUndefined(Reliability, options.reliability),
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts DeleteOptions object to a structured JSON object for logging
+ * @param options The DeleteOptions object to convert
+ * @returns A structured object containing all delete options as strings
+ */
+export function deleteOptionsToJSON(options: DeleteOptions): DeleteOptionsJSON {
+  const result: DeleteOptionsJSON = {
     priority: labelOrUndefined(Priority, options.priority),
     congestionControl: labelOrUndefined(
       CongestionControl,
