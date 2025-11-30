@@ -1,53 +1,28 @@
 <template>
-  <div class="option-group option-group-full-width radio-option-group">
-    <label>{{ props.label }}:</label>
-    <div class="radio-group">
-      <label class="radio-option">
-        <input
-          type="radio"
-          :name="props.name"
-          value="put"
-          :checked="props.modelValue === 'put'"
-          @change="updateValue"
-          :disabled="props.disabled"
-        >
-        <span>Put</span>
-      </label>
-      <label class="radio-option">
-        <input
-          type="radio"
-          :name="props.name"
-          value="delete"
-          :checked="props.modelValue === 'delete'"
-          @change="updateValue"
-          :disabled="props.disabled"
-        >
-        <span>Delete</span>
-      </label>
-    </div>
-  </div>
+  <NumberOptionSelect
+    :model-value="modelValue"
+    :disabled="disabled ?? false"
+    :options="options"
+    label="Publication Kind"
+    @update:model-value="$emit('update:modelValue', $event)"
+  />
 </template>
 
 <script setup lang="ts">
+import type { SampleKind } from '@eclipse-zenoh/zenoh-ts'
+import type { OptionItem } from '../composables/zenohDemo/safeUtils'
+import NumberOptionSelect from './NumberOptionSelect.vue'
+
 interface Props {
-  modelValue: 'put' | 'delete'
+  modelValue: SampleKind | undefined
   disabled?: boolean
-  label?: string
-  name: string
+  options: OptionItem[]
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: 'put' | 'delete'): void
+  (e: 'update:modelValue', value: SampleKind | undefined): void
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  disabled: false,
-  label: 'Publication Kind'
-})
-const emit = defineEmits<Emits>()
-
-function updateValue(event: Event) {
-  const target = event.target as HTMLInputElement
-  emit('update:modelValue', target.value as 'put' | 'delete')
-}
+defineProps<Props>()
+defineEmits<Emits>()
 </script>

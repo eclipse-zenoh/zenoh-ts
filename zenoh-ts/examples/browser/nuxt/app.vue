@@ -315,7 +315,7 @@
                   :disabled="
                     !selectedSessionId ||
                     !putParameters.key.value ||
-                    (putParameters.publicationKind.value === 'put' && putParameters.valueEmpty.value)
+                    (putParameters.publicationKind.value === 0 && putParameters.valueEmpty.value)
                   "
                 >
                   Run
@@ -325,7 +325,7 @@
               <template #edits>
                 <PublicationKindSelect
                   v-model="putParameters.publicationKind.value"
-                  name="publication-kind"
+                  :options="sampleKindOptions"
                   :disabled="!selectedSessionId"
                 />
 
@@ -336,8 +336,9 @@
                   :disabled="!selectedSessionId"
                 />
 
+                <!-- SampleKind.PUT = 0 -->
                 <PayloadInput
-                  v-if="putParameters.publicationKind.value === 'put'"
+                  v-if="putParameters.publicationKind.value === 0"
                   v-model="putParameters.value.value"
                   v-model:is-empty="putParameters.valueEmpty.value"
                   label="Payload"
@@ -346,7 +347,7 @@
                 />
 
                 <EncodingSelect
-                  v-if="putParameters.publicationKind.value === 'put'"
+                  v-if="putParameters.publicationKind.value === 0"
                   v-model="putParameters.encoding.value"
                   v-model:custom-encoding="putParameters.customEncoding.value"
                   :encoding-options="encodingOptions"
@@ -1166,6 +1167,7 @@ const {
   getParameters,
 
   // Option arrays (now part of the state)
+  sampleKindOptions,
   priorityOptions,
   congestionControlOptions,
   reliabilityOptions,

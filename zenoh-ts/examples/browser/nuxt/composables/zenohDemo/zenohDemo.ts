@@ -42,6 +42,7 @@ import {
   ReplyKeyExpr,
   Query,
   Timestamp,
+  SampleKind,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from "typed-duration";
 import type {
@@ -360,6 +361,8 @@ class ZenohDemo extends ZenohDemoEmpty {
 
     this.localityOptions = createOptionsFromEnum(Locality, ["DEFAULT"]);
 
+    this.sampleKindOptions = createOptionsFromEnum(SampleKind, []);
+
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
     this.consolidationOptions = createOptionsFromEnum(ConsolidationMode, [
@@ -633,7 +636,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     try {
       const keyExpr = new KeyExpr(this.putParameters.key.value);
 
-      if (publicationKind === 'put') {
+      if (publicationKind === SampleKind.PUT) {
         // PUT operation
         if (this.putParameters.valueEmpty.value) return;
 
@@ -657,8 +660,9 @@ class ZenohDemo extends ZenohDemoEmpty {
         });
       }
     } catch (error) {
+      const operationName = publicationKind === SampleKind.PUT ? "PUT" : "DELETE";
       this.addErrorLogEntry(
-        `${publicationKind.toUpperCase()} failed for key "${this.putParameters.key.value}" on ${sessionId}`,
+        `${operationName} failed for key "${this.putParameters.key.value}" on ${sessionId}`,
         { error }
       );
     }

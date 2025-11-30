@@ -11,6 +11,7 @@ import type {
   QueryTarget,
   ConsolidationMode,
   ReplyKeyExpr,
+  SampleKind,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { QueryableOptionsJSON, ReplyErrOptionsJSON, ReplyOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
 
@@ -119,7 +120,7 @@ export interface QueryableState {
 
 // Put parameters state - includes all put-related data
 export interface PutParametersState {
-  publicationKind: Ref<'put' | 'delete'>;
+  publicationKind: Ref<SampleKind>;
   key: Ref<string>;
   value: Ref<string>;
   valueEmpty: Ref<boolean>;
@@ -288,6 +289,7 @@ export interface ZenohDemoState {
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
   localityOptions: OptionItem[];
+  sampleKindOptions: OptionItem[];
   encodingOptions: OptionItem[];
   targetOptions: OptionItem[];
   consolidationOptions: OptionItem[];
@@ -399,7 +401,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   serverUrl = ref("ws://localhost:10000");
   isConnecting = ref(false);
   putParameters = {
-    publicationKind: ref('put' as 'put' | 'delete'),
+    publicationKind: ref(0 as SampleKind), // SampleKind.PUT = 0
     key: ref("demo/example/test"),
     value: ref("Hello Zenoh!"),
     valueEmpty: ref(false),
@@ -487,6 +489,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
   localityOptions: OptionItem[] = [];
+  sampleKindOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
   targetOptions: OptionItem[] = [];
   consolidationOptions: OptionItem[] = [];
