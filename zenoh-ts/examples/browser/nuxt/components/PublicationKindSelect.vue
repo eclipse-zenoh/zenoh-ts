@@ -1,5 +1,5 @@
 <template>
-  <NumberOptionSelect
+  <NumberOptionSelectRequired
     :model-value="modelValue"
     :disabled="disabled ?? false"
     :options="options"
@@ -11,16 +11,16 @@
 <script setup lang="ts">
 import type { SampleKind } from '@eclipse-zenoh/zenoh-ts'
 import type { OptionItem } from '../composables/zenohDemo/safeUtils'
-import NumberOptionSelect from './NumberOptionSelect.vue'
+import NumberOptionSelectRequired from './NumberOptionSelectRequired.vue'
 
 interface Props {
-  modelValue: SampleKind | undefined
+  modelValue: SampleKind
   disabled?: boolean
   options: OptionItem[]
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: SampleKind | undefined): void
+  (e: 'update:modelValue', value: SampleKind): void
 }
 
 defineProps<Props>()
