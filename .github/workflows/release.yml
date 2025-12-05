@@ -149,6 +149,11 @@ jobs:
         with:
           name: zenoh-ts-build
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: 'npm'
+
       - name: Publish Typescript to NPM
         id: publish
         shell: bash
@@ -157,7 +162,7 @@ jobs:
         run: |
           readonly live_run=${LIVE_RUN:-false}
           # Use npm latest for trusted publishing
-          npm install -g npm@latest
+          sudo npm install -g npm@latest
           if [ ${live_run} = true ]; then
               echo "Releasing to NPM"
               npm publish --access public
