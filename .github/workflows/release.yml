@@ -140,6 +140,9 @@ jobs:
     name: Release Zenoh-ts to NPM
     runs-on: ubuntu-latest
     needs: [tag, build-ts]
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Download zenoh-ts-build
         uses: actions/download-artifact@v4
@@ -150,11 +153,11 @@ jobs:
         id: publish
         shell: bash
         env:
-          ORG_NPMJS_TOKEN: ${{ secrets.ORG_NPMJS_TOKEN }}
           LIVE_RUN: ${{ inputs.live-run || false }}
         run: |
           readonly live_run=${LIVE_RUN:-false}
-          npm config set //registry.npmjs.org/:_authToken=\${ORG_NPMJS_TOKEN}
+          # Use npm latest for trusted publishing
+          npm install -g npm@latest
           if [ ${live_run} = true ]; then
               echo "Releasing to NPM"
               npm publish --access public
