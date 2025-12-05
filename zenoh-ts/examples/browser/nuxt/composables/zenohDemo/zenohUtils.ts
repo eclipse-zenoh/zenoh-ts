@@ -7,8 +7,12 @@ import {
   Locality,
   Query,
   type PutOptions,
+  type DeleteOptions,
+  type PublisherPutOptions,
+  type PublisherDeleteOptions,
   type SubscriberOptions,
   type QueryableOptions,
+  type QuerierOptions,
   type GetOptions,
   type ReplyErrOptions,
   type ReplyOptions,
@@ -70,9 +74,52 @@ export interface PutOptionsJSON {
   attachment: string | undefined;
 }
 
+// Interface for the delete options JSON representation
+export interface DeleteOptionsJSON {
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  reliability: string | undefined;
+  allowedDestination: string | undefined;
+  attachment: string | undefined;
+}
+
 // Interface for the subscriber options JSON representation
 export interface SubscriberOptionsJSON {
   allowedOrigin: string | undefined;
+}
+
+// Interface for the publisher options JSON representation
+export interface PublisherOptionsJSON {
+  encoding: string | undefined;
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  reliability: string | undefined;
+  allowedDestination: string | undefined;
+}
+
+// Interface for the publisher put options JSON representation
+export interface PublisherPutOptionsJSON {
+  encoding: string | undefined;
+  attachment: string | undefined;
+}
+
+// Interface for the querier options JSON representation
+export interface QuerierOptionsJSON {
+  congestionControl: string | undefined;
+  priority: string | undefined;
+  express: string | undefined;
+  allowedDestination: string | undefined;
+  consolidation: string | undefined;
+  target: string | undefined;
+  timeout_ms: number | undefined;
+  acceptReplies: string | undefined;
+}
+
+// Interface for the liveliness subscriber options JSON representation
+export interface LivelinessSubscriberOptionsJSON {
+  history: string | undefined;
 }
 
 // Interface for the queryable options JSON representation
@@ -239,6 +286,27 @@ export function putOptionsToJSON(options: PutOptions): PutOptionsJSON {
 }
 
 /**
+ * Converts DeleteOptions object to a structured JSON object for logging
+ * @param options The DeleteOptions object to convert
+ * @returns A structured object containing all delete options as strings
+ */
+export function deleteOptionsToJSON(options: DeleteOptions): DeleteOptionsJSON {
+  const result: DeleteOptionsJSON = {
+    priority: labelOrUndefined(Priority, options.priority),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    reliability: labelOrUndefined(Reliability, options.reliability),
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
  * Converts SubscriberOptions object to a structured JSON object for logging
  * @param options The SubscriberOptions object to convert
  * @returns A structured object containing all subscriber options as strings
@@ -248,6 +316,91 @@ export function subscriberOptionsToJSON(
 ): SubscriberOptionsJSON {
   const result: SubscriberOptionsJSON = {
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts PublisherOptions object to a structured JSON object for logging
+ * @param options The PublisherOptions object to convert
+ * @returns A structured object containing all publisher options as strings
+ */
+export function publisherOptionsToJSON(
+  options: PutOptions
+): PublisherOptionsJSON {
+  const result: PublisherOptionsJSON = {
+    encoding: options.encoding?.toString(),
+    priority: labelOrUndefined(Priority, options.priority),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    reliability: labelOrUndefined(Reliability, options.reliability),
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts PublisherPutOptions object to a structured JSON object for logging
+ * @param options The PublisherPutOptions object to convert
+ * @returns A structured object containing all publisher put options as strings
+ */
+export function publisherPutOptionsToJSON(
+  options: PublisherPutOptions
+): PublisherPutOptionsJSON {
+  const result: PublisherPutOptionsJSON = {
+    encoding: options.encoding?.toString(),
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+// Interface for the publisher delete options JSON representation
+export interface PublisherDeleteOptionsJSON {
+  attachment: string | undefined;
+}
+
+/**
+ * Converts PublisherDeleteOptions object to a structured JSON object for logging
+ * @param options The PublisherDeleteOptions object to convert
+ * @returns A structured object containing all publisher delete options as strings
+ */
+export function publisherDeleteOptionsToJSON(
+  options: PublisherDeleteOptions
+): PublisherDeleteOptionsJSON {
+  const result: PublisherDeleteOptionsJSON = {
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts QuerierOptions object to a structured JSON object for logging
+ * @param options The QuerierOptions object to convert
+ * @returns A structured object containing all querier options as strings
+ */
+export function querierOptionsToJSON(
+  options: QuerierOptions
+): QuerierOptionsJSON {
+  const result: QuerierOptionsJSON = {
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    priority: labelOrUndefined(Priority, options.priority),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    allowedDestination: labelOrUndefined(Locality, options.allowedDestination),
+    consolidation: labelOrUndefined(ConsolidationMode, options.consolidation),
+    target: labelOrUndefined(QueryTarget, options.target),
+    timeout_ms:
+      options.timeout !== undefined
+        ? milliseconds.from(options.timeout)
+        : undefined,
+    acceptReplies: labelOrUndefined(ReplyKeyExpr, options.acceptReplies),
   };
   return cleanUndefineds(result);
 }
@@ -263,6 +416,20 @@ export function queryableOptionsToJSON(
   const result: QueryableOptionsJSON = {
     complete: options.complete?.toString(),
     allowedOrigin: labelOrUndefined(Locality, options.allowedOrigin),
+  };
+  return cleanUndefineds(result);
+}
+
+/**
+ * Converts LivelinessSubscriberOptions object to a structured JSON object for logging
+ * @param history The history flag
+ * @returns A structured object containing all liveliness subscriber options as strings
+ */
+export function livelinessSubscriberOptionsToJSON(
+  history: boolean
+): LivelinessSubscriberOptionsJSON {
+  const result: LivelinessSubscriberOptionsJSON = {
+    history: history.toString(),
   };
   return cleanUndefineds(result);
 }
@@ -299,6 +466,39 @@ export function getOptionsToJSON(options: GetOptions): GetOptionsJSON {
 export function replyOptionsToJSON(options: ReplyOptions): ReplyOptionsJSON {
   const result: ReplyOptionsJSON = {
     encoding: options.encoding?.toString(),
+    congestionControl: labelOrUndefined(
+      CongestionControl,
+      options.congestionControl
+    ),
+    priority: labelOrUndefined(Priority, options.priority),
+    express:
+      options.express !== undefined ? options.express.toString() : undefined,
+    timestamp: options.timestamp
+      ? timestampToJSON(options.timestamp)
+      : undefined,
+    attachment: options.attachment?.toString(),
+  };
+  return cleanUndefineds(result);
+}
+
+// Interface for the reply delete options JSON representation
+export interface ReplyDelOptionsJSON {
+  priority: string | undefined;
+  congestionControl: string | undefined;
+  express: string | undefined;
+  timestamp: any | undefined;
+  attachment: string | undefined;
+}
+
+/**
+ * Converts ReplyDelOptions object to a structured JSON object for logging
+ * @param options The ReplyDelOptions object to convert
+ * @returns A structured object containing all reply delete options as strings
+ */
+export function replyDelOptionsToJSON(
+  options: import("@eclipse-zenoh/zenoh-ts").ReplyDelOptions
+): ReplyDelOptionsJSON {
+  const result: ReplyDelOptionsJSON = {
     congestionControl: labelOrUndefined(
       CongestionControl,
       options.congestionControl
