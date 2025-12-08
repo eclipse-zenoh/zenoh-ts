@@ -16,6 +16,7 @@ description = "Remote API Plugin for Zenoh using Websockets"
 async-liveliness-monitor = "0.1.1"
 bytes = "1.10.1"
 clap = { version = "4.5.40", features = ["derive"] }
+json5 = "0.4"
 rustc_version = "0.4.0"
 tokio = { version = "1.45.1", features = ["rt", "macros", "time"] }
 tokio-tungstenite = "0.27.0"
@@ -37,9 +38,10 @@ serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
 zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
     "internal",
-    "plugins", 
+    "plugins",
     "unstable",
 ], version = "1.6.2" }
+zenoh-config = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
