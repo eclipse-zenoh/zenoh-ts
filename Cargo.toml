@@ -35,16 +35,16 @@ serde = { version = "1.0.219", default-features = false, features = [
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
-zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", features = [
+zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", features = [
     "internal",
     "plugins", 
     "unstable",
-], version = "1.6.2" }
-zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
-zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.6.2" }
+], version = "1.7.0" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", version = "1.7.0" }
+zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", version = "1.7.0" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", version = "1.7.0" }
+zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", version = "1.7.0" }
+zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "release/1.7.0", version = "1.7.0" }
 zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.7.0" }
 
 uuid = { version = "1.17.0", default-features = false, features = [
@@ -55,8 +55,8 @@ uhlc = { version = "0.8.0", default-features = false } # Default features are di
 cargo-run-bin = "1.7.4"
 
 [workspace.dependencies.zenohd]
-version = "1.6.2"
-branch = "main"
+version = "1.7.0"
+branch = "release/1.7.0"
 git = "https://github.com/eclipse-zenoh/zenoh.git"
 
 [workspace.metadata.bin]
