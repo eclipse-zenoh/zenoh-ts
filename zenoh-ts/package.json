@@ -55,7 +55,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/eclipse-zenoh/zenoh-ts"
+    "url": "git+https://github.com/eclipse-zenoh/zenoh-ts.git"
   },
   "keywords": [
     "networking"
