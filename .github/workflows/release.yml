@@ -163,7 +163,7 @@ jobs:
               npm publish --access public
           else
               echo "Dry Run"
-              npm publish --dry-run --tag ${{ needs.tag.outputs.version }}
+              npm publish --dry-run --tag next
           fi
 
   cargo:
