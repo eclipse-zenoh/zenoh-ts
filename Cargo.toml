@@ -41,6 +41,7 @@ zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", f
     "plugins",
     "unstable",
 ], version = "1.7.1" }
+zenoh-config = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
 zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
 zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
 zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
