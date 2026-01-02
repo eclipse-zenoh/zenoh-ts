@@ -11,8 +11,16 @@ import type {
   QueryTarget,
   ConsolidationMode,
   ReplyKeyExpr,
+  SampleKind,
 } from "@eclipse-zenoh/zenoh-ts";
 import type { QueryableOptionsJSON, ReplyErrOptionsJSON, ReplyOptionsJSON, SubscriberOptionsJSON } from "./zenohDemo/zenohUtils";
+
+// Response type enum for queryable replies
+export enum ResponseType {
+  Sample = 0,
+  Error = 1,
+  Ignore = 2,
+}
 
 // Log entry interface
 export interface LogEntry {
@@ -41,8 +49,36 @@ export interface SubscriberState {
   options: SubscriberOptionsJSON
 }
 
+// Publisher put parameters state - for each publisher instance
+export interface PublisherPutParametersState {
+  publicationKind: SampleKind;
+  payload: string;
+  payloadEmpty: boolean;
+  encoding: string;
+  customEncoding: boolean;
+  priority: Priority | undefined;
+  congestionControl: CongestionControl | undefined;
+  express: boolean | undefined;
+  attachment: string;
+  attachmentEmpty: boolean;
+  putOptionsJSON: any; // TODO: Define PutOptionsJSON type
+  updatePutOptionsJSON: () => void;
+}
+
+// Publisher state interface
+export interface PublisherState {
+  displayId: string; // Display ID like "pub0", "pub1", etc.
+  sessionId: string; // Session ID that this publisher belongs to
+  keyExpr: string;
+  publisher: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define PublisherOptionsJSON when implementing
+  putParameters: PublisherPutParametersState; // Per-publisher configuration
+}
+
 // Reply parameters state - for successful replies
 export interface ReplyParametersState {
+  publicationKind: SampleKind;
   keyExpr: string;
   payload: string;
   payloadEmpty: boolean;
@@ -51,7 +87,7 @@ export interface ReplyParametersState {
   priority: Priority | undefined;
   congestionControl: CongestionControl | undefined;
   express: boolean | undefined;
-  useTimestamp: boolean; // Whether to automatically get timestamp from session
+  useTimestamp: boolean | undefined; // Whether to automatically get timestamp from session
   attachment: string;
   attachmentEmpty: boolean;
   replyOptionsJSON: ReplyOptionsJSON;
@@ -71,7 +107,7 @@ export interface ReplyErrParametersState {
 // Individual queryable response parameters state
 export interface QueryableResponseParametersState {
   // Reply configuration
-  replyType: "reply" | "replyErr" | "ignore";
+  replyType: ResponseType;
   
   // Reply sub-states
   reply: ReplyParametersState;
@@ -93,6 +129,7 @@ export interface QueryableState {
 
 // Put parameters state - includes all put-related data
 export interface PutParametersState {
+  publicationKind: Ref<SampleKind>;
   key: Ref<string>;
   value: Ref<string>;
   valueEmpty: Ref<boolean>;
@@ -113,11 +150,106 @@ export interface SubscriberParametersState {
   allowedOrigin: Ref<Locality | undefined>;
 }
 
+// Publisher parameters state - includes all publisher-related data
+export interface PublisherParametersState {
+  key: Ref<string>;
+  encoding: Ref<string>;
+  customEncoding: Ref<boolean>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  priority: Ref<Priority | undefined>;
+  express: Ref<boolean | undefined>;
+  reliability: Ref<Reliability | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
+}
+
+// Querier get parameters state - for each querier instance
+export interface QuerierGetParametersState {
+  congestionControl: CongestionControl | undefined;
+  priority: Priority | undefined;
+  express: boolean | undefined;
+  allowedDestination: Locality | undefined;
+  encoding: string;
+  customEncoding: boolean;
+  payload: string;
+  payloadEmpty: boolean;
+  attachment: string;
+  attachmentEmpty: boolean;
+  timeout: number | undefined;
+  timeoutEmpty: boolean;
+  target: QueryTarget | undefined;
+  consolidation: ConsolidationMode | undefined;
+  acceptReplies: ReplyKeyExpr | undefined;
+  getOptionsJSON: any; // TODO: Define GetOptionsJSON type
+  updateGetOptionsJSON: () => void;
+}
+
+// Querier state interface
+export interface QuerierState {
+  displayId: string; // Display ID like "qr0", "qr1", etc.
+  sessionId: string; // Session ID that this querier belongs to
+  keyExpr: string;
+  querier: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define QuerierOptionsJSON when implementing
+  getParameters: QuerierGetParametersState; // Per-querier configuration
+}
+
 // Queryable parameters state - includes all queryable-related data (declaration only)
 export interface QueryableParametersState {
   key: Ref<string>;
   complete: Ref<boolean | undefined>;
   allowedOrigin: Ref<Locality | undefined>;
+}
+
+// Querier parameters state - includes all querier-related data
+export interface QuerierParametersState {
+  key: Ref<string>;
+  congestionControl: Ref<CongestionControl | undefined>;
+  priority: Ref<Priority | undefined>;
+  express: Ref<boolean | undefined>;
+  allowedDestination: Ref<Locality | undefined>;
+  consolidation: Ref<ConsolidationMode | undefined>;
+  target: Ref<QueryTarget | undefined>;
+  timeout: Ref<number | undefined>;
+  timeoutEmpty: Ref<boolean>;
+  acceptReplies: Ref<ReplyKeyExpr | undefined>;
+}
+
+// Liveliness token state interface
+export interface LivelinessTokenState {
+  displayId: string; // Display ID like "lt0", "lt1", etc.
+  sessionId: string; // Session ID that this token belongs to
+  keyExpr: string;
+  token: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+}
+
+// Liveliness token parameters state - includes token declaration data
+export interface LivelinessTokenParametersState {
+  key: Ref<string>;
+}
+
+// Liveliness subscriber state interface
+export interface LivelinessSubscriberState {
+  displayId: string; // Display ID like "ls0", "ls1", etc.
+  sessionId: string; // Session ID that this subscriber belongs to
+  keyExpr: string;
+  subscriber: any; // Use any type to avoid strict type checking issues
+  createdAt: Date;
+  options: any; // TODO: Define LivelinessSubscriberOptionsJSON
+}
+
+// Liveliness subscriber parameters state - includes subscriber declaration data
+export interface LivelinessSubscriberParametersState {
+  key: Ref<string>;
+  history: Ref<boolean | undefined>;
+}
+
+// Liveliness get parameters state - includes all liveliness get-related data
+export interface LivelinessGetParametersState {
+  key: Ref<string>;
+  timeout: Ref<number | undefined>;
+  timeoutEmpty: Ref<boolean>;
 }
 
 // Get parameters state - includes all get-related data
@@ -146,21 +278,33 @@ export interface ZenohDemoState {
   isConnecting: Ref<boolean>;
   putParameters: PutParametersState;
   subscriberParameters: SubscriberParametersState;
+  publisherParameters: PublisherParametersState;
   queryableParameters: QueryableParametersState;
+  querierParameters: QuerierParametersState;
+  livelinessTokenParameters: LivelinessTokenParametersState;
+  livelinessSubscriberParameters: LivelinessSubscriberParametersState;
+  livelinessGetParameters: LivelinessGetParametersState;
   getParameters: GetParametersState;
   logEntries: Ref<LogEntry[]>;
   activeSessions: Ref<SessionState[]>;
   selectedSessionId: Ref<string | null>; // Track which session is currently selected
   activeSubscribers: Ref<SubscriberState[]>;
+  activePublishers: Ref<PublisherState[]>;
   activeQueryables: Ref<QueryableState[]>;
+  activeQueriers: Ref<QuerierState[]>;
+  activeLivelinessTokens: Ref<LivelinessTokenState[]>;
+  activeLivelinessSubscribers: Ref<LivelinessSubscriberState[]>;
   priorityOptions: OptionItem[];
   congestionControlOptions: OptionItem[];
   reliabilityOptions: OptionItem[];
   localityOptions: OptionItem[];
+  sampleKindOptions: OptionItem[];
+  responseTypeOptions: OptionItem[];
   encodingOptions: OptionItem[];
   targetOptions: OptionItem[];
   consolidationOptions: OptionItem[];
   acceptRepliesOptions: OptionItem[];
+  SampleKind: { PUT: number; DELETE: number };
   connect: () => Promise<void>;
   disconnect: (sessionId: string) => Promise<void>;
   selectSession: (sessionId: string) => void;
@@ -169,8 +313,19 @@ export interface ZenohDemoState {
   getSessionInfo: () => Promise<void>;
   subscribe: () => Promise<void>;
   unsubscribe: (subscriberId: string) => Promise<void>;
+  declarePublisher: () => Promise<void>;
+  undeclarePublisher: (publisherId: string) => Promise<void>;
+  publishData: (publisherId: string) => Promise<void>;
   declareQueryable: () => Promise<void>;
   undeclareQueryable: (queryableId: string) => Promise<void>;
+  declareQuerier: () => Promise<void>;
+  undeclareQuerier: (querierId: string) => Promise<void>;
+  performQuerierGet: (querierId: string) => Promise<void>;
+  declareLivelinessToken: () => Promise<void>;
+  undeclareLivelinessToken: (tokenId: string) => Promise<void>;
+  declareLivelinessSubscriber: () => Promise<void>;
+  undeclareLivelinessSubscriber: (subscriberId: string) => Promise<void>;
+  performLivelinessGet: () => Promise<void>;
   addLogEntry: (type: LogEntry["type"], message: string, data?: Record<string, any>) => void;
   addErrorLogEntry: (message: string, error?: any) => void;
   clearLog: () => void;
@@ -179,6 +334,7 @@ export interface ZenohDemoState {
 // Helper function to create default response parameters for a new queryable
 export function createDefaultResponseParameters(): QueryableResponseParametersState {
   const reply: ReplyParametersState = {
+    publicationKind: 0 as SampleKind, // SampleKind.PUT = 0
     keyExpr: "",
     payload: "",
     payloadEmpty: true,
@@ -205,10 +361,51 @@ export function createDefaultResponseParameters(): QueryableResponseParametersSt
 
   return {
     // Reply configuration
-    replyType: "reply" as "reply" | "replyErr" | "ignore",
+    replyType: ResponseType.Sample,
     // Reply sub-states
     reply,
     replyErr,
+  };
+}
+
+// Helper function to create default publisher put parameters
+export function createDefaultPublisherPutParameters(): PublisherPutParametersState {
+  return {
+    publicationKind: 0 as SampleKind, // SampleKind.PUT = 0
+    payload: "",
+    payloadEmpty: true,
+    encoding: "",
+    customEncoding: false,
+    priority: undefined as Priority | undefined,
+    congestionControl: undefined as CongestionControl | undefined,
+    express: undefined as boolean | undefined,
+    attachment: "",
+    attachmentEmpty: true,
+    putOptionsJSON: {},
+    updatePutOptionsJSON: () => {}
+  };
+}
+
+// Helper function to create default querier get parameters
+export function createDefaultQuerierGetParameters(): QuerierGetParametersState {
+  return {
+    congestionControl: undefined as CongestionControl | undefined,
+    priority: undefined as Priority | undefined,
+    express: undefined as boolean | undefined,
+    allowedDestination: undefined as Locality | undefined,
+    encoding: "",
+    customEncoding: false,
+    payload: "",
+    payloadEmpty: true,
+    attachment: "",
+    attachmentEmpty: true,
+    timeout: undefined as number | undefined,
+    timeoutEmpty: true,
+    target: undefined as QueryTarget | undefined,
+    consolidation: undefined as ConsolidationMode | undefined,
+    acceptReplies: undefined as ReplyKeyExpr | undefined,
+    getOptionsJSON: {},
+    updateGetOptionsJSON: () => {}
   };
 }
 
@@ -217,6 +414,7 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   serverUrl = ref("ws://localhost:10000");
   isConnecting = ref(false);
   putParameters = {
+    publicationKind: ref(0 as SampleKind), // SampleKind.PUT = 0
     key: ref("demo/example/test"),
     value: ref("Hello Zenoh!"),
     valueEmpty: ref(false),
@@ -234,10 +432,44 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
     key: ref("demo/example/**"),
     allowedOrigin: ref(undefined as Locality | undefined),
   };
+  publisherParameters = {
+    key: ref("demo/example/publisher"),
+    encoding: ref(""),
+    customEncoding: ref(false),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    priority: ref(undefined as Priority | undefined),
+    express: ref(undefined as boolean | undefined),
+    reliability: ref(undefined as Reliability | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
+  };
   queryableParameters = {
     key: ref("demo/example/queryable"),
     complete: ref(undefined as boolean | undefined),
     allowedOrigin: ref(undefined as Locality | undefined),
+  };
+  querierParameters = {
+    key: ref("demo/example/*"),
+    congestionControl: ref(undefined as CongestionControl | undefined),
+    priority: ref(undefined as Priority | undefined),
+    express: ref(undefined as boolean | undefined),
+    allowedDestination: ref(undefined as Locality | undefined),
+    consolidation: ref(undefined as ConsolidationMode | undefined),
+    target: ref(undefined as QueryTarget | undefined),
+    timeout: ref(undefined as number | undefined),
+    timeoutEmpty: ref(true),
+    acceptReplies: ref(undefined as ReplyKeyExpr | undefined),
+  };
+  livelinessTokenParameters = {
+    key: ref("demo/example/token0"),
+  };
+  livelinessSubscriberParameters = {
+    key: ref("demo/example/**"),
+    history: ref(undefined as boolean | undefined),
+  };
+  livelinessGetParameters = {
+    key: ref("demo/example/**"),
+    timeout: ref(undefined as number | undefined),
+    timeoutEmpty: ref(true),
   };
   getParameters = {
     key: ref("demo/example/*"),
@@ -261,12 +493,19 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   activeSessions = ref<SessionState[]>([]);
   selectedSessionId = ref<string | null>(null);
   activeSubscribers = ref<SubscriberState[]>([]);
+  activePublishers = ref<PublisherState[]>([]);
   activeQueryables = ref<QueryableState[]>([]) as any;
+  activeQueriers = ref<QuerierState[]>([]);
+  activeLivelinessTokens = ref<LivelinessTokenState[]>([]);
+  activeLivelinessSubscribers = ref<LivelinessSubscriberState[]>([]);
   priorityOptions: OptionItem[] = [];
   congestionControlOptions: OptionItem[] = [];
   reliabilityOptions: OptionItem[] = [];
   localityOptions: OptionItem[] = [];
+  sampleKindOptions: OptionItem[] = [];
+  responseTypeOptions: OptionItem[] = [];
   encodingOptions: OptionItem[] = [];
+  SampleKind = { PUT: 0, DELETE: 1 };
   targetOptions: OptionItem[] = [];
   consolidationOptions: OptionItem[] = [];
   acceptRepliesOptions: OptionItem[] = [];
@@ -277,8 +516,19 @@ export class ZenohDemoEmpty extends Deconstructable implements ZenohDemoState {
   async performGet() {}
   async subscribe() {}
   async unsubscribe(_: string) {}
+  async declarePublisher() {}
+  async undeclarePublisher(_: string) {}
+  async publishData(_: string) {}
   async declareQueryable() {}
   async undeclareQueryable(_: string) {}
+  async declareQuerier() {}
+  async undeclareQuerier(_: string) {}
+  async performQuerierGet(_: string) {}
+  async declareLivelinessToken() {}
+  async undeclareLivelinessToken(_: string) {}
+  async declareLivelinessSubscriber() {}
+  async undeclareLivelinessSubscriber(_: string) {}
+  async performLivelinessGet() {}
   addLogEntry(_: LogEntry["type"], __: string, ___?: Record<string, any>) {}
   addErrorLogEntry(_: string, __?: any) {}
   clearLog() {}
