@@ -3,30 +3,26 @@
     :model-value="modelValue"
     :disabled="disabled ?? false"
     :options="options"
-    label="Response Type"
-    @update:model-value="handleUpdate"
+    label="Publication Kind"
+    @update:model-value="$emit('update:modelValue', $event)"
   />
 </template>
 
 <script setup lang="ts">
-import type { ResponseType } from '../composables/useZenohDemo'
+import type { SampleKind } from '@eclipse-zenoh/zenoh-ts'
 import type { OptionItem } from '../composables/zenohDemo/safeUtils'
 import NumberOptionSelectRequired from './NumberOptionSelectRequired.vue'
 
 interface Props {
-  modelValue: ResponseType
+  modelValue: SampleKind
   disabled?: boolean
   options: OptionItem[]
 }
 
 interface Emits {
-  (e: 'update:modelValue', value: ResponseType): void
+  (e: 'update:modelValue', value: SampleKind): void
 }
 
 defineProps<Props>()
-const emit = defineEmits<Emits>()
-
-function handleUpdate(value: number) {
-  emit('update:modelValue', value as ResponseType)
-}
+defineEmits<Emits>()
 </script>

@@ -481,14 +481,14 @@
                       :data="{ 
                         'Reply Config': {
                           'Reply Type': queryableState.responseParameters.replyType,
-                          ...(queryableState.responseParameters.replyType === ResponseType.Sample ? {
+                          ...(queryableState.responseParameters.replyType === 'reply' ? {
                             'Reply Key': queryableState.responseParameters.reply.keyExpr,
                             'Reply Options': queryableState.responseParameters.reply.replyOptionsJSON
                           } : {}),
-                          ...(queryableState.responseParameters.replyType === ResponseType.Error ? {
+                          ...(queryableState.responseParameters.replyType === 'replyErr' ? {
                             'Error Options': queryableState.responseParameters.replyErr.replyErrOptionsJSON
                           } : {}),
-                          ...(queryableState.responseParameters.replyType === ResponseType.Ignore ? {
+                          ...(queryableState.responseParameters.replyType === 'ignore' ? {
                             'Behavior': 'Queries received but no reply sent (only query.finalize() called)'
                           } : {})
                         }
@@ -501,20 +501,14 @@
                     <!-- Response Type Selection -->
                     <ResponseTypeSelect
                       v-model="queryableState.responseParameters.replyType"
-                      :options="responseTypeOptions"
+                      :name="`response-type-${queryableState.displayId}`"
                       :disabled="!selectedSessionId"
                     />
 
                     <!-- Reply Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === ResponseType.Sample"
+                      v-if="queryableState.responseParameters.replyType === 'reply'"
                     >
-                      <PublicationKindSelect
-                        v-model="queryableState.responseParameters.reply.publicationKind"
-                        :options="sampleKindOptions"
-                        :disabled="!selectedSessionId"
-                      />
-
                       <KeyExprInput
                         v-model="queryableState.responseParameters.reply.keyExpr"
                         label="Key Expression"
@@ -523,7 +517,6 @@
                       />
 
                       <PayloadInput
-                        v-if="queryableState.responseParameters.reply.publicationKind === SampleKind.PUT"
                         v-model="queryableState.responseParameters.reply.payload"
                         v-model:is-empty="queryableState.responseParameters.reply.payloadEmpty"
                         label="Payload"
@@ -532,7 +525,6 @@
                       />
 
                       <EncodingSelect
-                        v-if="queryableState.responseParameters.reply.publicationKind === SampleKind.PUT"
                         v-model="queryableState.responseParameters.reply.encoding"
                         v-model:custom-encoding="queryableState.responseParameters.reply.customEncoding"
                         :encoding-options="encodingOptions"
@@ -574,7 +566,7 @@
 
                     <!-- ReplyErr Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === ResponseType.Error"
+                      v-if="queryableState.responseParameters.replyType === 'replyErr'"
                     >
                       <PayloadInput
                         v-model="queryableState.responseParameters.replyErr.payload"
@@ -594,7 +586,7 @@
 
                     <!-- Ignore Fields -->
                     <template
-                      v-if="queryableState.responseParameters.replyType === ResponseType.Ignore"
+                      v-if="queryableState.responseParameters.replyType === 'ignore'"
                     >
                       <div class="ignore-info">
                         <p class="ignore-description">
@@ -1136,7 +1128,6 @@
 
 <script setup lang="ts">
 import { onBeforeUnmount, onUnmounted } from "vue";
-import { ResponseType } from "./composables/useZenohDemo";
 
 // Import components
 import ResponseTypeSelect from "./components/ResponseTypeSelect.vue";
@@ -1185,7 +1176,6 @@ const {
 
   // Option arrays (now part of the state)
   sampleKindOptions,
-  responseTypeOptions,
   priorityOptions,
   congestionControlOptions,
   reliabilityOptions,

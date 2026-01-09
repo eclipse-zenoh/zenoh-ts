@@ -39,6 +39,7 @@ path = "src/main.rs"
 [dependencies]
 async-liveliness-monitor = { workspace = true }
 clap = { workspace = true }
+json5 = { workspace = true }
 tokio = { workspace = true }
 tokio-tungstenite = { workspace = true }
 tokio-rustls = { workspace = true }
@@ -56,6 +57,7 @@ serde = { workspace = true, default-features = false, features = [
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = { workspace = true }
 zenoh = { workspace = true }
+zenoh-config = { workspace = true }
 zenoh-ext = { workspace = true }
 zenoh-plugin-trait = { workspace = true }
 zenoh-util = { workspace = true }

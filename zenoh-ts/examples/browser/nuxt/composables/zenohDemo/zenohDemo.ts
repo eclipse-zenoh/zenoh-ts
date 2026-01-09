@@ -5,7 +5,15 @@ import {
   type LogEntry,
   type SessionState,
   type SubscriberState,
+  type PublisherState,
+  type PublisherPutParametersState,
+  type PublisherParametersState,
   type QueryableState,
+  type QuerierState,
+  type QuerierGetParametersState,
+  type QuerierParametersState,
+  type LivelinessTokenState,
+  type LivelinessSubscriberState,
   type PutParametersState,
   type SubscriberParametersState,
   type QueryableParametersState,
@@ -13,6 +21,9 @@ import {
   type ReplyErrParametersState,
   type GetParametersState,
   createDefaultResponseParameters,
+  createDefaultPublisherPutParameters,
+  createDefaultQuerierGetParameters,
+  ResponseType,
 } from "../useZenohDemo";
 import {
   Config,
@@ -32,12 +43,18 @@ import {
   ReplyKeyExpr,
   Query,
   Timestamp,
+  SampleKind,
 } from "@eclipse-zenoh/zenoh-ts";
 import { Duration } from "typed-duration";
 import type {
   PutOptions,
+  DeleteOptions,
+  PublisherOptions,
+  PublisherPutOptions,
+  PublisherDeleteOptions,
   SubscriberOptions,
   QueryableOptions,
+  QuerierOptions,
   GetOptions,
   ChannelReceiver,
 } from "@eclipse-zenoh/zenoh-ts";
@@ -49,10 +66,17 @@ import {
   sampleToJSON,
   queryToJSON,
   putOptionsToJSON,
+  deleteOptionsToJSON,
+  publisherPutOptionsToJSON,
+  publisherDeleteOptionsToJSON,
   subscriberOptionsToJSON,
+  publisherOptionsToJSON,
+  querierOptionsToJSON,
   queryableOptionsToJSON,
+  livelinessSubscriberOptionsToJSON,
   getOptionsToJSON,
   replyOptionsToJSON,
+  replyDelOptionsToJSON,
   replyErrorToJSON,
   sessionInfoToJSON,
   replyParametersStateToReplyOptionsJSON,
@@ -88,12 +112,62 @@ function putParametersStateToPutOptions(
   return opts;
 }
 
+function putParametersStateToDeleteOptions(
+  parameters: PutParametersState
+): DeleteOptions {
+  let opts: DeleteOptions = {};
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.reliability.value !== undefined) {
+    opts.reliability = parameters.reliability.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
+  }
+  if (!parameters.attachmentEmpty.value) {
+    opts.attachment = new ZBytes(parameters.attachment.value);
+  }
+  return opts;
+}
+
 function subscriberParametersStateToSubscriberOptions(
   options: SubscriberParametersState
 ): SubscriberOptions {
   let opts: SubscriberOptions = {};
   if (options.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = options.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function publisherParametersStateToPublisherOptions(
+  parameters: PublisherParametersState
+): PublisherOptions {
+  let opts: PublisherOptions = {};
+  if (parameters.encoding.value) {
+    opts.encoding = Encoding.fromString(parameters.encoding.value);
+  }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.reliability.value !== undefined) {
+    opts.reliability = parameters.reliability.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
   }
   return opts;
 }
@@ -107,6 +181,80 @@ function queryableParametersStateToQueryableOptions(
   }
   if (parameters.allowedOrigin.value !== undefined) {
     opts.allowedOrigin = parameters.allowedOrigin.value;
+  }
+  return opts;
+}
+
+function querierParametersStateToQuerierOptions(
+  parameters: QuerierParametersState
+): QuerierOptions {
+  let opts: QuerierOptions = {};
+  if (parameters.congestionControl.value !== undefined) {
+    opts.congestionControl = parameters.congestionControl.value;
+  }
+  if (parameters.priority.value !== undefined) {
+    opts.priority = parameters.priority.value;
+  }
+  if (parameters.express.value !== undefined) {
+    opts.express = parameters.express.value;
+  }
+  if (parameters.allowedDestination.value !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination.value;
+  }
+  if (parameters.consolidation.value !== undefined) {
+    opts.consolidation = parameters.consolidation.value;
+  }
+  if (parameters.target.value !== undefined) {
+    opts.target = parameters.target.value;
+  }
+  if (
+    !parameters.timeoutEmpty.value &&
+    parameters.timeout.value !== undefined
+  ) {
+    opts.timeout = Duration.milliseconds.of(parameters.timeout.value);
+  }
+  if (parameters.acceptReplies.value !== undefined) {
+    opts.acceptReplies = parameters.acceptReplies.value;
+  }
+  return opts;
+}
+
+function querierGetParametersStateToGetOptions(
+  parameters: QuerierGetParametersState
+): GetOptions {
+  let opts: GetOptions = {};
+  if (parameters.congestionControl !== undefined) {
+    opts.congestionControl = parameters.congestionControl;
+  }
+  if (parameters.priority !== undefined) {
+    opts.priority = parameters.priority;
+  }
+  if (parameters.express !== undefined) {
+    opts.express = parameters.express;
+  }
+  if (parameters.allowedDestination !== undefined) {
+    opts.allowedDestination = parameters.allowedDestination;
+  }
+  if (parameters.encoding) {
+    opts.encoding = Encoding.fromString(parameters.encoding);
+  }
+  if (!parameters.payloadEmpty) {
+    opts.payload = new ZBytes(parameters.payload);
+  }
+  if (!parameters.attachmentEmpty) {
+    opts.attachment = new ZBytes(parameters.attachment);
+  }
+  if (!parameters.timeoutEmpty && parameters.timeout !== undefined) {
+    opts.timeout = Duration.milliseconds.of(parameters.timeout);
+  }
+  if (parameters.target !== undefined) {
+    opts.target = parameters.target;
+  }
+  if (parameters.consolidation !== undefined) {
+    opts.consolidation = parameters.consolidation;
+  }
+  if (parameters.acceptReplies !== undefined) {
+    opts.acceptReplies = parameters.acceptReplies;
   }
   return opts;
 }
@@ -132,6 +280,29 @@ async function replyParametersStateToReplyOptions(
     console.log("Requesting new timestamp for reply");
     opts.timestamp = await session.newTimestamp();
     console.log("Timestamp for reply:", opts.timestamp);
+  }
+  if (!parameters.attachmentEmpty) {
+    opts.attachment = new ZBytes(parameters.attachment);
+  }
+  return opts;
+}
+
+async function replyParametersStateToReplyDelOptions(
+  parameters: ReplyParametersState,
+  session?: Session
+) {
+  let opts: import("@eclipse-zenoh/zenoh-ts").ReplyDelOptions = {};
+  if (parameters.priority !== undefined) {
+    opts.priority = parameters.priority;
+  }
+  if (parameters.congestionControl !== undefined) {
+    opts.congestionControl = parameters.congestionControl;
+  }
+  if (parameters.express !== undefined) {
+    opts.express = parameters.express;
+  }
+  if (parameters.useTimestamp && session) {
+    opts.timestamp = await session.newTimestamp();
   }
   if (!parameters.attachmentEmpty) {
     opts.attachment = new ZBytes(parameters.attachment);
@@ -195,7 +366,11 @@ function getParametersStateToGetOptions(
 class ZenohDemo extends ZenohDemoEmpty {
   private sessionIdCounter = 0;
   private subscriberIdCounter = 0;
+  private publisherIdCounter = 0;
   private queryableIdCounter = 0;
+  private querierIdCounter = 0;
+  private livelinessTokenIdCounter = 0;
+  private livelinessSubscriberIdCounter = 0;
 
   constructor() {
     super();
@@ -212,6 +387,13 @@ class ZenohDemo extends ZenohDemoEmpty {
     this.reliabilityOptions = createOptionsFromEnum(Reliability, ["DEFAULT"]);
 
     this.localityOptions = createOptionsFromEnum(Locality, ["DEFAULT"]);
+
+    this.sampleKindOptions = createOptionsFromEnum(SampleKind, []);
+
+    // Expose SampleKind enum values as a plain object for use in Vue templates
+    this.SampleKind = { PUT: SampleKind.PUT, DELETE: SampleKind.DELETE };
+
+    this.responseTypeOptions = createOptionsFromEnum(ResponseType, []);
 
     this.targetOptions = createOptionsFromEnum(QueryTarget, ["DEFAULT"]);
 
@@ -293,6 +475,22 @@ class ZenohDemo extends ZenohDemoEmpty {
           sessionId: firstSession.displayId,
         };
       }
+    }
+    return undefined;
+  }
+
+  // Method to get a specific session by ID
+  private getSessionById(
+    sessionId: string
+  ): { session: Session; sessionId: string } | undefined {
+    const foundSession = this.activeSessions.value.find(
+      (session) => session.displayId === sessionId
+    );
+    if (foundSession) {
+      return {
+        session: foundSession.session,
+        sessionId: foundSession.displayId,
+      };
     }
     return undefined;
   }
@@ -461,31 +659,42 @@ class ZenohDemo extends ZenohDemoEmpty {
 
   override async performPut(): Promise<void> {
     const sessionWithId = this.getCurrentSessionWithId();
-    if (
-      !sessionWithId ||
-      !this.putParameters.key.value ||
-      this.putParameters.valueEmpty.value
-    )
+    if (!sessionWithId || !this.putParameters.key.value)
       return;
 
     const { session: currentSession, sessionId } = sessionWithId;
+    const publicationKind = this.putParameters.publicationKind.value;
 
     try {
       const keyExpr = new KeyExpr(this.putParameters.key.value);
-      const bytes = new ZBytes(this.putParameters.value.value);
 
-      // Build put options
-      const options = putParametersStateToPutOptions(this.putParameters);
-      await currentSession.put(keyExpr, bytes, options);
+      if (publicationKind === SampleKind.PUT) {
+        // PUT operation
+        if (this.putParameters.valueEmpty.value) return;
 
-      this.addLogEntry("success", `PUT successful on ${sessionId}`, {
-        keyexpr: keyExpr.toString(),
-        payload: bytes.toString(),
-        PutOptions: putOptionsToJSON(options),
-      });
+        const bytes = new ZBytes(this.putParameters.value.value);
+        const options = putParametersStateToPutOptions(this.putParameters);
+        await currentSession.put(keyExpr, bytes, options);
+
+        this.addLogEntry("success", `PUT successful on ${sessionId}`, {
+          keyexpr: keyExpr.toString(),
+          payload: bytes.toString(),
+          PutOptions: putOptionsToJSON(options),
+        });
+      } else {
+        // DELETE operation
+        const options = putParametersStateToDeleteOptions(this.putParameters);
+        await currentSession.delete(keyExpr, options);
+
+        this.addLogEntry("success", `DELETE successful on ${sessionId}`, {
+          keyexpr: keyExpr.toString(),
+          DeleteOptions: deleteOptionsToJSON(options),
+        });
+      }
     } catch (error) {
+      const operationName = publicationKind === SampleKind.PUT ? "PUT" : "DELETE";
       this.addErrorLogEntry(
-        `PUT failed for key "${this.putParameters.key.value}" on ${sessionId}`,
+        `${operationName} failed for key "${this.putParameters.key.value}" on ${sessionId}`,
         { error }
       );
     }
@@ -645,6 +854,248 @@ class ZenohDemo extends ZenohDemoEmpty {
     }
   }
 
+  // Helper method to convert publisher put parameters to PublisherPutOptions
+  private async publisherPutParametersStateToPutOptions(
+    putParams: PublisherPutParametersState
+  ): Promise<PublisherPutOptions> {
+    const options: PublisherPutOptions = {};
+
+    // Encoding
+    if (putParams.encoding) {
+      options.encoding = Encoding.fromString(putParams.encoding);
+    }
+
+    // Attachment - send if checkbox is unchecked (even if empty string)
+    if (!putParams.attachmentEmpty) {
+      options.attachment = new ZBytes(putParams.attachment);
+    }
+
+    return options;
+  }
+
+  // Helper method to convert publisher put parameters to PublisherDeleteOptions
+  private async publisherPutParametersStateToDeleteOptions(
+    putParams: PublisherPutParametersState
+  ): Promise<PublisherDeleteOptions> {
+    const options: PublisherDeleteOptions = {};
+
+    // Attachment - send if checkbox is unchecked (even if empty string)
+    if (!putParams.attachmentEmpty) {
+      options.attachment = new ZBytes(putParams.attachment);
+    }
+
+    return options;
+  }
+
+  // Helper method to convert publisher put parameters to JSON for logging
+  private publisherPutParametersStateToPutOptionsJSON(
+    putParams: PublisherPutParametersState
+  ): any {
+    const json: any = {};
+
+    if (putParams.encoding) {
+      json.encoding = putParams.encoding;
+    }
+    if (!putParams.attachmentEmpty && putParams.attachment) {
+      json.attachment = putParams.attachment;
+    }
+
+    return json;
+  }
+
+  private querierGetParametersStateToGetOptionsJSON(
+    getParams: QuerierGetParametersState
+  ): any {
+    const json: any = {};
+
+    if (getParams.encoding) {
+      json.encoding = getParams.encoding;
+    }
+    if (getParams.priority !== undefined) {
+      json.priority = getParams.priority;
+    }
+    if (getParams.congestionControl !== undefined) {
+      json.congestionControl = getParams.congestionControl;
+    }
+    if (getParams.express !== undefined) {
+      json.express = getParams.express;
+    }
+    if (getParams.allowedDestination !== undefined) {
+      json.allowedDestination = getParams.allowedDestination;
+    }
+    if (getParams.consolidation !== undefined) {
+      json.consolidation = getParams.consolidation;
+    }
+    if (getParams.target !== undefined) {
+      json.target = getParams.target;
+    }
+    if (!getParams.timeoutEmpty && getParams.timeout !== undefined) {
+      json.timeout_ms = getParams.timeout;
+    }
+    if (getParams.acceptReplies !== undefined) {
+      json.acceptReplies = getParams.acceptReplies;
+    }
+    if (!getParams.payloadEmpty && getParams.payload) {
+      json.payload = getParams.payload;
+    }
+    if (!getParams.attachmentEmpty && getParams.attachment) {
+      json.attachment = getParams.attachment;
+    }
+
+    return json;
+  }
+
+  override async declarePublisher(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.publisherParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.publisherParameters.key.value);
+
+      const publisherOptions = publisherParametersStateToPublisherOptions(
+        this.publisherParameters
+      );
+
+      const publisher = await currentSession.declarePublisher(
+        keyExpr,
+        publisherOptions
+      );
+
+      displayId = `pub${this.publisherIdCounter++}`;
+      const createdAt = new Date();
+
+      // CREATE INDIVIDUAL PUT PARAMETERS FOR THIS PUBLISHER
+      const putParameters = createDefaultPublisherPutParameters();
+
+      // Set up sync method
+      putParameters.updatePutOptionsJSON = () => {
+        putParameters.putOptionsJSON = this.publisherPutParametersStateToPutOptionsJSON(putParameters);
+      };
+
+      // Initialize with default payload
+      const createdAtStr = createdAt.toISOString().slice(11, 19);
+      putParameters.payload = `Hello from publisher ${displayId} on session ${sessionId} created at ${createdAtStr}`;
+      putParameters.payloadEmpty = false;
+
+      const publisherState: PublisherState = {
+        displayId,
+        keyExpr: this.publisherParameters.key.value,
+        publisher,
+        createdAt,
+        options: publisherOptionsToJSON(publisherOptions),
+        putParameters: putParameters, // EACH PUBLISHER HAS ITS OWN
+        sessionId,
+      };
+
+      this.activePublishers.value.push(publisherState);
+
+      this.addLogEntry("success", `Publisher ${displayId} declared`, {
+        keyexpr: publisherState.keyExpr,
+        PublisherOptions: publisherState.options,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare publisher${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclarePublisher(publisherId: string): Promise<void> {
+    const index = this.activePublishers.value.findIndex(
+      (pub: PublisherState) => pub.displayId === publisherId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found`);
+      return;
+    }
+
+    const publisherState = this.activePublishers.value[index];
+    if (!publisherState) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found in array`);
+      return;
+    }
+
+    try {
+      await publisherState.publisher.undeclare();
+      this.activePublishers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Publisher ${publisherId} undeclared`, {
+        keyexpr: publisherState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare publisher ${publisherId}`,
+        { error }
+      );
+    }
+  }
+
+  override async publishData(publisherId: string): Promise<void> {
+    const publisherState = this.activePublishers.value.find(
+      (pub: PublisherState) => pub.displayId === publisherId
+    );
+
+    if (!publisherState) {
+      this.addErrorLogEntry(`Publisher ${publisherId} not found`);
+      return;
+    }
+
+    const sessionWithId = this.getSessionById(publisherState.sessionId);
+    if (!sessionWithId) {
+      this.addErrorLogEntry(`Session ${publisherState.sessionId} not found for publisher ${publisherId}`);
+      return;
+    }
+
+    try {
+      const putParams = publisherState.putParameters;
+      const publicationKind = putParams.publicationKind;
+
+      if (publicationKind === SampleKind.PUT) {
+        // PUT operation
+        const payload = putParams.payloadEmpty ? "" : putParams.payload;
+
+        // Build put options from publisher's stored parameters
+        const options = await this.publisherPutParametersStateToPutOptions(
+          putParams
+        );
+
+        await publisherState.publisher.put(payload, options);
+
+        this.addLogEntry("success", `Published data on ${publisherId}`, {
+          keyexpr: publisherState.keyExpr,
+          payload,
+          PublisherPutOptions: publisherPutOptionsToJSON(options),
+        });
+      } else {
+        // DELETE operation
+        const deleteOptions = await this.publisherPutParametersStateToDeleteOptions(
+          putParams
+        );
+
+        await publisherState.publisher.delete(deleteOptions);
+
+        this.addLogEntry("success", `Published DELETE on ${publisherId}`, {
+          keyexpr: publisherState.keyExpr,
+          PublisherDeleteOptions: publisherDeleteOptionsToJSON(deleteOptions),
+        });
+      }
+    } catch (error) {
+      const operationName = publisherState.putParameters.publicationKind === SampleKind.PUT ? "PUT" : "DELETE";
+      this.addErrorLogEntry(
+        `Failed to publish ${operationName} on ${publisherId}`,
+        { error }
+      );
+    }
+  }
+
   override async declareQueryable(): Promise<void> {
     const sessionWithId = this.getCurrentSessionWithId();
     if (!sessionWithId || !this.queryableParameters.key.value) return;
@@ -723,7 +1174,7 @@ class ZenohDemo extends ZenohDemoEmpty {
         for await (const query of receiver as ChannelReceiver<Query>) {
           try {
             // Handle reply based on configured reply type
-            if (responseParameters.replyType === "reply") {
+            if (responseParameters.replyType === ResponseType.Sample) {
               // Get reply parameters
               const replyParams = responseParameters.reply;
 
@@ -779,8 +1230,29 @@ class ZenohDemo extends ZenohDemoEmpty {
                 logData
               );
 
-              await query.reply(replyKeyExpr, replyPayload, replyOptions);
-            } else if (responseParameters.replyType === "replyErr") {
+              // Check publication kind to decide between reply() and replyDel()
+              if (replyParams.publicationKind === SampleKind.PUT) {
+                await query.reply(replyKeyExpr, replyPayload, replyOptions);
+              } else {
+                // DELETE - use replyDel
+                const replyDelOptions = await replyParametersStateToReplyDelOptions(
+                  replyParams,
+                  currentSession
+                );
+
+                this.addLogEntry(
+                  "data",
+                  `Queryable ${displayId} replying DELETE to query:`,
+                  {
+                    Query: queryToJSON(query),
+                    "reply keyexpr": replyKeyExpr.toString(),
+                    ReplyDelOptions: replyDelOptionsToJSON(replyDelOptions),
+                  }
+                );
+
+                await query.replyDel(replyKeyExpr, replyDelOptions);
+              }
+            } else if (responseParameters.replyType === ResponseType.Error) {
               // Handle error reply
               const replyErrParams = responseParameters.replyErr;
 
@@ -804,7 +1276,7 @@ class ZenohDemo extends ZenohDemoEmpty {
                 }
               );
               await query.replyErr(errorPayload, replyErrOptions);
-            } else if (responseParameters.replyType === "ignore") {
+            } else if (responseParameters.replyType === ResponseType.Ignore) {
               // Handle ignore case - just log that the query is being ignored
               this.addLogEntry("data", `Queryable ${displayId} ignoring query:`, {
                 Query: queryToJSON(query),
@@ -855,6 +1327,395 @@ class ZenohDemo extends ZenohDemoEmpty {
         `Undeclare queryable failed for ${queryableId}`,
         { error }
       );
+    }
+  }
+
+  override async declareQuerier(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.querierParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.querierParameters.key.value);
+
+      const querierOptions = querierParametersStateToQuerierOptions(
+        this.querierParameters
+      );
+
+      const querier = await currentSession.declareQuerier(
+        keyExpr,
+        querierOptions
+      );
+
+      displayId = `qr${this.querierIdCounter++}`;
+      const createdAt = new Date();
+
+      // CREATE INDIVIDUAL GET PARAMETERS FOR THIS QUERIER
+      const getParameters = createDefaultQuerierGetParameters();
+
+      // Set up sync method
+      getParameters.updateGetOptionsJSON = () => {
+        getParameters.getOptionsJSON = this.querierGetParametersStateToGetOptionsJSON(getParameters);
+      };
+
+      // Initialize with default payload (empty)
+      getParameters.payloadEmpty = true;
+
+      const querierState: QuerierState = {
+        displayId,
+        keyExpr: this.querierParameters.key.value,
+        querier,
+        createdAt,
+        options: querierOptionsToJSON(querierOptions),
+        getParameters: getParameters, // EACH QUERIER HAS ITS OWN
+        sessionId,
+      };
+
+      this.activeQueriers.value.push(querierState);
+
+      this.addLogEntry("success", `Querier ${displayId} declared`, {
+        keyexpr: this.querierParameters.key.value,
+        QuerierOptions: querierOptionsToJSON(querierOptions),
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare querier${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareQuerier(querierId: string): Promise<void> {
+    const index = this.activeQueriers.value.findIndex(
+      (qr: QuerierState) => qr.displayId === querierId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Querier ${querierId} not found`);
+      return;
+    }
+
+    const querierState = this.activeQueriers.value[index];
+    if (!querierState) {
+      this.addErrorLogEntry(`Querier ${querierId} not found in array`);
+      return;
+    }
+
+    try {
+      await querierState.querier.undeclare();
+      this.activeQueriers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Querier ${querierId} undeclared`, {
+        keyexpr: querierState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare querier ${querierId}`,
+        { error }
+      );
+    }
+  }
+
+  override async performQuerierGet(querierId: string): Promise<void> {
+    const querierState = this.activeQueriers.value.find(
+      (qr: QuerierState) => qr.displayId === querierId
+    );
+
+    if (!querierState) {
+      this.addErrorLogEntry(`Querier ${querierId} not found`);
+      return;
+    }
+
+    const sessionWithId = this.getSessionById(querierState.sessionId);
+    if (!sessionWithId) {
+      this.addErrorLogEntry(`Session ${querierState.sessionId} not found for querier ${querierId}`);
+      return;
+    }
+
+    try {
+      const getParams = querierState.getParameters;
+
+      // Build get options from querier's stored parameters
+      const options = querierGetParametersStateToGetOptions(getParams);
+
+      this.addLogEntry("info", `Performing get on ${querierId}`, {
+        keyexpr: querierState.keyExpr,
+        GetOptions: getOptionsToJSON(options),
+      });
+
+      const receiver = await querierState.querier.get(options);
+      if (!receiver) {
+        this.addErrorLogEntry("GET failed: No receiver returned");
+        return;
+      }
+
+      // Process replies
+      let resultCount = 0;
+
+      for await (const reply of receiver as ChannelReceiver<Reply>) {
+        try {
+          const result = reply.result();
+          // Check if it's a successful sample or an error
+          if (result instanceof Sample) {
+            // It's a Sample - use JSON formatting for enhanced display
+            const sample = result as Sample;
+            this.addLogEntry("data", `Reply ${resultCount + 1} from ${querierId}`, {
+              Sample: sampleToJSON(sample),
+            });
+            resultCount++;
+          } else {
+            // It's a ReplyError - log with error formatting
+            const replyError = result as ReplyError;
+            this.addLogEntry("data", `Error reply from ${querierId}`, {
+              ReplyError: replyErrorToJSON(replyError),
+            });
+          }
+        } catch (resultError) {
+          this.addErrorLogEntry("Error processing GET result", { error: resultError });
+        }
+      }
+
+      this.addLogEntry("success", `Get completed on ${querierId}: ${resultCount} replies received`, {
+        keyexpr: querierState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to perform get on ${querierId}`,
+        { error }
+      );
+    }
+  }
+
+  override async declareLivelinessToken(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessTokenParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.livelinessTokenParameters.key.value);
+
+      const token = await currentSession.liveliness().declareToken(keyExpr);
+
+      displayId = `lt${this.livelinessTokenIdCounter++}`;
+      const createdAt = new Date();
+
+      const tokenState: LivelinessTokenState = {
+        displayId,
+        keyExpr: this.livelinessTokenParameters.key.value,
+        token,
+        createdAt,
+        sessionId,
+      };
+
+      this.activeLivelinessTokens.value.push(tokenState);
+
+      this.addLogEntry("success", `Liveliness token ${displayId} declared`, {
+        keyexpr: this.livelinessTokenParameters.key.value,
+      });
+
+      // Update default key for next token
+      this.livelinessTokenParameters.key.value = `demo/example/token${this.livelinessTokenIdCounter}`;
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare liveliness token${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareLivelinessToken(tokenId: string): Promise<void> {
+    const index = this.activeLivelinessTokens.value.findIndex(
+      (tk: LivelinessTokenState) => tk.displayId === tokenId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Liveliness token ${tokenId} not found`);
+      return;
+    }
+
+    const tokenState = this.activeLivelinessTokens.value[index];
+    if (!tokenState) {
+      this.addErrorLogEntry(`Liveliness token ${tokenId} not found in array`);
+      return;
+    }
+
+    try {
+      await tokenState.token.undeclare();
+      this.activeLivelinessTokens.value.splice(index, 1);
+
+      this.addLogEntry("success", `Liveliness token ${tokenId} undeclared`, {
+        keyexpr: tokenState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare liveliness token ${tokenId}`,
+        { error }
+      );
+    }
+  }
+
+  override async declareLivelinessSubscriber(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessSubscriberParameters.key.value) {
+      this.addErrorLogEntry("No session selected or empty key expression");
+      return;
+    }
+
+    const { session: currentSession, sessionId } = sessionWithId;
+    let displayId: string | undefined;
+
+    try {
+      const keyExpr = new KeyExpr(this.livelinessSubscriberParameters.key.value);
+      const history = this.livelinessSubscriberParameters.history.value ?? false;
+
+      const subscriber = await currentSession.liveliness().declareSubscriber(
+        keyExpr,
+        { history }
+      );
+
+      displayId = `ls${this.livelinessSubscriberIdCounter++}`;
+      const createdAt = new Date();
+
+      const subscriberState: LivelinessSubscriberState = {
+        displayId,
+        keyExpr: this.livelinessSubscriberParameters.key.value,
+        subscriber,
+        createdAt,
+        options: livelinessSubscriberOptionsToJSON(history),
+        sessionId,
+      };
+
+      this.activeLivelinessSubscribers.value.push(subscriberState);
+
+      // Set up receiver to process samples
+      const receiver = subscriber.receiver();
+      (async () => {
+        try {
+          for await (const sample of receiver as ChannelReceiver<Sample>) {
+            this.addLogEntry("data", `Liveliness sample on ${displayId}`, {
+              Sample: sampleToJSON(sample),
+            });
+          }
+        } catch (error) {
+          this.addErrorLogEntry(
+            `Error in liveliness subscriber ${displayId} receiver`,
+            { error }
+          );
+        }
+      })();
+
+      this.addLogEntry("success", `Liveliness subscriber ${displayId} declared`, {
+        keyexpr: this.livelinessSubscriberParameters.key.value,
+        LivelinessSubscriberOptions: livelinessSubscriberOptionsToJSON(history),
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to declare liveliness subscriber${displayId ? ` ${displayId}` : ""}`,
+        { error }
+      );
+    }
+  }
+
+  override async undeclareLivelinessSubscriber(subscriberId: string): Promise<void> {
+    const index = this.activeLivelinessSubscribers.value.findIndex(
+      (sub: LivelinessSubscriberState) => sub.displayId === subscriberId
+    );
+
+    if (index === -1) {
+      this.addErrorLogEntry(`Liveliness subscriber ${subscriberId} not found`);
+      return;
+    }
+
+    const subscriberState = this.activeLivelinessSubscribers.value[index];
+    if (!subscriberState) {
+      this.addErrorLogEntry(`Liveliness subscriber ${subscriberId} not found in array`);
+      return;
+    }
+
+    try {
+      await subscriberState.subscriber.undeclare();
+      this.activeLivelinessSubscribers.value.splice(index, 1);
+
+      this.addLogEntry("success", `Liveliness subscriber ${subscriberId} undeclared`, {
+        keyexpr: subscriberState.keyExpr,
+      });
+    } catch (error) {
+      this.addErrorLogEntry(
+        `Failed to undeclare liveliness subscriber ${subscriberId}`,
+        { error }
+      );
+    }
+  }
+
+  override async performLivelinessGet(): Promise<void> {
+    const sessionWithId = this.getCurrentSessionWithId();
+    if (!sessionWithId || !this.livelinessGetParameters.key.value) return;
+
+    const { session: currentSession, sessionId } = sessionWithId;
+
+    try {
+      const selector = this.livelinessGetParameters.key.value;
+
+      // Build get options
+      const getOptions: any = {};
+      if (
+        !this.livelinessGetParameters.timeoutEmpty.value &&
+        this.livelinessGetParameters.timeout.value !== undefined
+      ) {
+        getOptions.timeout = Duration.milliseconds.of(this.livelinessGetParameters.timeout.value);
+      }
+
+      this.addLogEntry("info", `Starting liveliness GET on ${sessionId}`, {
+        selector: selector,
+        timeout_ms: this.livelinessGetParameters.timeout.value,
+      });
+
+      const receiver = await currentSession.liveliness().get(selector, getOptions);
+      if (!receiver) {
+        this.addErrorLogEntry("Liveliness GET failed: No receiver returned");
+        return;
+      }
+
+      let resultCount = 0;
+
+      for await (const reply of receiver as ChannelReceiver<Reply>) {
+        try {
+          const result = reply.result();
+          // Check if it's a successful sample or an error
+          if (result instanceof Sample) {
+            // It's a Sample - use JSON formatting for enhanced display
+            const sample = result as Sample;
+            this.addLogEntry("data", "Liveliness GET result", {
+              Sample: sampleToJSON(sample),
+            });
+            resultCount++;
+          } else {
+            // It's a ReplyError - log with error formatting
+            const replyError = result as ReplyError;
+            this.addLogEntry("data", `Liveliness GET query error for ${selector}`, {
+              ReplyError: replyErrorToJSON(replyError),
+            });
+          }
+        } catch (resultError) {
+          this.addErrorLogEntry("Error processing liveliness GET result", { error: resultError });
+        }
+      }
+      this.addLogEntry(
+        "success",
+        `Liveliness GET query completed on ${sessionId} for ${selector}. Found ${resultCount} results.`
+      );
+    } catch (error) {
+      this.addErrorLogEntry("Liveliness GET query failed", { error });
     }
   }
 }

@@ -4,14 +4,20 @@
     <div class="section-header">
       <div class="section-icon">{{ icon }}</div>
       <div class="section-title">{{ title }}</div>
-      
+
       <!-- Section actions - separate but sharing horizontal space -->
-      <div v-if="$slots['actions']" class="section-actions">
+      <div v-if="$slots['actions'] || props.collapsible" class="section-actions">
         <slot name="actions" />
+        <!-- Fold/Unfold button (always present if foldable) -->
+        <CheckButton
+          v-if="props.collapsible"
+          :pressed="props.collapsed ?? false"
+          @update:pressed="emit('update:collapsed', $event)"
+        />
       </div>
     </div>
-    
-    <div class="section-content">
+
+    <div v-if="!props.collapsed" class="section-content">
       <slot />
     </div>
   </div>
@@ -27,15 +33,24 @@
 </style>
 
 <script setup lang="ts">
+import CheckButton from './CheckButton.vue'
+
 interface Props {
   title: string
   icon: string
   sectionClass?: string
   disabled?: boolean
+  collapsed?: boolean
+  collapsible?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   sectionClass: '',
-  disabled: false
+  disabled: false,
+  collapsible: false
 })
+
+const emit = defineEmits<{
+  (e: 'update:collapsed', value: boolean): void
+}>()
 </script>
