@@ -22,7 +22,7 @@ use std::{
     collections::HashMap,
     fs::File,
     future::Future,
-    io::{self, BufReader, ErrorKind},
+    io::{self, BufReader},
     net::SocketAddr,
     path::Path,
     sync::{Arc, Mutex},
@@ -84,10 +84,8 @@ kedefine!(
 
 const WORKER_THREAD_NUM: usize = 2;
 const MAX_BLOCK_THREAD_NUM: usize = 50;
-const GIT_VERSION: &str = git_version::git_version!(prefix = "v", cargo_prefix = "v");
 
 lazy_static::lazy_static! {
-    static ref LONG_VERSION: String = format!("{} built with {}", GIT_VERSION, env!("RUSTC_VERSION"));
     // The global runtime is used in the dynamic plugins, which we can't get the current runtime
     static ref TOKIO_RUNTIME: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread()
         .worker_threads(WORKER_THREAD_NUM)
@@ -138,10 +136,7 @@ fn load_certs(path: &Path) -> io::Result<Vec<CertificateDer<'static>>> {
 fn load_key(path: &Path) -> io::Result<PrivateKeyDer<'static>> {
     private_key(&mut BufReader::new(File::open(path)?))
         .unwrap()
-        .ok_or(io::Error::new(
-            ErrorKind::Other,
-            "No private key found".to_string(),
-        ))
+        .ok_or_else(|| io::Error::other("No private key found"))
 }
 
 pub struct RemoteApiPlugin;
