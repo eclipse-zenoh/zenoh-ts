@@ -51,7 +51,7 @@ jobs:
 
       - name: Clippy without synced Cargo.lock
         run: |
-          rm -f Cargo.lock
+          rm Cargo.lock
           cargo clippy --all -- -D warnings
 
       - name: Run rust tests
