@@ -611,8 +611,6 @@ impl RemoteState {
                 q.reply(reply_ok.keyexpr, reply_ok.payload)
                     .attachment(reply_ok.attachment)
                     .encoding(reply_ok.encoding)
-                    .priority(reply_ok.qos.priority())
-                    .congestion_control(reply_ok.qos.congestion_control())
                     .express(reply_ok.qos.express())
                     .timestamp(reply_ok.timestamp)
                     .await?;
@@ -646,8 +644,6 @@ impl RemoteState {
             Some(q) => {
                 q.reply_del(reply_del.keyexpr)
                     .attachment(reply_del.attachment)
-                    .priority(reply_del.qos.priority())
-                    .congestion_control(reply_del.qos.congestion_control())
                     .express(reply_del.qos.express())
                     .timestamp(reply_del.timestamp)
                     .await?;

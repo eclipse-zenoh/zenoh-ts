@@ -99,7 +99,9 @@ export class Queryable {
 */
 export interface ReplyOptions {
     encoding?: IntoEncoding,
+    /** @deprecated Replies now inherit congestion control from the query. This field is ignored. */
     congestionControl?: CongestionControl,
+    /** @deprecated Replies now inherit priority from the query. This field is ignored. */
     priority?: Priority,
     express?: boolean,
     timestamp?: Timestamp;
@@ -123,7 +125,9 @@ export interface ReplyErrOptions {
  * @prop {IntoZBytes=} attachment - Additional Data sent with the reply
  */
 export interface ReplyDelOptions {
+    /** @deprecated Replies now inherit priority from the query. This field is ignored. */
     priority?: Priority,
+    /** @deprecated Replies now inherit congestion control from the query. This field is ignored. */
     congestionControl?: CongestionControl,
     express?: boolean,
     timestamp?: Timestamp;
