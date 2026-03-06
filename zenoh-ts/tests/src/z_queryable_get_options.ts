@@ -378,8 +378,6 @@ class TestCase {
     // Create options object with named fields
     return {
       encoding: this.getOptions.encoding,
-      congestionControl: this.getOptions.congestionControl,
-      priority: this.getOptions.priority,
       express: this.getOptions.express,
       attachment: this.getOptions.attachment,
     };
@@ -403,8 +401,6 @@ class TestCase {
    */
   toReplyDelOptions(): ReplyDelOptions {
     return {
-      congestionControl: this.getOptions.congestionControl,
-      priority: this.getOptions.priority,
       express: this.getOptions.express,
       attachment: this.getOptions.attachment,
     };
