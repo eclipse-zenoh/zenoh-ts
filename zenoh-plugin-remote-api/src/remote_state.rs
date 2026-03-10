@@ -77,8 +77,7 @@ pub(crate) struct RemoteState {
     liveliness_subscribers: HashMap<SubscriberId, Subscriber<()>>,
     queriers: HashMap<QuerierId, Querier<'static>>,
     matching_listeners: HashMap<MatchingListenerId, MatchingListener<()>>,
-    transport_events_listeners:
-        HashMap<TransportEventsListenerId, TransportEventsListener<()>>,
+    transport_events_listeners: HashMap<TransportEventsListenerId, TransportEventsListener<()>>,
     link_events_listeners: HashMap<LinkEventsListenerId, LinkEventsListener<()>>,
 }
 
@@ -175,10 +174,7 @@ impl RemoteState {
 
         let mut link_events_listeners: HashMap<LinkEventsListenerId, LinkEventsListener<()>> =
             HashMap::new();
-        std::mem::swap(
-            &mut link_events_listeners,
-            &mut self.link_events_listeners,
-        );
+        std::mem::swap(&mut link_events_listeners, &mut self.link_events_listeners);
         for (_, listener) in link_events_listeners {
             if let Err(e) = listener.undeclare().await {
                 tracing::error!("{e}")
@@ -1157,10 +1153,7 @@ impl RemoteState {
             msg.history
         );
         if self.link_events_listeners.contains_key(&msg.id) {
-            bail!(
-                "Link events listener with id: '{}' already exists",
-                msg.id
-            );
+            bail!("Link events listener with id: '{}' already exists", msg.id);
         }
         let tx = self.tx.clone();
         let listener_id = msg.id;
@@ -1200,10 +1193,7 @@ impl RemoteState {
                 );
                 Ok(None)
             }
-            None => bail!(
-                "Link events listener with id: '{}' does not exist",
-                msg.id
-            ),
+            None => bail!("Link events listener with id: '{}' does not exist", msg.id),
         }
     }
 
