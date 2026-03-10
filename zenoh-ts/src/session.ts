@@ -28,6 +28,7 @@ import { Encoding, IntoEncoding } from "./encoding.js";
 import { Duration, TimeDuration } from 'typed-duration'
 import { Timestamp } from "./timestamp.js";
 import { ChannelReceiver, FifoChannel, Handler, intoCbDropReceiver } from "./channels.js";
+import { TransportInfo, LinkInfo, TransportEvent, LinkEvent, TransportEventsListener, LinkEventsListener, TransportEventsListenerOptions, LinkEventsListenerOptions } from "./connectivity.js";
 import { ZenohId } from "./zid.js";
 import { CongestionControl, ConsolidationMode, Locality, Priority, QueryTarget, Reliability, ReplyKeyExpr } from "./enums.js";
 import { Sample } from "./sample.js";
@@ -267,6 +268,60 @@ export class Session {
      */
     async info(): Promise<SessionInfo> {
         return await this.inner.getSessionInfo();
+    }
+
+    /**
+     * Returns the list of currently open transports.
+     *
+     * @returns TransportInfo[]
+     */
+    async transports(): Promise<TransportInfo[]> {
+        return await this.inner.getTransports();
+    }
+
+    /**
+     * Returns the list of currently active links.
+     *
+     * @returns LinkInfo[]
+     */
+    async links(): Promise<LinkInfo[]> {
+        return await this.inner.getLinks();
+    }
+
+    /**
+     * Declares a listener for transport events (opened/closed).
+     *
+     * @param {TransportEventsListenerOptions} opts - optional parameters
+     * @returns TransportEventsListener
+     */
+    async transportEventsListener(
+        opts?: TransportEventsListenerOptions
+    ): Promise<TransportEventsListener> {
+        const handler = opts?.handler ?? new FifoChannel<TransportEvent>(256);
+        const [callback, drop, receiver] = intoCbDropReceiver(handler);
+        const listenerId = await this.inner.declareTransportEventsListener(
+            opts?.history ?? false,
+            { callback, drop }
+        );
+        return new TransportEventsListener(this.inner, listenerId, receiver);
+    }
+
+    /**
+     * Declares a listener for link events (added/removed).
+     *
+     * @param {LinkEventsListenerOptions} opts - optional parameters
+     * @returns LinkEventsListener
+     */
+    async linkEventsListener(
+        opts?: LinkEventsListenerOptions
+    ): Promise<LinkEventsListener> {
+        const handler = opts?.handler ?? new FifoChannel<LinkEvent>(256);
+        const [callback, drop, receiver] = intoCbDropReceiver(handler);
+        const listenerId = await this.inner.declareLinkEventsListener(
+            opts?.history ?? false,
+            { callback, drop }
+        );
+        return new LinkEventsListener(this.inner, listenerId, receiver);
     }
 
     /**
