@@ -15,14 +15,15 @@
 import { ZBytesDeserializer, ZBytesSerializer, ZD } from "./ext/index.js"
 import { Encoding } from "./encoding.js";
 import { KeyExpr } from "./key_expr.js";
-import { Locality, Reliability, CongestionControl, Priority, SampleKind, ConsolidationMode, ReplyKeyExpr, QueryTarget } from "./enums.js";
+import { Locality, Reliability, CongestionControl, Priority, SampleKind, ConsolidationMode, ReplyKeyExpr, QueryTarget, WhatAmI } from "./enums.js";
 import { Timestamp } from "./timestamp.js";
 import { ZenohId } from "./zid.js";
 import { Sample } from "./sample.js";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
 import { SessionInfo } from "./session.js";
-import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId } from "./session_inner.js";
+import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId, TransportEventsListenerId, LinkEventsListenerId } from "./session_inner.js";
+import { TransportInfo, LinkInfo, TransportEvent, LinkEvent } from "./connectivity.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
@@ -289,6 +290,12 @@ export enum OutRemoteMessageId {
     PublisherGetMatchingStatus,
     QuerierDeclareMatchingListener,
     QuerierGetMatchingStatus,
+    GetTransports,
+    GetLinks,
+    DeclareTransportEventsListener,
+    UndeclareTransportEventsListener,
+    DeclareLinkEventsListener,
+    UndeclareLinkEventsListener,
 }
 
 export type PublisherProperties = {
@@ -775,6 +782,68 @@ export class QuerierGetMatchingStatus {
     }
 }
 
+export class GetTransports {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.GetTransports;
+    public constructor() {}
+
+    public serializeWithZSerializer(_serializer: ZBytesSerializer) {}
+}
+
+export class GetLinks {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.GetLinks;
+    public constructor() {}
+
+    public serializeWithZSerializer(_serializer: ZBytesSerializer) {}
+}
+
+export class OutDeclareTransportEventsListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareTransportEventsListener;
+    public constructor(
+        public readonly id: TransportEventsListenerId,
+        public readonly history: boolean,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+        serializer.serializeBoolean(this.history);
+    }
+}
+
+export class OutUndeclareTransportEventsListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareTransportEventsListener;
+    public constructor(
+        public readonly id: TransportEventsListenerId,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+    }
+}
+
+export class OutDeclareLinkEventsListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.DeclareLinkEventsListener;
+    public constructor(
+        public readonly id: LinkEventsListenerId,
+        public readonly history: boolean,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+        serializer.serializeBoolean(this.history);
+    }
+}
+
+export class OutUndeclareLinkEventsListener {
+    public readonly outMessageId: OutRemoteMessageId = OutRemoteMessageId.UndeclareLinkEventsListener;
+    public constructor(
+        public readonly id: LinkEventsListenerId,
+    ) {}
+
+    public serializeWithZSerializer(serializer: ZBytesSerializer) {
+        serializer.serializeNumberUint32(this.id);
+    }
+}
+
 export enum InRemoteMessageId {
     ResponsePing = 0,
     ResponseOk,
@@ -787,6 +856,10 @@ export enum InRemoteMessageId {
     QueryResponseFinal,
     ResponseMatchingStatus,
     MatchingStatusUpdate,
+    ResponseTransports,
+    ResponseLinks,
+    InTransportEventUpdate,
+    InLinkEventUpdate,
 }
 
 export class ResponsePing {
@@ -929,6 +1002,125 @@ export class MatchingStatusUpdate {
     }
 }
 
+function deserializeTransportInfo(deserializer: ZBytesDeserializer): TransportInfo {
+    let zid = deserializeZenohId(deserializer);
+    let whatami = deserializer.deserializeNumberUint8() as WhatAmI;
+    let isQos = deserializer.deserializeBoolean();
+    let isMulticast = deserializer.deserializeBoolean();
+    return new TransportInfo(zid, whatami, isQos, isMulticast);
+}
+
+function deserializeOptString(deserializer: ZBytesDeserializer): string | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return deserializer.deserializeString();
+    } else {
+        return undefined;
+    }
+}
+
+function deserializeOptPriorities(deserializer: ZBytesDeserializer): [number, number] | undefined {
+    if (deserializer.deserializeBoolean()) {
+        let low = deserializer.deserializeNumberUint8();
+        let high = deserializer.deserializeNumberUint8();
+        return [low, high];
+    } else {
+        return undefined;
+    }
+}
+
+function deserializeOptReliability(deserializer: ZBytesDeserializer): Reliability | undefined {
+    if (deserializer.deserializeBoolean()) {
+        return deserializer.deserializeNumberUint8() as Reliability;
+    } else {
+        return undefined;
+    }
+}
+
+function deserializeLinkInfo(deserializer: ZBytesDeserializer): LinkInfo {
+    let zid = deserializeZenohId(deserializer);
+    let src = deserializer.deserializeString();
+    let dst = deserializer.deserializeString();
+    let group = deserializeOptString(deserializer);
+    let mtu = deserializer.deserializeNumberUint16();
+    let isStreamed = deserializer.deserializeBoolean();
+    let interfacesCount = deserializer.deserializeNumberUint32();
+    let interfaces: string[] = [];
+    for (let i = 0; i < interfacesCount; i++) {
+        interfaces.push(deserializer.deserializeString());
+    }
+    let authIdentifier = deserializeOptString(deserializer);
+    let priorities = deserializeOptPriorities(deserializer);
+    let reliability = deserializeOptReliability(deserializer);
+    return new LinkInfo(zid, src, dst, group, mtu, isStreamed, interfaces, authIdentifier, priorities, reliability);
+}
+
+export class ResponseTransports {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseTransports;
+
+    public constructor(
+        public readonly transports: TransportInfo[],
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): ResponseTransports {
+        let count = deserializer.deserializeNumberUint32();
+        let transports: TransportInfo[] = [];
+        for (let i = 0; i < count; i++) {
+            transports.push(deserializeTransportInfo(deserializer));
+        }
+        return new ResponseTransports(transports);
+    }
+}
+
+export class ResponseLinks {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseLinks;
+
+    public constructor(
+        public readonly links: LinkInfo[],
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): ResponseLinks {
+        let count = deserializer.deserializeNumberUint32();
+        let links: LinkInfo[] = [];
+        for (let i = 0; i < count; i++) {
+            links.push(deserializeLinkInfo(deserializer));
+        }
+        return new ResponseLinks(links);
+    }
+}
+
+export class InTransportEventUpdate {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InTransportEventUpdate;
+
+    public constructor(
+        public readonly listenerId: TransportEventsListenerId,
+        public readonly kind: SampleKind,
+        public readonly transport: TransportInfo,
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): InTransportEventUpdate {
+        let listenerId = deserializer.deserializeNumberUint32() as TransportEventsListenerId;
+        let kind = sampleKindFromUint8(deserializer.deserializeNumberUint8());
+        let transport = deserializeTransportInfo(deserializer);
+        return new InTransportEventUpdate(listenerId, kind, transport);
+    }
+}
+
+export class InLinkEventUpdate {
+    public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.InLinkEventUpdate;
+
+    public constructor(
+        public readonly listenerId: LinkEventsListenerId,
+        public readonly kind: SampleKind,
+        public readonly link: LinkInfo,
+    ) {}
+
+    static deserialize(deserializer: ZBytesDeserializer): InLinkEventUpdate {
+        let listenerId = deserializer.deserializeNumberUint32() as LinkEventsListenerId;
+        let kind = sampleKindFromUint8(deserializer.deserializeNumberUint8());
+        let link = deserializeLinkInfo(deserializer);
+        return new InLinkEventUpdate(listenerId, kind, link);
+    }
+}
 
 export interface OutMessageInterface {
     readonly outMessageId: OutRemoteMessageId;
