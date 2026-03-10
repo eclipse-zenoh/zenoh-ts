@@ -204,6 +204,13 @@ export class Query {
     attachment(): ZBytes | undefined {
         return this.inner.attachment_;
     }
+    /**
+      * gets the ReplyKeyExpr accepted by this Query
+      * @returns ReplyKeyExpr
+      */
+    acceptsReplies(): ReplyKeyExpr {
+        return this.inner.replyKeyExpr_;
+    }
 
     /**
       * Sends a Reply to for Query
