@@ -1240,6 +1240,12 @@ macro_rules! remote_message {
     ) => {
         remote_message_inner!{$typ, $enum_name, $name, $access, $( #[$meta] )*  $($val,)* }
         impl $name {
+            $access fn id(&self) -> $enum_name {
+                match self {
+                    $($name::$val(_) => $enum_name::$val,)*
+                }
+            }
+
             $access fn to_wire(&self, sequence_id: Option<SequenceId>) -> bytes::Bytes {
                 let mut serializer = ZSerializer::new();
                 match self {
