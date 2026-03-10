@@ -13,7 +13,7 @@
 //
 /// <reference lib="deno.ns" />
 
-import { Config, Session, TransportInfo, LinkInfo, TransportEventsListener, LinkEventsListener } from "@eclipse-zenoh/zenoh-ts";
+import { Config, Session, SessionInfo, TransportInfo, LinkInfo, TransportEventsListener, LinkEventsListener } from "@eclipse-zenoh/zenoh-ts";
 import { assert } from "https://deno.land/std@0.192.0/testing/asserts.ts";
 
 function sleep(ms: number) {
@@ -27,7 +27,8 @@ Deno.test("Connectivity - transports()", async () => {
         session = await Session.open(new Config("ws/127.0.0.1:10000"));
         await sleep(100);
 
-        const transports: TransportInfo[] = await session.transports();
+        const info: SessionInfo = await session.info();
+        const transports: TransportInfo[] = await info.transports();
         assert(Array.isArray(transports), "transports() should return an array");
 
         for (const t of transports) {
@@ -49,7 +50,8 @@ Deno.test("Connectivity - links()", async () => {
         session = await Session.open(new Config("ws/127.0.0.1:10000"));
         await sleep(100);
 
-        const links: LinkInfo[] = await session.links();
+        const info: SessionInfo = await session.info();
+        const links: LinkInfo[] = await info.links();
         assert(Array.isArray(links), "links() should return an array");
 
         for (const l of links) {
@@ -74,7 +76,8 @@ Deno.test("Connectivity - transportEventsListener declare/undeclare", async () =
         session = await Session.open(new Config("ws/127.0.0.1:10000"));
         await sleep(100);
 
-        listener = await session.transportEventsListener();
+        const info: SessionInfo = await session.info();
+        listener = await info.transportEventsListener();
         assert(listener !== undefined, "Transport events listener should be created");
         assert(listener.receiver() !== undefined, "Listener should have a receiver");
 
@@ -95,7 +98,8 @@ Deno.test("Connectivity - linkEventsListener declare/undeclare", async () => {
         session = await Session.open(new Config("ws/127.0.0.1:10000"));
         await sleep(100);
 
-        listener = await session.linkEventsListener();
+        const info: SessionInfo = await session.info();
+        listener = await info.linkEventsListener();
         assert(listener !== undefined, "Link events listener should be created");
         assert(listener.receiver() !== undefined, "Listener should have a receiver");
 

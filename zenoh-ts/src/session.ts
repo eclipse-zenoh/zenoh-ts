@@ -271,60 +271,6 @@ export class Session {
     }
 
     /**
-     * Returns the list of currently open transports.
-     *
-     * @returns TransportInfo[]
-     */
-    async transports(): Promise<TransportInfo[]> {
-        return await this.inner.getTransports();
-    }
-
-    /**
-     * Returns the list of currently active links.
-     *
-     * @returns LinkInfo[]
-     */
-    async links(): Promise<LinkInfo[]> {
-        return await this.inner.getLinks();
-    }
-
-    /**
-     * Declares a listener for transport events (opened/closed).
-     *
-     * @param {TransportEventsListenerOptions} opts - optional parameters
-     * @returns TransportEventsListener
-     */
-    async transportEventsListener(
-        opts?: TransportEventsListenerOptions
-    ): Promise<TransportEventsListener> {
-        const handler = opts?.handler ?? new FifoChannel<TransportEvent>(256);
-        const [callback, drop, receiver] = intoCbDropReceiver(handler);
-        const listenerId = await this.inner.declareTransportEventsListener(
-            opts?.history ?? false,
-            { callback, drop }
-        );
-        return new TransportEventsListener(this.inner, listenerId, receiver);
-    }
-
-    /**
-     * Declares a listener for link events (added/removed).
-     *
-     * @param {LinkEventsListenerOptions} opts - optional parameters
-     * @returns LinkEventsListener
-     */
-    async linkEventsListener(
-        opts?: LinkEventsListenerOptions
-    ): Promise<LinkEventsListener> {
-        const handler = opts?.handler ?? new FifoChannel<LinkEvent>(256);
-        const [callback, drop, receiver] = intoCbDropReceiver(handler);
-        const listenerId = await this.inner.declareLinkEventsListener(
-            opts?.history ?? false,
-            { callback, drop }
-        );
-        return new LinkEventsListener(this.inner, listenerId, receiver);
-    }
-
-    /**
      * Executes a Delete on a session, for a specific key expression KeyExpr
      *
      * @param {IntoKeyExpr} intoKeyExpr - something that implements intoKeyExpr
@@ -555,6 +501,7 @@ export class SessionInfo {
         private zid_: ZenohId,
         private peers_: ZenohId[],
         private routers_: ZenohId[],
+        private inner: SessionInner,
     ) { }
 
     zid(): ZenohId {
@@ -565,5 +512,59 @@ export class SessionInfo {
     }
     peersZid(): ZenohId[] {
         return this.peers_;
+    }
+
+    /**
+     * Returns the list of currently open transports.
+     *
+     * @returns TransportInfo[]
+     */
+    async transports(): Promise<TransportInfo[]> {
+        return await this.inner.getTransports();
+    }
+
+    /**
+     * Returns the list of currently active links.
+     *
+     * @returns LinkInfo[]
+     */
+    async links(): Promise<LinkInfo[]> {
+        return await this.inner.getLinks();
+    }
+
+    /**
+     * Declares a listener for transport events (opened/closed).
+     *
+     * @param {TransportEventsListenerOptions} opts - optional parameters
+     * @returns TransportEventsListener
+     */
+    async transportEventsListener(
+        opts?: TransportEventsListenerOptions
+    ): Promise<TransportEventsListener> {
+        const handler = opts?.handler ?? new FifoChannel<TransportEvent>(256);
+        const [callback, drop, receiver] = intoCbDropReceiver(handler);
+        const listenerId = await this.inner.declareTransportEventsListener(
+            opts?.history ?? false,
+            { callback, drop }
+        );
+        return new TransportEventsListener(this.inner, listenerId, receiver);
+    }
+
+    /**
+     * Declares a listener for link events (added/removed).
+     *
+     * @param {LinkEventsListenerOptions} opts - optional parameters
+     * @returns LinkEventsListener
+     */
+    async linkEventsListener(
+        opts?: LinkEventsListenerOptions
+    ): Promise<LinkEventsListener> {
+        const handler = opts?.handler ?? new FifoChannel<LinkEvent>(256);
+        const [callback, drop, receiver] = intoCbDropReceiver(handler);
+        const listenerId = await this.inner.declareLinkEventsListener(
+            opts?.history ?? false,
+            { callback, drop }
+        );
+        return new LinkEventsListener(this.inner, listenerId, receiver);
     }
 }

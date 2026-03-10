@@ -21,7 +21,6 @@ import { ZenohId } from "./zid.js";
 import { Sample } from "./sample.js";
 import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
-import { SessionInfo } from "./session.js";
 import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId, TransportEventsListenerId, LinkEventsListenerId } from "./session_inner.js";
 import { TransportInfo, LinkInfo } from "./connectivity.js";
 
@@ -917,7 +916,9 @@ export class ResponseSessionInfo {
     public readonly inMessageId: InRemoteMessageId = InRemoteMessageId.ResponseSessionInfo;
 
     public constructor(
-        public readonly info: SessionInfo,
+        public readonly zid: ZenohId,
+        public readonly peers: ZenohId[],
+        public readonly routers: ZenohId[],
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseSessionInfo {
@@ -925,7 +926,7 @@ export class ResponseSessionInfo {
         let dt = ZD.array(ZD.objectStatic(deserializeZenohId));
         let routers = deserializer.deserialize(dt);
         let peers = deserializer.deserialize(dt);
-        return new ResponseSessionInfo(new SessionInfo(zid, peers, routers));
+        return new ResponseSessionInfo(zid, peers, routers);
     }
 }
 

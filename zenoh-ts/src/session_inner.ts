@@ -379,11 +379,11 @@ export class SessionInner {
 
     async getSessionInfo(): Promise<SessionInfo> {
         return await this.sendRequest(
-            new GetSessionInfo(), 
-            InRemoteMessageId.ResponseSessionInfo, 
+            new GetSessionInfo(),
+            InRemoteMessageId.ResponseSessionInfo,
             ResponseSessionInfo.deserialize
         ).then(
-            (value) => value.info
+            (value) => new SessionInfo(value.zid, value.peers, value.routers, this)
         );
     }
 
