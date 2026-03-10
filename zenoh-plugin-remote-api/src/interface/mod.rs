@@ -326,7 +326,7 @@ fn timestamp_to_ntp_id(t: &Timestamp) -> (u64, [u8; 16]) {
     (t.get_time().0, t.get_id().to_le_bytes())
 }
 
-fn sample_kind_to_u8(k: SampleKind) -> u8 {
+pub(crate) fn sample_kind_to_u8(k: SampleKind) -> u8 {
     match k {
         SampleKind::Put => 0,
         SampleKind::Delete => 1,

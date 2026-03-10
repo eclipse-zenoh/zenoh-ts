@@ -27,26 +27,32 @@ use std::{
 use flume::Sender;
 use lru::LruCache;
 use zenoh::{
+    config::WhatAmI,
     handlers::CallbackDrop,
     liveliness::LivelinessToken,
     matching::MatchingListener,
     pubsub::{Publisher, Subscriber},
+    qos::Reliability,
     query::{Querier, Query, Queryable, Reply, Selector},
+    session::{LinkEventsListener, TransportEventsListener},
     Session,
 };
 use zenoh_result::bail;
 
 use crate::{
     interface::{
-        self, DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher,
-        DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, Get, LivelinessGet,
-        LivelinessTokenId, MatchingListenerId, MatchingStatus, PingAck,
+        self, DeclareLinkEventsListener, DeclareLivelinessSubscriber, DeclareLivelinessToken,
+        DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber,
+        DeclareTransportEventsListener, Delete, Get, LinkEventsListenerId, LinkInfoWire,
+        LivelinessGet, LivelinessTokenId, MatchingListenerId, MatchingStatus, PingAck,
         PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherId,
         PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus,
         QuerierId, QueryId, QueryResponseFinal, QueryableId, ReplyDel, ReplyErr, ReplyOk,
-        ResponseSessionInfo, ResponseTimestamp, SubscriberId, UndeclareLivelinessSubscriber,
-        UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier,
-        UndeclareQueryable, UndeclareSubscriber,
+        ResponseLinks, ResponseSessionInfo, ResponseTimestamp, ResponseTransports, SubscriberId,
+        TransportEventsListenerId, TransportInfoWire, UndeclareLinkEventsListener,
+        UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener,
+        UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber,
+        UndeclareTransportEventsListener,
     },
     AdminSpaceClient, InRemoteMessage, OutRemoteMessage, SequenceId,
 };
@@ -71,6 +77,9 @@ pub(crate) struct RemoteState {
     liveliness_subscribers: HashMap<SubscriberId, Subscriber<()>>,
     queriers: HashMap<QuerierId, Querier<'static>>,
     matching_listeners: HashMap<MatchingListenerId, MatchingListener<()>>,
+    transport_events_listeners:
+        HashMap<TransportEventsListenerId, TransportEventsListener<()>>,
+    link_events_listeners: HashMap<LinkEventsListenerId, LinkEventsListener<()>>,
 }
 
 impl RemoteState {
@@ -97,6 +106,8 @@ impl RemoteState {
             liveliness_subscribers: HashMap::new(),
             queriers: HashMap::new(),
             matching_listeners: HashMap::new(),
+            transport_events_listeners: HashMap::new(),
+            link_events_listeners: HashMap::new(),
         }
     }
 
@@ -144,6 +155,32 @@ impl RemoteState {
         );
         for (_, subscriber) in liveliness_subscribers {
             if let Err(e) = subscriber.undeclare().await {
+                tracing::error!("{e}")
+            }
+        }
+
+        let mut transport_events_listeners: HashMap<
+            TransportEventsListenerId,
+            TransportEventsListener<()>,
+        > = HashMap::new();
+        std::mem::swap(
+            &mut transport_events_listeners,
+            &mut self.transport_events_listeners,
+        );
+        for (_, listener) in transport_events_listeners {
+            if let Err(e) = listener.undeclare().await {
+                tracing::error!("{e}")
+            }
+        }
+
+        let mut link_events_listeners: HashMap<LinkEventsListenerId, LinkEventsListener<()>> =
+            HashMap::new();
+        std::mem::swap(
+            &mut link_events_listeners,
+            &mut self.link_events_listeners,
+        );
+        for (_, listener) in link_events_listeners {
+            if let Err(e) = listener.undeclare().await {
                 tracing::error!("{e}")
             }
         }
@@ -995,6 +1032,181 @@ impl RemoteState {
         }
     }
 
+    fn transport_info_to_wire(transport: &zenoh::session::Transport) -> TransportInfoWire {
+        TransportInfoWire {
+            zid: *transport.zid(),
+            whatami: match transport.whatami() {
+                WhatAmI::Router => 1,
+                WhatAmI::Peer => 2,
+                WhatAmI::Client => 4,
+            },
+            is_qos: transport.is_qos(),
+            is_multicast: transport.is_multicast(),
+        }
+    }
+
+    fn link_info_to_wire(link: &zenoh::session::Link) -> LinkInfoWire {
+        LinkInfoWire {
+            zid: *link.zid(),
+            src: link.src().to_string(),
+            dst: link.dst().to_string(),
+            group: link.group().map(|g: &zenoh::config::Locator| g.to_string()),
+            mtu: link.mtu(),
+            is_streamed: link.is_streamed(),
+            interfaces: link.interfaces().to_vec(),
+            auth_identifier: link.auth_identifier().map(|s: &str| s.to_string()),
+            priorities: link.priorities(),
+            reliability: link.reliability().map(|r| match r {
+                Reliability::BestEffort => 0,
+                Reliability::Reliable => 1,
+            }),
+        }
+    }
+
+    async fn get_transports(&self) -> OutRemoteMessage {
+        tracing::trace!("get_transports");
+        let transports: Vec<TransportInfoWire> = self
+            .session
+            .info()
+            .transports()
+            .await
+            .map(|t| Self::transport_info_to_wire(&t))
+            .collect();
+        OutRemoteMessage::ResponseTransports(ResponseTransports { transports })
+    }
+
+    async fn get_links(&self) -> OutRemoteMessage {
+        tracing::trace!("get_links");
+        let links: Vec<LinkInfoWire> = self
+            .session
+            .info()
+            .links()
+            .await
+            .map(|l| Self::link_info_to_wire(&l))
+            .collect();
+        OutRemoteMessage::ResponseLinks(ResponseLinks { links })
+    }
+
+    async fn declare_transport_events_listener(
+        &mut self,
+        msg: DeclareTransportEventsListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        tracing::trace!(
+            "declare_transport_events_listener: id={}, history={}",
+            msg.id,
+            msg.history
+        );
+        if self.transport_events_listeners.contains_key(&msg.id) {
+            bail!(
+                "Transport events listener with id: '{}' already exists",
+                msg.id
+            );
+        }
+        let tx = self.tx.clone();
+        let listener_id = msg.id;
+        let listener = self
+            .session
+            .info()
+            .transport_events_listener()
+            .history(msg.history)
+            .callback(move |event| {
+                let update = interface::TransportEventUpdate {
+                    listener_id,
+                    kind: interface::sample_kind_to_u8(event.kind()),
+                    transport: RemoteState::transport_info_to_wire(event.transport()),
+                };
+                let _ = tx.send((OutRemoteMessage::TransportEventUpdate(update), None));
+            })
+            .await?;
+        self.transport_events_listeners.insert(msg.id, listener);
+        tracing::trace!(
+            "declare_transport_events_listener: id={} completed successfully",
+            msg.id
+        );
+        Ok(None)
+    }
+
+    async fn undeclare_transport_events_listener(
+        &mut self,
+        msg: UndeclareTransportEventsListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        tracing::trace!("undeclare_transport_events_listener: id={}", msg.id);
+        match self.transport_events_listeners.remove(&msg.id) {
+            Some(listener) => {
+                listener.undeclare().await?;
+                tracing::trace!(
+                    "undeclare_transport_events_listener: id={} completed successfully",
+                    msg.id
+                );
+                Ok(None)
+            }
+            None => bail!(
+                "Transport events listener with id: '{}' does not exist",
+                msg.id
+            ),
+        }
+    }
+
+    async fn declare_link_events_listener(
+        &mut self,
+        msg: DeclareLinkEventsListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        tracing::trace!(
+            "declare_link_events_listener: id={}, history={}",
+            msg.id,
+            msg.history
+        );
+        if self.link_events_listeners.contains_key(&msg.id) {
+            bail!(
+                "Link events listener with id: '{}' already exists",
+                msg.id
+            );
+        }
+        let tx = self.tx.clone();
+        let listener_id = msg.id;
+        let listener = self
+            .session
+            .info()
+            .link_events_listener()
+            .history(msg.history)
+            .callback(move |event| {
+                let update = interface::LinkEventUpdate {
+                    listener_id,
+                    kind: interface::sample_kind_to_u8(event.kind()),
+                    link: RemoteState::link_info_to_wire(event.link()),
+                };
+                let _ = tx.send((OutRemoteMessage::LinkEventUpdate(update), None));
+            })
+            .await?;
+        self.link_events_listeners.insert(msg.id, listener);
+        tracing::trace!(
+            "declare_link_events_listener: id={} completed successfully",
+            msg.id
+        );
+        Ok(None)
+    }
+
+    async fn undeclare_link_events_listener(
+        &mut self,
+        msg: UndeclareLinkEventsListener,
+    ) -> Result<Option<OutRemoteMessage>, zenoh_result::Error> {
+        tracing::trace!("undeclare_link_events_listener: id={}", msg.id);
+        match self.link_events_listeners.remove(&msg.id) {
+            Some(listener) => {
+                listener.undeclare().await?;
+                tracing::trace!(
+                    "undeclare_link_events_listener: id={} completed successfully",
+                    msg.id
+                );
+                Ok(None)
+            }
+            None => bail!(
+                "Link events listener with id: '{}' does not exist",
+                msg.id
+            ),
+        }
+    }
+
     pub(crate) async fn handle_message(
         &mut self,
         msg: InRemoteMessage,
@@ -1111,6 +1323,20 @@ impl RemoteState {
             InRemoteMessage::QuerierGetMatchingStatus(querier_get_matching_status) => {
                 self.querier_get_matching_status(querier_get_matching_status)
                     .await
+            }
+            InRemoteMessage::GetTransports(_) => Ok(Some(self.get_transports().await)),
+            InRemoteMessage::GetLinks(_) => Ok(Some(self.get_links().await)),
+            InRemoteMessage::DeclareTransportEventsListener(msg) => {
+                self.declare_transport_events_listener(msg).await
+            }
+            InRemoteMessage::UndeclareTransportEventsListener(msg) => {
+                self.undeclare_transport_events_listener(msg).await
+            }
+            InRemoteMessage::DeclareLinkEventsListener(msg) => {
+                self.declare_link_events_listener(msg).await
+            }
+            InRemoteMessage::UndeclareLinkEventsListener(msg) => {
+                self.undeclare_link_events_listener(msg).await
             }
         }
     }
