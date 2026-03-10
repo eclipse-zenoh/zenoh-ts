@@ -23,7 +23,7 @@ import { Parameters, QueryInner, Reply, ReplyError } from "./query.js";
 import { ZBytes } from "./z_bytes.js";
 import { SessionInfo } from "./session.js";
 import { PublisherId, SubscriberId, QueryableId, QuerierId, LivelinessTokenId, GetId, MatchingListenerId, TransportEventsListenerId, LinkEventsListenerId } from "./session_inner.js";
-import { TransportInfo, LinkInfo, TransportEvent, LinkEvent } from "./connectivity.js";
+import { TransportInfo, LinkInfo } from "./connectivity.js";
 
 function sampleKindFromUint8(val: number): SampleKind {
     switch (val) {
