@@ -63,6 +63,8 @@ define_typed_id!(QueryId);
 define_typed_id!(LivelinessTokenId);
 define_typed_id!(QuerierId);
 define_typed_id!(MatchingListenerId);
+define_typed_id!(TransportEventsListenerId);
+define_typed_id!(LinkEventsListenerId);
 
 pub(crate) fn serialize_option<T: Sized + Serialize>(serializer: &mut ZSerializer, o: &Option<T>) {
     match o {
@@ -554,6 +556,179 @@ impl MatchingStatusUpdate {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
         serializer.serialize(self.matching_listener_id);
         serializer.serialize(self.matching);
+    }
+}
+
+pub(crate) struct GetTransports {}
+
+impl GetTransports {
+    pub(crate) fn from_wire(
+        _deserializer: &mut ZDeserializer,
+    ) -> Result<Self, zenoh_result::Error> {
+        Ok(GetTransports {})
+    }
+}
+
+pub(crate) struct GetLinks {}
+
+impl GetLinks {
+    pub(crate) fn from_wire(
+        _deserializer: &mut ZDeserializer,
+    ) -> Result<Self, zenoh_result::Error> {
+        Ok(GetLinks {})
+    }
+}
+
+pub(crate) struct DeclareTransportEventsListener {
+    pub(crate) id: TransportEventsListenerId,
+    pub(crate) history: bool,
+}
+
+impl DeclareTransportEventsListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(DeclareTransportEventsListener {
+            id: deserializer.deserialize()?,
+            history: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct UndeclareTransportEventsListener {
+    pub(crate) id: TransportEventsListenerId,
+}
+
+impl UndeclareTransportEventsListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(UndeclareTransportEventsListener {
+            id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct DeclareLinkEventsListener {
+    pub(crate) id: LinkEventsListenerId,
+    pub(crate) history: bool,
+}
+
+impl DeclareLinkEventsListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(DeclareLinkEventsListener {
+            id: deserializer.deserialize()?,
+            history: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct UndeclareLinkEventsListener {
+    pub(crate) id: LinkEventsListenerId,
+}
+
+impl UndeclareLinkEventsListener {
+    pub(crate) fn from_wire(deserializer: &mut ZDeserializer) -> Result<Self, zenoh_result::Error> {
+        Ok(UndeclareLinkEventsListener {
+            id: deserializer.deserialize()?,
+        })
+    }
+}
+
+pub(crate) struct TransportInfoWire {
+    pub(crate) zid: ZenohId,
+    pub(crate) whatami: u8,
+    pub(crate) is_qos: bool,
+    pub(crate) is_multicast: bool,
+}
+
+impl TransportInfoWire {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.zid.to_le_bytes());
+        serializer.serialize(self.whatami);
+        serializer.serialize(self.is_qos);
+        serializer.serialize(self.is_multicast);
+    }
+}
+
+pub(crate) struct LinkInfoWire {
+    pub(crate) zid: ZenohId,
+    pub(crate) src: String,
+    pub(crate) dst: String,
+    pub(crate) group: Option<String>,
+    pub(crate) mtu: u16,
+    pub(crate) is_streamed: bool,
+    pub(crate) interfaces: Vec<String>,
+    pub(crate) auth_identifier: Option<String>,
+    pub(crate) priorities: Option<(u8, u8)>,
+    pub(crate) reliability: Option<u8>,
+}
+
+impl LinkInfoWire {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.zid.to_le_bytes());
+        serializer.serialize(&self.src);
+        serializer.serialize(&self.dst);
+        serialize_option(serializer, &self.group);
+        serializer.serialize(self.mtu);
+        serializer.serialize(self.is_streamed);
+        serializer.serialize(self.interfaces.len() as u32);
+        for iface in &self.interfaces {
+            serializer.serialize(iface);
+        }
+        serialize_option(serializer, &self.auth_identifier);
+        serialize_option(serializer, &self.priorities);
+        serialize_option(serializer, &self.reliability);
+    }
+}
+
+pub(crate) struct ResponseTransports {
+    pub(crate) transports: Vec<TransportInfoWire>,
+}
+
+impl ResponseTransports {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.transports.len() as u32);
+        for t in &self.transports {
+            t.to_wire(serializer);
+        }
+    }
+}
+
+pub(crate) struct ResponseLinks {
+    pub(crate) links: Vec<LinkInfoWire>,
+}
+
+impl ResponseLinks {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.links.len() as u32);
+        for l in &self.links {
+            l.to_wire(serializer);
+        }
+    }
+}
+
+pub(crate) struct TransportEventUpdate {
+    pub(crate) listener_id: TransportEventsListenerId,
+    pub(crate) kind: u8,
+    pub(crate) transport: TransportInfoWire,
+}
+
+impl TransportEventUpdate {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.listener_id);
+        serializer.serialize(self.kind);
+        self.transport.to_wire(serializer);
+    }
+}
+
+pub(crate) struct LinkEventUpdate {
+    pub(crate) listener_id: LinkEventsListenerId,
+    pub(crate) kind: u8,
+    pub(crate) link: LinkInfoWire,
+}
+
+impl LinkEventUpdate {
+    pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
+        serializer.serialize(self.listener_id);
+        serializer.serialize(self.kind);
+        self.link.to_wire(serializer);
     }
 }
 
@@ -1125,6 +1300,12 @@ remote_message! {
         PublisherGetMatchingStatus,
         QuerierDeclareMatchingListener,
         QuerierGetMatchingStatus,
+        GetTransports,
+        GetLinks,
+        DeclareTransportEventsListener,
+        UndeclareTransportEventsListener,
+        DeclareLinkEventsListener,
+        UndeclareLinkEventsListener,
     },
     InRemoteMessageId
 }
@@ -1144,6 +1325,10 @@ remote_message! {
         QueryResponseFinal,
         MatchingStatus,
         MatchingStatusUpdate,
+        ResponseTransports,
+        ResponseLinks,
+        TransportEventUpdate,
+        LinkEventUpdate,
     },
     OutRemoteMessageId
 }
