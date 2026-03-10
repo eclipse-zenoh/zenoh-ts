@@ -13,7 +13,7 @@
 //
 
 import {
-  SessionInfo, Config, Session, WhatAmI
+  SessionInfo, Config, Session, WhatAmI, SampleKind
 } from "@eclipse-zenoh/zenoh-ts";
 
 export async function main() {
@@ -45,7 +45,17 @@ export async function main() {
   if (receiver !== undefined) {
     const event = await receiver.receive();
     if (event !== undefined) {
-      console.log!(`  Transport event: kind=${event.kind()}, zid=${event.transport().zid()}`);
+      console.log!(`  Transport event: kind=${SampleKind[event.kind()]}, zid=${event.transport().zid()}, whatami=${WhatAmI[event.transport().whatami()]}`);
+    }
+  }
+
+  console.log!("\nDeclaring link events listener...");
+  await using linkListener = await info.linkEventsListener({ history: true });
+  const linkReceiver = linkListener.receiver();
+  if (linkReceiver !== undefined) {
+    const linkEvent = await linkReceiver.receive();
+    if (linkEvent !== undefined) {
+      console.log!(`  Link event: kind=${SampleKind[linkEvent.kind()]}, src=${linkEvent.link().src()}, dst=${linkEvent.link().dst()}`);
     }
   }
 
