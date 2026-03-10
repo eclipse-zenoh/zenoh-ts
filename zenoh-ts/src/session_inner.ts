@@ -15,7 +15,7 @@
 
 import { ZBytesDeserializer, ZBytesSerializer } from "./ext/index.js";
 import { KeyExpr } from "./key_expr.js";
-import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, InQuery, InRemoteMessageId, InReply, InSample, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
+import { DeclareLivelinessSubscriber, DeclareLivelinessToken, DeclarePublisher, DeclareQuerier, DeclareQueryable, DeclareSubscriber, Delete, deserializeHeader, Get, GetProperties, GetSessionInfo, GetTimestamp, GetTransports, GetLinks, InQuery, InRemoteMessageId, InReply, InSample, InTransportEventUpdate, InLinkEventUpdate, LivelinessGet, LivelinessGetProperties, LivelinessSubscriberProperties, MatchingStatusUpdate, OutMessageInterface, OutDeclareTransportEventsListener, OutUndeclareTransportEventsListener, OutDeclareLinkEventsListener, OutUndeclareLinkEventsListener, Ping, PublisherDeclareMatchingListener, PublisherDelete, PublisherGetMatchingStatus, PublisherProperties, PublisherPut, Put, QuerierDeclareMatchingListener, QuerierGet, QuerierGetMatchingStatus, QuerierGetProperties, QuerierProperties, QueryableProperties, QueryResponseFinal, ReplyDel, ReplyErr, ReplyOk, ResponseError, ResponseLinks, ResponseMatchingStatus, ResponseOk, ResponsePing, ResponseSessionInfo, ResponseTimestamp, ResponseTransports, serializeHeader, SubscriberProperties, UndeclareLivelinessSubscriber, UndeclareLivelinessToken, UndeclareMatchingListener, UndeclarePublisher, UndeclareQuerier, UndeclareQueryable, UndeclareSubscriber } from "./message.js";
 import { Query, Reply } from "./query.js";
 import { Closure } from "./closure.js";
 import { RemoteLink } from "./link.js";
@@ -23,6 +23,7 @@ import { Sample } from "./sample.js";
 import { SessionInfo } from "./session.js";
 import { Timestamp } from "./timestamp.js";
 import { MatchingStatus } from "./matching.js";
+import { TransportInfo, LinkInfo, TransportEvent, LinkEvent } from "./connectivity.js";
 
 // Private branded types for IDs
 declare const publisherIdBrand: unique symbol;
@@ -32,6 +33,8 @@ declare const querierIdBrand: unique symbol;
 declare const livelinessTokenIdBrand: unique symbol;
 declare const getIdBrand: unique symbol;
 declare const matchingListenerIdBrand: unique symbol;
+declare const transportEventsListenerIdBrand: unique symbol;
+declare const linkEventsListenerIdBrand: unique symbol;
 
 export type PublisherId = number & { readonly [publisherIdBrand]: typeof publisherIdBrand };
 export type SubscriberId = number & { readonly [subscriberIdBrand]: typeof subscriberIdBrand };
@@ -40,6 +43,8 @@ export type QuerierId = number & { readonly [querierIdBrand]: typeof querierIdBr
 export type LivelinessTokenId = number & { readonly [livelinessTokenIdBrand]: typeof livelinessTokenIdBrand };
 export type GetId = number & { readonly [getIdBrand]: typeof getIdBrand };
 export type MatchingListenerId = number & { readonly [matchingListenerIdBrand]: typeof matchingListenerIdBrand };
+export type TransportEventsListenerId = number & { readonly [transportEventsListenerIdBrand]: typeof transportEventsListenerIdBrand };
+export type LinkEventsListenerId = number & { readonly [linkEventsListenerIdBrand]: typeof linkEventsListenerIdBrand };
 
 export enum SubscriberKind {
     Subscriber,
@@ -73,6 +78,8 @@ export class SessionInner {
     private queryables: Map<QueryableId, Closure<Query>> = new Map<QueryableId, Closure<Query>>();
     private gets: Map<GetId, Closure<Reply>> = new Map<GetId, Closure<Reply>>();
     private matchingListeners: Map<MatchingListenerId, Closure<MatchingStatus>> = new Map<MatchingListenerId, Closure<MatchingStatus>>();
+    private transportEventsListeners: Map<TransportEventsListenerId, Closure<TransportEvent>> = new Map<TransportEventsListenerId, Closure<TransportEvent>>();
+    private linkEventsListeners: Map<LinkEventsListenerId, Closure<LinkEvent>> = new Map<LinkEventsListenerId, Closure<LinkEvent>>();
     private pendingMessageResponses: Map<number, OnResponseReceivedCallback> = new Map<number, OnResponseReceivedCallback>();
     private nextMessageId: number = 0;
     private readonly messageResponseTimeoutMs: number;
@@ -147,9 +154,29 @@ export class SessionInner {
                     const m = MatchingStatusUpdate.deserialize(deserializer);
                     let matchingListener = this.matchingListeners.get(m.matchingListenerId);
                     if (matchingListener == undefined) {
-                        console.warn(`Received matching status update for inexistant matching listener ${m.matchingListenerId}`) 
+                        console.warn(`Received matching status update for inexistant matching listener ${m.matchingListenerId}`)
                     } else {
                         matchingListener.callback(new MatchingStatus(m.matching));
+                    }
+                    break;
+                }
+                case InRemoteMessageId.InTransportEventUpdate: {
+                    const evt = InTransportEventUpdate.deserialize(deserializer);
+                    let listener = this.transportEventsListeners.get(evt.listenerId);
+                    if (listener == undefined) {
+                        console.warn(`Received transport event for inexistant listener ${evt.listenerId}`);
+                    } else {
+                        listener.callback(new TransportEvent(evt.kind, evt.transport));
+                    }
+                    break;
+                }
+                case InRemoteMessageId.InLinkEventUpdate: {
+                    const evt = InLinkEventUpdate.deserialize(deserializer);
+                    let listener = this.linkEventsListeners.get(evt.listenerId);
+                    if (listener == undefined) {
+                        console.warn(`Received link event for inexistant listener ${evt.listenerId}`);
+                    } else {
+                        listener.callback(new LinkEvent(evt.kind, evt.link));
                     }
                     break;
                 }
@@ -498,11 +525,95 @@ export class SessionInner {
 
     async querierGetMatchingStatus(querierId: QuerierId): Promise<MatchingStatus> {
         return await this.sendRequest(
-            new QuerierGetMatchingStatus(querierId), 
-            InRemoteMessageId.ResponseMatchingStatus, 
+            new QuerierGetMatchingStatus(querierId),
+            InRemoteMessageId.ResponseMatchingStatus,
             ResponseMatchingStatus.deserialize
         ).then(
             (value) => new MatchingStatus(value.matching)
+        );
+    }
+
+    async getTransports(): Promise<TransportInfo[]> {
+        return await this.sendRequest(
+            new GetTransports(),
+            InRemoteMessageId.ResponseTransports,
+            ResponseTransports.deserialize
+        ).then(
+            (value) => value.transports
+        );
+    }
+
+    async getLinks(): Promise<LinkInfo[]> {
+        return await this.sendRequest(
+            new GetLinks(),
+            InRemoteMessageId.ResponseLinks,
+            ResponseLinks.deserialize
+        ).then(
+            (value) => value.links
+        );
+    }
+
+    async declareTransportEventsListener(history: boolean, closure: Closure<TransportEvent>): Promise<TransportEventsListenerId> {
+        let listenerId = IdSource.get<TransportEventsListenerId>();
+        this.transportEventsListeners.set(listenerId, closure);
+        try {
+            await this.sendRequest(
+                new OutDeclareTransportEventsListener(listenerId, history),
+                InRemoteMessageId.ResponseOk,
+                ResponseOk.deserialize
+            );
+        } catch (error) {
+            this.transportEventsListeners.delete(listenerId);
+            throw error;
+        }
+        return listenerId;
+    }
+
+    async undeclareTransportEventsListener(listenerId: TransportEventsListenerId) {
+        const listener = this.transportEventsListeners.get(listenerId);
+        if (listener == undefined) {
+            new Error(`Unknown transport events listener id: ${listenerId}`);
+        } else {
+            this.transportEventsListeners.delete(listenerId);
+            listener.drop();
+        }
+
+        await this.sendRequest(
+            new OutUndeclareTransportEventsListener(listenerId),
+            InRemoteMessageId.ResponseOk,
+            ResponseOk.deserialize
+        );
+    }
+
+    async declareLinkEventsListener(history: boolean, closure: Closure<LinkEvent>): Promise<LinkEventsListenerId> {
+        let listenerId = IdSource.get<LinkEventsListenerId>();
+        this.linkEventsListeners.set(listenerId, closure);
+        try {
+            await this.sendRequest(
+                new OutDeclareLinkEventsListener(listenerId, history),
+                InRemoteMessageId.ResponseOk,
+                ResponseOk.deserialize
+            );
+        } catch (error) {
+            this.linkEventsListeners.delete(listenerId);
+            throw error;
+        }
+        return listenerId;
+    }
+
+    async undeclareLinkEventsListener(listenerId: LinkEventsListenerId) {
+        const listener = this.linkEventsListeners.get(listenerId);
+        if (listener == undefined) {
+            new Error(`Unknown link events listener id: ${listenerId}`);
+        } else {
+            this.linkEventsListeners.delete(listenerId);
+            listener.drop();
+        }
+
+        await this.sendRequest(
+            new OutUndeclareLinkEventsListener(listenerId),
+            InRemoteMessageId.ResponseOk,
+            ResponseOk.deserialize
         );
     }
 
@@ -527,6 +638,16 @@ export class SessionInner {
             l[1].drop();
         }
         this.matchingListeners.clear();
+
+        for (let l of this.transportEventsListeners) {
+            l[1].drop();
+        }
+        this.transportEventsListeners.clear();
+
+        for (let l of this.linkEventsListeners) {
+            l[1].drop();
+        }
+        this.linkEventsListeners.clear();
 
         this.isClosed_ = true;
     }
