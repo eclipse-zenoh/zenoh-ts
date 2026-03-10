@@ -196,3 +196,78 @@ Deno.test("Connectivity - transportEventsListener no history by default", async 
         await sleep(100);
     }
 });
+
+Deno.test("Connectivity - transport event fields validation", async () => {
+    let session: Session | undefined;
+    let listener: TransportEventsListener | undefined;
+
+    try {
+        session = await Session.open(new Config("ws/127.0.0.1:10000"));
+        await sleep(100);
+
+        const info: SessionInfo = await session.info();
+        listener = await info.transportEventsListener({ history: true });
+        await sleep(100);
+
+        const receiver = listener.receiver();
+        assert(receiver !== undefined, "Listener should have a receiver");
+
+        const res = receiver!.tryReceive();
+        assertEquals(res.kind, TryReceivedKind.value, "Should receive a history event");
+        if (res.kind === TryReceivedKind.value) {
+            const event: TransportEvent = res.value;
+            assert(event.kind() === SampleKind.PUT || event.kind() === SampleKind.DELETE, "Event kind should be PUT or DELETE");
+            assert(event.transport().zid() !== undefined, "Transport zid should be defined");
+            assert(typeof event.transport().whatami() === "number", "Transport whatami should be a number");
+            assert(typeof event.transport().isQos() === "boolean", "Transport isQos should be a boolean");
+            assert(typeof event.transport().isMulticast() === "boolean", "Transport isMulticast should be a boolean");
+        }
+    } finally {
+        await listener?.undeclare();
+        await session?.close();
+        await sleep(100);
+    }
+});
+
+Deno.test("Connectivity - link event fields validation", async () => {
+    let session: Session | undefined;
+    let listener: LinkEventsListener | undefined;
+
+    try {
+        session = await Session.open(new Config("ws/127.0.0.1:10000"));
+        await sleep(100);
+
+        const info: SessionInfo = await session.info();
+        listener = await info.linkEventsListener({ history: true });
+        await sleep(100);
+
+        const receiver = listener.receiver();
+        assert(receiver !== undefined, "Listener should have a receiver");
+
+        const res = receiver!.tryReceive();
+        assertEquals(res.kind, TryReceivedKind.value, "Should receive a history event");
+        if (res.kind === TryReceivedKind.value) {
+            const event: LinkEvent = res.value;
+            assert(event.kind() === SampleKind.PUT || event.kind() === SampleKind.DELETE, "Event kind should be PUT or DELETE");
+            assert(event.link().zid() !== undefined, "Link zid should be defined");
+            assert(typeof event.link().src() === "string", "Link src should be a string");
+            assert(typeof event.link().dst() === "string", "Link dst should be a string");
+            assert(typeof event.link().mtu() === "number", "Link mtu should be a number");
+            assert(typeof event.link().isStreamed() === "boolean", "Link isStreamed should be a boolean");
+            assert(Array.isArray(event.link().interfaces()), "Link interfaces should be an array");
+            // Optional fields: verify they are either their expected type or undefined
+            const group = event.link().group();
+            assert(group === undefined || typeof group === "string", "Link group should be string or undefined");
+            const authId = event.link().authIdentifier();
+            assert(authId === undefined || typeof authId === "string", "Link authIdentifier should be string or undefined");
+            const priorities = event.link().priorities();
+            assert(priorities === undefined || (Array.isArray(priorities) && priorities.length === 2), "Link priorities should be [number, number] or undefined");
+            const reliability = event.link().reliability();
+            assert(reliability === undefined || typeof reliability === "number", "Link reliability should be Reliability enum or undefined");
+        }
+    } finally {
+        await listener?.undeclare();
+        await session?.close();
+        await sleep(100);
+    }
+});
