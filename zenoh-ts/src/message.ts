@@ -1044,7 +1044,7 @@ function deserializeLinkInfo(deserializer: ZBytesDeserializer): LinkInfo {
     let group = deserializeOptString(deserializer);
     let mtu = deserializer.deserializeNumberUint16();
     let isStreamed = deserializer.deserializeBoolean();
-    let interfacesCount = deserializer.deserializeNumberUint32();
+    let interfacesCount = deserializer.readSequenceLength();
     let interfaces: string[] = [];
     for (let i = 0; i < interfacesCount; i++) {
         interfaces.push(deserializer.deserializeString());
@@ -1063,7 +1063,7 @@ export class ResponseTransports {
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseTransports {
-        let count = deserializer.deserializeNumberUint32();
+        let count = deserializer.readSequenceLength();
         let transports: TransportInfo[] = [];
         for (let i = 0; i < count; i++) {
             transports.push(deserializeTransportInfo(deserializer));
@@ -1080,7 +1080,7 @@ export class ResponseLinks {
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseLinks {
-        let count = deserializer.deserializeNumberUint32();
+        let count = deserializer.readSequenceLength();
         let links: LinkInfo[] = [];
         for (let i = 0; i < count; i++) {
             links.push(deserializeLinkInfo(deserializer));

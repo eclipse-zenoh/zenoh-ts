@@ -27,14 +27,14 @@ use std::{
 use flume::Sender;
 use lru::LruCache;
 use zenoh::{
-    config::WhatAmI,
+    config::{Locator, WhatAmI},
     handlers::CallbackDrop,
     liveliness::LivelinessToken,
     matching::MatchingListener,
     pubsub::{Publisher, Subscriber},
     qos::Reliability,
     query::{Querier, Query, Queryable, Reply, Selector},
-    session::{LinkEventsListener, TransportEventsListener},
+    session::{Link, LinkEventsListener, Transport, TransportEventsListener},
     Session,
 };
 use zenoh_result::bail;
@@ -1028,7 +1028,7 @@ impl RemoteState {
         }
     }
 
-    fn transport_info_to_wire(transport: &zenoh::session::Transport) -> TransportInfoWire {
+    fn transport_info_to_wire(transport: &Transport) -> TransportInfoWire {
         TransportInfoWire {
             zid: *transport.zid(),
             whatami: match transport.whatami() {
@@ -1041,12 +1041,12 @@ impl RemoteState {
         }
     }
 
-    fn link_info_to_wire(link: &zenoh::session::Link) -> LinkInfoWire {
+    fn link_info_to_wire(link: &Link) -> LinkInfoWire {
         LinkInfoWire {
             zid: *link.zid(),
             src: link.src().to_string(),
             dst: link.dst().to_string(),
-            group: link.group().map(|g: &zenoh::config::Locator| g.to_string()),
+            group: link.group().map(|g: &Locator| g.to_string()),
             mtu: link.mtu(),
             is_streamed: link.is_streamed(),
             interfaces: link.interfaces().to_vec(),

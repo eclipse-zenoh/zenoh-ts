@@ -647,6 +647,12 @@ impl TransportInfoWire {
     }
 }
 
+impl Serialize for TransportInfoWire {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        self.to_wire(serializer);
+    }
+}
+
 pub(crate) struct LinkInfoWire {
     pub(crate) zid: ZenohId,
     pub(crate) src: String,
@@ -668,13 +674,16 @@ impl LinkInfoWire {
         serialize_option(serializer, &self.group);
         serializer.serialize(self.mtu);
         serializer.serialize(self.is_streamed);
-        serializer.serialize(self.interfaces.len() as u32);
-        for iface in &self.interfaces {
-            serializer.serialize(iface);
-        }
+        serializer.serialize(&self.interfaces);
         serialize_option(serializer, &self.auth_identifier);
         serialize_option(serializer, &self.priorities);
         serialize_option(serializer, &self.reliability);
+    }
+}
+
+impl Serialize for LinkInfoWire {
+    fn serialize(&self, serializer: &mut ZSerializer) {
+        self.to_wire(serializer);
     }
 }
 
@@ -684,10 +693,7 @@ pub(crate) struct ResponseTransports {
 
 impl ResponseTransports {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.transports.len() as u32);
-        for t in &self.transports {
-            t.to_wire(serializer);
-        }
+        serializer.serialize(&self.transports);
     }
 }
 
@@ -697,10 +703,7 @@ pub(crate) struct ResponseLinks {
 
 impl ResponseLinks {
     pub(crate) fn to_wire(&self, serializer: &mut ZSerializer) {
-        serializer.serialize(self.links.len() as u32);
-        for l in &self.links {
-            l.to_wire(serializer);
-        }
+        serializer.serialize(&self.links);
     }
 }
 
@@ -943,11 +946,7 @@ fn serialize_query(serializer: &mut ZSerializer, query: &zenoh::query::Query) {
     serialize_option(serializer, &query.payload().map(|p| p.to_bytes()));
     serialize_option(serializer, &query.encoding().map(encoding_to_id_schema));
     serialize_option(serializer, &query.attachment().map(|a| a.to_bytes()));
-    serializer.serialize(reply_keyexpr_to_u8(
-        query
-            .accepts_replies()
-            .unwrap_or(ReplyKeyExpr::MatchingQuery),
-    ));
+    serializer.serialize(reply_keyexpr_to_u8(query.accepts_replies()));
 }
 
 impl Query {
