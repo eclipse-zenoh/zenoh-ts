@@ -1044,11 +1044,7 @@ function deserializeLinkInfo(deserializer: ZBytesDeserializer): LinkInfo {
     let group = deserializeOptString(deserializer);
     let mtu = deserializer.deserializeNumberUint16();
     let isStreamed = deserializer.deserializeBoolean();
-    let interfacesCount = deserializer.readSequenceLength();
-    let interfaces: string[] = [];
-    for (let i = 0; i < interfacesCount; i++) {
-        interfaces.push(deserializer.deserializeString());
-    }
+    let interfaces = deserializer.deserializeArray(ZD.string());
     let authIdentifier = deserializeOptString(deserializer);
     let priorities = deserializeOptPriorities(deserializer);
     let reliability = deserializeOptReliability(deserializer);
@@ -1063,11 +1059,7 @@ export class ResponseTransports {
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseTransports {
-        let count = deserializer.readSequenceLength();
-        let transports: TransportInfo[] = [];
-        for (let i = 0; i < count; i++) {
-            transports.push(deserializeTransportInfo(deserializer));
-        }
+        let transports = deserializer.deserializeArray(ZD.objectStatic(deserializeTransportInfo));
         return new ResponseTransports(transports);
     }
 }
@@ -1080,11 +1072,7 @@ export class ResponseLinks {
     ) {}
 
     static deserialize(deserializer: ZBytesDeserializer): ResponseLinks {
-        let count = deserializer.readSequenceLength();
-        let links: LinkInfo[] = [];
-        for (let i = 0; i < count; i++) {
-            links.push(deserializeLinkInfo(deserializer));
-        }
+        let links = deserializer.deserializeArray(ZD.objectStatic(deserializeLinkInfo));
         return new ResponseLinks(links);
     }
 }
