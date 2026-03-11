@@ -158,10 +158,7 @@ impl RemoteState {
             }
         }
 
-        let mut transport_events_listeners: HashMap<
-            TransportEventsListenerId,
-            TransportEventsListener<()>,
-        > = HashMap::new();
+        let mut transport_events_listeners = HashMap::new();
         std::mem::swap(
             &mut transport_events_listeners,
             &mut self.transport_events_listeners,
@@ -172,8 +169,7 @@ impl RemoteState {
             }
         }
 
-        let mut link_events_listeners: HashMap<LinkEventsListenerId, LinkEventsListener<()>> =
-            HashMap::new();
+        let mut link_events_listeners = HashMap::new();
         std::mem::swap(&mut link_events_listeners, &mut self.link_events_listeners);
         for (_, listener) in link_events_listeners {
             if let Err(e) = listener.undeclare().await {
