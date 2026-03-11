@@ -597,7 +597,11 @@ async fn handle_message(
     match msg {
         Message::Binary(val) => match InRemoteMessage::from_wire(val) {
             Ok((header, msg)) => {
-                tracing::trace!(">> Recv: {:?} (seq={:?})", header.content_id, header.sequence_id);
+                tracing::trace!(
+                    ">> Recv: {:?} (seq={:?})",
+                    header.content_id,
+                    header.sequence_id
+                );
                 match state.handle_message(msg).await {
                     Ok(Some(msg)) => Some((msg, header.sequence_id)),
                     Ok(None) => header.sequence_id.map(|_| {
