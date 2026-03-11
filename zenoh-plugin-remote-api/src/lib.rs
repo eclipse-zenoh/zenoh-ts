@@ -547,7 +547,10 @@ async fn run_websocket_server(
 
             let ch_rx_stream = ws_ch_rx
                 .into_stream()
-                .map(|(out_msg, sequence_id)| Ok(Message::Binary(out_msg.to_wire(sequence_id))))
+                .map(|(out_msg, sequence_id)| {
+                    tracing::trace!("<< Send: {:?} (seq={:?})", out_msg.id(), sequence_id);
+                    Ok(Message::Binary(out_msg.to_wire(sequence_id)))
+                })
                 .forward(ws_tx);
 
             // send confirmation that session was successfully opened
@@ -594,6 +597,11 @@ async fn handle_message(
     match msg {
         Message::Binary(val) => match InRemoteMessage::from_wire(val) {
             Ok((header, msg)) => {
+                tracing::trace!(
+                    ">> Recv: {:?} (seq={:?})",
+                    header.content_id,
+                    header.sequence_id
+                );
                 match state.handle_message(msg).await {
                     Ok(Some(msg)) => Some((msg, header.sequence_id)),
                     Ok(None) => header.sequence_id.map(|_| {
