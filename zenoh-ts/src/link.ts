@@ -56,6 +56,8 @@ export class RemoteLink {
         console.warn("Connected to", websocketEndpoint);
         return new RemoteLink(ws);
       } else {
+        ws.close();
+        retries++;
         ws = new WebSocket(websocketEndpoint);
         console.warn("Restart connection");
       }
