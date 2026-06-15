@@ -378,8 +378,6 @@ class TestCase {
     // Create options object with named fields
     return {
       encoding: this.getOptions.encoding,
-      congestionControl: this.getOptions.congestionControl,
-      priority: this.getOptions.priority,
       express: this.getOptions.express,
       attachment: this.getOptions.attachment,
     };
@@ -403,8 +401,6 @@ class TestCase {
    */
   toReplyDelOptions(): ReplyDelOptions {
     return {
-      congestionControl: this.getOptions.congestionControl,
-      priority: this.getOptions.priority,
       express: this.getOptions.express,
       attachment: this.getOptions.attachment,
     };
@@ -794,6 +790,13 @@ Deno.test("API - Comprehensive Query Operations with Options", async () => {
               q.parameters().toString(),
               expectedParams,
               `Query parameters should match for ${fullDescription}`
+            );
+
+            // Verify acceptsReplies matches the get option
+            assertEquals(
+              q.acceptsReplies(),
+              testCase.getOptions.acceptReplies ?? ReplyKeyExpr.MATCHING_QUERY,
+              `Query acceptsReplies should match for ${fullDescription}`
             );
 
             //

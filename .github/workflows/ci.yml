@@ -24,22 +24,6 @@ on:
     - cron: "0 6 * * 1-5"
 
 jobs:
-  check_rust:
-      name: Check zenoh-ts using Rust 1.75
-      runs-on: ubuntu-latest
-      strategy:
-        fail-fast: false
-      steps:
-        - uses: actions/checkout@v4
-        - uses: dtolnay/rust-toolchain@1.75.0
-        - uses: Swatinem/rust-cache@v2
-          with:
-            cache-bin: false
-
-        - name: Check zenoh-ts with rust 1.75.0
-          run: |
-            cargo +1.75.0 check --release --bins --lib
-
   rust:
     name: Lints and doc tests on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -65,8 +49,10 @@ jobs:
       - name: Code format check
         run: cargo fmt --check -- --config "unstable_features=true,imports_granularity=Crate,group_imports=StdExternalCrate"
 
-      - name: Clippy
-        run: cargo clippy --all -- -D warnings
+      - name: Clippy without synced Cargo.lock
+        run: |
+          rm Cargo.lock
+          cargo clippy --all -- -D warnings
 
       - name: Run rust tests
         run: cargo test
@@ -138,7 +124,7 @@ jobs:
   ci:
     name: CI status checks
     runs-on: ubuntu-latest
-    needs: [check_rust, rust, typescript, markdown_lint]
+    needs: [rust, typescript, markdown_lint]
     if: always()
     steps:
       - name: Check whether all jobs pass

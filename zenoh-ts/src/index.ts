@@ -24,6 +24,7 @@ export {
   Reliability,
   SampleKind,
   ReplyKeyExpr,
+  WhatAmI,
 } from "./enums.js";
 export { Sample } from "./sample.js";
 export { Timestamp } from "./timestamp.js";
@@ -72,6 +73,16 @@ export {
   MatchingListenerOptions,
   MatchingStatus,
 } from "./matching.js";
+export {
+  TransportInfo,
+  LinkInfo,
+  TransportEvent,
+  LinkEvent,
+  TransportEventsListener,
+  LinkEventsListener,
+  TransportEventsListenerOptions,
+  LinkEventsListenerOptions,
+} from "./connectivity.js";
 export { CancellationToken } from "./cancellation_token.js"
 // Re-export duration external library
 export { Duration } from "typed-duration";

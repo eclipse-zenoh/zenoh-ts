@@ -1,8 +1,8 @@
 [package]
 name = "zenoh-keyexpr-wasm"
-version = "0.1.0"
+version = { workspace = true }
 authors = ["Charles Schleich"]
-edition = "2018"
+edition = { workspace = true }
 publish = false
 description = "A wrapper for zenoh-keyexpr for use with WebAssembly."
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
@@ -16,13 +16,13 @@ default = []
 
 [dependencies]
 wasm-bindgen = "0.2.84"
-zenoh-keyexpr = { workspace = true, features = [
-    "js",
-] }
+zenoh-keyexpr = { workspace = true, features = ["js"] }
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.34"
 
 # Disable warninng `unexpected `cfg` condition name: `wasm_bindgen_unstable_test_coverage``
 [lints.rust]
-unexpected_cfgs = { level = "warn", check-cfg = ['cfg(wasm_bindgen_unstable_test_coverage)'] }
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(wasm_bindgen_unstable_test_coverage)',
+] }

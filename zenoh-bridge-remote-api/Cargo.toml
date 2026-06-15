@@ -12,20 +12,15 @@
 #   ZettaScale Zenoh Team, <zenoh@zettascale.tech>
 #
 [package]
-rust-version = "1.75.0"
+rust-version = { workspace = true }
 name = "zenoh-bridge-remote-api"
-version = "1.4.0"
+version = { workspace = true }
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
-authors = [
-    "Michael Ilyin <michael.ilyin@zettascale.tech>",
-]
-edition = "2021"
+authors = ["Michael Ilyin <michael.ilyin@zettascale.tech>"]
+edition = { workspace = true }
 license = "EPL-2.0 OR Apache-2.0"
-categories = [
-    "network-programming",
-    "web-programming::websocket",
-]
+categories = ["network-programming", "web-programming::websocket"]
 description = "Zenoh: The Zero Overhead Pub/Sub/Query Protocol."
 
 [features]
@@ -62,12 +57,12 @@ zenoh-ext = { workspace = true }
 zenoh-plugin-trait = { workspace = true }
 zenoh-util = { workspace = true }
 zenoh-result = { workspace = true }
-zenoh-plugin-remote-api = {workspace = true }
-uuid = { workspace=true, default-features = false, features = [
+zenoh-plugin-remote-api = { workspace = true }
+uuid = { workspace = true, default-features = false, features = [
     "v4",
     "serde",
 ] }
-uhlc = { workspace=true, default-features = false } # Default features are disabled due to usage in no_std crates
+uhlc = { workspace = true, default-features = false } # Default features are disabled due to usage in no_std crates
 lru = { workspace = true }
 
 [build-dependencies]
@@ -83,4 +78,4 @@ maintainer = "zenoh-dev@eclipse.org"
 copyright = "2024 ZettaScale Technology"
 section = "net"
 license-file = ["../zenoh-ts/LICENSE", "0"]
-depends = "zenohd (=1.4.0)"
+depends = "zenohd (=1.9.0)"

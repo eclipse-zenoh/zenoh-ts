@@ -89,6 +89,13 @@ export enum ConsolidationMode {
     DEFAULT = AUTO
 }
 
+// The role of a zenoh node in the network.
+export enum WhatAmI {
+    ROUTER = 1,
+    PEER = 2,
+    CLIENT = 4,
+}
+
 // The kind of accepted query replies.
 export enum ReplyKeyExpr {
     // Accept replies whose key expressions may not match the query key expression.

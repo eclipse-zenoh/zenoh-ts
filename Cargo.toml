@@ -1,9 +1,13 @@
 [workspace]
-members = ["zenoh-plugin-remote-api", "zenoh-bridge-remote-api", "zenoh-keyexpr-wasm"]
+members = [
+    "zenoh-plugin-remote-api",
+    "zenoh-bridge-remote-api",
+    "zenoh-keyexpr-wasm",
+]
 resolver = "1"
 
 [workspace.package]
-version = "1.7.1"
+version = "1.9.0"
 repository = "https://github.com/eclipse-zenoh/zenoh-ts"
 homepage = "http://zenoh.io"
 authors = ["Charles Schleich <charles.schleich@zettascale.tech>"]
@@ -11,6 +15,7 @@ edition = "2021"
 license = "EPL-2.0 OR Apache-2.0"
 categories = ["network-programming"]
 description = "Remote API Plugin for Zenoh using Websockets"
+rust-version = "1.75.0"
 
 [workspace.dependencies]
 async-liveliness-monitor = "0.1.1"
@@ -32,7 +37,7 @@ lru = "0.14.0"
 tracing = "0.1.41"
 schemars = { version = "0.8.21" } # do not switch to 0.9, it's not supported by rust 1.75
 serde = { version = "1.0.219", default-features = false, features = [
-  "derive",
+    "derive",
 ] } # Default features are disabled due to usage in no_std crates
 serde_json = "1.0.140"
 jsonschema = { version = "0.18.0", default-features = false }
@@ -40,14 +45,14 @@ zenoh = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", f
     "internal",
     "plugins",
     "unstable",
-], version = "1.7.1" }
-zenoh-config = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
-zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.7.1" }
+], version = "1.9.0" }
+zenoh-config = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-ext = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-plugin-trait = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-util = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-result = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-keyexpr = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
+zenoh-plugin-remote-api = { path = "zenoh-plugin-remote-api", version = "1.9.0" }
 
 uuid = { version = "1.17.0", default-features = false, features = [
     "v4",
@@ -57,12 +62,12 @@ uhlc = { version = "0.8.0", default-features = false } # Default features are di
 cargo-run-bin = "1.7.4"
 
 [workspace.dependencies.zenohd]
-version = "1.7.1"
+version = "1.9.0"
 branch = "main"
 git = "https://github.com/eclipse-zenoh/zenoh.git"
 
 [workspace.metadata.bin]
-zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.7.1" }
+zenohd = { git = "https://github.com/eclipse-zenoh/zenoh.git", branch = "main", version = "1.9.0" }
 
 [profile.release.package.zenoh-keyexpr-wasm]
 # Tell `rustc` to optimize for small code size for wasm project
