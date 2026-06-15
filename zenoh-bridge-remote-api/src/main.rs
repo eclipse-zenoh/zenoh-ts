@@ -76,7 +76,7 @@ struct Args {
     #[arg(long, value_name = "PATH")]
     key: Option<String>,
 
-    /// Allows arbitrary configuration changes as column-separated KEY:VALUE pairs,
+    /// Allows arbitrary configuration changes as colon-separated KEY:VALUE pairs,
     /// where the empty key is used to represent the entire configuration:
     ///   - KEY must be a valid config path, or empty string if the whole configuration is defined.
     ///   - VALUE must be a valid JSON5 string that can be deserialized to the expected type for the KEY field.
