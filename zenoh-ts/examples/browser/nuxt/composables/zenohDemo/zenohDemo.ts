@@ -896,7 +896,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (putParams.encoding) {
       json.encoding = putParams.encoding;
     }
-    if (!putParams.attachmentEmpty && putParams.attachment) {
+    if (!putParams.attachmentEmpty) {
       json.attachment = putParams.attachment;
     }
 
