@@ -84,7 +84,7 @@ struct Args {
     /// Examples:
     /// - `--cfg='startup/subscribe:["demo/**"]'`
     /// - `--cfg='plugins/storage_manager/storages/demo:{key_expr:"demo/example/**",volume:"memory"}'`
-    /// - `--cfg=':{metadata:{name:"My App"},adminspace:{enabled:true,permissions:{read:true,write:true}}'`
+    /// - `--cfg=':{metadata:{name:"My App"},adminspace:{enabled:true,permissions:{read:true,write:true}}}'`
     #[arg(long)]
     cfg: Vec<String>,
 
