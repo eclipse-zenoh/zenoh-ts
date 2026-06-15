@@ -1328,20 +1328,17 @@ watch(
 // Watchers to update putOptionsJSON when publisher put parameters change
 watch(
   activePublishers,
-  (publishers) => {
-    publishers.forEach((publisher) => {
+  (publishers, _prev, onCleanup) => {
+    const stops = publishers.map((publisher) =>
       watch(
-        () => ({
-          putParams: publisher.putParameters,
-        }),
-        () => {
-          publisher.putParameters.updatePutOptionsJSON();
-        },
+        () => publisher.putParameters,
+        () => publisher.putParameters.updatePutOptionsJSON(),
         { deep: true, immediate: true }
-      );
-    });
+      )
+    );
+    onCleanup(() => stops.forEach((stop) => stop()));
   },
-  { deep: true, immediate: true }
+  { immediate: true }
 );
 
 // Watchers to update getOptionsJSON when querier get parameters change
