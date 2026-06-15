@@ -8,6 +8,7 @@ import {
   Query,
   type PutOptions,
   type DeleteOptions,
+  type PublisherOptions,
   type PublisherPutOptions,
   type PublisherDeleteOptions,
   type SubscriberOptions,
@@ -326,7 +327,7 @@ export function subscriberOptionsToJSON(
  * @returns A structured object containing all publisher options as strings
  */
 export function publisherOptionsToJSON(
-  options: PutOptions
+  options: PublisherOptions
 ): PublisherOptionsJSON {
   const result: PublisherOptionsJSON = {
     encoding: options.encoding?.toString(),
