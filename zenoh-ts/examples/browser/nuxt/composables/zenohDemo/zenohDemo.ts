@@ -938,7 +938,7 @@ class ZenohDemo extends ZenohDemoEmpty {
     if (!getParams.payloadEmpty) {
       json.payload = getParams.payload;
     }
-    if (!getParams.attachmentEmpty && getParams.attachment) {
+    if (!getParams.attachmentEmpty) {
       json.attachment = getParams.attachment;
     }
 
