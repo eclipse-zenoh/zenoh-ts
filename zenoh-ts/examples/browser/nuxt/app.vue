@@ -1344,20 +1344,17 @@ watch(
 // Watchers to update getOptionsJSON when querier get parameters change
 watch(
   activeQueriers,
-  (queriers) => {
-    queriers.forEach((querier) => {
+  (queriers, _prev, onCleanup) => {
+    const stops = queriers.map((querier) =>
       watch(
-        () => ({
-          getParams: querier.getParameters,
-        }),
-        () => {
-          querier.getParameters.updateGetOptionsJSON();
-        },
+        () => querier.getParameters,
+        () => querier.getParameters.updateGetOptionsJSON(),
         { deep: true, immediate: true }
-      );
-    });
+      )
+    );
+    onCleanup(() => stops.forEach((stop) => stop()));
   },
-  { deep: true, immediate: true }
+  { immediate: true }
 );
 </script>
 
