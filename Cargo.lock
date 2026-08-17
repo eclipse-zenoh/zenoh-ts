@@ -4086,7 +4086,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-bridge-remote-api"
-version = "1.9.0"
+version = "1.10.0"
 dependencies = [
  "async-liveliness-monitor",
  "base64",
@@ -4233,7 +4233,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-keyexpr-wasm"
-version = "1.9.0"
+version = "1.10.0"
 dependencies = [
  "wasm-bindgen",
  "wasm-bindgen-test",
@@ -4445,7 +4445,7 @@ dependencies = [
 
 [[package]]
 name = "zenoh-plugin-remote-api"
-version = "1.9.0"
+version = "1.10.0"
 dependencies = [
  "base64",
  "bytes",
