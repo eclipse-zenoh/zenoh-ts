@@ -28,7 +28,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use futures::{future, pin_mut, SinkExt, StreamExt, TryStreamExt};
+use futures::{future, future::Either, pin_mut, SinkExt, StreamExt, TryStreamExt};
 use interface::{InRemoteMessage, OutRemoteMessage, SequenceId};
 use remote_state::RemoteState;
 use rustls_pemfile::{certs, private_key};
@@ -580,7 +580,15 @@ async fn run_websocket_server(
             });
 
             pin_mut!(ch_rx_stream, incoming_ws);
-            future::select(ch_rx_stream, incoming_ws).await;
+            match future::select(ch_rx_stream, incoming_ws).await {
+                Either::Left((Err(err), _)) => {
+                    tracing::warn!("WebSocket forwarding failed: {err}");
+                }
+                Either::Right((Err(err), _)) => {
+                    tracing::warn!("WebSocket receive task failed: {err}");
+                }
+                _ => {}
+            }
 
             // cleanup state
             state_map2.write().await.remove(&id.to_string());
