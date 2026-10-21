@@ -27,7 +27,7 @@ export class ZenohId {
             out += ZenohId.KEY[b >> 4];
             out += ZenohId.KEY[b & 15];
         }
-        return out;
+        return out.replace(/^0+/, "");
     }
 
     toLeBytes() {
